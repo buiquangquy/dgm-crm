@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DGM Sales CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5F4F1;
+  --surface: #FFFFFF;
+  --surface2: #F0EEE9;
+  --border: rgba(0,0,0,0.09);
+  --border2: rgba(0,0,0,0.14);
+  --text: #1A1917;
+  --text2: #6B6860;
+  --text3: #9B9890;
+  --blue: #185FA5; --blue-light: #E6F1FB; --blue-dark: #0C447C;
+  --green: #0F6E56; --green-light: #E1F5EE;
+  --red: #A32D2D; --red-light: #FCEBEB;
+  --amber: #854F0B; --amber-light: #FAEEDA;
+  --pink: #72243E; --pink-light: #FBEAF0;
+  --teal: #085041; --teal-light: #E1F5EE;
+  --r: 8px; --r-lg: 12px; --r-xl: 16px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); font-size: 13px; background: var(--bg); color: var(--text); min-height: 100vh; }
+button { font-family: var(--font); cursor: pointer; }
+input, select, textarea { font-family: var(--font); }
+a { color: var(--blue); text-decoration: none; }
+
+/* ---- LAYOUT ---- */
+.app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: 0 1.25rem; height: 52px; background: var(--surface); border-bottom: 0.5px solid var(--border); flex-shrink: 0; gap: 12px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-mark { width: 30px; height: 30px; border-radius: 7px; background: var(--blue); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; }
+.brand-name { font-size: 14px; font-weight: 600; }
+.brand-sub { font-size: 11px; color: var(--text3); }
+.topbar-mid { display: flex; gap: 4px; }
+.nav-btn { font-size: 12px; padding: 5px 12px; border: 0.5px solid transparent; border-radius: var(--r); background: none; color: var(--text2); display: flex; align-items: center; gap: 5px; transition: all 0.15s; }
+.nav-btn:hover { background: var(--surface2); color: var(--text); }
+.nav-btn.active { background: var(--blue-light); color: var(--blue-dark); border-color: rgba(24,95,165,0.2); font-weight: 500; }
+.topbar-right { display: flex; align-items: center; gap: 8px; }
+.user-pill { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 10px; border: 0.5px solid var(--border); border-radius: 20px; background: var(--surface); }
+.av { width: 22px; height: 22px; border-radius: 50%; background: var(--blue-light); color: var(--blue-dark); display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; }
+.av-sm { width: 20px; height: 20px; font-size: 9px; }
+.sync-status { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text3); }
+.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); }
+.sync-dot.ok { background: #1D9E75; }
+.sync-dot.syncing { background: var(--amber); animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.page { flex: 1; overflow-y: auto; padding: 1.25rem; display: none; }
+.page.active { display: block; }
+
+/* ---- BUTTONS ---- */
+.btn { font-size: 12px; padding: 6px 12px; border: 0.5px solid var(--border2); border-radius: var(--r); background: var(--surface); color: var(--text); display: inline-flex; align-items: center; gap: 5px; transition: all 0.15s; }
+.btn:hover { background: var(--surface2); }
+.btn-primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+.btn-primary:hover { background: var(--blue-dark); }
+.btn-danger { color: var(--red); border-color: rgba(163,45,45,0.3); }
+.btn-danger:hover { background: var(--red-light); }
+.btn-sm { font-size: 11px; padding: 4px 9px; }
+.btn-xs { font-size: 10px; padding: 3px 7px; }
+
+/* ---- BADGES ---- */
+.badge { font-size: 10px; padding: 2px 7px; border-radius: 8px; font-weight: 500; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; }
+.badge-MT { background: var(--blue-light); color: var(--blue-dark); }
+.badge-GT { background: #EAF3DE; color: #3B6D11; }
+.badge-B2B { background: var(--amber-light); color: var(--amber); }
+.badge-HoReCa { background: var(--pink-light); color: var(--pink); }
+.badge-ok { background: var(--green-light); color: var(--green); }
+.badge-overdue { background: var(--red-light); color: var(--red); }
+.badge-soon { background: var(--amber-light); color: var(--amber); }
+.badge-gray { background: var(--surface2); color: var(--text2); }
+.badge-todo { background: var(--surface2); color: var(--text2); }
+.badge-inprogress { background: var(--blue-light); color: var(--blue-dark); }
+.badge-review { background: var(--amber-light); color: var(--amber); }
+.badge-done { background: var(--green-light); color: var(--green); }
+
+/* ---- STATS ---- */
+.stats-row { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 1rem; }
+.stat-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--r-lg); padding: 12px 14px; }
+.stat-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+.stat-val { font-size: 24px; font-weight: 600; }
+
+/* ---- KANBAN ---- */
+.filter-bar { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
+.filter-label { font-size: 11px; color: var(--text3); }
+.filter-chip { font-size: 11px; padding: 3px 10px; border: 0.5px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text2); cursor: pointer; transition: all 0.12s; }
+.filter-chip:hover { border-color: var(--border2); color: var(--text); }
+.filter-chip.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+.board { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; align-items: start; }
+.kol { background: var(--surface2); border-radius: var(--r-xl); padding: 10px; min-height: 200px; }
+.kol-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 0.5px solid var(--border); }
+.kol-title { font-size: 12px; font-weight: 600; }
+.kol-badge { font-size: 10px; background: var(--surface); border: 0.5px solid var(--border); border-radius: 8px; padding: 1px 7px; color: var(--text2); }
+.task-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--r-lg); padding: 10px; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; position: relative; }
+.task-card:hover { border-color: var(--border2); box-shadow: var(--shadow); transform: translateY(-1px); }
+.task-card.dragging { opacity: 0.5; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+.kol.drag-over { background: #E6F1FB; border: 1.5px dashed var(--blue); }
+.task-title { font-size: 12px; font-weight: 500; margin-bottom: 6px; line-height: 1.4; }
+.task-badges { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 6px; }
+.flow-step-current { font-size: 10px; color: var(--blue-dark); background: var(--blue-light); padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px; margin-bottom: 5px; }
+.sp-bar { height: 3px; background: var(--surface2); border-radius: 2px; overflow: hidden; margin-top: 4px; }
+.sp-fill { height: 100%; background: #1D9E75; border-radius: 2px; transition: width 0.3s; }
+.sp-label { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.task-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+.task-dl { font-size: 10px; color: var(--text3); display: flex; align-items: center; gap: 3px; }
+.task-dl.ov { color: var(--red); }
+.task-dl.soon { color: var(--amber); }
+.move-btns { display: flex; gap: 3px; margin-top: 6px; }
+.move-btn { font-size: 10px; padding: 2px 7px; border: 0.5px solid var(--border); border-radius: var(--r); background: var(--surface2); color: var(--text2); cursor: pointer; white-space: nowrap; }
+.move-btn:hover { background: var(--surface); color: var(--text); }
+.empty-col { font-size: 11px; color: var(--text3); text-align: center; padding: 20px 0; border: 1px dashed var(--border); border-radius: var(--r-lg); }
+
+/* ---- MODAL ---- */
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: flex-start; justify-content: center; padding-top: 60px; z-index: 1000; }
+.modal { background: var(--surface); border-radius: var(--r-xl); border: 0.5px solid var(--border); padding: 1.25rem; width: 100%; max-width: 520px; max-height: 85vh; overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,0.18); }
+.modal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1rem; gap: 10px; }
+.modal-title { font-size: 15px; font-weight: 600; line-height: 1.4; }
+.modal-close { font-size: 20px; background: none; border: none; color: var(--text3); cursor: pointer; padding: 0 4px; line-height: 1; flex-shrink: 0; }
+.modal-close:hover { color: var(--text); }
+
+/* ---- FORMS ---- */
+.form-row { margin-bottom: 12px; }
+.form-label { font-size: 11px; color: var(--text2); font-weight: 500; margin-bottom: 4px; display: block; }
+.form-input { width: 100%; font-size: 13px; padding: 7px 10px; border: 0.5px solid var(--border2); border-radius: var(--r); background: var(--surface); color: var(--text); }
+.form-input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 2px rgba(24,95,165,0.12); }
+textarea.form-input { resize: vertical; min-height: 64px; }
+.form-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-actions { display: flex; gap: 8px; margin-top: 1rem; }
+
+/* ---- SUBTASKS ---- */
+.subtask-list { margin: 6px 0; }
+.subtask-item { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 0.5px solid var(--border); }
+.subtask-item:last-child { border-bottom: none; }
+.subtask-item input[type=checkbox] { margin-top: 1px; width: 14px; height: 14px; accent-color: var(--blue); flex-shrink: 0; }
+.subtask-text { font-size: 12px; flex: 1; line-height: 1.4; }
+.subtask-text.done { text-decoration: line-through; color: var(--text3); }
+.subtask-del { font-size: 14px; background: none; border: none; color: var(--text3); cursor: pointer; padding: 0 2px; line-height: 1; opacity: 0; transition: opacity 0.1s; }
+.subtask-item:hover .subtask-del { opacity: 1; }
+.add-subtask { display: flex; gap: 6px; margin-top: 6px; }
+.add-subtask input { flex: 1; font-size: 12px; padding: 5px 8px; border: 0.5px solid var(--border2); border-radius: var(--r); background: var(--surface); color: var(--text); }
+
+/* ---- DETAIL MODAL ---- */
+.detail-section { margin-bottom: 14px; }
+.detail-section-title { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+.detail-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.detail-meta-item .label { font-size: 11px; color: var(--text2); margin-bottom: 2px; }
+.detail-meta-item .value { font-size: 13px; font-weight: 500; }
+.notes-box { font-size: 12px; background: var(--surface2); border-radius: var(--r); padding: 10px; line-height: 1.6; white-space: pre-wrap; color: var(--text); }
+.flow-track { display: flex; align-items: center; flex-wrap: wrap; gap: 0; margin-top: 4px; }
+.flow-node { font-size: 11px; padding: 4px 10px; background: var(--surface2); border: 0.5px solid var(--border); color: var(--text2); white-space: nowrap; }
+.flow-node:first-child { border-radius: var(--r) 0 0 var(--r); }
+.flow-node:last-child { border-radius: 0 var(--r) var(--r) 0; }
+.flow-node.current { background: var(--blue-light); color: var(--blue-dark); border-color: rgba(24,95,165,0.3); font-weight: 500; }
+.flow-node.completed { background: var(--green-light); color: var(--green); border-color: rgba(15,110,86,0.2); }
+.flow-arrow-sm { font-size: 10px; color: var(--text3); }
+
+/* ---- MASTER DATA ---- */
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.section-title { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.data-table-wrap { border: 0.5px solid var(--border); border-radius: var(--r-lg); overflow: hidden; margin-bottom: 1.5rem; }
+table { width: 100%; border-collapse: collapse; }
+thead th { font-size: 11px; font-weight: 600; color: var(--text2); padding: 9px 12px; text-align: left; background: var(--surface2); border-bottom: 0.5px solid var(--border); white-space: nowrap; }
+tbody td { font-size: 12px; padding: 8px 12px; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--surface2); }
+.table-action-btns { display: flex; gap: 4px; opacity: 0; transition: opacity 0.1s; }
+tr:hover .table-action-btns { opacity: 1; }
+
+/* ---- SETUP ---- */
+.setup-wrap { max-width: 520px; margin: 2rem auto; }
+.setup-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--r-xl); padding: 1.75rem; }
+.setup-title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+.setup-sub { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 1.25rem; }
+.setup-step { display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start; }
+.setup-step-num { width: 22px; height: 22px; min-width: 22px; border-radius: 50%; background: var(--blue-light); color: var(--blue-dark); font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+.setup-step-text { font-size: 12px; line-height: 1.6; }
+code { font-family: var(--mono); font-size: 11px; background: var(--surface2); padding: 1px 5px; border-radius: 4px; }
+.msg { font-size: 12px; margin-top: 8px; }
+.msg-ok { color: var(--green); }
+.msg-err { color: var(--red); }
+.spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--border2); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: -2px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---- TOAST ---- */
+.toast-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 6px; z-index: 9999; }
+.toast { font-size: 12px; padding: 10px 14px; background: var(--text); color: #fff; border-radius: var(--r-lg); box-shadow: 0 4px 16px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 8px; animation: slideIn 0.2s ease; }
+.toast.ok { background: var(--green); }
+.toast.err { background: var(--red); }
+@keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+@media (max-width: 768px) {
+  .board { grid-template-columns: repeat(2, 1fr); }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .topbar-mid { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">DGM</div>
+      <div>
+        <div class="brand-name">DGM Sales CRM</div>
+        <div class="brand-sub">Ayam Brand · Alce Nero · Duchef</div>
+      </div>
+    </div>
+    <div class="topbar-mid" id="topbar-nav">
+      <button class="nav-btn active" onclick="showPage('kanban',this)" data-page="kanban">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18"/><rect x="14" y="3" width="7" height="10"/><rect x="14" y="17" width="7" height="4"/></svg>
+        Kanban
+      </button>
+      <button class="nav-btn" onclick="showPage('customers',this)" data-page="customers">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Khách hàng
+      </button>
+      <button class="nav-btn" onclick="showPage('products',this)" data-page="products">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        Sản phẩm
+      </button>
+      <button class="nav-btn" onclick="showPage('users',this)" data-page="users">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Team
+      </button>
+      <button class="nav-btn" onclick="showPage('config',this)" data-page="config">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Cấu hình
+      </button>
+    </div>
+    <div class="topbar-right">
+      <div class="sync-status">
+        <div class="sync-dot" id="sync-dot"></div>
+        <span id="sync-label">Chưa kết nối</span>
+      </div>
+      <select id="user-select" class="btn btn-sm" onchange="switchUser(this.value)" style="padding:4px 8px"></select>
+    </div>
+  </div>
+
+  <!-- PAGES -->
+  <div class="page active" id="page-kanban">
+    <div class="stats-row" id="stats-row"></div>
+    <div class="filter-bar" id="filter-bar"></div>
+    <div class="board" id="board"></div>
+  </div>
+
+  <div class="page" id="page-customers">
+    <div class="section-header">
+      <div class="section-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        Khách hàng / Customers
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="openCustomerForm()">+ Thêm khách hàng</button>
+    </div>
+    <div class="data-table-wrap">
+      <table id="customers-table">
+        <thead><tr><th>Tên</th><th>Kênh</th><th>Khu vực</th><th>Người liên hệ</th><th>SĐT</th><th>Tasks</th><th></th></tr></thead>
+        <tbody id="customers-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="page" id="page-products">
+    <div class="section-header">
+      <div class="section-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        Sản phẩm / Products
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="openProductForm()">+ Thêm sản phẩm</button>
+    </div>
+    <div class="data-table-wrap">
+      <table id="products-table">
+        <thead><tr><th>Tên sản phẩm</th><th>Danh mục</th><th>Brand</th><th>SKU</th><th></th></tr></thead>
+        <tbody id="products-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="page" id="page-users">
+    <div class="section-header">
+      <div class="section-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Team / Users
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="openUserForm()">+ Thêm thành viên</button>
+    </div>
+    <div class="data-table-wrap">
+      <table>
+        <thead><tr><th>Tên</th><th>Role</th><th>Initials</th><th>Email</th><th></th></tr></thead>
+        <tbody id="users-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="page" id="page-config">
+    <div class="section-header">
+      <div class="section-title">Task Flow theo kênh</div>
+    </div>
+    <div id="config-body"></div>
+  </div>
+
+  <!-- SETUP PAGE -->
+  <div class="page active" id="page-setup" style="display:block">
+    <div class="setup-wrap">
+      <div class="setup-card">
+        <div class="setup-title">🔌 Kết nối Google Sheets</div>
+        <div class="setup-sub">Dán URL Apps Script Web App để kết nối dữ liệu persistent 2 chiều.</div>
+        <div class="setup-step"><div class="setup-step-num">1</div><div class="setup-step-text">Mở Google Sheet → <strong>Extensions → Apps Script</strong> → paste code từ file <code>apps-script-backend.js</code></div></div>
+        <div class="setup-step"><div class="setup-step-num">2</div><div class="setup-step-text"><strong>Deploy</strong> → New deployment → Web app → Execute as: <strong>Me</strong> → Who has access: <strong>Anyone</strong> → Deploy</div></div>
+        <div class="setup-step"><div class="setup-step-num">3</div><div class="setup-step-text">Copy <strong>Web app URL</strong> (dạng <code>https://script.google.com/macros/s/...</code>) và dán vào đây:</div></div>
+        <div style="margin-top:12px">
+          <div class="form-label">Apps Script Web App URL</div>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="script-url-input" class="form-input" placeholder="https://script.google.com/macros/s/..." style="flex:1;font-size:12px;font-family:var(--mono)">
+            <button class="btn btn-primary" onclick="connectScript()">Kết nối</button>
+          </div>
+          <div id="connect-msg" class="msg"></div>
+        </div>
+        <div style="margin-top:1rem;padding-top:1rem;border-top:0.5px solid var(--border)">
+          <button class="btn btn-sm" onclick="useSampleData()">Bỏ qua – dùng dữ liệu mẫu (không lưu)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODALS -->
+<div id="modal-container"></div>
+<div class="toast-container" id="toasts"></div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let SCRIPT_URL = localStorage.getItem('dgm_script_url') || '';
+let state = {
+  tasks: [], customers: [], products: [], users: [], config: [],
+  currentUser: 'mgr',
+  filterChannel: 'all',
+  filterPIC: 'all',
+  syncing: false,
+  lastSync: null,
+  setupDone: false,
+};
+
+// ============================================================
+// UTILS
+// ============================================================
+const $ = id => document.getElementById(id);
+function fmtDate(d) { if (!d) return '—'; return new Date(d).toLocaleDateString('vi-VN'); }
+function daysFrom(d) { return Math.round((new Date(d) - new Date()) / 864e5); }
+function uid() { return Date.now() + Math.random().toString(36).slice(2,6); }
+function getCustomer(id) { return state.customers.find(c => String(c.id) === String(id)); }
+function getUser(id) { return state.users.find(u => u.id === id); }
+function getFlow(channel) { const c = state.config.find(x => x.channel === channel); return c ? (Array.isArray(c.steps) ? c.steps : JSON.parse(c.steps || '[]')) : []; }
+function subProg(task) {
+  const subs = Array.isArray(task.subtasks) ? task.subtasks : [];
+  if (!subs.length) return null;
+  const done = subs.filter(s => s.done).length;
+  return { done, total: subs.length, pct: Math.round(done / subs.length * 100) };
+}
+function toast(msg, type='ok') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span>${type==='ok'?'✓':'✕'}</span>${msg}`;
+  $('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+function setSyncStatus(status) {
+  const dot = $('sync-dot'), label = $('sync-label');
+  if (status === 'ok') { dot.className='sync-dot ok'; label.textContent=state.lastSync?'Sync '+state.lastSync.toLocaleTimeString('vi-VN'):'Đã kết nối'; }
+  else if (status === 'syncing') { dot.className='sync-dot syncing'; label.textContent='Đang sync...'; }
+  else { dot.className='sync-dot'; label.textContent='Chưa kết nối'; }
+}
+
+// ============================================================
+// API
+// ============================================================
+async function apiGet() {
+  if (!SCRIPT_URL) return null;
+  try {
+    const res = await fetch(SCRIPT_URL + '?action=all', {redirect:'follow'});
+    const d = await res.json();
+    return d.ok ? d.data : null;
+  } catch(e) { return null; }
+}
+async function apiPost(payload) {
+  if (!SCRIPT_URL) return false;
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST', redirect: 'follow',
+      headers: {'Content-Type':'text/plain'},
+      body: JSON.stringify(payload)
+    });
+    const d = await res.json();
+    return d.ok;
+  } catch(e) { return false; }
+}
+async function syncAll() {
+  if (!SCRIPT_URL) return;
+  state.syncing = true; setSyncStatus('syncing');
+  const data = await apiGet();
+  if (data) {
+    state.tasks = data.Tasks || [];
+    state.customers = data.Customers || [];
+    state.products = data.Products || [];
+    state.users = data.Users || [];
+    state.config = data.Config || [];
+    state.lastSync = new Date();
+    setSyncStatus('ok');
+  } else {
+    setSyncStatus('error');
+  }
+  state.syncing = false;
+  renderAll();
+}
+async function saveTask(task) {
+  const ok = await apiPost({action:'upsert', sheet:'Tasks', data: {...task, subtasks: JSON.stringify(Array.isArray(task.subtasks)?task.subtasks:[])}});
+  if (ok) { toast('Task đã lưu vào Sheet ✓'); state.lastSync=new Date(); setSyncStatus('ok'); }
+  else toast('Lưu thất bại – kiểm tra kết nối','err');
+}
+async function deleteTaskRemote(id) {
+  await apiPost({action:'delete', sheet:'Tasks', id});
+}
+async function saveMasterData(sheet, data) {
+  const ok = await apiPost({action:'upsert', sheet, data});
+  if (ok) { toast(`${sheet} đã lưu vào Sheet ✓`); state.lastSync=new Date(); setSyncStatus('ok'); }
+}
+
+// ============================================================
+// SETUP
+// ============================================================
+async function connectScript() {
+  const url = $('script-url-input').value.trim();
+  if (!url) { $('connect-msg').textContent='Vui lòng nhập URL.'; return; }
+  $('connect-msg').innerHTML='<span class="spinner"></span> Đang kiểm tra...';
+  $('connect-msg').className='msg';
+  try {
+    const res = await fetch(url + '?action=init', {redirect:'follow'});
+    const d = await res.json();
+    if (!d.ok) throw new Error('API trả về lỗi');
+    SCRIPT_URL = url;
+    localStorage.setItem('dgm_script_url', url);
+    $('connect-msg').className='msg msg-ok';
+    $('connect-msg').textContent='✓ Kết nối thành công! Đang tải dữ liệu...';
+    setTimeout(() => startApp(), 800);
+  } catch(e) {
+    $('connect-msg').className='msg msg-err';
+    $('connect-msg').textContent='Lỗi: Không kết nối được. Kiểm tra URL và quyền deploy (Anyone).';
+  }
+}
+function useSampleData() {
+  SCRIPT_URL = '';
+  loadSampleData();
+  startApp();
+}
+function loadSampleData() {
+  state.users = [
+    {id:'mgr',name:'Quy (Manager)',role:'manager',initials:'QM',email:'quangquy.bui@gmail.com',active:true},
+    {id:'nt',name:'Nguyễn Tuấn',role:'sales',initials:'NT',email:'',active:true},
+    {id:'lh',name:'Lê Hương',role:'sales',initials:'LH',email:'',active:true},
+    {id:'pv',name:'Phạm Vũ',role:'sales',initials:'PV',email:'',active:true},
+    {id:'tm',name:'Trần Minh',role:'sales',initials:'TM',email:'',active:true},
+  ];
+  state.customers = [
+    {id:1,name:'Mega Market',channel:'MT',region:'Toàn quốc',contact:'Ms. Linh',phone:'0901234567',email:'',notes:'',active:true},
+    {id:2,name:'Co.opmart',channel:'MT',region:'Nam & Trung',contact:'Mr. Hùng',phone:'0912345678',email:'',notes:'',active:true},
+    {id:3,name:'KFC Vietnam',channel:'B2B',region:'Toàn quốc',contact:'Ms. Trang',phone:'0923456789',email:'',notes:'',active:true},
+    {id:4,name:'Sheraton Saigon',channel:'HoReCa',region:'HCM',contact:'Mr. Khải',phone:'0934567890',email:'',notes:'',active:true},
+    {id:5,name:'Đại lý Đà Nẵng',channel:'GT',region:'Miền Trung',contact:'Anh Hải',phone:'0945678901',email:'',notes:'',active:true},
+    {id:6,name:'Lotte Mart',channel:'MT',region:'Toàn quốc',contact:'Ms. Phương',phone:'',email:'',notes:'',active:true},
+  ];
+  state.products = [
+    {id:1,name:'Coconut Milk 400ml',category:'Coconut',brand:'Ayam Brand',sku:'AB-CM-400',active:true},
+    {id:2,name:'Baked Beans 425g',category:'Beans',brand:'Ayam Brand',sku:'AB-BB-425',active:true},
+    {id:3,name:'Sardines in Tomato 155g',category:'Sardines',brand:'Ayam Brand',sku:'AB-ST-155',active:true},
+    {id:4,name:'Curry Paste 100g',category:'Paste',brand:'Ayam Brand',sku:'AB-CP-100',active:true},
+    {id:5,name:'Extra Virgin Olive Oil 500ml',category:'Oil',brand:'Alce Nero',sku:'AN-OO-500',active:true},
+    {id:6,name:'Oyster Sauce 510g',category:'Sauce',brand:'Duchef',sku:'DC-OS-510',active:true},
+  ];
+  state.config = [
+    {channel:'MT',steps:['Chuẩn bị','Gửi proposal','Đàm phán','Ký kết','Triển khai']},
+    {channel:'GT',steps:['Tạo HĐ','Đào tạo SP','Đặt hàng đầu','Follow up']},
+    {channel:'B2B',steps:['Prospecting','Demo SP','Báo giá','Chốt đơn','Onboard']},
+    {channel:'HoReCa',steps:['Tiếp cận','Sampling','Thoả thuận','Listing','Review']},
+  ];
+  state.tasks = [
+    {id:1,title:'Đàm phán trading term Q3 – Mega Market',customer_id:1,channel:'MT',pic_id:'nt',status:'inprogress',step:'Gửi proposal',deadline:'2026-05-20',notes:'Giữ net terms, tăng activation budget',subtasks:[{id:1,text:'Chuẩn bị deck',done:true},{id:2,text:'Review với Quy',done:true},{id:3,text:'Gửi proposal',done:false},{id:4,text:'Follow up',done:false}],product_ids:'1'},
+    {id:2,title:'Onboard đại lý GT mới – Đà Nẵng',customer_id:5,channel:'GT',pic_id:'lh',status:'todo',step:'Tạo HĐ',deadline:'2026-05-25',notes:'Liên hệ anh Hải khu vực miền Trung',subtasks:[{id:1,text:'Gửi hợp đồng khung',done:false},{id:2,text:'Đào tạo sản phẩm',done:false},{id:3,text:'Đặt hàng đầu',done:false}],product_ids:''},
+    {id:3,title:'Sampling Baked Beans – Co.opmart',customer_id:2,channel:'MT',pic_id:'pv',status:'todo',step:'Chuẩn bị',deadline:'2026-06-01',notes:'3 điểm thí điểm tháng 6',subtasks:[{id:1,text:'Xác nhận số lượng mẫu',done:false},{id:2,text:'Booking POSM',done:false}],product_ids:'2'},
+    {id:4,title:'Thu hồi công nợ – KFC Vietnam',customer_id:3,channel:'B2B',pic_id:'tm',status:'inprogress',step:'Báo giá',deadline:'2026-05-10',notes:'Hóa đơn 45 ngày – nhắc lần 2',subtasks:[{id:1,text:'Gửi reminder email',done:true},{id:2,text:'Gọi điện xác nhận',done:false}],product_ids:''},
+    {id:5,title:'Demo Sardines & Coconut Cream – Sheraton',customer_id:4,channel:'HoReCa',pic_id:'lh',status:'todo',step:'Tiếp cận',deadline:'2026-05-15',notes:'Giới thiệu line cao cấp',subtasks:[{id:1,text:'Chuẩn bị sample kit',done:false},{id:2,text:'Xác nhận lịch demo',done:false}],product_ids:'1,3'},
+    {id:6,title:'POSM deployment tháng 4 – Lotte',customer_id:6,channel:'MT',pic_id:'pv',status:'done',step:'Triển khai',deadline:'2026-04-30',notes:'Hoàn thành – đạt 112% target',subtasks:[{id:1,text:'Booking vị trí',done:true},{id:2,text:'Vận chuyển POSM',done:true},{id:3,text:'Lắp đặt',done:true},{id:4,text:'Báo cáo',done:true}],product_ids:''},
+  ];
+}
+
+function startApp() {
+  state.setupDone = true;
+  $('page-setup').style.display = 'none';
+  if (SCRIPT_URL) syncAll(); else { renderAll(); setSyncStatus('disconnected'); }
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => { if(p.id !== 'page-setup') p.classList.remove('active'); });
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  $(`page-${name}`).classList.add('active');
+  if (btn) btn.classList.add('active');
+  renderPage(name);
+}
+function renderPage(name) {
+  if (name === 'kanban') renderKanban();
+  else if (name === 'customers') renderCustomers();
+  else if (name === 'products') renderProducts();
+  else if (name === 'users') renderUsers();
+  else if (name === 'config') renderConfig();
+}
+function renderAll() {
+  renderUserSelect();
+  renderKanban();
+}
+
+// ============================================================
+// USER SELECT
+// ============================================================
+function renderUserSelect() {
+  const sel = $('user-select');
+  sel.innerHTML = state.users.filter(u=>u.active).map(u =>
+    `<option value="${u.id}" ${u.id===state.currentUser?'selected':''}>${u.initials} – ${u.name}</option>`
+  ).join('');
+}
+function switchUser(id) {
+  state.currentUser = id;
+  renderKanban();
+}
+
+// ============================================================
+// KANBAN
+// ============================================================
+const STATUSES = ['todo','inprogress','review','done'];
+const STATUS_LABELS = {todo:'To Do',inprogress:'In Progress',review:'Review',done:'Done'};
+
+function getVisibleTasks() {
+  const u = getUser(state.currentUser);
+  let list = state.tasks;
+  if (u && u.role === 'sales') list = list.filter(t => t.pic_id === state.currentUser);
+  if (state.filterChannel !== 'all') list = list.filter(t => t.channel === state.filterChannel);
+  if (state.filterPIC !== 'all') list = list.filter(t => t.pic_id === state.filterPIC);
+  return list;
+}
+
+function renderKanban() {
+  const visible = getVisibleTasks();
+  const now = new Date();
+
+  // stats
+  const overdue = visible.filter(t => t.status!=='done' && t.deadline && daysFrom(t.deadline)<0).length;
+  $('stats-row').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Tổng tasks</div><div class="stat-val">${visible.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Đang làm</div><div class="stat-val" style="color:var(--blue)">${visible.filter(t=>t.status==='inprogress').length}</div></div>
+    <div class="stat-card"><div class="stat-label">Hoàn thành</div><div class="stat-val" style="color:var(--green)">${visible.filter(t=>t.status==='done').length}</div></div>
+    <div class="stat-card"><div class="stat-label">Quá hạn</div><div class="stat-val" style="color:${overdue>0?'var(--red)':'var(--text)'}">${overdue}</div></div>
+  `;
+
+  // filter bar
+  const channels = ['all','MT','GT','B2B','HoReCa'];
+  const salesUsers = state.users.filter(u => u.role==='sales');
+  $('filter-bar').innerHTML = `
+    <span class="filter-label">Kênh:</span>
+    ${channels.map(c=>`<button class="filter-chip ${state.filterChannel===c?'active':''}" onclick="setFilter('channel','${c}')">${c==='all'?'Tất cả':c}</button>`).join('')}
+    <span class="filter-label" style="margin-left:8px">PIC:</span>
+    <button class="filter-chip ${state.filterPIC==='all'?'active':''}" onclick="setFilter('pic','all')">Tất cả</button>
+    ${salesUsers.map(u=>`<button class="filter-chip ${state.filterPIC===u.id?'active':''}" onclick="setFilter('pic','${u.id}')">${u.name}</button>`).join('')}
+    <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openTaskForm()">+ Thêm task</button>
+    ${SCRIPT_URL?`<button class="btn btn-sm" onclick="syncAll()">↻ Sync Sheet</button>`:''}
+  `;
+
+  // board
+  const board = $('board');
+  board.innerHTML = STATUSES.map(st => {
+    const colTasks = visible.filter(t => t.status === st);
+    const cards = colTasks.length ? colTasks.map(task => renderTaskCard(task)).join('') : `<div class="empty-col">Không có task</div>`;
+    return `
+      <div class="kol" id="kol-${st}" ondragover="dragOver(event,'${st}')" ondragleave="dragLeave(event,'${st}')" ondrop="drop(event,'${st}')">
+        <div class="kol-head">
+          <span class="kol-title">${STATUS_LABELS[st]}</span>
+          <span class="kol-badge">${colTasks.length}</span>
+        </div>
+        ${cards}
+      </div>`;
+  }).join('');
+}
+
+function renderTaskCard(task) {
+  const cust = getCustomer(task.customer_id);
+  const days = task.deadline ? daysFrom(task.deadline) : null;
+  const ov = task.status!=='done' && days!==null && days<0;
+  const soon = task.status!=='done' && days!==null && days>=0 && days<=3;
+  const sp = subProg(task);
+  const flow = getFlow(task.channel);
+  const stepIdx = flow.indexOf(task.step);
+  const u = getUser(task.pic_id);
+  const st = task.status;
+
+  return `<div class="task-card" id="card-${task.id}" draggable="true"
+    ondragstart="dragStart(event,${task.id})" onclick="openTaskDetail(${task.id})">
+    <div class="task-title">${task.title}</div>
+    <div class="task-badges">
+      <span class="badge badge-${task.channel}">${task.channel}</span>
+      ${cust?`<span class="badge badge-gray">${cust.name}</span>`:''}
+      ${ov?`<span class="badge badge-overdue">Quá hạn</span>`:''}
+      ${soon&&!ov?`<span class="badge badge-soon">Sắp hết hạn</span>`:''}
+    </div>
+    ${task.step?`<div class="flow-step-current">▶ ${task.step}</div>`:''}
+    ${sp?`<div class="sp-bar"><div class="sp-fill" style="width:${sp.pct}%"></div></div><div class="sp-label">${sp.done}/${sp.total} subtasks</div>`:''}
+    <div class="task-foot">
+      <span class="task-dl ${ov?'ov':soon?'soon':''}">${fmtDate(task.deadline)}</span>
+      ${u?`<div class="av av-sm" title="${u.name}">${u.initials}</div>`:''}
+    </div>
+    <div class="move-btns" onclick="event.stopPropagation()">
+      ${st!=='todo'?`<button class="move-btn" onclick="moveTask(${task.id},'${st==='inprogress'?'todo':st==='review'?'inprogress':'review'}')">← ${st==='inprogress'?'To Do':st==='review'?'In Progress':'In Progress'}</button>`:''}
+      ${st!=='done'?`<button class="move-btn" onclick="moveTask(${task.id},'${st==='todo'?'inprogress':st==='inprogress'?'review':'done'}')">→ ${st==='todo'?'In Progress':st==='inprogress'?'Review':'Done'}</button>`:''}
+    </div>
+  </div>`;
+}
+
+function setFilter(type, val) {
+  if (type==='channel') state.filterChannel=val;
+  else state.filterPIC=val;
+  renderKanban();
+}
+
+// ============================================================
+// DRAG & DROP
+// ============================================================
+let dragId = null;
+function dragStart(e, id) { dragId=id; e.dataTransfer.effectAllowed='move'; setTimeout(()=>{ const c=document.getElementById('card-'+id); if(c) c.classList.add('dragging'); },0); }
+function dragOver(e, st) { e.preventDefault(); document.getElementById('kol-'+st).classList.add('drag-over'); }
+function dragLeave(e, st) { document.getElementById('kol-'+st).classList.remove('drag-over'); }
+async function drop(e, st) {
+  e.preventDefault();
+  document.getElementById('kol-'+st).classList.remove('drag-over');
+  if (dragId !== null) {
+    const c=document.getElementById('card-'+dragId); if(c) c.classList.remove('dragging');
+    await moveTask(dragId, st);
+    dragId=null;
+  }
+}
+
+async function moveTask(id, newStatus) {
+  const task = state.tasks.find(t => String(t.id)===String(id));
+  if (!task) return;
+  task.status = newStatus;
+  const flow = getFlow(task.channel);
+  if (newStatus==='inprogress' && flow.length && !flow.includes(task.step)) task.step = flow[0];
+  if (newStatus==='done') task.step = flow[flow.length-1]||task.step;
+  renderKanban();
+  if (SCRIPT_URL) await saveTask(task);
+}
+
+// ============================================================
+// TASK DETAIL MODAL
+// ============================================================
+function openTaskDetail(id) {
+  const task = state.tasks.find(t => String(t.id)===String(id));
+  if (!task) return;
+  const cust = getCustomer(task.customer_id);
+  const u = getUser(task.pic_id);
+  const flow = getFlow(task.channel);
+  const stepIdx = flow.indexOf(task.step);
+  const sp = subProg(task);
+  const subs = Array.isArray(task.subtasks) ? task.subtasks : [];
+  const days = task.deadline ? daysFrom(task.deadline) : null;
+  const ov = task.status!=='done' && days!==null && days<0;
+
+  const flowHtml = flow.length ? `
+    <div class="flow-track">
+      ${flow.map((s,i) => `
+        ${i>0?`<span class="flow-arrow-sm">›</span>`:''}
+        <span class="flow-node ${i<stepIdx?'completed':i===stepIdx?'current':''}">${s}</span>
+      `).join('')}
+    </div>` : '';
+
+  const subsHtml = subs.map(s => `
+    <div class="subtask-item" id="si-${task.id}-${s.id}">
+      <input type="checkbox" ${s.done?'checked':''} onchange="toggleSubtask(${task.id},${s.id},this.checked)">
+      <span class="subtask-text ${s.done?'done':''}">${s.text}</span>
+      <button class="subtask-del" onclick="delSubtask(${task.id},${s.id})">×</button>
+    </div>`).join('');
+
+  const html = `
+    <div class="modal-bg" onclick="closeModal()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <div>
+            <div class="task-badges" style="margin-bottom:6px">
+              <span class="badge badge-${task.channel}">${task.channel}</span>
+              <span class="badge badge-${task.status}">${STATUS_LABELS[task.status]}</span>
+              ${ov?`<span class="badge badge-overdue">Quá hạn</span>`:''}
+            </div>
+            <div class="modal-title">${task.title}</div>
+          </div>
+          <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+        <div class="detail-meta-grid">
+          <div class="detail-meta-item"><div class="label">Khách hàng</div><div class="value">${cust?cust.name:'—'}</div></div>
+          <div class="detail-meta-item"><div class="label">PIC</div><div class="value">${u?u.name:'—'}</div></div>
+          <div class="detail-meta-item"><div class="label">Deadline</div><div class="value" style="${ov?'color:var(--red)':''}">${fmtDate(task.deadline)}</div></div>
+          <div class="detail-meta-item"><div class="label">Tiến độ subtasks</div><div class="value">${sp?sp.done+'/'+sp.total+' ('+sp.pct+'%)':'—'}</div></div>
+        </div>
+        ${flow.length?`<div class="detail-section"><div class="detail-section-title">Flow tiến độ</div>${flowHtml}</div>`:''}
+        ${task.notes?`<div class="detail-section"><div class="detail-section-title">Ghi chú</div><div class="notes-box">${task.notes}</div></div>`:''}
+        <div class="detail-section">
+          <div class="detail-section-title">Subtasks (${sp?sp.done+'/'+sp.total:'0/0'})</div>
+          <div class="subtask-list" id="subs-${task.id}">${subsHtml}</div>
+          <div class="add-subtask">
+            <input type="text" id="new-sub-${task.id}" placeholder="Thêm subtask mới..." onkeydown="if(event.key==='Enter')addSubtask(${task.id})">
+            <button class="btn btn-sm" onclick="addSubtask(${task.id})">+ Thêm</button>
+          </div>
+        </div>
+        ${task.step?`
+        <div class="detail-section">
+          <div class="detail-section-title">Cập nhật bước hiện tại</div>
+          <select class="form-input" style="font-size:12px" onchange="updateStep(${task.id},this.value)">
+            ${flow.map(s=>`<option value="${s}" ${s===task.step?'selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>`:''}
+        <div class="form-actions">
+          <button class="btn btn-primary btn-sm" onclick="closeModal();openTaskForm(${task.id})">✎ Chỉnh sửa</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteTask(${task.id})">✕ Xóa task</button>
+          <button class="btn btn-sm" onclick="closeModal()">Đóng</button>
+        </div>
+      </div>
+    </div>`;
+  $('modal-container').innerHTML = html;
+}
+
+function closeModal() { $('modal-container').innerHTML = ''; }
+
+async function toggleSubtask(taskId, subId, done) {
+  const task = state.tasks.find(t => String(t.id)===String(taskId));
+  if (!task) return;
+  const subs = Array.isArray(task.subtasks) ? task.subtasks : [];
+  const s = subs.find(x => String(x.id)===String(subId));
+  if (s) s.done = done;
+  const el = document.querySelector(`#si-${taskId}-${subId} .subtask-text`);
+  if (el) el.className = `subtask-text ${done?'done':''}`;
+  renderKanban();
+  if (SCRIPT_URL) await saveTask(task);
+}
+
+async function addSubtask(taskId) {
+  const inp = $(`new-sub-${taskId}`);
+  if (!inp || !inp.value.trim()) return;
+  const task = state.tasks.find(t => String(t.id)===String(taskId));
+  if (!task) return;
+  if (!Array.isArray(task.subtasks)) task.subtasks = [];
+  task.subtasks.push({id: Date.now(), text: inp.value.trim(), done: false});
+  openTaskDetail(taskId);
+  renderKanban();
+  if (SCRIPT_URL) await saveTask(task);
+}
+
+async function delSubtask(taskId, subId) {
+  const task = state.tasks.find(t => String(t.id)===String(taskId));
+  if (!task) return;
+  task.subtasks = (task.subtasks||[]).filter(s => String(s.id)!==String(subId));
+  openTaskDetail(taskId);
+  renderKanban();
+  if (SCRIPT_URL) await saveTask(task);
+}
+
+async function updateStep(taskId, step) {
+  const task = state.tasks.find(t => String(t.id)===String(taskId));
+  if (!task) return;
+  task.step = step;
+  renderKanban();
+  if (SCRIPT_URL) await saveTask(task);
+}
+
+// ============================================================
+// TASK FORM (ADD/EDIT)
+// ============================================================
+function openTaskForm(editId) {
+  const task = editId ? state.tasks.find(t=>String(t.id)===String(editId)) : null;
+  const t = task || {title:'',customer_id:'',channel:'MT',pic_id:'nt',status:'todo',step:'',deadline:'',notes:'',subtasks:[],product_ids:''};
+  const flow = getFlow(t.channel);
+
+  const html = `
+    <div class="modal-bg" onclick="closeModal()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title">${task?'Chỉnh sửa task':'Thêm task mới'}</div>
+          <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Tiêu đề *</label>
+          <input type="text" id="f-title" class="form-input" value="${t.title}" placeholder="Tên task...">
+        </div>
+        <div class="form-grid2">
+          <div class="form-row">
+            <label class="form-label">Khách hàng *</label>
+            <select id="f-customer" class="form-input">
+              <option value="">Chọn khách hàng...</option>
+              ${state.customers.filter(c=>c.active).map(c=>`<option value="${c.id}" ${String(t.customer_id)===String(c.id)?'selected':''}>${c.name} (${c.channel})</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Kênh *</label>
+            <select id="f-channel" class="form-input" onchange="updateFlowSelect()">
+              ${['MT','GT','B2B','HoReCa'].map(c=>`<option value="${c}" ${t.channel===c?'selected':''}>${c}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="form-grid2">
+          <div class="form-row">
+            <label class="form-label">PIC</label>
+            <select id="f-pic" class="form-input">
+              ${state.users.filter(u=>u.active).map(u=>`<option value="${u.id}" ${t.pic_id===u.id?'selected':''}>${u.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Trạng thái</label>
+            <select id="f-status" class="form-input">
+              ${STATUSES.map(s=>`<option value="${s}" ${t.status===s?'selected':''}>${STATUS_LABELS[s]}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Bước hiện tại (Flow)</label>
+          <select id="f-step" class="form-input">
+            ${flow.map(s=>`<option value="${s}" ${t.step===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Deadline</label>
+          <input type="date" id="f-deadline" class="form-input" value="${t.deadline||''}">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Ghi chú</label>
+          <textarea id="f-notes" class="form-input">${t.notes||''}</textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="saveTaskForm('${editId||''}')">💾 ${task?'Lưu thay đổi':'Tạo task'}</button>
+          <button class="btn" onclick="closeModal()">Huỷ</button>
+        </div>
+      </div>
+    </div>`;
+  $('modal-container').innerHTML = html;
+}
+
+function updateFlowSelect() {
+  const ch = $('f-channel').value;
+  const flow = getFlow(ch);
+  $('f-step').innerHTML = flow.map(s=>`<option value="${s}">${s}</option>`).join('');
+}
+
+async function saveTaskForm(editId) {
+  const title = $('f-title').value.trim();
+  const customer_id = $('f-customer').value;
+  if (!title || !customer_id) { alert('Vui lòng điền tiêu đề và chọn khách hàng.'); return; }
+  const data = {
+    title, customer_id: parseInt(customer_id),
+    channel: $('f-channel').value,
+    pic_id: $('f-pic').value,
+    status: $('f-status').value,
+    step: $('f-step').value,
+    deadline: $('f-deadline').value,
+    notes: $('f-notes').value.trim(),
+    updated_at: new Date().toISOString(),
+  };
+  if (editId) {
+    const task = state.tasks.find(t=>String(t.id)===String(editId));
+    if (task) Object.assign(task, data);
+    else return;
+  } else {
+    const newId = Date.now();
+    state.tasks.push({id:newId, subtasks:[], product_ids:'', created_at:new Date().toISOString(), ...data});
+    data.id = newId;
+  }
+  closeModal();
+  renderKanban();
+  const saved = editId ? state.tasks.find(t=>String(t.id)===String(editId)) : state.tasks[state.tasks.length-1];
+  if (SCRIPT_URL && saved) await saveTask(saved);
+}
+
+async function deleteTask(id) {
+  if (!confirm('Xoá task này?')) return;
+  state.tasks = state.tasks.filter(t => String(t.id)!==String(id));
+  closeModal();
+  renderKanban();
+  if (SCRIPT_URL) await deleteTaskRemote(id);
+  toast('Đã xóa task');
+}
+
+// ============================================================
+// MASTER DATA PAGES
+// ============================================================
+function renderCustomers() {
+  const tbody = $('customers-body');
+  tbody.innerHTML = state.customers.filter(c=>c.active).map(c => {
+    const taskCount = state.tasks.filter(t=>String(t.customer_id)===String(c.id)&&t.status!=='done').length;
+    return `<tr>
+      <td><strong>${c.name}</strong></td>
+      <td><span class="badge badge-${c.channel}">${c.channel}</span></td>
+      <td>${c.region||'—'}</td>
+      <td>${c.contact||'—'}</td>
+      <td>${c.phone||'—'}</td>
+      <td>${taskCount>0?`<span style="color:var(--blue);font-weight:500">${taskCount}</span>`:'0'}</td>
+      <td><div class="table-action-btns">
+        <button class="btn btn-xs" onclick="openCustomerForm(${c.id})">✎</button>
+        <button class="btn btn-xs btn-danger" onclick="delCustomer(${c.id})">✕</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function openCustomerForm(editId) {
+  const c = editId ? state.customers.find(x=>String(x.id)===String(editId)) : null;
+  const d = c || {name:'',channel:'MT',region:'',contact:'',phone:'',email:'',notes:''};
+  const html = `<div class="modal-bg" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><div class="modal-title">${c?'Sửa khách hàng':'Thêm khách hàng'}</div><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="form-grid2">
+      <div class="form-row"><label class="form-label">Tên *</label><input type="text" id="c-name" class="form-input" value="${d.name}"></div>
+      <div class="form-row"><label class="form-label">Kênh</label>
+        <select id="c-channel" class="form-input">${['MT','GT','B2B','HoReCa'].map(ch=>`<option ${d.channel===ch?'selected':''}>${ch}</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="form-grid2">
+      <div class="form-row"><label class="form-label">Khu vực</label><input type="text" id="c-region" class="form-input" value="${d.region||''}"></div>
+      <div class="form-row"><label class="form-label">Người liên hệ</label><input type="text" id="c-contact" class="form-input" value="${d.contact||''}"></div>
+    </div>
+    <div class="form-grid2">
+      <div class="form-row"><label class="form-label">SĐT</label><input type="text" id="c-phone" class="form-input" value="${d.phone||''}"></div>
+      <div class="form-row"><label class="form-label">Email</label><input type="text" id="c-email" class="form-input" value="${d.email||''}"></div>
+    </div>
+    <div class="form-row"><label class="form-label">Ghi chú</label><textarea id="c-notes" class="form-input">${d.notes||''}</textarea></div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="saveCustomer('${editId||''}')">💾 Lưu</button>
+      <button class="btn" onclick="closeModal()">Huỷ</button>
+    </div>
+  </div></div>`;
+  $('modal-container').innerHTML = html;
+}
+
+async function saveCustomer(editId) {
+  const name = $('c-name').value.trim();
+  if (!name) { alert('Nhập tên khách hàng.'); return; }
+  const data = {name, channel:$('c-channel').value, region:$('c-region').value, contact:$('c-contact').value, phone:$('c-phone').value, email:$('c-email').value, notes:$('c-notes').value, active:true};
+  if (editId) {
+    const c = state.customers.find(x=>String(x.id)===String(editId));
+    if (c) { Object.assign(c,data); if(SCRIPT_URL) await saveMasterData('Customers',c); }
+  } else {
+    const newC = {id:Date.now(), ...data};
+    state.customers.push(newC);
+    if (SCRIPT_URL) await saveMasterData('Customers', newC);
+  }
+  closeModal(); renderCustomers(); renderUserSelect();
+}
+
+async function delCustomer(id) {
+  if (!confirm('Xoá khách hàng?')) return;
+  const c = state.customers.find(x=>String(x.id)===String(id));
+  if (c) c.active = false;
+  if (SCRIPT_URL) await saveMasterData('Customers', c);
+  renderCustomers();
+}
+
+function renderProducts() {
+  $('products-body').innerHTML = state.products.filter(p=>p.active).map(p => `
+    <tr>
+      <td><strong>${p.name}</strong></td>
+      <td>${p.category||'—'}</td>
+      <td><span class="badge badge-gray">${p.brand||'—'}</span></td>
+      <td><code style="font-size:11px">${p.sku||'—'}</code></td>
+      <td><div class="table-action-btns">
+        <button class="btn btn-xs" onclick="openProductForm(${p.id})">✎</button>
+        <button class="btn btn-xs btn-danger" onclick="delProduct(${p.id})">✕</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+function openProductForm(editId) {
+  const p = editId ? state.products.find(x=>String(x.id)===String(editId)) : null;
+  const d = p || {name:'',category:'',brand:'Ayam Brand',sku:''};
+  const html = `<div class="modal-bg" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><div class="modal-title">${p?'Sửa sản phẩm':'Thêm sản phẩm'}</div><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="form-row"><label class="form-label">Tên sản phẩm *</label><input type="text" id="p-name" class="form-input" value="${d.name}"></div>
+    <div class="form-grid2">
+      <div class="form-row"><label class="form-label">Danh mục</label><input type="text" id="p-cat" class="form-input" value="${d.category||''}"></div>
+      <div class="form-row"><label class="form-label">Brand</label>
+        <select id="p-brand" class="form-input">${['Ayam Brand','Alce Nero','Duchef'].map(b=>`<option ${d.brand===b?'selected':''}>${b}</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="form-row"><label class="form-label">SKU</label><input type="text" id="p-sku" class="form-input" value="${d.sku||''}"></div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="saveProduct('${editId||''}')">💾 Lưu</button>
+      <button class="btn" onclick="closeModal()">Huỷ</button>
+    </div>
+  </div></div>`;
+  $('modal-container').innerHTML = html;
+}
+
+async function saveProduct(editId) {
+  const name = $('p-name').value.trim();
+  if (!name) { alert('Nhập tên sản phẩm.'); return; }
+  const data = {name, category:$('p-cat').value, brand:$('p-brand').value, sku:$('p-sku').value, active:true};
+  if (editId) {
+    const p = state.products.find(x=>String(x.id)===String(editId));
+    if (p) { Object.assign(p,data); if(SCRIPT_URL) await saveMasterData('Products',p); }
+  } else {
+    const newP = {id:Date.now(),...data};
+    state.products.push(newP);
+    if (SCRIPT_URL) await saveMasterData('Products',newP);
+  }
+  closeModal(); renderProducts();
+}
+
+async function delProduct(id) {
+  if (!confirm('Xoá sản phẩm?')) return;
+  const p = state.products.find(x=>String(x.id)===String(id));
+  if (p) p.active = false;
+  if (SCRIPT_URL) await saveMasterData('Products',p);
+  renderProducts();
+}
+
+function renderUsers() {
+  $('users-body').innerHTML = state.users.filter(u=>u.active).map(u => `
+    <tr>
+      <td><strong>${u.name}</strong></td>
+      <td><span class="badge ${u.role==='manager'?'badge-inprogress':'badge-gray'}">${u.role}</span></td>
+      <td><div class="av">${u.initials}</div></td>
+      <td style="color:var(--text2)">${u.email||'—'}</td>
+      <td><div class="table-action-btns">
+        <button class="btn btn-xs" onclick="openUserForm('${u.id}')">✎</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+function openUserForm(editId) {
+  const u = editId ? state.users.find(x=>x.id===editId) : null;
+  const d = u || {name:'',role:'sales',initials:'',email:''};
+  const html = `<div class="modal-bg" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><div class="modal-title">${u?'Sửa thành viên':'Thêm thành viên'}</div><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="form-grid2">
+      <div class="form-row"><label class="form-label">Họ tên *</label><input type="text" id="u-name" class="form-input" value="${d.name}"></div>
+      <div class="form-row"><label class="form-label">Initials (2 ký tự)</label><input type="text" id="u-init" class="form-input" value="${d.initials}" maxlength="3"></div>
+    </div>
+    <div class="form-grid2">
+      <div class="form-row"><label class="form-label">Role</label>
+        <select id="u-role" class="form-input"><option value="sales" ${d.role==='sales'?'selected':''}>Sales</option><option value="manager" ${d.role==='manager'?'selected':''}>Manager</option></select>
+      </div>
+      <div class="form-row"><label class="form-label">Email</label><input type="email" id="u-email" class="form-input" value="${d.email||''}"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="saveUser('${editId||''}')">💾 Lưu</button>
+      <button class="btn" onclick="closeModal()">Huỷ</button>
+    </div>
+  </div></div>`;
+  $('modal-container').innerHTML = html;
+}
+
+async function saveUser(editId) {
+  const name = $('u-name').value.trim();
+  if (!name) { alert('Nhập tên.'); return; }
+  const data = {name, initials:$('u-init').value.toUpperCase(), role:$('u-role').value, email:$('u-email').value, active:true};
+  if (editId) {
+    const u = state.users.find(x=>x.id===editId);
+    if (u) { Object.assign(u,data); if(SCRIPT_URL) await saveMasterData('Users',u); }
+  } else {
+    const newU = {id:'u'+Date.now(),...data};
+    state.users.push(newU);
+    if(SCRIPT_URL) await saveMasterData('Users',newU);
+  }
+  closeModal(); renderUsers(); renderUserSelect();
+}
+
+function renderConfig() {
+  $('config-body').innerHTML = state.config.map(cfg => {
+    const steps = Array.isArray(cfg.steps)?cfg.steps:JSON.parse(cfg.steps||'[]');
+    return `<div style="margin-bottom:1.25rem">
+      <div class="section-header">
+        <span class="section-title" style="font-size:13px"><span class="badge badge-${cfg.channel}">${cfg.channel}</span></span>
+        <button class="btn btn-sm" onclick="editFlow('${cfg.channel}')">✎ Sửa flow</button>
+      </div>
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:0;border:0.5px solid var(--border);border-radius:var(--r);overflow:hidden">
+        ${steps.map((s,i)=>`
+          ${i>0?`<span style="padding:0 8px;color:var(--text3);font-size:12px;background:var(--surface2)">›</span>`:''}
+          <span style="padding:7px 12px;font-size:12px;background:var(--surface);border-right:0.5px solid var(--border)">${s}</span>
+        `).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function editFlow(channel) {
+  const cfg = state.config.find(c=>c.channel===channel);
+  if (!cfg) return;
+  const steps = Array.isArray(cfg.steps)?cfg.steps:JSON.parse(cfg.steps||'[]');
+  const html = `<div class="modal-bg" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><div class="modal-title">Sửa flow: ${channel}</div><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="form-row">
+      <label class="form-label">Các bước (mỗi bước 1 dòng)</label>
+      <textarea id="flow-steps" class="form-input" style="min-height:160px">${steps.join('\n')}</textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="saveFlow('${channel}')">💾 Lưu flow</button>
+      <button class="btn" onclick="closeModal()">Huỷ</button>
+    </div>
+  </div></div>`;
+  $('modal-container').innerHTML = html;
+}
+
+async function saveFlow(channel) {
+  const raw = $('flow-steps').value;
+  const steps = raw.split('\n').map(s=>s.trim()).filter(Boolean);
+  const cfg = state.config.find(c=>c.channel===channel);
+  if (cfg) { cfg.steps = steps; if(SCRIPT_URL) await apiPost({action:'upsert',sheet:'Config',data:{channel,steps:JSON.stringify(steps)}}); }
+  closeModal(); renderConfig(); toast(`Flow ${channel} đã cập nhật`);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('load', () => {
+  if (SCRIPT_URL) {
+    $('script-url-input').value = SCRIPT_URL;
+    loadSampleData();
+    startApp();
+    syncAll();
+  } else {
+    $('page-setup').classList.add('active');
+  }
+});
+</script>
+</body>
+</html>
