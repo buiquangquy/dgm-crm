@@ -342,7 +342,7 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
 // ============================================================
 // STATE
 // ============================================================
-let SCRIPT_URL = localStorage.getItem('dgm_script_url') || 'https://script.google.com/macros/s/AKfycbwzndRIcGs_zD-FgyXIRJS6sTF1K5NSjI-Nc_oNHHPx1T968uaee9W1xDG8dQA4TqAz/exec';
+let SCRIPT_URL = localStorage.getItem('dgm_script_url') || 'https://script.google.com/macros/s/AKfycbw1fpn2PD3GavcWPcJRMtY6K89c5IF6raxMuGATAGgUk3_GSRf1bHM3oBydi5UMnHC5/exec';
 let state = {
   tasks: [], customers: [], products: [], users: [], config: [],
   currentUser: 'mgr',
@@ -398,20 +398,35 @@ async function apiGet() {
   try {
     const res = await fetch(SCRIPT_URL + '?action=all', {redirect:'follow'});
     const d = await res.json();
-    return d.ok ? d.data : null;
-  } catch(e) { return null; }
+    // Support both v3 format {ok,data} and flat format
+    if (d.ok && d.data) return d.data;
+    if (d.tasks || d.users) return d; // flat
+    return null;
+  } catch(e) { console.error('apiGet error:', e); return null; }
 }
+
+// Dùng GET + encoded payload thay vì POST để tránh CORS redirect issue
+// Apps Script luôn allow GET từ mọi domain
 async function apiPost(payload) {
   if (!SCRIPT_URL) return false;
   try {
-    const res = await fetch(SCRIPT_URL, {
-      method: 'POST', redirect: 'follow',
-      headers: {'Content-Type':'text/plain'},
-      body: JSON.stringify(payload)
-    });
-    const d = await res.json();
-    return d.ok;
-  } catch(e) { return false; }
+    // Encode payload vào query param
+    const encoded = encodeURIComponent(JSON.stringify(payload));
+    const url = SCRIPT_URL + '?method=post&payload=' + encoded;
+    const res = await fetch(url, {redirect:'follow'});
+    const text = await res.text();
+    // Parse JSON từ response text
+    let d;
+    try { d = JSON.parse(text); } catch(e) {
+      // Apps Script đôi khi trả HTML khi lỗi auth
+      console.error('Non-JSON response:', text.substring(0, 200));
+      return false;
+    }
+    return d.ok === true;
+  } catch(e) {
+    console.error('apiPost error:', e);
+    return false;
+  }
 }
 async function syncAll() {
   if (!SCRIPT_URL) return;
