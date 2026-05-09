@@ -342,7 +342,7 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
 // ============================================================
 // STATE
 // ============================================================
-let SCRIPT_URL = localStorage.getItem('dgm_script_url') || '';
+let SCRIPT_URL = localStorage.getItem('dgm_script_url') || 'https://script.google.com/macros/s/AKfycbwW-ayAXsBy35EgpnhpWOhqKueRNWOQi8BT5y_k7s43XiNk7xAPdUIrF3yKZ6D96q5T/exec';
 let state = {
   tasks: [], customers: [], products: [], users: [], config: [],
   currentUser: 'mgr',
@@ -360,9 +360,16 @@ const $ = id => document.getElementById(id);
 function fmtDate(d) { if (!d) return '—'; return new Date(d).toLocaleDateString('vi-VN'); }
 function daysFrom(d) { return Math.round((new Date(d) - new Date()) / 864e5); }
 function uid() { return Date.now() + Math.random().toString(36).slice(2,6); }
-function getCustomer(id) { return state.customers.find(c => String(c.id) === String(id)); }
-function getUser(id) { return state.users.find(u => u.id === id); }
-function getFlow(channel) { const c = state.config.find(x => x.channel === channel); return c ? (Array.isArray(c.steps) ? c.steps : JSON.parse(c.steps || '[]')) : []; }
+function getCustomer(id) { return state.customers.find(c => String(c.id) === String(id) || c.name === id); }
+function getUser(id) { return state.users.find(u => u.id === id || u.email === id || String(u.id) === String(id)); }
+function getFlow(channel, taskType) {
+  let flows = state.config.filter(x => x.channel === channel || x.channel === 'ALL');
+  if (taskType) flows = flows.filter(x => x.task_type === taskType);
+  const c = flows[0];
+  if (!c) return ['To Do','In Progress','Done'];
+  if (Array.isArray(c.steps)) return c.steps;
+  try { return JSON.parse(c.steps || '[]'); } catch(e) { return c.steps.split('→').map(s=>s.trim()); }
+}
 function subProg(task) {
   const subs = Array.isArray(task.subtasks) ? task.subtasks : [];
   if (!subs.length) return null;
@@ -537,7 +544,7 @@ function renderAll() {
 // ============================================================
 function renderUserSelect() {
   const sel = $('user-select');
-  sel.innerHTML = state.users.filter(u=>u.active).map(u =>
+  sel.innerHTML = state.users.filter(u=>u.active==true||u.status==='Active'||u.status===true||(!u.active&&!u.status)).map(u =>
     `<option value="${u.id}" ${u.id===state.currentUser?'selected':''}>${u.initials} – ${u.name}</option>`
   ).join('');
 }
@@ -555,7 +562,7 @@ const STATUS_LABELS = {todo:'To Do',inprogress:'In Progress',review:'Review',don
 function getVisibleTasks() {
   const u = getUser(state.currentUser);
   let list = state.tasks;
-  if (u && u.role === 'sales') list = list.filter(t => t.pic_id === state.currentUser);
+  if (u && u.role === 'sales') list = list.filter(t => t.pic_id === state.currentUser || t.pic_email === state.currentUser);
   if (state.filterChannel !== 'all') list = list.filter(t => t.channel === state.filterChannel);
   if (state.filterPIC !== 'all') list = list.filter(t => t.pic_id === state.filterPIC);
   return list;
@@ -814,7 +821,7 @@ function openTaskForm(editId) {
             <label class="form-label">Khách hàng *</label>
             <select id="f-customer" class="form-input">
               <option value="">Chọn khách hàng...</option>
-              ${state.customers.filter(c=>c.active).map(c=>`<option value="${c.id}" ${String(t.customer_id)===String(c.id)?'selected':''}>${c.name} (${c.channel})</option>`).join('')}
+              ${state.customers.filter(c=>c.active==true||c.status==='Active'||c.status===true||(!c.active&&!c.status)).map(c=>`<option value="${c.id}" ${String(t.customer_id)===String(c.id)?'selected':''}>${c.name} (${c.channel})</option>`).join('')}
             </select>
           </div>
           <div class="form-row">
@@ -828,7 +835,7 @@ function openTaskForm(editId) {
           <div class="form-row">
             <label class="form-label">PIC</label>
             <select id="f-pic" class="form-input">
-              ${state.users.filter(u=>u.active).map(u=>`<option value="${u.id}" ${t.pic_id===u.id?'selected':''}>${u.name}</option>`).join('')}
+              ${state.users.filter(u=>u.active==true||u.status==='Active'||u.status===true||(!u.active&&!u.status)).map(u=>`<option value="${u.id}" ${t.pic_id===u.id?'selected':''}>${u.name}</option>`).join('')}
             </select>
           </div>
           <div class="form-row">
@@ -910,7 +917,7 @@ async function deleteTask(id) {
 // ============================================================
 function renderCustomers() {
   const tbody = $('customers-body');
-  tbody.innerHTML = state.customers.filter(c=>c.active).map(c => {
+  tbody.innerHTML = state.customers.filter(c=>c.active==true||c.status==='Active'||c.status===true||(!c.active&&!c.status)).map(c => {
     const taskCount = state.tasks.filter(t=>String(t.customer_id)===String(c.id)&&t.status!=='done').length;
     return `<tr>
       <td><strong>${c.name}</strong></td>
@@ -979,7 +986,7 @@ async function delCustomer(id) {
 }
 
 function renderProducts() {
-  $('products-body').innerHTML = state.products.filter(p=>p.active).map(p => `
+  $('products-body').innerHTML = state.products.filter(p=>p.active==true||p.status==='Active'||p.status===true||(!p.active&&!p.status)).map(p => `
     <tr>
       <td><strong>${p.name}</strong></td>
       <td>${p.category||'—'}</td>
@@ -1037,7 +1044,7 @@ async function delProduct(id) {
 }
 
 function renderUsers() {
-  $('users-body').innerHTML = state.users.filter(u=>u.active).map(u => `
+  $('users-body').innerHTML = state.users.filter(u=>u.active==true||u.status==='Active'||u.status===true||(!u.active&&!u.status)).map(u => `
     <tr>
       <td><strong>${u.name}</strong></td>
       <td><span class="badge ${u.role==='manager'?'badge-inprogress':'badge-gray'}">${u.role}</span></td>
@@ -1135,14 +1142,12 @@ async function saveFlow(channel) {
 // INIT
 // ============================================================
 window.addEventListener('load', () => {
-  if (SCRIPT_URL) {
-    $('script-url-input').value = SCRIPT_URL;
-    loadSampleData();
-    startApp();
-    syncAll();
-  } else {
-    $('page-setup').classList.add('active');
-  }
+  // Auto-connect với Script URL đã cấu hình sẵn
+  localStorage.setItem('dgm_script_url', SCRIPT_URL);
+  $('script-url-input') && ($('script-url-input').value = SCRIPT_URL);
+  loadSampleData();
+  startApp();
+  syncAll();
 });
 </script>
 </body>
