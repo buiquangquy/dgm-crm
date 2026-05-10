@@ -421,7 +421,7 @@ function doLogin(){
   const email=$('le').value.trim().toLowerCase();
   const pw=$('lpw').value;
   const users=state.users.length?aUsers():DEFAULT_USERS;
-  const user=users.find(u=>u.id===uid);
+  const user=users.find(u=>u.id===uid)||users.find(u=>u.email&&u.email.toLowerCase()===email);
   if(!user){$('lerr').textContent='Vui lòng chọn tài khoản.';return;}
   if(!email){$('lerr').textContent='Vui lòng nhập email.';return;}
   if(user.email&&user.email.toLowerCase()!==email){$('lerr').textContent='Email không khớp tài khoản.';return;}
@@ -438,7 +438,8 @@ function doLogin(){
   $('cav').textContent=user.initials||user.name[0];
   $('cnm').textContent=user.name;
   document.querySelectorAll('.mgr-only').forEach(el=>el.style.display=isMgr()?'':'none');
-  renderAll();
+  const savedPage=localStorage.getItem('dgm_page')||'kanban';
+  showPage(savedPage,null);
   syncAll();
 }
 
@@ -454,18 +455,18 @@ function doLogout(){
 // ---- API ----
 // Maps Sheet Vietnamese headers → app field names
 function mapUser(row){
-  // Sheet headers: STT | Họ và tên | Email Gmail | Role | Chức vụ | Kênh phụ trách | Vùng phụ trách | Initials | Trạng thái
-  // After initSheets v4, we also have: password
+  const name=row.name||row['Họ và tên']||'';
+  const email=row.email||row['Email Gmail (đăng nhập app)']||row['Email Gmail']||'';
+  const role=(row.role||row['Role']||'sales').toLowerCase();
+  // Generate consistent id from email if no id field
+  const id=row.id&&row.id!==''?String(row.id):('u_'+email.replace(/[@.]/g,'_'));
   return{
-    id:row.id||'u'+row['STT']||row['stt'],
-    name:row.name||row['Họ và tên']||row['ho_va_ten']||'',
-    email:row.email||row['Email Gmail (đăng nhập app)']||row['email_gmail']||'',
-    role:(row.role||row['Role']||'sales').toLowerCase(),
-    position:row.position||row['Chức vụ / Position']||row['chuc_vu']||'',
-    channel:row.channel||row['Kênh phụ trách']||row['kenh']||'ALL',
-    region:row.region||row['Vùng phụ trách']||row['vung']||'',
-    initials:row.initials||row['Initials (2-3 ký tự)']||row['initials']||'?',
-    password:row.password||row['Password']||row['password']||'',
+    id,name,email,role,
+    position:row.position||row['Chức vụ / Position']||'',
+    channel:row.channel||row['Kênh phụ trách']||'ALL',
+    region:row.region||row['Vùng phụ trách']||'',
+    initials:row.initials||row['Initials (2-3 ký tự)']||'?',
+    password:row.password||row['Password']||'',
     status:row.status||row['Trạng thái']||'Active',
   };
 }
@@ -574,12 +575,12 @@ async function syncAll(){
     if(d.ok&&d.data){
       const dt=d.data;
       // Map with Vietnamese field name support
-      if(dt.users&&dt.users.length)state.users=dt.users.map(mapUser).filter(u=>u.name);
+      if(dt.users&&dt.users.length)state.users=dt.users.map(mapUser).filter(u=>u.name&&u.email&&!['STT','stt','Trạng thái'].includes(u.name));
       else state.users=DEFAULT_USERS;
-      state.customers=(dt.customers||dt.Customers||[]).map(mapCustomer).filter(c=>c.name);
-      state.products=(dt.products||dt.Products||[]).map(mapProduct).filter(p=>p.name);
+      state.customers=(dt.customers||dt.Customers||[]).map(mapCustomer).filter(c=>c.name&&!['▶','STT'].some(x=>String(c.name).startsWith(x)));
+      state.products=(dt.products||dt.Products||[]).map(mapProduct).filter(p=>p.name&&!['▶','STT'].some(x=>String(p.name).startsWith(x)));
       const flows=dt.flows||dt.Flows||[];
-      state.config=flows.length?flows.map(mapFlow).filter(f=>f.name):DEFAULT_FLOWS;
+      state.config=flows.length?flows.map(mapFlow).filter(f=>f.name&&!['▶','STT'].some(x=>String(f.name).startsWith(x))):DEFAULT_FLOWS;
       state.tasks=(dt.tasks||dt.Tasks||[]).map(mapTask).filter(t=>t.title||t.id);
       state.lastSync=new Date();setSS('ok');
     }
@@ -589,8 +590,10 @@ async function syncAll(){
     setSS('error');
   }
   state.syncing=false;
-  if(!state.currentUser)initLogin();
-  else renderAll();
+  if(!state.currentUser){initLogin();return;}
+  // Update login dropdown với users mới từ Sheet
+  initLogin();
+  renderAll();
 }
 
 async function saveTask(task){
@@ -618,13 +621,27 @@ function showPage(nm,btn){
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
   $('pg-'+nm).classList.add('active');
   if(btn)btn.classList.add('active');
+  else{// restore nav button active state
+    const nb=document.querySelector('.nb[onclick*="''+nm+''"]');
+    if(nb)nb.classList.add('active');
+  }
+  localStorage.setItem('dgm_page',nm);
   if(nm==='customers')renderCustomers();
   else if(nm==='products')renderProducts();
   else if(nm==='users')renderUsers();
   else if(nm==='config'){if(isMgr())renderConfig();else toast('Chỉ Manager','warn');}
   else renderKanban();
 }
-function renderAll(){renderKanban();}
+function renderAll(){
+  const active=document.querySelector('.pg.active');
+  const pid=active?active.id:'pg-kanban';
+  if(pid==='pg-kanban')renderKanban();
+  else if(pid==='pg-customers')renderCustomers();
+  else if(pid==='pg-products')renderProducts();
+  else if(pid==='pg-users')renderUsers();
+  else if(pid==='pg-config')renderConfig();
+  else renderKanban();
+}
 
 // ---- KANBAN ----
 function getVisible(){
@@ -1330,6 +1347,8 @@ window.addEventListener('load',()=>{
       $('cav').textContent=u.initials||u.name[0];
       $('cnm').textContent=u.name;
       document.querySelectorAll('.mgr-only').forEach(el=>el.style.display=isMgr()?'':'none');
+      const sp2=localStorage.getItem('dgm_page')||'kanban';
+      showPage(sp2,null);
       syncAll();return;
     }
   }
