@@ -295,7 +295,7 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
     </div>
     <div class="data-table-wrap">
       <table>
-        <thead><tr><th>Tên</th><th>Role</th><th>Initials</th><th>Email</th><th></th></tr></thead>
+        <thead><tr><th>Tên</th><th>Role</th><th>Kênh</th><th>Vùng</th><th>Chức vụ</th><th>Email</th><th>Initials</th><th></th></tr></thead>
         <tbody id="users-body"></tbody>
       </table>
     </div>
@@ -499,43 +499,33 @@ function useSampleData() {
   startApp();
 }
 function loadSampleData() {
+  // ---- USERS THẬT (từ master data DGM) ----
   state.users = [
-    {id:'mgr',name:'Quy (Manager)',role:'manager',initials:'QM',email:'quangquy.bui@gmail.com',active:true},
-    {id:'nt',name:'Nguyễn Tuấn',role:'sales',initials:'NT',email:'',active:true},
-    {id:'lh',name:'Lê Hương',role:'sales',initials:'LH',email:'',active:true},
-    {id:'pv',name:'Phạm Vũ',role:'sales',initials:'PV',email:'',active:true},
-    {id:'tm',name:'Trần Minh',role:'sales',initials:'TM',email:'',active:true},
+    {id:'u1',name:'Bùi Quang Quý',role:'manager',position:'Sales & Marketing Manager',channel:'ALL',region:'ALL',initials:'QB',email:'quangquy.bui@gmail.com',status:'Active'},
+    {id:'u2',name:'Hồ Anh Tài',role:'sales',position:'Sales Representative',channel:'MT',region:'ALL',initials:'HAT',email:'taihathuy@gmail.com',status:'Active'},
+    {id:'u3',name:'Hoàng Thị Thiên Thanh',role:'sales',position:'Sales Representative',channel:'MT',region:'ALL',initials:'HTTT',email:'ng.thienthanh1696@gmail.com',status:'Active'},
+    {id:'u4',name:'Nguyễn Xuân Đức',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Bắc',initials:'NXD',email:'nguyenxuanduc13091987@gmail.com',status:'Active'},
+    {id:'u5',name:'Phương Ngọc Chánh',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Nam',initials:'PNC',email:'chanhphuong86@gmail.com',status:'Active'},
+    {id:'u6',name:'Hồ Ngọc Anh',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Trung',initials:'HNA',email:'honguyennguyenan2016@gmail.com',status:'Active'},
+    {id:'u7',name:'Phương Thi',role:'sales',position:'Trade Marketing',channel:'ALL',region:'ALL',initials:'DPT',email:'phuongthi21@gmail.com',status:'Active'},
   ];
-  state.customers = [
-    {id:1,name:'Mega Market',channel:'MT',region:'Toàn quốc',contact:'Ms. Linh',phone:'0901234567',email:'',notes:'',active:true},
-    {id:2,name:'Co.opmart',channel:'MT',region:'Nam & Trung',contact:'Mr. Hùng',phone:'0912345678',email:'',notes:'',active:true},
-    {id:3,name:'KFC Vietnam',channel:'B2B',region:'Toàn quốc',contact:'Ms. Trang',phone:'0923456789',email:'',notes:'',active:true},
-    {id:4,name:'Sheraton Saigon',channel:'HoReCa',region:'HCM',contact:'Mr. Khải',phone:'0934567890',email:'',notes:'',active:true},
-    {id:5,name:'Đại lý Đà Nẵng',channel:'GT',region:'Miền Trung',contact:'Anh Hải',phone:'0945678901',email:'',notes:'',active:true},
-    {id:6,name:'Lotte Mart',channel:'MT',region:'Toàn quốc',contact:'Ms. Phương',phone:'',email:'',notes:'',active:true},
-  ];
-  state.products = [
-    {id:1,name:'Coconut Milk 400ml',category:'Coconut',brand:'Ayam Brand',sku:'AB-CM-400',active:true},
-    {id:2,name:'Baked Beans 425g',category:'Beans',brand:'Ayam Brand',sku:'AB-BB-425',active:true},
-    {id:3,name:'Sardines in Tomato 155g',category:'Sardines',brand:'Ayam Brand',sku:'AB-ST-155',active:true},
-    {id:4,name:'Curry Paste 100g',category:'Paste',brand:'Ayam Brand',sku:'AB-CP-100',active:true},
-    {id:5,name:'Extra Virgin Olive Oil 500ml',category:'Oil',brand:'Alce Nero',sku:'AN-OO-500',active:true},
-    {id:6,name:'Oyster Sauce 510g',category:'Sauce',brand:'Duchef',sku:'DC-OS-510',active:true},
-  ];
+  // ---- CUSTOMERS (trống — load từ Sheet) ----
+  state.customers = [];
+  // ---- PRODUCTS (trống — load từ Sheet) ----
+  state.products = [];
+  // ---- FLOWS THẬT (từ master data DGM) ----
   state.config = [
-    {channel:'MT',steps:['Chuẩn bị','Gửi proposal','Đàm phán','Ký kết','Triển khai']},
-    {channel:'GT',steps:['Tạo HĐ','Đào tạo SP','Đặt hàng đầu','Follow up']},
-    {channel:'B2B',steps:['Prospecting','Demo SP','Báo giá','Chốt đơn','Onboard']},
-    {channel:'HoReCa',steps:['Tiếp cận','Sampling','Thoả thuận','Listing','Review']},
+    {id:'f1',name:'General Task',channel:'ALL',task_type:'General',steps:['To Do','In Progress','Done']},
+    {id:'f2',name:'MT – Trading Term',channel:'MT',task_type:'Trading Term',steps:['Nhận yêu cầu','Gửi proposal','Phản hồi','Đàm phán','Đồng ý','Trình ký']},
+    {id:'f3',name:'MT – New Product Listing',channel:'MT',task_type:'Listing',steps:['Lấy mẫu','Gửi mẫu','Xác nhận','Lên kệ']},
+    {id:'f4',name:'POSM / Design',channel:'ALL',task_type:'Activation',steps:['Ý tưởng','Thiết kế','Duyệt thiết kế','Làm việc với NCC','Ký hợp đồng','Giao hàng']},
+    {id:'f5',name:'Sampling / Activation',channel:'ALL',task_type:'Activation',steps:['Lên kế hoạch','Gửi chờ duyệt','Duyệt kế hoạch','Đăng ký với khách hàng','Chuẩn bị vật dụng','Thực hiện']},
+    {id:'f6',name:'GT – Trade Program',channel:'ALL',task_type:'Trade Program',steps:['Lên chương trình','Thông báo','Gửi sales','Gửi khách','Order']},
+    {id:'f7',name:'GT – Phát triển điểm bán',channel:'GT',task_type:'Expansion',steps:['Khảo sát','Tiếp cận','Chào hàng','Trưng bày','Review']},
+    {id:'f8',name:'MT – Khách hàng mới',channel:'MT',task_type:'Expansion',steps:['Tiếp cận','Gửi thông tin sản phẩm/giá','Đàm phán trading term/hợp đồng','Ký kết','Lên kệ']},
   ];
-  state.tasks = [
-    {id:1,title:'Đàm phán trading term Q3 – Mega Market',customer_id:1,channel:'MT',pic_id:'nt',status:'inprogress',step:'Gửi proposal',deadline:'2026-05-20',notes:'Giữ net terms, tăng activation budget',subtasks:[{id:1,text:'Chuẩn bị deck',done:true},{id:2,text:'Review với Quy',done:true},{id:3,text:'Gửi proposal',done:false},{id:4,text:'Follow up',done:false}],product_ids:'1'},
-    {id:2,title:'Onboard đại lý GT mới – Đà Nẵng',customer_id:5,channel:'GT',pic_id:'lh',status:'todo',step:'Tạo HĐ',deadline:'2026-05-25',notes:'Liên hệ anh Hải khu vực miền Trung',subtasks:[{id:1,text:'Gửi hợp đồng khung',done:false},{id:2,text:'Đào tạo sản phẩm',done:false},{id:3,text:'Đặt hàng đầu',done:false}],product_ids:''},
-    {id:3,title:'Sampling Baked Beans – Co.opmart',customer_id:2,channel:'MT',pic_id:'pv',status:'todo',step:'Chuẩn bị',deadline:'2026-06-01',notes:'3 điểm thí điểm tháng 6',subtasks:[{id:1,text:'Xác nhận số lượng mẫu',done:false},{id:2,text:'Booking POSM',done:false}],product_ids:'2'},
-    {id:4,title:'Thu hồi công nợ – KFC Vietnam',customer_id:3,channel:'B2B',pic_id:'tm',status:'inprogress',step:'Báo giá',deadline:'2026-05-10',notes:'Hóa đơn 45 ngày – nhắc lần 2',subtasks:[{id:1,text:'Gửi reminder email',done:true},{id:2,text:'Gọi điện xác nhận',done:false}],product_ids:''},
-    {id:5,title:'Demo Sardines & Coconut Cream – Sheraton',customer_id:4,channel:'HoReCa',pic_id:'lh',status:'todo',step:'Tiếp cận',deadline:'2026-05-15',notes:'Giới thiệu line cao cấp',subtasks:[{id:1,text:'Chuẩn bị sample kit',done:false},{id:2,text:'Xác nhận lịch demo',done:false}],product_ids:'1,3'},
-    {id:6,title:'POSM deployment tháng 4 – Lotte',customer_id:6,channel:'MT',pic_id:'pv',status:'done',step:'Triển khai',deadline:'2026-04-30',notes:'Hoàn thành – đạt 112% target',subtasks:[{id:1,text:'Booking vị trí',done:true},{id:2,text:'Vận chuyển POSM',done:true},{id:3,text:'Lắp đặt',done:true},{id:4,text:'Báo cáo',done:true}],product_ids:''},
-  ];
+  // ---- TASKS (trống — load từ Sheet) ----
+  state.tasks = [];
 }
 
 function startApp() {
@@ -845,12 +835,43 @@ function openTaskForm(editId) {
         </div>
         <div class="form-grid2">
           <div class="form-row">
-            <label class="form-label">Khách hàng *</label>
-            <select id="f-customer" class="form-input">
-              <option value="">Chọn khách hàng...</option>
-              ${state.customers.filter(c=>c.active==true||c.status==='Active'||c.status===true||(!c.active&&!c.status)).map(c=>`<option value="${c.id}" ${String(t.customer_id)===String(c.id)?'selected':''}>${c.name} (${c.channel})</option>`).join('')}
+        <div class="form-grid2">
+          <div class="form-row">
+            <label class="form-label">Kênh *</label>
+            <select id="f-channel" class="form-input" onchange="updateFlowSelect();filterCustomersByChannel()">
+              ${['MT','GT','B2B','HoReCa'].map(c=>`<option value="${c}" ${t.channel===c?'selected':''}>${c}</option>`).join('')}
             </select>
           </div>
+          <div class="form-row">
+            <label class="form-label">Flow / Quy trình</label>
+            <select id="f-flowname" class="form-input" onchange="updateFlowStepsFromName()">
+              ${state.config.filter(f=>f.channel===t.channel||f.channel==='ALL').map(f=>`<option value="${f.id||f.name}" ${f.name===t.flow_name?'selected':''}>${f.name}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Khách hàng *</label>
+          <select id="f-customer" class="form-input" onchange="toggleNewCustomer()">
+            <option value="">-- Chọn khách hàng --</option>
+            ${state.customers.filter(c=>c.active==true||c.status==='Active'||(!c.active&&!c.status)).map(c=>`<option value="${c.id}" ${String(t.customer_id)===String(c.id)?'selected':''}>${c.name}${c.channel?' ('+c.channel+')':''}</option>`).join('')}
+            <option value="__new__">➕ Thêm khách hàng mới...</option>
+          </select>
+        </div>
+        <div id="new-customer-fields" style="display:none;background:var(--blue-light);border-radius:var(--r);padding:10px;margin-bottom:4px;border:0.5px solid rgba(24,95,165,0.2)">
+          <div style="font-size:11px;font-weight:600;color:var(--blue-dark);margin-bottom:8px">➕ THÊM KHÁCH HÀNG MỚI — tự lưu vào Sheet</div>
+          <div class="form-grid2">
+            <div class="form-row"><label class="form-label">Tên KH *</label><input type="text" id="nc-name" class="form-input" placeholder="Tên khách hàng..."></div>
+            <div class="form-row"><label class="form-label">Kênh</label><select id="nc-channel" class="form-input">${['MT','GT','B2B','HoReCa'].map(c=>`<option>${c}</option>`).join('')}</select></div>
+          </div>
+          <div class="form-grid2">
+            <div class="form-row"><label class="form-label">Vùng</label><input type="text" id="nc-region" class="form-input" placeholder="HCM, Hà Nội..."></div>
+            <div class="form-row"><label class="form-label">Người liên hệ</label><input type="text" id="nc-contact" class="form-input" placeholder="Họ tên..."></div>
+          </div>
+          <div class="form-grid2">
+            <div class="form-row"><label class="form-label">SĐT</label><input type="text" id="nc-phone" class="form-input" placeholder="0901..."></div>
+            <div class="form-row"><label class="form-label">Email</label><input type="text" id="nc-email" class="form-input" placeholder="email@..."></div>
+          </div>
+        </div>
           <div class="form-row">
             <label class="form-label">Kênh *</label>
             <select id="f-channel" class="form-input" onchange="updateFlowSelect()">
@@ -873,7 +894,7 @@ function openTaskForm(editId) {
           </div>
         </div>
         <div class="form-row">
-          <label class="form-label">Bước hiện tại (Flow)</label>
+          <label class="form-label">Bước hiện tại</label>
           <select id="f-step" class="form-input">
             ${flow.map(s=>`<option value="${s}" ${t.step===s?'selected':''}>${s}</option>`).join('')}
           </select>
@@ -897,20 +918,101 @@ function openTaskForm(editId) {
 
 function updateFlowSelect() {
   const ch = $('f-channel').value;
-  const flow = getFlow(ch);
-  $('f-step').innerHTML = flow.map(s=>`<option value="${s}">${s}</option>`).join('');
+  // Update flow name dropdown
+  const flowSel = $('f-flowname');
+  if (flowSel) {
+    const flows = state.config.filter(f => f.channel === ch || f.channel === 'ALL');
+    flowSel.innerHTML = flows.map(f => `<option value="${f.id||f.name}">${f.name}</option>`).join('');
+    // Update steps based on first flow
+    updateFlowStepsFromName();
+  } else {
+    // Fallback
+    const flow = getFlow(ch);
+    const stepSel = $('f-step');
+    if (stepSel) stepSel.innerHTML = flow.map(s=>`<option value="${s}">${s}</option>`).join('');
+  }
+  filterCustomersByChannel();
+}
+
+
+// ============================================================
+// INLINE ADD — Khách hàng mới / Sản phẩm mới từ task form
+// ============================================================
+function toggleNewCustomer() {
+  const val = document.getElementById('f-customer').value;
+  const fields = document.getElementById('new-customer-fields');
+  if (fields) fields.style.display = val === '__new__' ? 'block' : 'none';
+}
+
+function filterCustomersByChannel() {
+  const ch = document.getElementById('f-channel') ? document.getElementById('f-channel').value : '';
+  const sel = document.getElementById('f-customer');
+  if (!sel) return;
+  const current = sel.value;
+  const filtered = state.customers.filter(c => !ch || c.channel === ch || c.channel === 'ALL' || !c.channel);
+  sel.innerHTML = '<option value="">-- Chọn khách hàng --</option>' +
+    filtered.map(c => `<option value="${c.id}" ${String(c.id)===current?'selected':''}>${c.name}${c.channel?' ('+c.channel+')':''}</option>`).join('') +
+    '<option value="__new__">➕ Thêm khách hàng mới...</option>';
+}
+
+function updateFlowStepsFromName() {
+  const flowId = document.getElementById('f-flowname') ? document.getElementById('f-flowname').value : '';
+  const flow = state.config.find(f => f.id === flowId || f.name === flowId);
+  const steps = flow ? (Array.isArray(flow.steps) ? flow.steps : flow.steps.split('→').map(s=>s.trim()).filter(Boolean)) : ['To Do','In Progress','Done'];
+  const stepSel = document.getElementById('f-step');
+  if (stepSel) {
+    stepSel.innerHTML = steps.map(s => `<option value="${s}">${s}</option>`).join('');
+  }
+}
+
+async function createNewCustomerIfNeeded() {
+  const sel = document.getElementById('f-customer');
+  if (!sel || sel.value !== '__new__') return null;
+  const name = (document.getElementById('nc-name') || {}).value?.trim();
+  if (!name) { alert('Vui lòng nhập tên khách hàng mới'); return null; }
+  const newC = {
+    id: Date.now(),
+    name,
+    channel: (document.getElementById('nc-channel') || {}).value || '',
+    region: (document.getElementById('nc-region') || {}).value || '',
+    contact_name: (document.getElementById('nc-contact') || {}).value || '',
+    contact: (document.getElementById('nc-contact') || {}).value || '',
+    phone: (document.getElementById('nc-phone') || {}).value || '',
+    email: (document.getElementById('nc-email') || {}).value || '',
+    notes: '',
+    status: 'Active',
+    active: true,
+  };
+  state.customers.push(newC);
+  if (SCRIPT_URL) await saveMasterData('Customers', newC);
+  toast(`Đã thêm khách hàng: ${name}`);
+  return newC.id;
 }
 
 async function saveTaskForm(editId) {
   const title = $('f-title').value.trim();
-  const customer_id = $('f-customer').value;
-  if (!title || !customer_id) { alert('Vui lòng điền tiêu đề và chọn khách hàng.'); return; }
+  if (!title) { alert('Vui lòng điền tiêu đề task.'); return; }
+
+  // Xử lý khách hàng mới nếu chọn "Thêm mới"
+  let customer_id = $('f-customer').value;
+  if (customer_id === '__new__') {
+    customer_id = await createNewCustomerIfNeeded();
+    if (!customer_id) return;
+  }
+  if (!customer_id) { alert('Vui lòng chọn khách hàng.'); return; }
+
+  // Lấy flow name
+  const flowNameEl = $('f-flowname');
+  const flow_name = flowNameEl ? flowNameEl.options[flowNameEl.selectedIndex]?.text : '';
+
   const data = {
-    title, customer_id: parseInt(customer_id),
+    title, customer_id,
     channel: $('f-channel').value,
     pic_id: $('f-pic').value,
+    pic_email: (() => { const u = state.users.find(x=>x.id===$('f-pic').value); return u?u.email:''; })(),
     status: $('f-status').value,
     step: $('f-step').value,
+    flow_name,
     deadline: $('f-deadline').value,
     notes: $('f-notes').value.trim(),
     updated_at: new Date().toISOString(),
@@ -1075,8 +1177,11 @@ function renderUsers() {
     <tr>
       <td><strong>${u.name}</strong></td>
       <td><span class="badge ${u.role==='manager'?'badge-inprogress':'badge-gray'}">${u.role}</span></td>
-      <td><div class="av">${u.initials}</div></td>
+      <td><span class="badge badge-${u.channel==='MT'?'MT':u.channel==='GT'?'GT':u.channel==='B2B'?'B2B':'gray'}">${u.channel||'—'}</span></td>
+      <td style="font-size:11px;color:var(--text2)">${u.region||'—'}</td>
+      <td style="font-size:11px;color:var(--text2)">${u.position||'—'}</td>
       <td style="color:var(--text2)">${u.email||'—'}</td>
+      <td><div class="av" title="${u.name}">${u.initials||'?'}</div></td>
       <td><div class="table-action-btns">
         <button class="btn btn-xs" onclick="openUserForm('${u.id}')">✎</button>
       </div></td>
