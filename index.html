@@ -4,209 +4,270 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DGM Sales CRM</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #F5F4F1;
-  --surface: #FFFFFF;
-  --surface2: #F0EEE9;
-  --border: rgba(0,0,0,0.09);
-  --border2: rgba(0,0,0,0.14);
-  --text: #1A1917;
-  --text2: #6B6860;
-  --text3: #9B9890;
-  --blue: #185FA5; --blue-light: #E6F1FB; --blue-dark: #0C447C;
-  --green: #0F6E56; --green-light: #E1F5EE;
-  --red: #A32D2D; --red-light: #FCEBEB;
-  --amber: #854F0B; --amber-light: #FAEEDA;
-  --pink: #72243E; --pink-light: #FBEAF0;
-  --teal: #085041; --teal-light: #E1F5EE;
-  --r: 8px; --r-lg: 12px; --r-xl: 16px;
-  --shadow: 0 1px 3px rgba(0,0,0,0.08);
-  --font: 'DM Sans', sans-serif;
-  --mono: 'DM Mono', monospace;
+  --bg:#F5F4F1;--surface:#FFF;--surface2:#F0EEE9;--border:rgba(0,0,0,.09);--border2:rgba(0,0,0,.14);
+  --text:#1A1917;--text2:#6B6860;--text3:#9B9890;
+  --blue:#185FA5;--blue-lt:#E6F1FB;--blue-dk:#0C447C;
+  --green:#0F6E56;--green-lt:#E1F5EE;
+  --red:#A32D2D;--red-lt:#FCEBEB;
+  --amber:#854F0B;--amber-lt:#FAEEDA;
+  --pink:#72243E;--pink-lt:#FBEAF0;
+  --navy:#1B3A57;--gold:#C9B037;
+  --r:8px;--rlg:12px;--rxl:16px;
+  --shadow:0 1px 4px rgba(0,0,0,.1);
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
 }
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: var(--font); font-size: 13px; background: var(--bg); color: var(--text); min-height: 100vh; }
-button { font-family: var(--font); cursor: pointer; }
-input, select, textarea { font-family: var(--font); }
-a { color: var(--blue); text-decoration: none; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);font-size:13px;background:var(--bg);color:var(--text);min-height:100vh}
+button,input,select,textarea{font-family:var(--font)}
+a{color:var(--blue);text-decoration:none}
 
-/* ---- LAYOUT ---- */
-.app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-.topbar { display: flex; align-items: center; justify-content: space-between; padding: 0 1.25rem; height: 52px; background: var(--surface); border-bottom: 0.5px solid var(--border); flex-shrink: 0; gap: 12px; }
-.brand { display: flex; align-items: center; gap: 10px; }
-.brand-mark { width: 30px; height: 30px; border-radius: 7px; background: var(--blue); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; }
-.brand-name { font-size: 14px; font-weight: 600; }
-.brand-sub { font-size: 11px; color: var(--text3); }
-.topbar-mid { display: flex; gap: 4px; }
-.nav-btn { font-size: 12px; padding: 5px 12px; border: 0.5px solid transparent; border-radius: var(--r); background: none; color: var(--text2); display: flex; align-items: center; gap: 5px; transition: all 0.15s; }
-.nav-btn:hover { background: var(--surface2); color: var(--text); }
-.nav-btn.active { background: var(--blue-light); color: var(--blue-dark); border-color: rgba(24,95,165,0.2); font-weight: 500; }
-.topbar-right { display: flex; align-items: center; gap: 8px; }
-.user-pill { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 10px; border: 0.5px solid var(--border); border-radius: 20px; background: var(--surface); }
-.av { width: 22px; height: 22px; border-radius: 50%; background: var(--blue-light); color: var(--blue-dark); display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; }
-.av-sm { width: 20px; height: 20px; font-size: 9px; }
-.sync-status { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text3); }
-.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); }
-.sync-dot.ok { background: #1D9E75; }
-.sync-dot.syncing { background: var(--amber); animation: pulse 1s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-.page { flex: 1; overflow-y: auto; padding: 1.25rem; display: none; }
-.page.active { display: block; }
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--navy)}
+.login-card{background:var(--surface);border-radius:var(--rxl);padding:2rem;width:360px;box-shadow:0 8px 40px rgba(0,0,0,.25)}
+.login-logo{width:48px;height:48px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;margin:0 auto 1rem}
+.login-title{font-size:18px;font-weight:600;text-align:center;margin-bottom:4px}
+.login-sub{font-size:12px;color:var(--text3);text-align:center;margin-bottom:1.5rem}
+.login-label{font-size:11px;color:var(--text2);font-weight:500;margin-bottom:4px;display:block}
+.login-select{width:100%;font-size:13px;padding:9px 12px;border:0.5px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text);margin-bottom:1rem}
+.login-btn{width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer}
+.login-btn:hover{background:var(--blue-dk)}
+.login-note{font-size:11px;color:var(--text3);text-align:center;margin-top:.75rem}
 
-/* ---- BUTTONS ---- */
-.btn { font-size: 12px; padding: 6px 12px; border: 0.5px solid var(--border2); border-radius: var(--r); background: var(--surface); color: var(--text); display: inline-flex; align-items: center; gap: 5px; transition: all 0.15s; }
-.btn:hover { background: var(--surface2); }
-.btn-primary { background: var(--blue); color: #fff; border-color: var(--blue); }
-.btn-primary:hover { background: var(--blue-dark); }
-.btn-danger { color: var(--red); border-color: rgba(163,45,45,0.3); }
-.btn-danger:hover { background: var(--red-light); }
-.btn-sm { font-size: 11px; padding: 4px 9px; }
-.btn-xs { font-size: 10px; padding: 3px 7px; }
+/* LAYOUT */
+.app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;height:52px;background:var(--surface);border-bottom:.5px solid var(--border);flex-shrink:0;gap:10px}
+.brand{display:flex;align-items:center;gap:8px}
+.brand-mark{width:28px;height:28px;border-radius:6px;background:var(--blue);display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700}
+.brand-name{font-size:14px;font-weight:600}
+.brand-sub{font-size:11px;color:var(--text3)}
+.nav-mid{display:flex;gap:3px}
+.nav-btn{font-size:12px;padding:5px 11px;border:.5px solid transparent;border-radius:var(--r);background:none;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:4px}
+.nav-btn:hover{background:var(--surface2)}
+.nav-btn.active{background:var(--blue-lt);color:var(--blue-dk);border-color:rgba(24,95,165,.2);font-weight:500}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.sync-status{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text3)}
+.sync-dot.ok{background:#1D9E75}
+.sync-dot.syncing{background:var(--amber);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.user-pill{display:flex;align-items:center;gap:6px;font-size:12px;padding:4px 10px;border:.5px solid var(--border);border-radius:20px;background:var(--surface);cursor:pointer}
+.user-pill:hover{background:var(--surface2)}
+.av{width:24px;height:24px;border-radius:50%;background:var(--blue-lt);color:var(--blue-dk);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+.av-sm{width:20px;height:20px;font-size:8px}
+.page{flex:1;overflow-y:auto;padding:1.25rem;display:none}
+.page.active{display:block}
 
-/* ---- BADGES ---- */
-.badge { font-size: 10px; padding: 2px 7px; border-radius: 8px; font-weight: 500; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; }
-.badge-MT { background: var(--blue-light); color: var(--blue-dark); }
-.badge-GT { background: #EAF3DE; color: #3B6D11; }
-.badge-B2B { background: var(--amber-light); color: var(--amber); }
-.badge-HoReCa { background: var(--pink-light); color: var(--pink); }
-.badge-ok { background: var(--green-light); color: var(--green); }
-.badge-overdue { background: var(--red-light); color: var(--red); }
-.badge-soon { background: var(--amber-light); color: var(--amber); }
-.badge-gray { background: var(--surface2); color: var(--text2); }
-.badge-todo { background: var(--surface2); color: var(--text2); }
-.badge-inprogress { background: var(--blue-light); color: var(--blue-dark); }
-.badge-review { background: var(--amber-light); color: var(--amber); }
-.badge-done { background: var(--green-light); color: var(--green); }
+/* BUTTONS */
+.btn{font-size:12px;padding:6px 12px;border:.5px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s}
+.btn:hover{background:var(--surface2)}
+.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-primary:hover{background:var(--blue-dk)}
+.btn-success{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-danger{color:var(--red);border-color:rgba(163,45,45,.3)}
+.btn-danger:hover{background:var(--red-lt)}
+.btn-warn{background:var(--amber);color:#fff;border-color:var(--amber)}
+.btn-sm{font-size:11px;padding:4px 9px}
+.btn-xs{font-size:10px;padding:2px 7px}
 
-/* ---- STATS ---- */
-.stats-row { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 1rem; }
-.stat-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--r-lg); padding: 12px 14px; }
-.stat-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
-.stat-val { font-size: 24px; font-weight: 600; }
+/* BADGES */
+.badge{font-size:10px;padding:2px 7px;border-radius:8px;font-weight:500;white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
+.badge-MT{background:var(--blue-lt);color:var(--blue-dk)}
+.badge-GT{background:#EAF3DE;color:#3B6D11}
+.badge-B2B{background:var(--amber-lt);color:var(--amber)}
+.badge-HoReCa{background:var(--pink-lt);color:var(--pink)}
+.badge-todo{background:var(--surface2);color:var(--text2)}
+.badge-inprogress{background:var(--blue-lt);color:var(--blue-dk)}
+.badge-review{background:var(--amber-lt);color:var(--amber)}
+.badge-done{background:var(--green-lt);color:var(--green)}
+.badge-done_fail{background:var(--red-lt);color:var(--red)}
+.badge-overdue{background:var(--red-lt);color:var(--red)}
+.badge-soon{background:var(--amber-lt);color:var(--amber)}
+.badge-gray{background:var(--surface2);color:var(--text2)}
+.badge-manager{background:#EDE9FE;color:#5B21B6}
 
-/* ---- KANBAN ---- */
-.filter-bar { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
-.filter-label { font-size: 11px; color: var(--text3); }
-.filter-chip { font-size: 11px; padding: 3px 10px; border: 0.5px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text2); cursor: pointer; transition: all 0.12s; }
-.filter-chip:hover { border-color: var(--border2); color: var(--text); }
-.filter-chip.active { background: var(--blue); color: #fff; border-color: var(--blue); }
-.board { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; align-items: start; }
-.kol { background: var(--surface2); border-radius: var(--r-xl); padding: 10px; min-height: 200px; }
-.kol-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 0.5px solid var(--border); }
-.kol-title { font-size: 12px; font-weight: 600; }
-.kol-badge { font-size: 10px; background: var(--surface); border: 0.5px solid var(--border); border-radius: 8px; padding: 1px 7px; color: var(--text2); }
-.task-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--r-lg); padding: 10px; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; position: relative; }
-.task-card:hover { border-color: var(--border2); box-shadow: var(--shadow); transform: translateY(-1px); }
-.task-card.dragging { opacity: 0.5; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
-.kol.drag-over { background: #E6F1FB; border: 1.5px dashed var(--blue); }
-.task-title { font-size: 12px; font-weight: 500; margin-bottom: 6px; line-height: 1.4; }
-.task-badges { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 6px; }
-.flow-step-current { font-size: 10px; color: var(--blue-dark); background: var(--blue-light); padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px; margin-bottom: 5px; }
-.sp-bar { height: 3px; background: var(--surface2); border-radius: 2px; overflow: hidden; margin-top: 4px; }
-.sp-fill { height: 100%; background: #1D9E75; border-radius: 2px; transition: width 0.3s; }
-.sp-label { font-size: 10px; color: var(--text3); margin-top: 2px; }
-.task-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
-.task-dl { font-size: 10px; color: var(--text3); display: flex; align-items: center; gap: 3px; }
-.task-dl.ov { color: var(--red); }
-.task-dl.soon { color: var(--amber); }
-.move-btns { display: flex; gap: 3px; margin-top: 6px; }
-.move-btn { font-size: 10px; padding: 2px 7px; border: 0.5px solid var(--border); border-radius: var(--r); background: var(--surface2); color: var(--text2); cursor: pointer; white-space: nowrap; }
-.move-btn:hover { background: var(--surface); color: var(--text); }
-.empty-col { font-size: 11px; color: var(--text3); text-align: center; padding: 20px 0; border: 1px dashed var(--border); border-radius: var(--r-lg); }
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:1rem}
+.stat-card{background:var(--surface);border:.5px solid var(--border);border-radius:var(--rlg);padding:10px 14px}
+.stat-label{font-size:11px;color:var(--text2);margin-bottom:3px}
+.stat-val{font-size:22px;font-weight:600}
 
-/* ---- MODAL ---- */
-.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: flex-start; justify-content: center; padding-top: 60px; z-index: 1000; }
-.modal { background: var(--surface); border-radius: var(--r-xl); border: 0.5px solid var(--border); padding: 1.25rem; width: 100%; max-width: 520px; max-height: 85vh; overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,0.18); }
-.modal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1rem; gap: 10px; }
-.modal-title { font-size: 15px; font-weight: 600; line-height: 1.4; }
-.modal-close { font-size: 20px; background: none; border: none; color: var(--text3); cursor: pointer; padding: 0 4px; line-height: 1; flex-shrink: 0; }
-.modal-close:hover { color: var(--text); }
+/* KANBAN */
+.filter-bar{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.filter-chip{font-size:11px;padding:3px 10px;border:.5px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text2);cursor:pointer}
+.filter-chip:hover{border-color:var(--border2)}
+.filter-chip.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;align-items:start}
+.kol{background:var(--surface2);border-radius:var(--rxl);padding:8px;min-height:160px}
+.kol-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:6px;border-bottom:.5px solid var(--border)}
+.kol-title{font-size:12px;font-weight:600}
+.kol-cnt{font-size:10px;background:var(--surface);border:.5px solid var(--border);border-radius:8px;padding:1px 7px;color:var(--text2)}
+.kol.kol-done-ok .kol-head{border-bottom-color:#1D9E75}
+.kol.kol-done-fail .kol-head{border-bottom-color:var(--red)}
+.kol.kol-review .kol-head{border-bottom-color:var(--amber)}
+.task-card{background:var(--surface);border:.5px solid var(--border);border-radius:var(--rlg);padding:9px;margin-bottom:6px;cursor:pointer;transition:all .15s;position:relative}
+.task-card:hover{border-color:var(--border2);box-shadow:var(--shadow);transform:translateY(-1px)}
+.task-card.dragging{opacity:.45}
+.kol.drag-over{background:var(--blue-lt);border:1.5px dashed var(--blue)}
+.task-title{font-size:12px;font-weight:500;margin-bottom:5px;line-height:1.4}
+.task-badges{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:5px}
+.task-step{font-size:10px;color:var(--blue-dk);background:var(--blue-lt);padding:2px 7px;border-radius:6px;display:inline-block;margin-bottom:4px}
+.sp-bar{height:3px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-top:4px}
+.sp-fill{height:100%;background:#1D9E75;border-radius:2px}
+.sp-txt{font-size:10px;color:var(--text3);margin-top:2px}
+.task-foot{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+.task-dl{font-size:10px;color:var(--text3)}
+.task-dl.ov{color:var(--red)}
+.task-dl.soon{color:var(--amber)}
+.task-pics{display:flex;gap:-4px}
+.task-pics .av-sm{border:1.5px solid var(--surface);margin-left:-4px}
+.move-btns{display:flex;gap:3px;margin-top:5px}
+.move-btn{font-size:10px;padding:2px 7px;border:.5px solid var(--border);border-radius:var(--r);background:var(--surface2);color:var(--text2);cursor:pointer}
+.move-btn:hover{background:var(--surface)}
+.empty-col{font-size:11px;color:var(--text3);text-align:center;padding:16px 0;border:1px dashed var(--border);border-radius:var(--rlg)}
+.manager-approve-btn{width:100%;margin-top:5px;font-size:11px;padding:4px;background:var(--amber-lt);color:var(--amber);border:.5px solid var(--amber);border-radius:var(--r);cursor:pointer;font-weight:500}
+.manager-approve-btn:hover{background:var(--amber);color:#fff}
 
-/* ---- FORMS ---- */
-.form-row { margin-bottom: 12px; }
-.form-label { font-size: 11px; color: var(--text2); font-weight: 500; margin-bottom: 4px; display: block; }
-.form-input { width: 100%; font-size: 13px; padding: 7px 10px; border: 0.5px solid var(--border2); border-radius: var(--r); background: var(--surface); color: var(--text); }
-.form-input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 2px rgba(24,95,165,0.12); }
-textarea.form-input { resize: vertical; min-height: 64px; }
-.form-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.form-actions { display: flex; gap: 8px; margin-top: 1rem; }
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.38);display:flex;align-items:flex-start;justify-content:center;padding-top:48px;z-index:1000}
+.modal{background:var(--surface);border-radius:var(--rxl);border:.5px solid var(--border);padding:1.25rem;width:100%;max-width:560px;max-height:87vh;overflow-y:auto;box-shadow:0 8px 48px rgba(0,0,0,.2)}
+.modal-lg{max-width:680px}
+.modal-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1rem;gap:10px}
+.modal-title{font-size:15px;font-weight:600;line-height:1.4}
+.modal-close{font-size:20px;background:none;border:none;color:var(--text3);cursor:pointer;padding:0 4px;flex-shrink:0}
+.modal-close:hover{color:var(--text)}
 
-/* ---- SUBTASKS ---- */
-.subtask-list { margin: 6px 0; }
-.subtask-item { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 0.5px solid var(--border); }
-.subtask-item:last-child { border-bottom: none; }
-.subtask-item input[type=checkbox] { margin-top: 1px; width: 14px; height: 14px; accent-color: var(--blue); flex-shrink: 0; }
-.subtask-text { font-size: 12px; flex: 1; line-height: 1.4; }
-.subtask-text.done { text-decoration: line-through; color: var(--text3); }
-.subtask-del { font-size: 14px; background: none; border: none; color: var(--text3); cursor: pointer; padding: 0 2px; line-height: 1; opacity: 0; transition: opacity 0.1s; }
-.subtask-item:hover .subtask-del { opacity: 1; }
-.add-subtask { display: flex; gap: 6px; margin-top: 6px; }
-.add-subtask input { flex: 1; font-size: 12px; padding: 5px 8px; border: 0.5px solid var(--border2); border-radius: var(--r); background: var(--surface); color: var(--text); }
+/* FORMS */
+.form-row{margin-bottom:10px}
+.form-label{font-size:11px;color:var(--text2);font-weight:500;margin-bottom:4px;display:block}
+.form-input{width:100%;font-size:13px;padding:7px 10px;border:.5px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text)}
+.form-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(24,95,165,.1)}
+textarea.form-input{resize:vertical;min-height:56px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.form-actions{display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap}
+.inline-add-box{background:var(--blue-lt);border:.5px solid rgba(24,95,165,.2);border-radius:var(--r);padding:10px;margin-bottom:8px}
+.inline-add-title{font-size:11px;font-weight:600;color:var(--blue-dk);margin-bottom:8px}
 
-/* ---- DETAIL MODAL ---- */
-.detail-section { margin-bottom: 14px; }
-.detail-section-title { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
-.detail-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-.detail-meta-item .label { font-size: 11px; color: var(--text2); margin-bottom: 2px; }
-.detail-meta-item .value { font-size: 13px; font-weight: 500; }
-.notes-box { font-size: 12px; background: var(--surface2); border-radius: var(--r); padding: 10px; line-height: 1.6; white-space: pre-wrap; color: var(--text); }
-.flow-track { display: flex; align-items: center; flex-wrap: wrap; gap: 0; margin-top: 4px; }
-.flow-node { font-size: 11px; padding: 4px 10px; background: var(--surface2); border: 0.5px solid var(--border); color: var(--text2); white-space: nowrap; }
-.flow-node:first-child { border-radius: var(--r) 0 0 var(--r); }
-.flow-node:last-child { border-radius: 0 var(--r) var(--r) 0; }
-.flow-node.current { background: var(--blue-light); color: var(--blue-dark); border-color: rgba(24,95,165,0.3); font-weight: 500; }
-.flow-node.completed { background: var(--green-light); color: var(--green); border-color: rgba(15,110,86,0.2); }
-.flow-arrow-sm { font-size: 10px; color: var(--text3); }
+/* DETAIL MODAL */
+.detail-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.detail-meta-item .label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.detail-meta-item .value{font-size:13px;font-weight:500}
+.detail-sec{margin-bottom:14px}
+.detail-sec-title{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.flow-track{display:flex;align-items:center;flex-wrap:wrap;gap:0;margin-top:4px}
+.flow-node{font-size:11px;padding:4px 10px;background:var(--surface2);border:.5px solid var(--border);color:var(--text2);white-space:nowrap}
+.flow-node:first-child{border-radius:var(--r) 0 0 var(--r)}
+.flow-node:last-child{border-radius:0 var(--r) var(--r) 0}
+.flow-node.current{background:var(--blue-lt);color:var(--blue-dk);border-color:rgba(24,95,165,.3);font-weight:500}
+.flow-node.done{background:var(--green-lt);color:var(--green);border-color:rgba(15,110,86,.2)}
+.notes-box{font-size:12px;background:var(--surface2);border-radius:var(--r);padding:8px 10px;line-height:1.6;white-space:pre-wrap}
 
-/* ---- MASTER DATA ---- */
-.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.section-title { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
-.data-table-wrap { border: 0.5px solid var(--border); border-radius: var(--r-lg); overflow: hidden; margin-bottom: 1.5rem; }
-table { width: 100%; border-collapse: collapse; }
-thead th { font-size: 11px; font-weight: 600; color: var(--text2); padding: 9px 12px; text-align: left; background: var(--surface2); border-bottom: 0.5px solid var(--border); white-space: nowrap; }
-tbody td { font-size: 12px; padding: 8px 12px; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
-tbody tr:last-child td { border-bottom: none; }
-tbody tr:hover td { background: var(--surface2); }
-.table-action-btns { display: flex; gap: 4px; opacity: 0; transition: opacity 0.1s; }
-tr:hover .table-action-btns { opacity: 1; }
+/* COMMENTS */
+.comment-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;max-height:240px;overflow-y:auto}
+.comment-item{display:flex;gap:8px}
+.comment-body{flex:1;background:var(--surface2);border-radius:0 var(--rlg) var(--rlg) var(--rlg);padding:8px 10px}
+.comment-header{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+.comment-author{font-size:11px;font-weight:600}
+.comment-time{font-size:10px;color:var(--text3)}
+.comment-text{font-size:12px;line-height:1.5;white-space:pre-wrap}
+.comment-input-row{display:flex;gap:8px;margin-top:6px}
+.comment-input-row textarea{flex:1;font-size:12px;padding:7px 10px;border:.5px solid var(--border2);border-radius:var(--r);min-height:38px;resize:none}
 
-/* ---- SETUP ---- */
-.setup-wrap { max-width: 520px; margin: 2rem auto; }
-.setup-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--r-xl); padding: 1.75rem; }
-.setup-title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
-.setup-sub { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 1.25rem; }
-.setup-step { display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start; }
-.setup-step-num { width: 22px; height: 22px; min-width: 22px; border-radius: 50%; background: var(--blue-light); color: var(--blue-dark); font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
-.setup-step-text { font-size: 12px; line-height: 1.6; }
-code { font-family: var(--mono); font-size: 11px; background: var(--surface2); padding: 1px 5px; border-radius: 4px; }
-.msg { font-size: 12px; margin-top: 8px; }
-.msg-ok { color: var(--green); }
-.msg-err { color: var(--red); }
-.spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--border2); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: -2px; }
-@keyframes spin { to { transform: rotate(360deg); } }
+/* SUBTASKS */
+.subtask-list{margin:6px 0}
+.subtask-item{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:.5px solid var(--border)}
+.subtask-item:last-child{border-bottom:none}
+.subtask-item input[type=checkbox]{margin-top:2px;width:14px;height:14px;accent-color:var(--blue);flex-shrink:0}
+.subtask-text{font-size:12px;flex:1;line-height:1.4}
+.subtask-text.done{text-decoration:line-through;color:var(--text3)}
+.subtask-del{font-size:14px;background:none;border:none;color:var(--text3);cursor:pointer;opacity:0;padding:0}
+.subtask-item:hover .subtask-del{opacity:1}
+.add-sub-row{display:flex;gap:6px;margin-top:6px}
+.add-sub-row input{flex:1;font-size:12px;padding:5px 8px;border:.5px solid var(--border2);border-radius:var(--r)}
 
-/* ---- TOAST ---- */
-.toast-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 6px; z-index: 9999; }
-.toast { font-size: 12px; padding: 10px 14px; background: var(--text); color: #fff; border-radius: var(--r-lg); box-shadow: 0 4px 16px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 8px; animation: slideIn 0.2s ease; }
-.toast.ok { background: var(--green); }
-.toast.err { background: var(--red); }
-@keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+/* PIC MULTI */
+.pic-multi{display:flex;flex-wrap:wrap;gap:6px;padding:6px 0}
+.pic-chip{display:flex;align-items:center;gap:5px;font-size:11px;padding:3px 8px;border:.5px solid var(--border2);border-radius:10px;background:var(--surface);cursor:pointer}
+.pic-chip.selected{background:var(--blue-lt);border-color:var(--blue);color:var(--blue-dk);font-weight:500}
+.pic-chip .av-sm{flex-shrink:0}
 
-@media (max-width: 768px) {
-  .board { grid-template-columns: repeat(2, 1fr); }
-  .stats-row { grid-template-columns: repeat(2, 1fr); }
-  .topbar-mid { display: none; }
-}
+/* TABLE */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.section-title{font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px}
+.table-wrap{border:.5px solid var(--border);border-radius:var(--rlg);overflow:hidden;margin-bottom:1.5rem}
+table{width:100%;border-collapse:collapse}
+thead th{font-size:11px;font-weight:600;color:var(--text2);padding:9px 12px;text-align:left;background:var(--surface2);border-bottom:.5px solid var(--border);white-space:nowrap}
+tbody td{font-size:12px;padding:8px 12px;border-bottom:.5px solid var(--border);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--surface2)}
+.table-action-btns{display:flex;gap:4px;opacity:0}
+tr:hover .table-action-btns{opacity:1}
+
+/* TOAST */
+.toast-container{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:6px;z-index:9999}
+.toast{font-size:12px;padding:10px 14px;background:var(--text);color:#fff;border-radius:var(--rlg);box-shadow:0 4px 16px rgba(0,0,0,.2);display:flex;align-items:center;gap:8px;animation:slideIn .2s ease}
+.toast.ok{background:var(--green)}
+.toast.err{background:var(--red)}
+.toast.warn{background:var(--amber)}
+@keyframes slideIn{from{transform:translateX(60px);opacity:0}to{transform:translateX(0);opacity:1}}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:900px){.board{grid-template-columns:repeat(2,1fr)}.stats-row{grid-template-columns:repeat(3,1fr)}.nav-mid{display:none}}
+
+/* FILE UPLOAD */
+.upload-zone{border:1.5px dashed var(--border2);border-radius:var(--r);padding:14px;text-align:center;cursor:pointer;transition:all .15s;background:var(--surface2)}
+.upload-zone:hover,.upload-zone.drag-active{border-color:var(--blue);background:var(--blue-lt)}
+.upload-zone input[type=file]{display:none}
+.upload-zone-label{font-size:12px;color:var(--text2)}
+.upload-zone-sub{font-size:10px;color:var(--text3);margin-top:3px}
+.attachment-list{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+.attachment-item{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface2);border-radius:var(--r);font-size:12px}
+.attachment-icon{font-size:16px;flex-shrink:0}
+.attachment-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.attachment-size{font-size:10px;color:var(--text3);flex-shrink:0}
+.upload-progress{height:3px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-top:4px}
+.upload-progress-bar{height:100%;background:var(--blue);border-radius:2px;transition:width .3s}
+/* PERMISSION BADGE */
+.perm-badge{font-size:10px;padding:1px 6px;border-radius:6px;font-weight:500}
+.perm-manager{background:#EDE9FE;color:#5B21B6}
+.perm-sales{background:var(--green-lt);color:var(--green)}
+.perm-tm{background:var(--amber-lt);color:var(--amber)}
+/* CONFIG PAGE */
+.flow-edit-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px 10px;background:var(--surface2);border-radius:var(--r)}
+.flow-steps-preview{display:flex;align-items:center;gap:2px;flex-wrap:wrap;flex:1}
+.flow-step-badge{font-size:10px;padding:2px 7px;background:var(--surface);border:.5px solid var(--border);border-radius:5px}
+/* CUSTOMER DETAIL */
+.cust-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.info-field{background:var(--surface2);border-radius:var(--r);padding:8px 10px}
+.info-field-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.info-field-value{font-size:13px;font-weight:500;word-break:break-word}
 </style>
 </head>
 <body>
 
-<div class="app" id="app">
+<!-- LOGIN SCREEN -->
+<div id="login-screen" class="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">DGM</div>
+    <div class="login-title">DGM Sales CRM</div>
+    <div class="login-sub">Ayam Brand · Alce Nero · Duchef</div>
+    <label class="login-label">Chọn tài khoản của bạn</label>
+    <select id="login-user" class="login-select">
+      <option value="">-- Chọn tên --</option>
+    </select>
+    <label class="login-label">Xác nhận email Gmail</label>
+    <input type="email" id="login-email" class="login-select" placeholder="email@gmail.com" style="margin-bottom:1rem">
+    <button class="login-btn" onclick="doLogin()">Đăng nhập</button>
+    <div class="login-note" id="login-err"></div>
+  </div>
+</div>
 
-  <!-- TOPBAR -->
+<!-- MAIN APP -->
+<div class="app" id="main-app" style="display:none">
   <div class="topbar">
     <div class="brand">
       <div class="brand-mark">DGM</div>
@@ -215,38 +276,24 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
         <div class="brand-sub">Ayam Brand · Alce Nero · Duchef</div>
       </div>
     </div>
-    <div class="topbar-mid" id="topbar-nav">
-      <button class="nav-btn active" onclick="showPage('kanban',this)" data-page="kanban">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18"/><rect x="14" y="3" width="7" height="10"/><rect x="14" y="17" width="7" height="4"/></svg>
-        Kanban
-      </button>
-      <button class="nav-btn" onclick="showPage('customers',this)" data-page="customers">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Khách hàng
-      </button>
-      <button class="nav-btn" onclick="showPage('products',this)" data-page="products">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-        Sản phẩm
-      </button>
-      <button class="nav-btn" onclick="showPage('users',this)" data-page="users">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        Team
-      </button>
-      <button class="nav-btn" onclick="showPage('config',this)" data-page="config">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-        Cấu hình
-      </button>
+    <div class="nav-mid" id="nav-mid">
+      <button class="nav-btn active" onclick="showPage('kanban',this)">📋 Kanban</button>
+      <button class="nav-btn" onclick="showPage('customers',this)">🏢 Khách hàng</button>
+      <button class="nav-btn" onclick="showPage('products',this)">📦 Sản phẩm</button>
+      <button class="nav-btn manager-only" onclick="showPage('users',this)">👥 Team</button>
+      <button class="nav-btn manager-only" onclick="showPage('config',this)">⚙️ Cấu hình</button>
     </div>
     <div class="topbar-right">
-      <div class="sync-status">
-        <div class="sync-dot" id="sync-dot"></div>
-        <span id="sync-label">Chưa kết nối</span>
+      <div class="sync-status"><div class="sync-dot" id="sync-dot"></div><span id="sync-label">Đang kết nối...</span></div>
+      <button class="btn btn-sm" onclick="syncAll()" title="Sync dữ liệu">↻</button>
+      <div class="user-pill" onclick="doLogout()">
+        <div class="av" id="cur-av">?</div>
+        <span id="cur-name">...</span>
+        <span style="font-size:10px;color:var(--text3)">↩</span>
       </div>
-      <select id="user-select" class="btn btn-sm" onchange="switchUser(this.value)" style="padding:4px 8px"></select>
     </div>
   </div>
 
-  <!-- PAGES -->
   <div class="page active" id="page-kanban">
     <div class="stats-row" id="stats-row"></div>
     <div class="filter-bar" id="filter-bar"></div>
@@ -255,649 +302,772 @@ code { font-family: var(--mono); font-size: 11px; background: var(--surface2); p
 
   <div class="page" id="page-customers">
     <div class="section-header">
-      <div class="section-title">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-        Khách hàng / Customers
-      </div>
-      <button class="btn btn-primary btn-sm" onclick="openCustomerForm()">+ Thêm khách hàng</button>
+      <div class="section-title">🏢 Khách hàng</div>
+      <button class="btn btn-primary btn-sm" onclick="openCustomerForm()">+ Thêm</button>
     </div>
-    <div class="data-table-wrap">
-      <table id="customers-table">
-        <thead><tr><th>Tên</th><th>Kênh</th><th>Khu vực</th><th>Người liên hệ</th><th>SĐT</th><th>Tasks</th><th></th></tr></thead>
-        <tbody id="customers-body"></tbody>
-      </table>
-    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Tên</th><th>Kênh</th><th>Vùng</th><th>Hình thức KD</th><th>Liên hệ</th><th>SĐT</th><th>Số cửa hàng</th><th>Tasks</th><th></th></tr></thead>
+      <tbody id="customers-body"></tbody>
+    </table></div>
   </div>
 
   <div class="page" id="page-products">
     <div class="section-header">
-      <div class="section-title">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-        Sản phẩm / Products
-      </div>
-      <button class="btn btn-primary btn-sm" onclick="openProductForm()">+ Thêm sản phẩm</button>
+      <div class="section-title">📦 Sản phẩm</div>
+      ${isManager()||(state.currentUser&&state.currentUser.position==='Trade Marketing')?`<button class="btn btn-primary btn-sm" onclick="openProductForm()">+ Thêm</button>`:'<span class="perm-badge perm-manager">Manager / TM only</span>'}
     </div>
-    <div class="data-table-wrap">
-      <table id="products-table">
-        <thead><tr><th>Tên sản phẩm</th><th>Danh mục</th><th>Brand</th><th>SKU</th><th></th></tr></thead>
-        <tbody id="products-body"></tbody>
-      </table>
-    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Tên</th><th>Brand</th><th>Danh mục</th><th>SKU</th><th>Đơn vị</th><th></th></tr></thead>
+      <tbody id="products-body"></tbody>
+    </table></div>
   </div>
 
   <div class="page" id="page-users">
     <div class="section-header">
-      <div class="section-title">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        Team / Users
-      </div>
-      <button class="btn btn-primary btn-sm" onclick="openUserForm()">+ Thêm thành viên</button>
+      <div class="section-title">👥 Team</div>
+      <button class="btn btn-primary btn-sm" onclick="openUserForm()">+ Thêm</button>
     </div>
-    <div class="data-table-wrap">
-      <table>
-        <thead><tr><th>Tên</th><th>Role</th><th>Kênh</th><th>Vùng</th><th>Chức vụ</th><th>Email</th><th>Initials</th><th></th></tr></thead>
-        <tbody id="users-body"></tbody>
-      </table>
-    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Tên</th><th>Role</th><th>Kênh</th><th>Vùng</th><th>Chức vụ</th><th>Email</th><th>Initials</th><th></th></tr></thead>
+      <tbody id="users-body"></tbody>
+    </table></div>
   </div>
+</div>
 
   <div class="page" id="page-config">
     <div class="section-header">
-      <div class="section-title">Task Flow theo kênh</div>
+      <div class="section-title">⚙️ Cấu hình Flow <span class="perm-badge perm-manager">Manager only</span></div>
+      <button class="btn btn-primary btn-sm" onclick="openFlowForm()">+ Thêm flow</button>
     </div>
     <div id="config-body"></div>
   </div>
 
-  <!-- SETUP PAGE -->
-  <div class="page active" id="page-setup" style="display:block">
-    <div class="setup-wrap">
-      <div class="setup-card">
-        <div class="setup-title">🔌 Kết nối Google Sheets</div>
-        <div class="setup-sub">Dán URL Apps Script Web App để kết nối dữ liệu persistent 2 chiều.</div>
-        <div class="setup-step"><div class="setup-step-num">1</div><div class="setup-step-text">Mở Google Sheet → <strong>Extensions → Apps Script</strong> → paste code từ file <code>apps-script-backend.js</code></div></div>
-        <div class="setup-step"><div class="setup-step-num">2</div><div class="setup-step-text"><strong>Deploy</strong> → New deployment → Web app → Execute as: <strong>Me</strong> → Who has access: <strong>Anyone</strong> → Deploy</div></div>
-        <div class="setup-step"><div class="setup-step-num">3</div><div class="setup-step-text">Copy <strong>Web app URL</strong> (dạng <code>https://script.google.com/macros/s/...</code>) và dán vào đây:</div></div>
-        <div style="margin-top:12px">
-          <div class="form-label">Apps Script Web App URL</div>
-          <div style="display:flex;gap:8px">
-            <input type="text" id="script-url-input" class="form-input" placeholder="https://script.google.com/macros/s/..." style="flex:1;font-size:12px;font-family:var(--mono)">
-            <button class="btn btn-primary" onclick="connectScript()">Kết nối</button>
-          </div>
-          <div id="connect-msg" class="msg"></div>
-        </div>
-        <div style="margin-top:1rem;padding-top:1rem;border-top:0.5px solid var(--border)">
-          <button class="btn btn-sm" onclick="useSampleData()">Bỏ qua – dùng dữ liệu mẫu (không lưu)</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<!-- MODALS -->
 <div id="modal-container"></div>
 <div class="toast-container" id="toasts"></div>
 
 <script>
-// ============================================================
-// STATE
-// ============================================================
-let SCRIPT_URL = localStorage.getItem('dgm_script_url') || 'https://script.google.com/macros/s/AKfycbw1fpn2PD3GavcWPcJRMtY6K89c5IF6raxMuGATAGgUk3_GSRf1bHM3oBydi5UMnHC5/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwfdPEtl9BBW-xHuXBMuCvZSN40CUbQHZsMNvA0CkXjgHR7CrfUSj06fssMZJmm-MMX/exec';
+
+const STATUSES = ['todo','inprogress','review','done','done_fail'];
+const SL = {todo:'To Do',inprogress:'In Progress',review:'Chờ duyệt',done:'Hoàn thành ✓',done_fail:'Không thành công'};
+const COL_COLORS = {todo:'',inprogress:'',review:'kol-review',done:'kol-done-ok',done_fail:'kol-done-fail'};
+const CHANNELS = ['MT','GT','B2B','HoReCa'];
+
 let state = {
-  tasks: [], customers: [], products: [], users: [], config: [],
-  currentUser: 'mgr',
-  filterChannel: 'all',
-  filterPIC: 'all',
-  syncing: false,
-  lastSync: null,
-  setupDone: false,
+  tasks:[], customers:[], products:[], users:[], config:[],
+  currentUser: null,
+  filterChannel:'all', filterPIC:'all',
+  syncing:false, lastSync:null,
 };
 
-// ============================================================
-// UTILS
-// ============================================================
+// ---- REAL USERS (fallback nếu Sheet chưa load) ----
+const DEFAULT_USERS = [
+  {id:'u1',name:'Bùi Quang Quý',role:'manager',position:'Sales & Marketing Manager',channel:'ALL',region:'ALL',initials:'QB',email:'quangquy.bui@gmail.com',status:'Active'},
+  {id:'u2',name:'Hồ Anh Tài',role:'sales',position:'Sales Representative',channel:'MT',region:'ALL',initials:'HAT',email:'taihathuy@gmail.com',status:'Active'},
+  {id:'u3',name:'Thiên Thanh',role:'sales',position:'Sales Representative',channel:'MT',region:'ALL',initials:'TT',email:'ng.thienthanh1696@gmail.com',status:'Active'},
+  {id:'u4',name:'Nguyễn Xuân Đức',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Bắc',initials:'NXD',email:'nguyenxuanduc13091987@gmail.com',status:'Active'},
+  {id:'u5',name:'Phương Ngọc Chánh',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Nam',initials:'PNC',email:'chanhphuong86@gmail.com',status:'Active'},
+  {id:'u6',name:'Hồ Ngọc Anh',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Trung',initials:'HNA',email:'honguyennguyenan2016@gmail.com',status:'Active'},
+  {id:'u7',name:'Phương Thi',role:'sales',position:'Trade Marketing',channel:'ALL',region:'ALL',initials:'DPT',email:'phuongthi21@gmail.com',status:'Active'},
+];
+
+const DEFAULT_FLOWS = [
+  {id:'f1',name:'General Task',channel:'ALL',task_type:'General',steps:['To Do','In Progress','Done']},
+  {id:'f2',name:'MT – Trading Term',channel:'MT',task_type:'Trading Term',steps:['Nhận yêu cầu','Gửi proposal','Phản hồi','Đàm phán','Đồng ý','Trình ký']},
+  {id:'f3',name:'MT – New Product Listing',channel:'MT',task_type:'Listing',steps:['Lấy mẫu','Gửi mẫu','Xác nhận','Lên kệ']},
+  {id:'f4',name:'POSM / Design',channel:'ALL',task_type:'Activation',steps:['Ý tưởng','Thiết kế','Duyệt thiết kế','Làm việc với NCC','Ký hợp đồng','Giao hàng']},
+  {id:'f5',name:'Sampling / Activation',channel:'ALL',task_type:'Activation',steps:['Lên kế hoạch','Gửi chờ duyệt','Duyệt kế hoạch','Đăng ký với KH','Chuẩn bị vật dụng','Thực hiện']},
+  {id:'f6',name:'GT – Trade Program',channel:'ALL',task_type:'Trade Program',steps:['Lên chương trình','Thông báo','Gửi sales','Gửi khách','Order']},
+  {id:'f7',name:'GT – Phát triển điểm bán',channel:'GT',task_type:'Expansion',steps:['Khảo sát','Tiếp cận','Chào hàng','Trưng bày','Review']},
+  {id:'f8',name:'MT – Khách hàng mới',channel:'MT',task_type:'Expansion',steps:['Tiếp cận','Gửi thông tin SP/giá','Đàm phán TT/HĐ','Ký kết','Lên kệ']},
+];
+
+// ---- UTILS ----
 const $ = id => document.getElementById(id);
-function fmtDate(d) { if (!d) return '—'; return new Date(d).toLocaleDateString('vi-VN'); }
-function daysFrom(d) { return Math.round((new Date(d) - new Date()) / 864e5); }
-function uid() { return Date.now() + Math.random().toString(36).slice(2,6); }
-function getCustomer(id) { return state.customers.find(c => String(c.id) === String(id) || c.name === id); }
-function getUser(id) { return state.users.find(u => u.id === id || u.email === id || String(u.id) === String(id)); }
-function getFlow(channel, taskType) {
-  let flows = state.config.filter(x => x.channel === channel || x.channel === 'ALL');
-  if (taskType) flows = flows.filter(x => x.task_type === taskType);
-  const c = flows[0];
-  if (!c) return ['To Do','In Progress','Done'];
-  if (Array.isArray(c.steps)) return c.steps;
-  try { return JSON.parse(c.steps || '[]'); } catch(e) { return c.steps.split('→').map(s=>s.trim()); }
+function fmtDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('vi-VN')}
+function fmtDT(d){if(!d)return'';const dt=new Date(d);return dt.toLocaleDateString('vi-VN')+' '+dt.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}
+function daysFrom(d){return Math.round((new Date(d)-new Date())/864e5)}
+function getCustomer(id){return state.customers.find(c=>String(c.id)===String(id)||c.name===id)}
+function getUser(id){return state.users.find(u=>u.id===id||u.email===id||String(u.id)===String(id))}
+function activeUsers(){return state.users.filter(u=>u.status==='Active'||u.role==='manager'||(!u.status&&u.active!==false))}
+function isManager(){return state.currentUser&&state.currentUser.role==='manager'}
+function getFlowSteps(flowIdOrName){
+  const f=state.config.find(x=>x.id===flowIdOrName||x.name===flowIdOrName);
+  if(!f)return['To Do','In Progress','Done'];
+  if(Array.isArray(f.steps))return f.steps;
+  try{return JSON.parse(f.steps)}catch(e){return f.steps.split('→').map(s=>s.trim()).filter(Boolean)}
 }
-function subProg(task) {
-  const subs = Array.isArray(task.subtasks) ? task.subtasks : [];
-  if (!subs.length) return null;
-  const done = subs.filter(s => s.done).length;
-  return { done, total: subs.length, pct: Math.round(done / subs.length * 100) };
+function subProg(task){
+  const s=Array.isArray(task.subtasks)?task.subtasks:[];
+  if(!s.length)return null;
+  const d=s.filter(x=>x.done).length;
+  return{done:d,total:s.length,pct:Math.round(d/s.length*100)}
 }
-function toast(msg, type='ok') {
-  const t = document.createElement('div');
-  t.className = `toast ${type}`;
-  t.innerHTML = `<span>${type==='ok'?'✓':'✕'}</span>${msg}`;
+function getPics(task){
+  const ids=Array.isArray(task.pic_ids)?task.pic_ids:(task.pic_ids?String(task.pic_ids).split(',').filter(Boolean):[]);
+  if(!ids.length&&task.pic_id)ids.push(task.pic_id);
+  if(!ids.length&&task.pic_email){const u=state.users.find(x=>x.email===task.pic_email);if(u)ids.push(u.id)}
+  return ids.map(id=>getUser(id)).filter(Boolean)
+}
+function toast(msg,type='ok'){
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<span>${type==='ok'?'✓':type==='warn'?'⚠':'✕'}</span>${msg}`;
   $('toasts').appendChild(t);
-  setTimeout(() => t.remove(), 3000);
+  setTimeout(()=>t.remove(),3500)
 }
-function setSyncStatus(status) {
-  const dot = $('sync-dot'), label = $('sync-label');
-  if (status === 'ok') { dot.className='sync-dot ok'; label.textContent=state.lastSync?'Sync '+state.lastSync.toLocaleTimeString('vi-VN'):'Đã kết nối'; }
-  else if (status === 'syncing') { dot.className='sync-dot syncing'; label.textContent='Đang sync...'; }
-  else { dot.className='sync-dot'; label.textContent='Chưa kết nối'; }
+function setSyncStatus(s){
+  const dot=$('sync-dot'),label=$('sync-label');
+  if(s==='ok'){dot.className='sync-dot ok';label.textContent=state.lastSync?'Sync '+state.lastSync.toLocaleTimeString('vi-VN'):'Đã kết nối'}
+  else if(s==='syncing'){dot.className='sync-dot syncing';label.textContent='Đang sync...'}
+  else{dot.className='sync-dot';label.textContent='Chưa kết nối'}
 }
+function closeModal(){$('modal-container').innerHTML=''}
 
-// ============================================================
-// API
-// ============================================================
-async function apiGet() {
-  if (!SCRIPT_URL) return null;
-  try {
-    const res = await fetch(SCRIPT_URL + '?action=all', {redirect:'follow'});
-    const d = await res.json();
-    // Support both v3 format {ok,data} and flat format
-    if (d.ok && d.data) return d.data;
-    if (d.tasks || d.users) return d; // flat
-    return null;
-  } catch(e) { console.error('apiGet error:', e); return null; }
+// ---- LOGIN ----
+function initLogin(){
+  const users=state.users.length?activeUsers():DEFAULT_USERS.filter(u=>u.status==='Active');
+  const sel=$('login-user');
+  sel.innerHTML='<option value="">-- Chọn tên --</option>'+
+    users.map(u=>`<option value="${u.id}">${u.name} (${u.role==='manager'?'Manager':u.position||'Sales'})</option>`).join('');
+  // Pre-fill if remembered
+  const saved=localStorage.getItem('dgm_user_id');
+  if(saved)sel.value=saved;
+  const savedEmail=localStorage.getItem('dgm_user_email');
+  if(savedEmail)$('login-email').value=savedEmail;
 }
-
-// Ghi data qua GET request (tránh CORS/redirect issue của Apps Script)
-// Payload nhỏ: gửi qua GET params. Payload lớn: chunk hoặc dùng POST no-cors
-async function apiPost(payload) {
-  if (!SCRIPT_URL) return false;
-
-  // Thử cách 1: GET + encoded payload (works cho payload nhỏ)
-  try {
-    const encoded = encodeURIComponent(JSON.stringify(payload));
-    if (encoded.length < 7000) {
-      const url = SCRIPT_URL + '?method=post&payload=' + encoded;
-      const res = await fetch(url, {redirect:'follow'});
-      const text = await res.text();
-      try {
-        const d = JSON.parse(text);
-        if (d.ok === true) return true;
-      } catch(e) {}
-    }
-  } catch(e) {}
-
-  // Thử cách 2: POST với mode no-cors (không đọc được response nhưng data vẫn ghi)
-  // Dùng khi GET payload quá dài
-  try {
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: {'Content-Type': 'text/plain'},
-      body: JSON.stringify(payload)
-    });
-    // no-cors không đọc được response → assume OK nếu không có exception
-    return true;
-  } catch(e) {
-    console.error('apiPost both methods failed:', e);
-    return false;
+function doLogin(){
+  const userId=$('login-user').value;
+  const email=$('login-email').value.trim().toLowerCase();
+  const users=state.users.length?activeUsers():DEFAULT_USERS;
+  const user=users.find(u=>u.id===userId);
+  if(!user){$('login-err').textContent='Vui lòng chọn tên.';return}
+  if(!email){$('login-err').textContent='Vui lòng nhập email.';return}
+  // Validate email matches user
+  if(user.email&&user.email.toLowerCase()!==email){
+    $('login-err').textContent='Email không khớp với tài khoản đã chọn.';return
   }
+  state.currentUser=user;
+  localStorage.setItem('dgm_user_id',userId);
+  localStorage.setItem('dgm_user_email',email);
+  $('login-screen').style.display='none';
+  $('main-app').style.display='flex';
+  // Update topbar
+  $('cur-av').textContent=user.initials||user.name[0];
+  $('cur-name').textContent=user.name;
+  // Hide manager-only for sales
+  document.querySelectorAll('.manager-only').forEach(el=>{
+    el.style.display=isManager()?'':'none'
+  });
+  // Restrict Sheet access note for sales
+  renderAll();
+  syncAll();
 }
-async function syncAll() {
-  if (!SCRIPT_URL) return;
-  state.syncing = true; setSyncStatus('syncing');
-  const data = await apiGet();
-  if (data) {
-    state.tasks = data.Tasks || [];
-    state.customers = data.Customers || [];
-    state.products = data.Products || [];
-    state.users = data.Users || [];
-    state.config = data.Config || [];
-    state.lastSync = new Date();
-    setSyncStatus('ok');
-  } else {
+function doLogout(){
+  state.currentUser=null;
+  localStorage.removeItem('dgm_user_id');
+  localStorage.removeItem('dgm_user_email');
+  $('main-app').style.display='none';
+  $('login-screen').style.display='flex';
+  $('login-err').textContent='';
+}
+
+// ---- API ----
+async function apiPost(payload){
+  if(!SCRIPT_URL)return false;
+  try{
+    const encoded=encodeURIComponent(JSON.stringify(payload));
+    if(encoded.length<6000){
+      const res=await fetch(SCRIPT_URL+'?method=post&payload='+encoded,{redirect:'follow'});
+      const text=await res.text();
+      try{const d=JSON.parse(text);if(d.ok===true)return true}catch(e){}
+    }
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
+    return true;
+  }catch(e){console.error('apiPost:',e);return false}
+}
+
+// Upload file lên Google Drive qua Apps Script
+async function uploadFileToDrive(file, taskId){
+  if(!SCRIPT_URL)return null;
+  const MAX=4*1024*1024;
+  if(file.size>MAX){toast('File quá lớn. Giới hạn 4MB.','err');return null;}
+  return new Promise((resolve)=>{
+    const reader=new FileReader();
+    reader.onload=async(e)=>{
+      try{
+        const base64=e.target.result.split(',')[1];
+        const payload={action:'upload',filename:file.name,mimeType:file.type||'application/octet-stream',base64data:base64,taskId:taskId||'general'};
+        const encoded=encodeURIComponent(JSON.stringify(payload));
+        // File upload must go via GET (base64 is large, use chunked approach)
+        const url=SCRIPT_URL+'?action=upload&payload='+encoded;
+        if(url.length<8000){
+          const res=await fetch(url,{redirect:'follow'});
+          const d=await res.json();
+          if(d.ok)resolve(d);
+          else{toast('Upload thất bại: '+d.error,'err');resolve(null);}
+        } else {
+          // Fallback: POST no-cors (can't read response but file gets saved)
+          await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
+          resolve({ok:true,fileName:file.name,viewUrl:'#',directUrl:'#',note:'no-cors'});
+        }
+      }catch(err){toast('Upload lỗi: '+err.message,'err');resolve(null);}
+    };
+    reader.readAsDataURL(file);
+  });
+}
+async function syncAll(){
+  if(!SCRIPT_URL)return;
+  state.syncing=true;setSyncStatus('syncing');
+  try{
+    const res=await fetch(SCRIPT_URL+'?action=all',{redirect:'follow'});
+    const d=await res.json();
+    if(d.ok&&d.data){
+      const dt=d.data;
+      if(dt.users&&dt.users.length)state.users=dt.users;
+      else state.users=DEFAULT_USERS;
+      state.customers=dt.customers||dt.Customers||[];
+      state.products=dt.products||dt.Products||[];
+      state.tasks=dt.tasks||dt.Tasks||[];
+      const flows=dt.flows||dt.Flows||[];
+      state.config=flows.length?flows.map(f=>({...f,steps:Array.isArray(f.steps)?f.steps:typeof f.steps==='string'?f.steps.split('→').map(s=>s.trim()).filter(Boolean):['To Do','In Progress','Done']})):DEFAULT_FLOWS;
+      state.lastSync=new Date();
+      setSyncStatus('ok');
+    }
+  }catch(e){
+    if(!state.users.length)state.users=DEFAULT_USERS;
+    if(!state.config.length)state.config=DEFAULT_FLOWS;
     setSyncStatus('error');
   }
-  state.syncing = false;
+  state.syncing=false;
+  // Update login dropdown if on login screen
+  if(!state.currentUser)initLogin();
   renderAll();
 }
-async function saveTask(task) {
-  const ok = await apiPost({action:'upsert', sheet:'Tasks', data: {...task, subtasks: JSON.stringify(Array.isArray(task.subtasks)?task.subtasks:[])}});
-  if (ok) { toast('Task đã lưu vào Sheet ✓'); state.lastSync=new Date(); setSyncStatus('ok'); }
-  else toast('Lưu thất bại – kiểm tra kết nối','err');
+async function saveTask(task){
+  const payload={action:'upsert',sheet:'Tasks',data:{...task,
+    subtasks:JSON.stringify(Array.isArray(task.subtasks)?task.subtasks:[]),
+    comments:JSON.stringify(Array.isArray(task.comments)?task.comments:[]),
+    pic_ids:Array.isArray(task.pic_ids)?task.pic_ids.join(','):task.pic_ids||'',
+  }};
+  const ok=await apiPost(payload);
+  if(ok){state.lastSync=new Date();setSyncStatus('ok');toast('Đã lưu vào Sheet ✓')}
+  else toast('Lưu thất bại – sẽ thử lại','warn');
+  return ok;
 }
-async function deleteTaskRemote(id) {
-  await apiPost({action:'delete', sheet:'Tasks', id});
-}
-async function saveMasterData(sheet, data) {
-  const ok = await apiPost({action:'upsert', sheet, data});
-  if (ok) { toast(`${sheet} đã lưu vào Sheet ✓`); state.lastSync=new Date(); setSyncStatus('ok'); }
-}
-
-// ============================================================
-// SETUP
-// ============================================================
-async function connectScript() {
-  const url = $('script-url-input').value.trim();
-  if (!url) { $('connect-msg').textContent='Vui lòng nhập URL.'; return; }
-  $('connect-msg').innerHTML='<span class="spinner"></span> Đang kiểm tra...';
-  $('connect-msg').className='msg';
-  try {
-    const res = await fetch(url + '?action=init', {redirect:'follow'});
-    const d = await res.json();
-    if (!d.ok) throw new Error('API trả về lỗi');
-    SCRIPT_URL = url;
-    localStorage.setItem('dgm_script_url', url);
-    $('connect-msg').className='msg msg-ok';
-    $('connect-msg').textContent='✓ Kết nối thành công! Đang tải dữ liệu...';
-    setTimeout(() => startApp(), 800);
-  } catch(e) {
-    $('connect-msg').className='msg msg-err';
-    $('connect-msg').textContent='Lỗi: Không kết nối được. Kiểm tra URL và quyền deploy (Anyone).';
-  }
-}
-function useSampleData() {
-  SCRIPT_URL = '';
-  loadSampleData();
-  startApp();
-}
-function loadSampleData() {
-  // ---- USERS THẬT (từ master data DGM) ----
-  state.users = [
-    {id:'u1',name:'Bùi Quang Quý',role:'manager',position:'Sales & Marketing Manager',channel:'ALL',region:'ALL',initials:'QB',email:'quangquy.bui@gmail.com',status:'Active'},
-    {id:'u2',name:'Hồ Anh Tài',role:'sales',position:'Sales Representative',channel:'MT',region:'ALL',initials:'HAT',email:'taihathuy@gmail.com',status:'Active'},
-    {id:'u3',name:'Hoàng Thị Thiên Thanh',role:'sales',position:'Sales Representative',channel:'MT',region:'ALL',initials:'HTTT',email:'ng.thienthanh1696@gmail.com',status:'Active'},
-    {id:'u4',name:'Nguyễn Xuân Đức',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Bắc',initials:'NXD',email:'nguyenxuanduc13091987@gmail.com',status:'Active'},
-    {id:'u5',name:'Phương Ngọc Chánh',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Nam',initials:'PNC',email:'chanhphuong86@gmail.com',status:'Active'},
-    {id:'u6',name:'Hồ Ngọc Anh',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Trung',initials:'HNA',email:'honguyennguyenan2016@gmail.com',status:'Active'},
-    {id:'u7',name:'Phương Thi',role:'sales',position:'Trade Marketing',channel:'ALL',region:'ALL',initials:'DPT',email:'phuongthi21@gmail.com',status:'Active'},
-  ];
-  // ---- CUSTOMERS (trống — load từ Sheet) ----
-  state.customers = [];
-  // ---- PRODUCTS (trống — load từ Sheet) ----
-  state.products = [];
-  // ---- FLOWS THẬT (từ master data DGM) ----
-  state.config = [
-    {id:'f1',name:'General Task',channel:'ALL',task_type:'General',steps:['To Do','In Progress','Done']},
-    {id:'f2',name:'MT – Trading Term',channel:'MT',task_type:'Trading Term',steps:['Nhận yêu cầu','Gửi proposal','Phản hồi','Đàm phán','Đồng ý','Trình ký']},
-    {id:'f3',name:'MT – New Product Listing',channel:'MT',task_type:'Listing',steps:['Lấy mẫu','Gửi mẫu','Xác nhận','Lên kệ']},
-    {id:'f4',name:'POSM / Design',channel:'ALL',task_type:'Activation',steps:['Ý tưởng','Thiết kế','Duyệt thiết kế','Làm việc với NCC','Ký hợp đồng','Giao hàng']},
-    {id:'f5',name:'Sampling / Activation',channel:'ALL',task_type:'Activation',steps:['Lên kế hoạch','Gửi chờ duyệt','Duyệt kế hoạch','Đăng ký với khách hàng','Chuẩn bị vật dụng','Thực hiện']},
-    {id:'f6',name:'GT – Trade Program',channel:'ALL',task_type:'Trade Program',steps:['Lên chương trình','Thông báo','Gửi sales','Gửi khách','Order']},
-    {id:'f7',name:'GT – Phát triển điểm bán',channel:'GT',task_type:'Expansion',steps:['Khảo sát','Tiếp cận','Chào hàng','Trưng bày','Review']},
-    {id:'f8',name:'MT – Khách hàng mới',channel:'MT',task_type:'Expansion',steps:['Tiếp cận','Gửi thông tin sản phẩm/giá','Đàm phán trading term/hợp đồng','Ký kết','Lên kệ']},
-  ];
-  // ---- TASKS (trống — load từ Sheet) ----
-  state.tasks = [];
+async function saveMaster(sheet,data){
+  const ok=await apiPost({action:'upsert',sheet,data});
+  if(ok)toast(`${sheet} đã lưu ✓`);
+  return ok;
 }
 
-function startApp() {
-  state.setupDone = true;
-  $('page-setup').style.display = 'none';
-  if (SCRIPT_URL) syncAll(); else { renderAll(); setSyncStatus('disconnected'); }
-}
-
-// ============================================================
-// NAVIGATION
-// ============================================================
-function showPage(name, btn) {
-  document.querySelectorAll('.page').forEach(p => { if(p.id !== 'page-setup') p.classList.remove('active'); });
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+// ---- NAVIGATION ----
+function showPage(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   $(`page-${name}`).classList.add('active');
-  if (btn) btn.classList.add('active');
-  renderPage(name);
+  if(btn)btn.classList.add('active');
+  if(name==='customers')renderCustomers();
+  else if(name==='products')renderProducts();
+  else if(name==='users')renderUsers();
+  else if(name==='config'){if(isManager())renderConfig();else{toast('Chỉ Manager mới có quyền này','warn');return;}}
+  else renderKanban();
 }
-function renderPage(name) {
-  if (name === 'kanban') renderKanban();
-  else if (name === 'customers') renderCustomers();
-  else if (name === 'products') renderProducts();
-  else if (name === 'users') renderUsers();
-  else if (name === 'config') renderConfig();
-}
-function renderAll() {
-  renderUserSelect();
-  renderKanban();
-}
+function renderAll(){renderKanban()}
 
-// ============================================================
-// USER SELECT
-// ============================================================
-function renderUserSelect() {
-  const sel = $('user-select');
-  sel.innerHTML = state.users.filter(u=>u.active==true||u.status==='Active'||u.status===true||(!u.active&&!u.status)).map(u =>
-    `<option value="${u.id}" ${u.id===state.currentUser?'selected':''}>${u.initials} – ${u.name}</option>`
-  ).join('');
-}
-function switchUser(id) {
-  state.currentUser = id;
-  renderKanban();
-}
-
-// ============================================================
-// KANBAN
-// ============================================================
-const STATUSES = ['todo','inprogress','review','done'];
-const STATUS_LABELS = {todo:'To Do',inprogress:'In Progress',review:'Review',done:'Done'};
-
-function getVisibleTasks() {
-  const u = getUser(state.currentUser);
-  let list = state.tasks;
-  if (u && u.role === 'sales') list = list.filter(t => t.pic_id === state.currentUser || t.pic_email === state.currentUser);
-  if (state.filterChannel !== 'all') list = list.filter(t => t.channel === state.filterChannel);
-  if (state.filterPIC !== 'all') list = list.filter(t => t.pic_id === state.filterPIC);
+// ---- KANBAN ----
+function getVisible(){
+  let list=state.tasks;
+  // Sales chỉ thấy task mình được assign
+  if(!isManager()){
+    const uid=state.currentUser.id;
+    const uemail=state.currentUser.email;
+    list=list.filter(t=>{
+      const ids=Array.isArray(t.pic_ids)?t.pic_ids:String(t.pic_ids||'').split(',').filter(Boolean);
+      return ids.includes(uid)||ids.includes(uemail)||t.pic_id===uid||t.pic_email===uemail;
+    });
+  }
+  if(state.filterChannel!=='all')list=list.filter(t=>t.channel===state.filterChannel);
+  if(state.filterPIC!=='all')list=list.filter(t=>{
+    const ids=Array.isArray(t.pic_ids)?t.pic_ids:String(t.pic_ids||'').split(',');
+    return ids.includes(state.filterPIC)||t.pic_id===state.filterPIC;
+  });
   return list;
 }
 
-function renderKanban() {
-  const visible = getVisibleTasks();
-  const now = new Date();
-
-  // stats
-  const overdue = visible.filter(t => t.status!=='done' && t.deadline && daysFrom(t.deadline)<0).length;
-  $('stats-row').innerHTML = `
+function renderKanban(){
+  if(!state.currentUser)return;
+  const visible=getVisible();
+  const overdue=visible.filter(t=>!['done','done_fail'].includes(t.status)&&t.deadline&&daysFrom(t.deadline)<0).length;
+  // Stats
+  $('stats-row').innerHTML=`
     <div class="stat-card"><div class="stat-label">Tổng tasks</div><div class="stat-val">${visible.length}</div></div>
     <div class="stat-card"><div class="stat-label">Đang làm</div><div class="stat-val" style="color:var(--blue)">${visible.filter(t=>t.status==='inprogress').length}</div></div>
-    <div class="stat-card"><div class="stat-label">Hoàn thành</div><div class="stat-val" style="color:var(--green)">${visible.filter(t=>t.status==='done').length}</div></div>
-    <div class="stat-card"><div class="stat-label">Quá hạn</div><div class="stat-val" style="color:${overdue>0?'var(--red)':'var(--text)'}">${overdue}</div></div>
-  `;
+    <div class="stat-card"><div class="stat-label">Chờ duyệt</div><div class="stat-val" style="color:var(--amber)">${visible.filter(t=>t.status==='review').length}</div></div>
+    <div class="stat-card"><div class="stat-label">Hoàn thành ✓</div><div class="stat-val" style="color:var(--green)">${visible.filter(t=>t.status==='done').length}</div></div>
+    <div class="stat-card"><div class="stat-label">Không thành công</div><div class="stat-val" style="color:var(--red)">${visible.filter(t=>t.status==='done_fail').length}</div></div>`;
 
-  // filter bar
-  const channels = ['all','MT','GT','B2B','HoReCa'];
-  const salesUsers = state.users.filter(u => u.role==='sales');
-  $('filter-bar').innerHTML = `
-    <span class="filter-label">Kênh:</span>
-    ${channels.map(c=>`<button class="filter-chip ${state.filterChannel===c?'active':''}" onclick="setFilter('channel','${c}')">${c==='all'?'Tất cả':c}</button>`).join('')}
-    <span class="filter-label" style="margin-left:8px">PIC:</span>
+  // Filter bar
+  const salesUsers=activeUsers().filter(u=>u.role!=='manager');
+  $('filter-bar').innerHTML=`
+    <span style="font-size:11px;color:var(--text3)">Kênh:</span>
+    <button class="filter-chip ${state.filterChannel==='all'?'active':''}" onclick="setFilter('channel','all')">Tất cả</button>
+    ${CHANNELS.map(c=>`<button class="filter-chip ${state.filterChannel===c?'active':''}" onclick="setFilter('channel','${c}')">${c}</button>`).join('')}
+    ${isManager()?`<span style="font-size:11px;color:var(--text3);margin-left:8px">PIC:</span>
     <button class="filter-chip ${state.filterPIC==='all'?'active':''}" onclick="setFilter('pic','all')">Tất cả</button>
-    ${salesUsers.map(u=>`<button class="filter-chip ${state.filterPIC===u.id?'active':''}" onclick="setFilter('pic','${u.id}')">${u.name}</button>`).join('')}
-    <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openTaskForm()">+ Thêm task</button>
-    ${SCRIPT_URL?`<button class="btn btn-sm" onclick="syncAll()">↻ Sync Sheet</button>`:''}
-  `;
+    ${salesUsers.map(u=>`<button class="filter-chip ${state.filterPIC===u.id?'active':''}" onclick="setFilter('pic','${u.id}')">${u.name}</button>`).join('')}`:''}
+    <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openTaskForm()">+ Thêm task</button>`;
 
-  // board
-  const board = $('board');
-  board.innerHTML = STATUSES.map(st => {
-    const colTasks = visible.filter(t => t.status === st);
-    const cards = colTasks.length ? colTasks.map(task => renderTaskCard(task)).join('') : `<div class="empty-col">Không có task</div>`;
-    return `
-      <div class="kol" id="kol-${st}" ondragover="dragOver(event,'${st}')" ondragleave="dragLeave(event,'${st}')" ondrop="drop(event,'${st}')">
-        <div class="kol-head">
-          <span class="kol-title">${STATUS_LABELS[st]}</span>
-          <span class="kol-badge">${colTasks.length}</span>
-        </div>
-        ${cards}
-      </div>`;
+  // Board
+  $('board').innerHTML=STATUSES.map(st=>{
+    const col=visible.filter(t=>t.status===st);
+    const colClass=COL_COLORS[st]||'';
+    const cards=col.length?col.map(t=>renderCard(t)).join(''):`<div class="empty-col">Không có task</div>`;
+    const colTitle=st==='done'?'✅ Hoàn thành':st==='done_fail'?'❌ Không thành công':SL[st];
+    return `<div class="kol ${colClass}" id="kol-${st}"
+      ondragover="dragOver(event,'${st}')" ondragleave="dragLeave(event,'${st}')" ondrop="drop(event,'${st}')">
+      <div class="kol-head"><span class="kol-title">${colTitle}</span><span class="kol-cnt">${col.length}</span></div>
+      ${cards}
+    </div>`;
   }).join('');
 }
 
-function renderTaskCard(task) {
-  const cust = getCustomer(task.customer_id);
-  const days = task.deadline ? daysFrom(task.deadline) : null;
-  const ov = task.status!=='done' && days!==null && days<0;
-  const soon = task.status!=='done' && days!==null && days>=0 && days<=3;
-  const sp = subProg(task);
-  const flow = getFlow(task.channel);
-  const stepIdx = flow.indexOf(task.step);
-  const u = getUser(task.pic_id);
-  const st = task.status;
+function renderCard(task){
+  const cust=getCustomer(task.customer_id);
+  const pics=getPics(task);
+  const days=task.deadline?daysFrom(task.deadline):null;
+  const ov=!['done','done_fail'].includes(task.status)&&days!==null&&days<0;
+  const soon=!['done','done_fail'].includes(task.status)&&days!==null&&days>=0&&days<=3;
+  const sp=subProg(task);
+  const comments=Array.isArray(task.comments)?task.comments:[];
+  const canDrag=isManager()||(task.status!=='done'&&task.status!=='done_fail');
+  const isDone=['done','done_fail'].includes(task.status);
 
-  return `<div class="task-card" id="card-${task.id}" draggable="true"
-    ondragstart="dragStart(event,${task.id})" onclick="openTaskDetail(${task.id})">
+  // Move buttons — sales can't push to done/done_fail (only review)
+  let moveBtns='';
+  const st=task.status;
+  if(!isDone){
+    if(st!=='todo')moveBtns+=`<button class="move-btn" onclick="event.stopPropagation();moveTask('${task.id}','${st==='inprogress'?'todo':st==='review'?'inprogress':'inprogress'}')">← ${st==='inprogress'?'To Do':'In Progress'}</button>`;
+    if(st==='todo')moveBtns+=`<button class="move-btn" onclick="event.stopPropagation();moveTask('${task.id}','inprogress')">→ In Progress</button>`;
+    if(st==='inprogress')moveBtns+=`<button class="move-btn" onclick="event.stopPropagation();moveTask('${task.id}','review')">→ Chờ duyệt</button>`;
+  }
+
+  // Manager approve button
+  let approveBtn='';
+  if(isManager()&&st==='review'){
+    approveBtn=`
+      <button class="manager-approve-btn" onclick="event.stopPropagation();openApproveModal('${task.id}')">
+        ⚡ Duyệt & Xác nhận hoàn thành
+      </button>`;
+  }
+
+  return `<div class="task-card ${task.dragging?'dragging':''}" id="card-${task.id}"
+    ${canDrag?`draggable="true" ondragstart="dragStart(event,'${task.id}')"`:''}
+    onclick="openTaskDetail('${task.id}')">
     <div class="task-title">${task.title}</div>
     <div class="task-badges">
       <span class="badge badge-${task.channel}">${task.channel}</span>
       ${cust?`<span class="badge badge-gray">${cust.name}</span>`:''}
       ${ov?`<span class="badge badge-overdue">Quá hạn</span>`:''}
-      ${soon&&!ov?`<span class="badge badge-soon">Sắp hết hạn</span>`:''}
+      ${soon&&!ov?`<span class="badge badge-soon">Sắp hạn</span>`:''}
     </div>
-    ${task.step?`<div class="flow-step-current">▶ ${task.step}</div>`:''}
-    ${sp?`<div class="sp-bar"><div class="sp-fill" style="width:${sp.pct}%"></div></div><div class="sp-label">${sp.done}/${sp.total} subtasks</div>`:''}
+    ${task.step?`<div class="task-step">▶ ${task.step}</div>`:''}
+    ${sp?`<div class="sp-bar"><div class="sp-fill" style="width:${sp.pct}%"></div></div><div class="sp-txt">${sp.done}/${sp.total} subtasks</div>`:''}
+    ${comments.length?`<div style="font-size:10px;color:var(--text3);margin-top:3px">💬 ${comments.length} comment${comments.length>1?'s':''}</div>`:''}
     <div class="task-foot">
       <span class="task-dl ${ov?'ov':soon?'soon':''}">${fmtDate(task.deadline)}</span>
-      ${u?`<div class="av av-sm" title="${u.name}">${u.initials}</div>`:''}
+      <div class="task-pics">${pics.slice(0,3).map(u=>`<div class="av av-sm" title="${u.name}">${u.initials||u.name[0]}</div>`).join('')}${pics.length>3?`<div class="av av-sm">+${pics.length-3}</div>`:''}</div>
     </div>
-    <div class="move-btns" onclick="event.stopPropagation()">
-      ${st!=='todo'?`<button class="move-btn" onclick="moveTask(${task.id},'${st==='inprogress'?'todo':st==='review'?'inprogress':'review'}')">← ${st==='inprogress'?'To Do':st==='review'?'In Progress':'In Progress'}</button>`:''}
-      ${st!=='done'?`<button class="move-btn" onclick="moveTask(${task.id},'${st==='todo'?'inprogress':st==='inprogress'?'review':'done'}')">→ ${st==='todo'?'In Progress':st==='inprogress'?'Review':'Done'}</button>`:''}
-    </div>
+    ${moveBtns?`<div class="move-btns" onclick="event.stopPropagation()">${moveBtns}</div>`:''}
+    ${approveBtn}
   </div>`;
 }
 
-function setFilter(type, val) {
-  if (type==='channel') state.filterChannel=val;
+function setFilter(type,val){
+  if(type==='channel')state.filterChannel=val;
   else state.filterPIC=val;
   renderKanban();
 }
 
-// ============================================================
-// DRAG & DROP
-// ============================================================
-let dragId = null;
-function dragStart(e, id) { dragId=id; e.dataTransfer.effectAllowed='move'; setTimeout(()=>{ const c=document.getElementById('card-'+id); if(c) c.classList.add('dragging'); },0); }
-function dragOver(e, st) { e.preventDefault(); document.getElementById('kol-'+st).classList.add('drag-over'); }
-function dragLeave(e, st) { document.getElementById('kol-'+st).classList.remove('drag-over'); }
-async function drop(e, st) {
+// ---- DRAG & DROP ----
+let dragId=null;
+function dragStart(e,id){dragId=id;setTimeout(()=>{const c=document.getElementById('card-'+id);if(c)c.classList.add('dragging')},0)}
+function dragOver(e,st){e.preventDefault();document.getElementById('kol-'+st).classList.add('drag-over')}
+function dragLeave(e,st){document.getElementById('kol-'+st).classList.remove('drag-over')}
+async function drop(e,st){
   e.preventDefault();
   document.getElementById('kol-'+st).classList.remove('drag-over');
-  if (dragId !== null) {
-    const c=document.getElementById('card-'+dragId); if(c) c.classList.remove('dragging');
-    await moveTask(dragId, st);
-    dragId=null;
+  if(dragId===null)return;
+  const c=document.getElementById('card-'+dragId);if(c)c.classList.remove('dragging');
+  // Block sales from dragging to done/done_fail
+  if(!isManager()&&(st==='done'||st==='done_fail')){
+    toast('Chỉ Manager mới có thể xác nhận hoàn thành','warn');dragId=null;return;
   }
+  await moveTask(dragId,st);
+  dragId=null;
 }
-
-async function moveTask(id, newStatus) {
-  const task = state.tasks.find(t => String(t.id)===String(id));
-  if (!task) return;
-  task.status = newStatus;
-  const flow = getFlow(task.channel);
-  if (newStatus==='inprogress' && flow.length && !flow.includes(task.step)) task.step = flow[0];
-  if (newStatus==='done') task.step = flow[flow.length-1]||task.step;
+async function moveTask(id,newStatus){
+  const task=state.tasks.find(t=>String(t.id)===String(id));
+  if(!task)return;
+  task.status=newStatus;
+  // Auto-advance step
+  const steps=getFlowSteps(task.flow_name||task.channel);
+  if(newStatus==='done'||newStatus==='done_fail')task.step=steps[steps.length-1]||task.step;
+  // Add activity comment
+  addSystemComment(task,`Chuyển sang "${SL[newStatus]}"`);
   renderKanban();
-  if (SCRIPT_URL) await saveTask(task);
+  await saveTask(task);
 }
 
-// ============================================================
-// TASK DETAIL MODAL
-// ============================================================
-function openTaskDetail(id) {
-  const task = state.tasks.find(t => String(t.id)===String(id));
-  if (!task) return;
-  const cust = getCustomer(task.customer_id);
-  const u = getUser(task.pic_id);
-  const flow = getFlow(task.channel);
-  const stepIdx = flow.indexOf(task.step);
-  const sp = subProg(task);
-  const subs = Array.isArray(task.subtasks) ? task.subtasks : [];
-  const days = task.deadline ? daysFrom(task.deadline) : null;
-  const ov = task.status!=='done' && days!==null && days<0;
+// ---- APPROVE MODAL (Manager only) ----
+function openApproveModal(taskId){
+  const task=state.tasks.find(t=>String(t.id)===String(taskId));
+  if(!task)return;
+  $('modal-container').innerHTML=`
+    <div class="modal-bg" onclick="closeModal()">
+      <div class="modal" onclick="event.stopPropagation()" style="max-width:400px">
+        <div class="modal-header">
+          <div class="modal-title">⚡ Duyệt hoàn thành: ${task.title}</div>
+          <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+        <div style="margin-bottom:12px;font-size:13px;color:var(--text2)">Chọn kết quả hoàn thành:</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-success" style="justify-content:center;padding:12px" onclick="approveTask('${taskId}','done')">
+            ✅ Hoàn thành thành công
+          </button>
+          <button class="btn btn-danger" style="justify-content:center;padding:12px;background:var(--red-lt)" onclick="approveTask('${taskId}','done_fail')">
+            ❌ Không thành công / Cancel
+          </button>
+        </div>
+        <div class="form-row" style="margin-top:12px">
+          <label class="form-label">Ghi chú của Manager (tuỳ chọn)</label>
+          <textarea id="approve-note" class="form-input" placeholder="Nhận xét, lý do..."></textarea>
+        </div>
+      </div>
+    </div>`;
+}
+async function approveTask(taskId,result){
+  const task=state.tasks.find(t=>String(t.id)===String(taskId));
+  if(!task)return;
+  const note=$('approve-note')?$('approve-note').value.trim():'';
+  task.status=result;
+  const msg=result==='done'?'✅ Manager đã xác nhận HOÀN THÀNH':'❌ Manager đánh dấu KHÔNG THÀNH CÔNG'+(note?` — ${note}`:'');
+  addSystemComment(task,msg);
+  if(note)addComment(task,note);
+  closeModal();
+  renderKanban();
+  await saveTask(task);
+  toast(result==='done'?'Đã xác nhận hoàn thành ✓':'Đã đánh dấu không thành công');
+}
 
-  const flowHtml = flow.length ? `
-    <div class="flow-track">
-      ${flow.map((s,i) => `
-        ${i>0?`<span class="flow-arrow-sm">›</span>`:''}
-        <span class="flow-node ${i<stepIdx?'completed':i===stepIdx?'current':''}">${s}</span>
-      `).join('')}
-    </div>` : '';
+// ---- COMMENTS ----
+function addSystemComment(task,text){
+  if(!Array.isArray(task.comments))task.comments=[];
+  task.comments.push({
+    id:Date.now(),
+    author:'system',
+    authorName:'Hệ thống',
+    text,
+    time:new Date().toISOString(),
+    isSystem:true,
+  });
+}
+function addComment(task,text){
+  if(!text||!text.trim())return;
+  if(!Array.isArray(task.comments))task.comments=[];
+  const u=state.currentUser;
+  task.comments.push({
+    id:Date.now(),
+    author:u.id,
+    authorName:u.name,
+    authorInitials:u.initials||u.name[0],
+    text:text.trim(),
+    time:new Date().toISOString(),
+    isSystem:false,
+  });
+}
 
-  const subsHtml = subs.map(s => `
-    <div class="subtask-item" id="si-${task.id}-${s.id}">
-      <input type="checkbox" ${s.done?'checked':''} onchange="toggleSubtask(${task.id},${s.id},this.checked)">
+// ---- TASK DETAIL MODAL ----
+function openTaskDetail(id){
+  const task=state.tasks.find(t=>String(t.id)===String(id));
+  if(!task)return;
+  const cust=getCustomer(task.customer_id);
+  const pics=getPics(task);
+  const sp=subProg(task);
+  const steps=getFlowSteps(task.flow_name||task.channel);
+  const stepIdx=steps.indexOf(task.step);
+  const comments=Array.isArray(task.comments)?task.comments:[];
+  const subs=Array.isArray(task.subtasks)?task.subtasks:[];
+  const days=task.deadline?daysFrom(task.deadline):null;
+  const ov=!['done','done_fail'].includes(task.status)&&days!==null&&days<0;
+  const isDone=['done','done_fail'].includes(task.status);
+
+  const flowHtml=steps.length?`<div class="flow-track">
+    ${steps.map((s,i)=>`
+      ${i>0?`<span style="font-size:10px;color:var(--text3);padding:0 1px">›</span>`:''}
+      <span class="flow-node ${i<stepIdx?'done':i===stepIdx?'current':''}">${s}</span>`).join('')}
+  </div>`:'';
+
+  const commentsHtml=`
+    <div class="comment-list" id="comment-list-${id}">
+      ${comments.map(c=>c.isSystem?`
+        <div style="text-align:center;margin:4px 0">
+          <span style="font-size:10px;color:var(--text3);background:var(--surface2);padding:2px 8px;border-radius:8px">${c.text} · ${fmtDT(c.time)}</span>
+        </div>`:
+        `<div class="comment-item">
+          <div class="av av-sm" style="margin-top:2px">${c.authorInitials||c.authorName?.[0]||'?'}</div>
+          <div class="comment-body">
+            <div class="comment-header">
+              <span class="comment-author">${c.authorName}</span>
+              <span class="comment-time">${fmtDT(c.time)}</span>
+            </div>
+            <div class="comment-text">${c.text}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+    <div class="comment-input-row">
+      <textarea id="new-comment-${id}" placeholder="Thêm comment hoặc cập nhật tình hình... (Ctrl+Enter để gửi)" onkeydown="if(event.ctrlKey&&event.key==='Enter')submitComment('${id}')"></textarea>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button class="btn btn-primary btn-sm" onclick="submitComment('${id}')">Gửi</button>
+        <label class="btn btn-sm" style="cursor:pointer;text-align:center" title="Upload file (max 4MB)">
+          📎<input type="file" accept="image/*,.pdf,.xlsx,.xls,.doc,.docx" style="display:none" onchange="handleFileUpload(event,'${id}')">
+        </label>
+      </div>
+    </div>
+    <div id="attachments-${id}" class="attachment-list">${(Array.isArray(task.attachments)?task.attachments:[]).map(a=>`
+      <div class="attachment-item">
+        <span class="attachment-icon">${a.mimeType&&a.mimeType.startsWith('image/')?'🖼️':a.mimeType==='application/pdf'?'📄':'📊'}</span>
+        <span class="attachment-name"><a href="${a.viewUrl}" target="_blank">${a.fileName}</a></span>
+        <span class="attachment-size">${a.size?Math.round(a.size/1024)+'KB':''}</span>
+      </div>`).join('')}
+    </div>`;
+
+  const subsHtml=subs.map(s=>`
+    <div class="subtask-item" id="si-${id}-${s.id}">
+      <input type="checkbox" ${s.done?'checked':''} onchange="toggleSub('${id}',${s.id},this.checked)">
       <span class="subtask-text ${s.done?'done':''}">${s.text}</span>
-      <button class="subtask-del" onclick="delSubtask(${task.id},${s.id})">×</button>
+      ${!isDone?`<button class="subtask-del" onclick="delSub('${id}',${s.id})">×</button>`:''}
     </div>`).join('');
 
-  const html = `
+  // Step selector (sales can update step, but not approve)
+  const stepSelector=!isDone?`
+    <div class="detail-sec">
+      <div class="detail-sec-title">Cập nhật bước</div>
+      <select class="form-input" style="font-size:12px" onchange="updateStep('${id}',this.value)">
+        ${steps.map(s=>`<option value="${s}" ${s===task.step?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </div>`:'';
+
+  $('modal-container').innerHTML=`
     <div class="modal-bg" onclick="closeModal()">
-      <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal modal-lg" onclick="event.stopPropagation()">
         <div class="modal-header">
           <div>
             <div class="task-badges" style="margin-bottom:6px">
               <span class="badge badge-${task.channel}">${task.channel}</span>
-              <span class="badge badge-${task.status}">${STATUS_LABELS[task.status]}</span>
+              <span class="badge badge-${task.status}">${SL[task.status]}</span>
               ${ov?`<span class="badge badge-overdue">Quá hạn</span>`:''}
             </div>
             <div class="modal-title">${task.title}</div>
           </div>
           <button class="modal-close" onclick="closeModal()">×</button>
         </div>
-        <div class="detail-meta-grid">
+
+        <div class="detail-meta">
           <div class="detail-meta-item"><div class="label">Khách hàng</div><div class="value">${cust?cust.name:'—'}</div></div>
-          <div class="detail-meta-item"><div class="label">PIC</div><div class="value">${u?u.name:'—'}</div></div>
           <div class="detail-meta-item"><div class="label">Deadline</div><div class="value" style="${ov?'color:var(--red)':''}">${fmtDate(task.deadline)}</div></div>
-          <div class="detail-meta-item"><div class="label">Tiến độ subtasks</div><div class="value">${sp?sp.done+'/'+sp.total+' ('+sp.pct+'%)':'—'}</div></div>
+          <div class="detail-meta-item"><div class="label">Flow</div><div class="value" style="font-size:12px">${task.flow_name||'—'}</div></div>
         </div>
-        ${flow.length?`<div class="detail-section"><div class="detail-section-title">Flow tiến độ</div>${flowHtml}</div>`:''}
-        ${task.notes?`<div class="detail-section"><div class="detail-section-title">Ghi chú</div><div class="notes-box">${task.notes}</div></div>`:''}
-        <div class="detail-section">
-          <div class="detail-section-title">Subtasks (${sp?sp.done+'/'+sp.total:'0/0'})</div>
-          <div class="subtask-list" id="subs-${task.id}">${subsHtml}</div>
-          <div class="add-subtask">
-            <input type="text" id="new-sub-${task.id}" placeholder="Thêm subtask mới..." onkeydown="if(event.key==='Enter')addSubtask(${task.id})">
-            <button class="btn btn-sm" onclick="addSubtask(${task.id})">+ Thêm</button>
+
+        <div class="detail-sec">
+          <div class="detail-sec-title">PICs / Người phụ trách</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            ${pics.map(u=>`<div style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--surface2);padding:3px 8px;border-radius:8px">
+              <div class="av av-sm">${u.initials||u.name[0]}</div>${u.name}
+            </div>`).join('')}
           </div>
         </div>
-        ${task.step?`
-        <div class="detail-section">
-          <div class="detail-section-title">Cập nhật bước hiện tại</div>
-          <select class="form-input" style="font-size:12px" onchange="updateStep(${task.id},this.value)">
-            ${flow.map(s=>`<option value="${s}" ${s===task.step?'selected':''}>${s}</option>`).join('')}
-          </select>
-        </div>`:''}
+
+        ${steps.length?`<div class="detail-sec"><div class="detail-sec-title">Tiến độ flow</div>${flowHtml}</div>`:''}
+        ${task.notes?`<div class="detail-sec"><div class="detail-sec-title">Ghi chú</div><div class="notes-box">${task.notes}</div></div>`:''}
+
+        ${stepSelector}
+
+        <div class="detail-sec">
+          <div class="detail-sec-title">Subtasks (${sp?sp.done+'/'+sp.total:'0/0'})</div>
+          <div class="subtask-list" id="subs-${id}">${subsHtml}</div>
+          ${!isDone?`<div class="add-sub-row">
+            <input type="text" id="ns-${id}" placeholder="Thêm subtask..." onkeydown="if(event.key==='Enter')addSub('${id}')">
+            <button class="btn btn-sm" onclick="addSub('${id}')">+ Thêm</button>
+          </div>`:''}
+        </div>
+
+        <div class="detail-sec">
+          <div class="detail-sec-title">💬 Comments & Cập nhật</div>
+          ${commentsHtml}
+        </div>
+
         <div class="form-actions">
-          <button class="btn btn-primary btn-sm" onclick="closeModal();openTaskForm(${task.id})">✎ Chỉnh sửa</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteTask(${task.id})">✕ Xóa task</button>
+          ${!isDone&&isManager()?`<button class="btn btn-primary btn-sm" onclick="closeModal();openTaskForm('${id}')">✎ Sửa</button>`:''}
+          ${!isDone&&isManager()?`<button class="btn btn-danger btn-sm" onclick="deleteTask('${id}')">✕ Xóa</button>`:''}
+          ${isManager()&&task.status==='review'?`<button class="btn btn-warn btn-sm" onclick="closeModal();openApproveModal('${id}')">⚡ Duyệt hoàn thành</button>`:''}
           <button class="btn btn-sm" onclick="closeModal()">Đóng</button>
         </div>
       </div>
     </div>`;
-  $('modal-container').innerHTML = html;
 }
 
-function closeModal() { $('modal-container').innerHTML = ''; }
+async function handleFileUpload(event, taskId){
+  const file=event.target.files[0];
+  if(!file)return;
+  if(file.size>4*1024*1024){toast('File quá lớn. Giới hạn 4MB.','err');return;}
+  toast('Đang upload '+file.name+'...');
+  const task=state.tasks.find(t=>String(t.id)===String(taskId));
+  if(!task)return;
+  const result=await uploadFileToDrive(file,taskId);
+  if(result){
+    if(!Array.isArray(task.attachments))task.attachments=[];
+    task.attachments.push({fileName:file.name,mimeType:file.type,viewUrl:result.viewUrl||'#',directUrl:result.directUrl||'#',size:file.size,uploadedBy:state.currentUser.name,uploadedAt:new Date().toISOString()});
+    addSystemComment(task,'📎 Đã đính kèm file: '+file.name+' (bởi '+state.currentUser.name+')');
+    toast('Upload thành công: '+file.name);
+    openTaskDetail(taskId);
+    renderKanban();
+    await saveTask(task);
+  }
+  event.target.value='';
+}
 
-async function toggleSubtask(taskId, subId, done) {
-  const task = state.tasks.find(t => String(t.id)===String(taskId));
-  if (!task) return;
-  const subs = Array.isArray(task.subtasks) ? task.subtasks : [];
-  const s = subs.find(x => String(x.id)===String(subId));
-  if (s) s.done = done;
-  const el = document.querySelector(`#si-${taskId}-${subId} .subtask-text`);
-  if (el) el.className = `subtask-text ${done?'done':''}`;
+async function submitComment(taskId){
+  const inp=$(`new-comment-${taskId}`);
+  if(!inp||!inp.value.trim())return;
+  const task=state.tasks.find(t=>String(t.id)===String(taskId));
+  if(!task)return;
+  addComment(task,inp.value);
+  inp.value='';
+  openTaskDetail(taskId); // re-render modal
   renderKanban();
-  if (SCRIPT_URL) await saveTask(task);
+  await saveTask(task);
 }
-
-async function addSubtask(taskId) {
-  const inp = $(`new-sub-${taskId}`);
-  if (!inp || !inp.value.trim()) return;
-  const task = state.tasks.find(t => String(t.id)===String(taskId));
-  if (!task) return;
-  if (!Array.isArray(task.subtasks)) task.subtasks = [];
-  task.subtasks.push({id: Date.now(), text: inp.value.trim(), done: false});
+async function toggleSub(taskId,subId,done){
+  const task=state.tasks.find(t=>String(t.id)===String(taskId));
+  if(!task)return;
+  const s=(task.subtasks||[]).find(x=>String(x.id)===String(subId));
+  if(s)s.done=done;
   openTaskDetail(taskId);
   renderKanban();
-  if (SCRIPT_URL) await saveTask(task);
+  await saveTask(task);
 }
-
-async function delSubtask(taskId, subId) {
-  const task = state.tasks.find(t => String(t.id)===String(taskId));
-  if (!task) return;
-  task.subtasks = (task.subtasks||[]).filter(s => String(s.id)!==String(subId));
+async function addSub(taskId){
+  const inp=$(`ns-${taskId}`);
+  if(!inp||!inp.value.trim())return;
+  const task=state.tasks.find(t=>String(t.id)===String(taskId));
+  if(!task)return;
+  if(!Array.isArray(task.subtasks))task.subtasks=[];
+  task.subtasks.push({id:Date.now(),text:inp.value.trim(),done:false});
   openTaskDetail(taskId);
   renderKanban();
-  if (SCRIPT_URL) await saveTask(task);
+  await saveTask(task);
 }
-
-async function updateStep(taskId, step) {
-  const task = state.tasks.find(t => String(t.id)===String(taskId));
-  if (!task) return;
-  task.step = step;
+async function delSub(taskId,subId){
+  const task=state.tasks.find(t=>String(t.id)===String(taskId));
+  if(!task)return;
+  task.subtasks=(task.subtasks||[]).filter(x=>String(x.id)!==String(subId));
+  openTaskDetail(taskId);
   renderKanban();
-  if (SCRIPT_URL) await saveTask(task);
+  await saveTask(task);
+}
+async function updateStep(taskId,step){
+  const task=state.tasks.find(t=>String(t.id)===String(taskId));
+  if(!task)return;
+  task.step=step;
+  addSystemComment(task,`Cập nhật bước: "${step}" bởi ${state.currentUser.name}`);
+  openTaskDetail(taskId);
+  renderKanban();
+  await saveTask(task);
+}
+async function deleteTask(id){
+  if(!confirm('Xoá task này?'))return;
+  state.tasks=state.tasks.filter(t=>String(t.id)!==String(id));
+  closeModal();renderKanban();
+  await apiPost({action:'delete',sheet:'Tasks',id});
+  toast('Đã xóa task');
 }
 
-// ============================================================
-// TASK FORM (ADD/EDIT)
-// ============================================================
-function openTaskForm(editId) {
-  const task = editId ? state.tasks.find(t=>String(t.id)===String(editId)) : null;
-  const t = task || {title:'',customer_id:'',channel:'MT',pic_id:'nt',status:'todo',step:'',deadline:'',notes:'',subtasks:[],product_ids:''};
-  const flow = getFlow(t.channel);
+// ---- TASK FORM ----
+function openTaskForm(editId){
+  const task=editId?state.tasks.find(t=>String(t.id)===String(editId)):null;
+  const t=task||{title:'',customer_id:'',channel:'MT',pic_ids:[],status:'todo',step:'',flow_name:'',deadline:'',notes:'',subtasks:[],comments:[]};
+  const tPicIds=Array.isArray(t.pic_ids)?t.pic_ids:String(t.pic_ids||'').split(',').filter(Boolean);
+  const flows=state.config.filter(f=>f.channel===t.channel||f.channel==='ALL');
+  const flow=getFlowSteps(t.flow_name||t.channel);
 
-  const html = `
+  $('modal-container').innerHTML=`
     <div class="modal-bg" onclick="closeModal()">
-      <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal modal-lg" onclick="event.stopPropagation()">
         <div class="modal-header">
-          <div class="modal-title">${task?'Chỉnh sửa task':'Thêm task mới'}</div>
+          <div class="modal-title">${task?'Sửa task':'Thêm task mới'}</div>
           <button class="modal-close" onclick="closeModal()">×</button>
         </div>
         <div class="form-row">
           <label class="form-label">Tiêu đề *</label>
           <input type="text" id="f-title" class="form-input" value="${t.title}" placeholder="Tên task...">
         </div>
-        <div class="form-grid2">
-          <div class="form-row">
-        <div class="form-grid2">
+        <div class="g2">
           <div class="form-row">
             <label class="form-label">Kênh *</label>
-            <select id="f-channel" class="form-input" onchange="updateFlowSelect();filterCustomersByChannel()">
-              ${['MT','GT','B2B','HoReCa'].map(c=>`<option value="${c}" ${t.channel===c?'selected':''}>${c}</option>`).join('')}
+            <select id="f-channel" class="form-input" onchange="onChannelChange()">
+              ${CHANNELS.map(c=>`<option value="${c}" ${t.channel===c?'selected':''}>${c}</option>`).join('')}
             </select>
           </div>
           <div class="form-row">
             <label class="form-label">Flow / Quy trình</label>
-            <select id="f-flowname" class="form-input" onchange="updateFlowStepsFromName()">
-              ${state.config.filter(f=>f.channel===t.channel||f.channel==='ALL').map(f=>`<option value="${f.id||f.name}" ${f.name===t.flow_name?'selected':''}>${f.name}</option>`).join('')}
+            <select id="f-flowname" class="form-input" onchange="onFlowChange()">
+              ${flows.map(f=>`<option value="${f.name}" ${f.name===t.flow_name?'selected':''}>${f.name}</option>`).join('')}
             </select>
           </div>
         </div>
         <div class="form-row">
           <label class="form-label">Khách hàng *</label>
-          <select id="f-customer" class="form-input" onchange="toggleNewCustomer()">
+          <select id="f-customer" class="form-input" onchange="onCustomerChange()">
             <option value="">-- Chọn khách hàng --</option>
-            ${state.customers.filter(c=>c.active==true||c.status==='Active'||(!c.active&&!c.status)).map(c=>`<option value="${c.id}" ${String(t.customer_id)===String(c.id)?'selected':''}>${c.name}${c.channel?' ('+c.channel+')':''}</option>`).join('')}
+            ${state.customers.filter(c=>c.status==='Active'||c.active!==false).map(c=>`<option value="${c.id}" ${String(t.customer_id)===String(c.id)?'selected':''}>${c.name}${c.channel?' ('+c.channel+')':''}</option>`).join('')}
             <option value="__new__">➕ Thêm khách hàng mới...</option>
           </select>
         </div>
-        <div id="new-customer-fields" style="display:none;background:var(--blue-light);border-radius:var(--r);padding:10px;margin-bottom:4px;border:0.5px solid rgba(24,95,165,0.2)">
-          <div style="font-size:11px;font-weight:600;color:var(--blue-dark);margin-bottom:8px">➕ THÊM KHÁCH HÀNG MỚI — tự lưu vào Sheet</div>
-          <div class="form-grid2">
-            <div class="form-row"><label class="form-label">Tên KH *</label><input type="text" id="nc-name" class="form-input" placeholder="Tên khách hàng..."></div>
-            <div class="form-row"><label class="form-label">Kênh</label><select id="nc-channel" class="form-input">${['MT','GT','B2B','HoReCa'].map(c=>`<option>${c}</option>`).join('')}</select></div>
+        <div id="new-cust-box" style="display:none" class="inline-add-box">
+          <div class="inline-add-title">➕ Thêm khách hàng mới — tự lưu vào Sheet</div>
+          <div class="g2">
+            <div class="form-row"><label class="form-label">Tên *</label><input type="text" id="nc-name" class="form-input" placeholder="Tên KH..."></div>
+            <div class="form-row"><label class="form-label">Kênh</label><select id="nc-channel" class="form-input">${CHANNELS.map(c=>`<option>${c}</option>`).join('')}</select></div>
           </div>
-          <div class="form-grid2">
-            <div class="form-row"><label class="form-label">Vùng</label><input type="text" id="nc-region" class="form-input" placeholder="HCM, Hà Nội..."></div>
-            <div class="form-row"><label class="form-label">Người liên hệ</label><input type="text" id="nc-contact" class="form-input" placeholder="Họ tên..."></div>
-          </div>
-          <div class="form-grid2">
+          <div class="g3">
+            <div class="form-row"><label class="form-label">Vùng</label><input type="text" id="nc-region" class="form-input" placeholder="HCM..."></div>
+            <div class="form-row"><label class="form-label">Liên hệ</label><input type="text" id="nc-contact" class="form-input" placeholder="Họ tên..."></div>
             <div class="form-row"><label class="form-label">SĐT</label><input type="text" id="nc-phone" class="form-input" placeholder="0901..."></div>
-            <div class="form-row"><label class="form-label">Email</label><input type="text" id="nc-email" class="form-input" placeholder="email@..."></div>
-          </div>
-        </div>
-          <div class="form-row">
-            <label class="form-label">Kênh *</label>
-            <select id="f-channel" class="form-input" onchange="updateFlowSelect()">
-              ${['MT','GT','B2B','HoReCa'].map(c=>`<option value="${c}" ${t.channel===c?'selected':''}>${c}</option>`).join('')}
-            </select>
-          </div>
-        </div>
-        <div class="form-grid2">
-          <div class="form-row">
-            <label class="form-label">PIC</label>
-            <select id="f-pic" class="form-input">
-              ${state.users.filter(u=>u.active==true||u.status==='Active'||u.status===true||(!u.active&&!u.status)).map(u=>`<option value="${u.id}" ${t.pic_id===u.id?'selected':''}>${u.name}</option>`).join('')}
-            </select>
-          </div>
-          <div class="form-row">
-            <label class="form-label">Trạng thái</label>
-            <select id="f-status" class="form-input">
-              ${STATUSES.map(s=>`<option value="${s}" ${t.status===s?'selected':''}>${STATUS_LABELS[s]}</option>`).join('')}
-            </select>
           </div>
         </div>
         <div class="form-row">
-          <label class="form-label">Bước hiện tại</label>
-          <select id="f-step" class="form-input">
-            ${flow.map(s=>`<option value="${s}" ${t.step===s?'selected':''}>${s}</option>`).join('')}
-          </select>
+          <label class="form-label">PICs / Người phụ trách (chọn nhiều)</label>
+          <div class="pic-multi" id="pic-multi">
+            ${activeUsers().map(u=>`
+              <div class="pic-chip ${tPicIds.includes(u.id)?'selected':''}" id="pc-${u.id}" onclick="togglePIC('${u.id}')">
+                <div class="av av-sm">${u.initials||u.name[0]}</div>${u.name}
+              </div>`).join('')}
+          </div>
+        </div>
+        <div class="g2">
+          <div class="form-row">
+            <label class="form-label">Trạng thái</label>
+            <select id="f-status" class="form-input">
+              ${['todo','inprogress','review'].map(s=>`<option value="${s}" ${t.status===s?'selected':''}>${SL[s]}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Bước hiện tại</label>
+            <select id="f-step" class="form-input">
+              ${flow.map(s=>`<option value="${s}" ${t.step===s?'selected':''}>${s}</option>`).join('')}
+            </select>
+          </div>
         </div>
         <div class="form-row">
           <label class="form-label">Deadline</label>
@@ -913,272 +1083,238 @@ function openTaskForm(editId) {
         </div>
       </div>
     </div>`;
-  $('modal-container').innerHTML = html;
 }
 
-function updateFlowSelect() {
-  const ch = $('f-channel').value;
-  // Update flow name dropdown
-  const flowSel = $('f-flowname');
-  if (flowSel) {
-    const flows = state.config.filter(f => f.channel === ch || f.channel === 'ALL');
-    flowSel.innerHTML = flows.map(f => `<option value="${f.id||f.name}">${f.name}</option>`).join('');
-    // Update steps based on first flow
-    updateFlowStepsFromName();
-  } else {
-    // Fallback
-    const flow = getFlow(ch);
-    const stepSel = $('f-step');
-    if (stepSel) stepSel.innerHTML = flow.map(s=>`<option value="${s}">${s}</option>`).join('');
-  }
-  filterCustomersByChannel();
-}
-
-
-// ============================================================
-// INLINE ADD — Khách hàng mới / Sản phẩm mới từ task form
-// ============================================================
-function toggleNewCustomer() {
-  const val = document.getElementById('f-customer').value;
-  const fields = document.getElementById('new-customer-fields');
-  if (fields) fields.style.display = val === '__new__' ? 'block' : 'none';
-}
-
-function filterCustomersByChannel() {
-  const ch = document.getElementById('f-channel') ? document.getElementById('f-channel').value : '';
-  const sel = document.getElementById('f-customer');
-  if (!sel) return;
-  const current = sel.value;
-  const filtered = state.customers.filter(c => !ch || c.channel === ch || c.channel === 'ALL' || !c.channel);
-  sel.innerHTML = '<option value="">-- Chọn khách hàng --</option>' +
-    filtered.map(c => `<option value="${c.id}" ${String(c.id)===current?'selected':''}>${c.name}${c.channel?' ('+c.channel+')':''}</option>`).join('') +
-    '<option value="__new__">➕ Thêm khách hàng mới...</option>';
-}
-
-function updateFlowStepsFromName() {
-  const flowId = document.getElementById('f-flowname') ? document.getElementById('f-flowname').value : '';
-  const flow = state.config.find(f => f.id === flowId || f.name === flowId);
-  const steps = flow ? (Array.isArray(flow.steps) ? flow.steps : flow.steps.split('→').map(s=>s.trim()).filter(Boolean)) : ['To Do','In Progress','Done'];
-  const stepSel = document.getElementById('f-step');
-  if (stepSel) {
-    stepSel.innerHTML = steps.map(s => `<option value="${s}">${s}</option>`).join('');
+function onChannelChange(){
+  const ch=$('f-channel').value;
+  const flowSel=$('f-flowname');
+  if(flowSel){
+    const flows=state.config.filter(f=>f.channel===ch||f.channel==='ALL');
+    flowSel.innerHTML=flows.map(f=>`<option value="${f.name}">${f.name}</option>`).join('');
+    onFlowChange();
   }
 }
+function onFlowChange(){
+  const flowName=$('f-flowname')?$('f-flowname').value:'';
+  const steps=getFlowSteps(flowName);
+  const stepSel=$('f-step');
+  if(stepSel)stepSel.innerHTML=steps.map(s=>`<option value="${s}">${s}</option>`).join('');
+}
+function onCustomerChange(){
+  const val=$('f-customer').value;
+  const box=$('new-cust-box');
+  if(box)box.style.display=val==='__new__'?'block':'none';
+}
+function togglePIC(uid){
+  const chip=document.getElementById(`pc-${uid}`);
+  if(chip)chip.classList.toggle('selected');
+}
 
-async function createNewCustomerIfNeeded() {
-  const sel = document.getElementById('f-customer');
-  if (!sel || sel.value !== '__new__') return null;
-  const name = (document.getElementById('nc-name') || {}).value?.trim();
-  if (!name) { alert('Vui lòng nhập tên khách hàng mới'); return null; }
-  const newC = {
-    id: Date.now(),
-    name,
-    channel: (document.getElementById('nc-channel') || {}).value || '',
-    region: (document.getElementById('nc-region') || {}).value || '',
-    contact_name: (document.getElementById('nc-contact') || {}).value || '',
-    contact: (document.getElementById('nc-contact') || {}).value || '',
-    phone: (document.getElementById('nc-phone') || {}).value || '',
-    email: (document.getElementById('nc-email') || {}).value || '',
-    notes: '',
-    status: 'Active',
-    active: true,
+async function saveTaskForm(editId){
+  const title=$('f-title').value.trim();
+  if(!title){alert('Vui lòng điền tiêu đề.');return}
+
+  // Handle new customer
+  let customer_id=$('f-customer').value;
+  if(customer_id==='__new__'){
+    const name=($('nc-name')||{}).value?.trim();
+    if(!name){alert('Vui lòng nhập tên khách hàng.');return}
+    const newC={id:Date.now(),name,channel:($('nc-channel')||{}).value||'',region:($('nc-region')||{}).value||'',contact_name:($('nc-contact')||{}).value||'',phone:($('nc-phone')||{}).value||'',status:'Active',active:true};
+    state.customers.push(newC);
+    customer_id=newC.id;
+    await saveMaster('Customers',newC);
+    toast(`Đã thêm KH: ${name}`);
+  }
+  if(!customer_id){alert('Vui lòng chọn khách hàng.');return}
+
+  // Collect selected PICs
+  const selectedPics=activeUsers().filter(u=>document.getElementById(`pc-${u.id}`)?.classList.contains('selected')).map(u=>u.id);
+  if(!selectedPics.length){alert('Chọn ít nhất 1 PIC.');return}
+
+  const flowName=$('f-flowname')?$('f-flowname').value:'';
+  const data={
+    title,customer_id,
+    channel:$('f-channel').value,
+    pic_ids:selectedPics,
+    pic_id:selectedPics[0]||'',
+    pic_email:(getUser(selectedPics[0])||{}).email||'',
+    flow_name:flowName,
+    status:$('f-status').value,
+    step:$('f-step').value,
+    deadline:$('f-deadline').value,
+    notes:$('f-notes').value.trim(),
   };
-  state.customers.push(newC);
-  if (SCRIPT_URL) await saveMasterData('Customers', newC);
-  toast(`Đã thêm khách hàng: ${name}`);
-  return newC.id;
-}
 
-async function saveTaskForm(editId) {
-  const title = $('f-title').value.trim();
-  if (!title) { alert('Vui lòng điền tiêu đề task.'); return; }
-
-  // Xử lý khách hàng mới nếu chọn "Thêm mới"
-  let customer_id = $('f-customer').value;
-  if (customer_id === '__new__') {
-    customer_id = await createNewCustomerIfNeeded();
-    if (!customer_id) return;
+  let task;
+  if(editId){
+    task=state.tasks.find(t=>String(t.id)===String(editId));
+    if(task)Object.assign(task,data);
+  }else{
+    task={id:Date.now(),subtasks:[],comments:[],...data};
+    addSystemComment(task,`Task được tạo bởi ${state.currentUser.name}`);
+    state.tasks.push(task);
   }
-  if (!customer_id) { alert('Vui lòng chọn khách hàng.'); return; }
-
-  // Lấy flow name
-  const flowNameEl = $('f-flowname');
-  const flow_name = flowNameEl ? flowNameEl.options[flowNameEl.selectedIndex]?.text : '';
-
-  const data = {
-    title, customer_id,
-    channel: $('f-channel').value,
-    pic_id: $('f-pic').value,
-    pic_email: (() => { const u = state.users.find(x=>x.id===$('f-pic').value); return u?u.email:''; })(),
-    status: $('f-status').value,
-    step: $('f-step').value,
-    flow_name,
-    deadline: $('f-deadline').value,
-    notes: $('f-notes').value.trim(),
-    updated_at: new Date().toISOString(),
-  };
-  if (editId) {
-    const task = state.tasks.find(t=>String(t.id)===String(editId));
-    if (task) Object.assign(task, data);
-    else return;
-  } else {
-    const newId = Date.now();
-    state.tasks.push({id:newId, subtasks:[], product_ids:'', created_at:new Date().toISOString(), ...data});
-    data.id = newId;
-  }
-  closeModal();
-  renderKanban();
-  const saved = editId ? state.tasks.find(t=>String(t.id)===String(editId)) : state.tasks[state.tasks.length-1];
-  if (SCRIPT_URL && saved) await saveTask(saved);
+  closeModal();renderKanban();
+  if(task)await saveTask(task);
 }
 
-async function deleteTask(id) {
-  if (!confirm('Xoá task này?')) return;
-  state.tasks = state.tasks.filter(t => String(t.id)!==String(id));
-  closeModal();
-  renderKanban();
-  if (SCRIPT_URL) await deleteTaskRemote(id);
-  toast('Đã xóa task');
-}
-
-// ============================================================
-// MASTER DATA PAGES
-// ============================================================
-function renderCustomers() {
-  const tbody = $('customers-body');
-  tbody.innerHTML = state.customers.filter(c=>c.active==true||c.status==='Active'||c.status===true||(!c.active&&!c.status)).map(c => {
-    const taskCount = state.tasks.filter(t=>String(t.customer_id)===String(c.id)&&t.status!=='done').length;
-    return `<tr>
-      <td><strong>${c.name}</strong></td>
-      <td><span class="badge badge-${c.channel}">${c.channel}</span></td>
+// ---- MASTER DATA PAGES ----
+function renderCustomers(){
+  const u=state.currentUser;
+  $('customers-body').innerHTML=state.customers.filter(c=>c.status==='Active'||c.active!==false).filter(c=>{
+    // Sales chỉ thấy KH trong kênh/vùng của mình
+    if(isManager()||u.channel==='ALL')return true;
+    return !c.channel||c.channel===u.channel;
+  }).map(c=>{
+    const cnt=state.tasks.filter(t=>String(t.customer_id)===String(c.id)&&!['done','done_fail'].includes(t.status)).length;
+    return`<tr>
+      <td><strong style="cursor:pointer;color:var(--blue)" onclick="openCustomerDetail('${c.id}')">${c.name}</strong></td>
+      <td><span class="badge badge-${c.channel}">${c.channel||'—'}</span></td>
       <td>${c.region||'—'}</td>
-      <td>${c.contact||'—'}</td>
+      <td style="font-size:11px">${c.business_type||'—'}</td>
+      <td>${c.contact_name||c.contact||'—'}</td>
       <td>${c.phone||'—'}</td>
-      <td>${taskCount>0?`<span style="color:var(--blue);font-weight:500">${taskCount}</span>`:'0'}</td>
+      <td style="text-align:center">${c.num_stores||'—'}</td>
+      <td>${cnt>0?`<span style="color:var(--blue);font-weight:500">${cnt}</span>`:'0'}</td>
       <td><div class="table-action-btns">
-        <button class="btn btn-xs" onclick="openCustomerForm(${c.id})">✎</button>
-        <button class="btn btn-xs btn-danger" onclick="delCustomer(${c.id})">✕</button>
+        <button class="btn btn-xs" onclick="openCustomerForm('${c.id}')">✎</button>
       </div></td>
-    </tr>`;
-  }).join('');
+    </tr>`;}).join('');
+}
+function openCustomerDetail(editId){
+  const c=state.customers.find(x=>String(x.id)===String(editId));
+  if(!c)return;
+  const tasks=state.tasks.filter(t=>String(t.customer_id)===String(c.id));
+  $('modal-container').innerHTML=`<div class="modal-bg" onclick="closeModal()"><div class="modal modal-lg" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div><span class="badge badge-${c.channel}" style="margin-bottom:5px;display:inline-flex">${c.channel}</span>
+        <div class="modal-title">${c.name}</div></div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="cust-info-grid" style="margin-bottom:14px">
+      <div class="info-field"><div class="info-field-label">Vùng</div><div class="info-field-value">${c.region||'—'}</div></div>
+      <div class="info-field"><div class="info-field-label">Hình thức KD</div><div class="info-field-value">${c.business_type||'—'}</div></div>
+      <div class="info-field"><div class="info-field-label">Người liên hệ</div><div class="info-field-value">${c.contact_name||'—'}</div></div>
+      <div class="info-field"><div class="info-field-label">SĐT</div><div class="info-field-value">${c.phone||'—'}</div></div>
+      <div class="info-field"><div class="info-field-label">Số cửa hàng</div><div class="info-field-value">${c.num_stores||'—'}</div></div>
+      <div class="info-field"><div class="info-field-label">Khả năng tài chính</div><div class="info-field-value">${c.financial||'—'}</div></div>
+    </div>
+    ${c.resources?`<div class="detail-sec"><div class="detail-sec-title">Nguồn lực</div><div class="notes-box">${c.resources}</div></div>`:''}
+    ${c.notes?`<div class="detail-sec"><div class="detail-sec-title">Ghi chú</div><div class="notes-box">${c.notes}</div></div>`:''}
+    <div class="detail-sec"><div class="detail-sec-title">Tasks (${tasks.length})</div>
+      ${tasks.length?tasks.map(t=>`<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:.5px solid var(--border)">
+        <span class="badge badge-${t.status}">${SL[t.status]}</span>
+        <span style="font-size:12px;flex:1">${t.title}</span>
+        <span style="font-size:11px;color:var(--text3)">${fmtDate(t.deadline)}</span>
+      </div>`).join(''):'<span style="font-size:12px;color:var(--text3)">Chưa có task</span>'}
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary btn-sm" onclick="closeModal();openCustomerForm('${c.id}')">✎ Chỉnh sửa</button>
+      <button class="btn btn-sm" onclick="closeModal()">Đóng</button>
+    </div>
+  </div></div>`;
 }
 
-function openCustomerForm(editId) {
-  const c = editId ? state.customers.find(x=>String(x.id)===String(editId)) : null;
-  const d = c || {name:'',channel:'MT',region:'',contact:'',phone:'',email:'',notes:''};
-  const html = `<div class="modal-bg" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header"><div class="modal-title">${c?'Sửa khách hàng':'Thêm khách hàng'}</div><button class="modal-close" onclick="closeModal()">×</button></div>
-    <div class="form-grid2">
+function openCustomerForm(editId){
+  // Sales chỉ edit KH trong kênh/vùng mình
+  const u=state.currentUser;
+  const c=editId?state.customers.find(x=>String(x.id)===String(editId)):null;
+  if(c&&!isManager()&&u.channel!=='ALL'&&c.channel!==u.channel){
+    toast('Bạn chỉ có thể sửa KH trong kênh của mình','warn');return;
+  }
+  const d=c||{name:'',channel:u.channel!=='ALL'?u.channel:'MT',region:u.region||'',contact_name:'',phone:'',email:'',business_type:'',num_stores:'',resources:'',financial:'',notes:''};
+  $('modal-container').innerHTML=`<div class="modal-bg" onclick="closeModal()"><div class="modal modal-lg" onclick="event.stopPropagation()">
+    <div class="modal-header"><div class="modal-title">${c?'Sửa khách hàng':'Thêm khách hàng mới'}</div><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="g2">
       <div class="form-row"><label class="form-label">Tên *</label><input type="text" id="c-name" class="form-input" value="${d.name}"></div>
-      <div class="form-row"><label class="form-label">Kênh</label>
-        <select id="c-channel" class="form-input">${['MT','GT','B2B','HoReCa'].map(ch=>`<option ${d.channel===ch?'selected':''}>${ch}</option>`).join('')}</select>
-      </div>
+      <div class="form-row"><label class="form-label">Kênh</label><select id="c-channel" class="form-input">${CHANNELS.map(x=>`<option ${d.channel===x?'selected':''}>${x}</option>`).join('')}</select></div>
     </div>
-    <div class="form-grid2">
-      <div class="form-row"><label class="form-label">Khu vực</label><input type="text" id="c-region" class="form-input" value="${d.region||''}"></div>
-      <div class="form-row"><label class="form-label">Người liên hệ</label><input type="text" id="c-contact" class="form-input" value="${d.contact||''}"></div>
+    <div class="g2">
+      <div class="form-row"><label class="form-label">Vùng / Khu vực</label><input type="text" id="c-region" class="form-input" value="${d.region||''}"></div>
+      <div class="form-row"><label class="form-label">Hình thức kinh doanh</label><input type="text" id="c-biztype" class="form-input" value="${d.business_type||''}" placeholder="Siêu thị, Đại lý..."></div>
     </div>
-    <div class="form-grid2">
+    <div class="g2">
+      <div class="form-row"><label class="form-label">Người liên hệ</label><input type="text" id="c-contact" class="form-input" value="${d.contact_name||d.contact||''}"></div>
       <div class="form-row"><label class="form-label">SĐT</label><input type="text" id="c-phone" class="form-input" value="${d.phone||''}"></div>
-      <div class="form-row"><label class="form-label">Email</label><input type="text" id="c-email" class="form-input" value="${d.email||''}"></div>
     </div>
-    <div class="form-row"><label class="form-label">Ghi chú</label><textarea id="c-notes" class="form-input">${d.notes||''}</textarea></div>
+    <div class="g2">
+      <div class="form-row"><label class="form-label">Email</label><input type="text" id="c-email" class="form-input" value="${d.email||''}"></div>
+      <div class="form-row"><label class="form-label">Số cửa hàng / điểm bán</label><input type="text" id="c-stores" class="form-input" value="${d.num_stores||''}" placeholder="VD: 12 cửa hàng"></div>
+    </div>
+    <div class="form-row"><label class="form-label">Nguồn lực (nhân sự, kho bãi...)</label><textarea id="c-resources" class="form-input">${d.resources||''}</textarea></div>
+    <div class="form-row"><label class="form-label">Khả năng tài chính</label><textarea id="c-financial" class="form-input" style="min-height:48px">${d.financial||''}</textarea></div>
+    <div class="form-row"><label class="form-label">Ghi chú thêm</label><textarea id="c-notes" class="form-input">${d.notes||''}</textarea></div>
     <div class="form-actions">
-      <button class="btn btn-primary" onclick="saveCustomer('${editId||''}')">💾 Lưu</button>
+      <button class="btn btn-primary" onclick="saveCustomer('${editId||''}')">💾 Lưu vào Sheet</button>
       <button class="btn" onclick="closeModal()">Huỷ</button>
     </div>
   </div></div>`;
-  $('modal-container').innerHTML = html;
+}
+async function saveCustomer(editId){
+  const name=$('c-name').value.trim();
+  if(!name){alert('Nhập tên KH');return}
+  const data={name,channel:$('c-channel').value,region:$('c-region').value,
+    business_type:($('c-biztype')||{}).value||'',
+    contact_name:$('c-contact').value,phone:$('c-phone').value,email:$('c-email').value,
+    num_stores:($('c-stores')||{}).value||'',
+    resources:($('c-resources')||{}).value||'',
+    financial:($('c-financial')||{}).value||'',
+    notes:$('c-notes').value,status:'Active',active:true};
+  if(editId){const c=state.customers.find(x=>String(x.id)===String(editId));if(c){data.id=c.id;Object.assign(c,data);await saveMaster('Customers',c);}}
+  else{const newC={id:Date.now(),...data};state.customers.push(newC);await saveMaster('Customers',newC);}
+  closeModal();renderCustomers();
 }
 
-async function saveCustomer(editId) {
-  const name = $('c-name').value.trim();
-  if (!name) { alert('Nhập tên khách hàng.'); return; }
-  const data = {name, channel:$('c-channel').value, region:$('c-region').value, contact:$('c-contact').value, phone:$('c-phone').value, email:$('c-email').value, notes:$('c-notes').value, active:true};
-  if (editId) {
-    const c = state.customers.find(x=>String(x.id)===String(editId));
-    if (c) { Object.assign(c,data); if(SCRIPT_URL) await saveMasterData('Customers',c); }
-  } else {
-    const newC = {id:Date.now(), ...data};
-    state.customers.push(newC);
-    if (SCRIPT_URL) await saveMasterData('Customers', newC);
-  }
-  closeModal(); renderCustomers(); renderUserSelect();
-}
-
-async function delCustomer(id) {
-  if (!confirm('Xoá khách hàng?')) return;
-  const c = state.customers.find(x=>String(x.id)===String(id));
-  if (c) c.active = false;
-  if (SCRIPT_URL) await saveMasterData('Customers', c);
-  renderCustomers();
-}
-
-function renderProducts() {
-  $('products-body').innerHTML = state.products.filter(p=>p.active==true||p.status==='Active'||p.status===true||(!p.active&&!p.status)).map(p => `
+function renderProducts(){
+  $('products-body').innerHTML=state.products.filter(p=>p.status==='Active'||p.active!==false).map(p=>`
     <tr>
       <td><strong>${p.name}</strong></td>
-      <td>${p.category||'—'}</td>
       <td><span class="badge badge-gray">${p.brand||'—'}</span></td>
-      <td><code style="font-size:11px">${p.sku||'—'}</code></td>
+      <td>${p.category||'—'}</td>
+      <td style="font-size:11px;color:var(--text2)">${p.sku||'—'}</td>
+      <td>${p.unit||'—'}</td>
       <td><div class="table-action-btns">
-        <button class="btn btn-xs" onclick="openProductForm(${p.id})">✎</button>
-        <button class="btn btn-xs btn-danger" onclick="delProduct(${p.id})">✕</button>
+        ${isManager()||state.currentUser.position==='Trade Marketing'?`<button class="btn btn-xs" onclick="openProductForm('${p.id}')">✎</button>`:''}
       </div></td>
     </tr>`).join('');
 }
-
-function openProductForm(editId) {
-  const p = editId ? state.products.find(x=>String(x.id)===String(editId)) : null;
-  const d = p || {name:'',category:'',brand:'Ayam Brand',sku:''};
-  const html = `<div class="modal-bg" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header"><div class="modal-title">${p?'Sửa sản phẩm':'Thêm sản phẩm'}</div><button class="modal-close" onclick="closeModal()">×</button></div>
-    <div class="form-row"><label class="form-label">Tên sản phẩm *</label><input type="text" id="p-name" class="form-input" value="${d.name}"></div>
-    <div class="form-grid2">
+function openProductForm(editId){
+  const p=editId?state.products.find(x=>String(x.id)===String(editId)):null;
+  const d=p||{name:'',brand:'Ayam Brand',category:'',sku:'',unit:''};
+  $('modal-container').innerHTML=`<div class="modal-bg" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><div class="modal-title">${p?'Sửa SP':'Thêm SP'}</div><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="form-row"><label class="form-label">Tên *</label><input type="text" id="p-name" class="form-input" value="${d.name}"></div>
+    <div class="g2">
+      <div class="form-row"><label class="form-label">Brand</label><select id="p-brand" class="form-input">
+        ${['Ayam Brand','Alce Nero','Duchef'].map(b=>`<option ${d.brand===b?'selected':''}>${b}</option>`).join('')}
+      </select></div>
       <div class="form-row"><label class="form-label">Danh mục</label><input type="text" id="p-cat" class="form-input" value="${d.category||''}"></div>
-      <div class="form-row"><label class="form-label">Brand</label>
-        <select id="p-brand" class="form-input">${['Ayam Brand','Alce Nero','Duchef'].map(b=>`<option ${d.brand===b?'selected':''}>${b}</option>`).join('')}</select>
-      </div>
     </div>
-    <div class="form-row"><label class="form-label">SKU</label><input type="text" id="p-sku" class="form-input" value="${d.sku||''}"></div>
+    <div class="g2">
+      <div class="form-row"><label class="form-label">SKU</label><input type="text" id="p-sku" class="form-input" value="${d.sku||''}"></div>
+      <div class="form-row"><label class="form-label">Đơn vị</label><input type="text" id="p-unit" class="form-input" value="${d.unit||''}"></div>
+    </div>
     <div class="form-actions">
       <button class="btn btn-primary" onclick="saveProduct('${editId||''}')">💾 Lưu</button>
       <button class="btn" onclick="closeModal()">Huỷ</button>
     </div>
   </div></div>`;
-  $('modal-container').innerHTML = html;
+}
+async function saveProduct(editId){
+  const name=$('p-name').value.trim();if(!name){alert('Nhập tên SP');return}
+  const data={name,brand:$('p-brand').value,category:$('p-cat').value,sku:$('p-sku').value,unit:$('p-unit').value,status:'Active',active:true};
+  if(editId){const p=state.products.find(x=>String(x.id)===String(editId));if(p){data.id=p.id;Object.assign(p,data);await saveMaster('Products',p);}}
+  else{const np={id:Date.now(),...data};state.products.push(np);await saveMaster('Products',np);}
+  closeModal();renderProducts();
 }
 
-async function saveProduct(editId) {
-  const name = $('p-name').value.trim();
-  if (!name) { alert('Nhập tên sản phẩm.'); return; }
-  const data = {name, category:$('p-cat').value, brand:$('p-brand').value, sku:$('p-sku').value, active:true};
-  if (editId) {
-    const p = state.products.find(x=>String(x.id)===String(editId));
-    if (p) { Object.assign(p,data); if(SCRIPT_URL) await saveMasterData('Products',p); }
-  } else {
-    const newP = {id:Date.now(),...data};
-    state.products.push(newP);
-    if (SCRIPT_URL) await saveMasterData('Products',newP);
-  }
-  closeModal(); renderProducts();
-}
-
-async function delProduct(id) {
-  if (!confirm('Xoá sản phẩm?')) return;
-  const p = state.products.find(x=>String(x.id)===String(id));
-  if (p) p.active = false;
-  if (SCRIPT_URL) await saveMasterData('Products',p);
-  renderProducts();
-}
-
-function renderUsers() {
-  $('users-body').innerHTML = state.users.filter(u=>u.active==true||u.status==='Active'||u.status===true||(!u.active&&!u.status)).map(u => `
+function renderUsers(){
+  $('users-body').innerHTML=activeUsers().map(u=>`
     <tr>
       <td><strong>${u.name}</strong></td>
-      <td><span class="badge ${u.role==='manager'?'badge-inprogress':'badge-gray'}">${u.role}</span></td>
+      <td><span class="badge ${u.role==='manager'?'badge-manager':'badge-gray'}">${u.role}</span></td>
       <td><span class="badge badge-${u.channel==='MT'?'MT':u.channel==='GT'?'GT':u.channel==='B2B'?'B2B':'gray'}">${u.channel||'—'}</span></td>
-      <td style="font-size:11px;color:var(--text2)">${u.region||'—'}</td>
+      <td style="font-size:11px">${u.region||'—'}</td>
       <td style="font-size:11px;color:var(--text2)">${u.position||'—'}</td>
       <td style="color:var(--text2)">${u.email||'—'}</td>
       <td><div class="av" title="${u.name}">${u.initials||'?'}</div></td>
@@ -1187,102 +1323,131 @@ function renderUsers() {
       </div></td>
     </tr>`).join('');
 }
-
-function openUserForm(editId) {
-  const u = editId ? state.users.find(x=>x.id===editId) : null;
-  const d = u || {name:'',role:'sales',initials:'',email:''};
-  const html = `<div class="modal-bg" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
+function openUserForm(editId){
+  const u=editId?state.users.find(x=>x.id===editId):null;
+  const d=u||{name:'',role:'sales',position:'',channel:'MT',region:'',initials:'',email:''};
+  $('modal-container').innerHTML=`<div class="modal-bg" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
     <div class="modal-header"><div class="modal-title">${u?'Sửa thành viên':'Thêm thành viên'}</div><button class="modal-close" onclick="closeModal()">×</button></div>
-    <div class="form-grid2">
-      <div class="form-row"><label class="form-label">Họ tên *</label><input type="text" id="u-name" class="form-input" value="${d.name}"></div>
-      <div class="form-row"><label class="form-label">Initials (2 ký tự)</label><input type="text" id="u-init" class="form-input" value="${d.initials}" maxlength="3"></div>
+    <div class="g2">
+      <div class="form-row"><label class="form-label">Tên *</label><input type="text" id="u-name" class="form-input" value="${d.name}"></div>
+      <div class="form-row"><label class="form-label">Initials</label><input type="text" id="u-init" class="form-input" value="${d.initials}" maxlength="4"></div>
     </div>
-    <div class="form-grid2">
-      <div class="form-row"><label class="form-label">Role</label>
-        <select id="u-role" class="form-input"><option value="sales" ${d.role==='sales'?'selected':''}>Sales</option><option value="manager" ${d.role==='manager'?'selected':''}>Manager</option></select>
-      </div>
-      <div class="form-row"><label class="form-label">Email</label><input type="email" id="u-email" class="form-input" value="${d.email||''}"></div>
+    <div class="g2">
+      <div class="form-row"><label class="form-label">Role</label><select id="u-role" class="form-input">
+        <option value="sales" ${d.role==='sales'?'selected':''}>Sales</option>
+        <option value="manager" ${d.role==='manager'?'selected':''}>Manager</option>
+        <option value="supervisor" ${d.role==='supervisor'?'selected':''}>Supervisor</option>
+      </select></div>
+      <div class="form-row"><label class="form-label">Chức vụ</label><input type="text" id="u-pos" class="form-input" value="${d.position||''}"></div>
     </div>
+    <div class="g2">
+      <div class="form-row"><label class="form-label">Kênh</label><select id="u-channel" class="form-input">
+        ${['MT','GT','B2B','HoReCa','ALL'].map(c=>`<option ${d.channel===c?'selected':''}>${c}</option>`).join('')}
+      </select></div>
+      <div class="form-row"><label class="form-label">Vùng</label><input type="text" id="u-region" class="form-input" value="${d.region||''}"></div>
+    </div>
+    <div class="form-row"><label class="form-label">Email Gmail (bắt buộc để đăng nhập)</label><input type="email" id="u-email" class="form-input" value="${d.email||''}"></div>
     <div class="form-actions">
       <button class="btn btn-primary" onclick="saveUser('${editId||''}')">💾 Lưu</button>
       <button class="btn" onclick="closeModal()">Huỷ</button>
     </div>
   </div></div>`;
-  $('modal-container').innerHTML = html;
+}
+async function saveUser(editId){
+  const name=$('u-name').value.trim();if(!name){alert('Nhập tên');return}
+  const data={name,initials:$('u-init').value.toUpperCase(),role:$('u-role').value,position:$('u-pos').value,channel:$('u-channel').value,region:$('u-region').value,email:$('u-email').value,status:'Active',active:true};
+  if(editId){const u=state.users.find(x=>x.id===editId);if(u){data.id=u.id;Object.assign(u,data);await saveMaster('Users',u);}}
+  else{const nu={id:'u'+Date.now(),...data};state.users.push(nu);await saveMaster('Users',nu);}
+  closeModal();renderUsers();
 }
 
-async function saveUser(editId) {
-  const name = $('u-name').value.trim();
-  if (!name) { alert('Nhập tên.'); return; }
-  const data = {name, initials:$('u-init').value.toUpperCase(), role:$('u-role').value, email:$('u-email').value, active:true};
-  if (editId) {
-    const u = state.users.find(x=>x.id===editId);
-    if (u) { Object.assign(u,data); if(SCRIPT_URL) await saveMasterData('Users',u); }
-  } else {
-    const newU = {id:'u'+Date.now(),...data};
-    state.users.push(newU);
-    if(SCRIPT_URL) await saveMasterData('Users',newU);
-  }
-  closeModal(); renderUsers(); renderUserSelect();
-}
-
-function renderConfig() {
-  $('config-body').innerHTML = state.config.map(cfg => {
-    const steps = Array.isArray(cfg.steps)?cfg.steps:JSON.parse(cfg.steps||'[]');
-    return `<div style="margin-bottom:1.25rem">
-      <div class="section-header">
-        <span class="section-title" style="font-size:13px"><span class="badge badge-${cfg.channel}">${cfg.channel}</span></span>
-        <button class="btn btn-sm" onclick="editFlow('${cfg.channel}')">✎ Sửa flow</button>
+// ---- CONFIG PAGE (Manager only) ----
+function renderConfig(){
+  if(!isManager())return;
+  $('config-body').innerHTML=state.config.map((f,idx)=>{
+    const steps=Array.isArray(f.steps)?f.steps:typeof f.steps==='string'?f.steps.split('→').map(s=>s.trim()).filter(Boolean):[];
+    return`<div class="flow-edit-row">
+      <div style="min-width:140px">
+        <div style="font-size:12px;font-weight:500">${f.name}</div>
+        <div style="display:flex;gap:4px;margin-top:3px">
+          <span class="badge badge-${f.channel==='MT'?'MT':f.channel==='GT'?'GT':f.channel==='B2B'?'B2B':f.channel==='ALL'?'gray':'gray'}">${f.channel}</span>
+          <span style="font-size:10px;color:var(--text3)">${f.task_type||''}</span>
+        </div>
       </div>
-      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:0;border:0.5px solid var(--border);border-radius:var(--r);overflow:hidden">
-        ${steps.map((s,i)=>`
-          ${i>0?`<span style="padding:0 8px;color:var(--text3);font-size:12px;background:var(--surface2)">›</span>`:''}
-          <span style="padding:7px 12px;font-size:12px;background:var(--surface);border-right:0.5px solid var(--border)">${s}</span>
-        `).join('')}
+      <div class="flow-steps-preview">
+        ${steps.map((s,i)=>`${i>0?'<span style="font-size:10px;color:var(--text3);margin:0 2px">›</span>':''}<span class="flow-step-badge">${s}</span>`).join('')}
+      </div>
+      <div style="display:flex;gap:4px;flex-shrink:0">
+        <button class="btn btn-xs" onclick="openFlowForm('${f.id||f.name}')">✎ Sửa</button>
       </div>
     </div>`;
   }).join('');
 }
 
-function editFlow(channel) {
-  const cfg = state.config.find(c=>c.channel===channel);
-  if (!cfg) return;
-  const steps = Array.isArray(cfg.steps)?cfg.steps:JSON.parse(cfg.steps||'[]');
-  const html = `<div class="modal-bg" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header"><div class="modal-title">Sửa flow: ${channel}</div><button class="modal-close" onclick="closeModal()">×</button></div>
-    <div class="form-row">
-      <label class="form-label">Các bước (mỗi bước 1 dòng)</label>
-      <textarea id="flow-steps" class="form-input" style="min-height:160px">${steps.join('\n')}</textarea>
+function openFlowForm(editId){
+  const f=editId?state.config.find(x=>x.id===editId||x.name===editId):null;
+  const d=f||{name:'',channel:'ALL',task_type:'',steps:[],description:''};
+  const stepsStr=Array.isArray(d.steps)?d.steps.join(' → '):d.steps||'';
+  $('modal-container').innerHTML=`<div class="modal-bg" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><div class="modal-title">${f?'Sửa flow':'Thêm flow mới'}</div><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="g2">
+      <div class="form-row"><label class="form-label">Tên flow *</label><input type="text" id="fl-name" class="form-input" value="${d.name}"></div>
+      <div class="form-row"><label class="form-label">Kênh</label>
+        <select id="fl-channel" class="form-input">${['MT','GT','B2B','HoReCa','ALL'].map(c=>`<option ${d.channel===c?'selected':''}>${c}</option>`).join('')}</select>
+      </div>
     </div>
+    <div class="form-row"><label class="form-label">Loại công việc</label><input type="text" id="fl-type" class="form-input" value="${d.task_type||''}" placeholder="Trading Term, Activation..."></div>
+    <div class="form-row">
+      <label class="form-label">Các bước (cách nhau bởi →)</label>
+      <textarea id="fl-steps" class="form-input" style="min-height:80px" placeholder="Bước 1 → Bước 2 → Bước 3">${stepsStr}</textarea>
+    </div>
+    <div class="form-row"><label class="form-label">Mô tả</label><textarea id="fl-desc" class="form-input">${d.description||''}</textarea></div>
     <div class="form-actions">
-      <button class="btn btn-primary" onclick="saveFlow('${channel}')">💾 Lưu flow</button>
+      <button class="btn btn-primary" onclick="saveFlow('${editId||''}')">💾 Lưu</button>
       <button class="btn" onclick="closeModal()">Huỷ</button>
     </div>
   </div></div>`;
-  $('modal-container').innerHTML = html;
 }
 
-async function saveFlow(channel) {
-  const raw = $('flow-steps').value;
-  const steps = raw.split('\n').map(s=>s.trim()).filter(Boolean);
-  const cfg = state.config.find(c=>c.channel===channel);
-  if (cfg) { cfg.steps = steps; if(SCRIPT_URL) await apiPost({action:'upsert',sheet:'Config',data:{channel,steps:JSON.stringify(steps)}}); }
-  closeModal(); renderConfig(); toast(`Flow ${channel} đã cập nhật`);
+async function saveFlow(editId){
+  const name=$('fl-name').value.trim();
+  if(!name){alert('Nhập tên flow');return}
+  const stepsRaw=$('fl-steps').value;
+  const steps=stepsRaw.split('→').map(s=>s.trim()).filter(Boolean);
+  const data={name,channel:$('fl-channel').value,task_type:$('fl-type').value,steps,description:$('fl-desc').value,status:'Active'};
+  if(editId){
+    const f=state.config.find(x=>x.id===editId||x.name===editId);
+    if(f){if(!f.id)f.id='flow_'+Date.now();data.id=f.id;Object.assign(f,data);await saveMaster('Flows',f);}
+  }else{
+    const nf={id:'flow_'+Date.now(),...data};state.config.push(nf);await saveMaster('Flows',nf);
+  }
+  closeModal();renderConfig();toast('Flow đã lưu ✓');
 }
 
-// ============================================================
-// INIT
-// ============================================================
-window.addEventListener('load', () => {
-  // Luôn dùng URL hardcode, xóa localStorage cũ để tránh conflict
-  localStorage.setItem('dgm_script_url', SCRIPT_URL);
-  loadSampleData();
-  startApp();
-  // Test kết nối trước khi sync
-  fetch(SCRIPT_URL + '?action=ping', {redirect:'follow'})
-    .then(r => r.json())
-    .then(d => { console.log('Script ping:', d); syncAll(); })
-    .catch(e => { console.warn('Ping failed, trying sync anyway:', e); syncAll(); });
+// ---- INIT ----
+window.addEventListener('load',()=>{
+  // Load users from Sheet first, then init login
+  state.users=DEFAULT_USERS;
+  state.config=DEFAULT_FLOWS;
+  initLogin();
+  // Try to auto-login if remembered
+  const savedId=localStorage.getItem('dgm_user_id');
+  const savedEmail=localStorage.getItem('dgm_user_email');
+  if(savedId&&savedEmail){
+    const user=DEFAULT_USERS.find(u=>u.id===savedId);
+    if(user&&user.email.toLowerCase()===savedEmail.toLowerCase()){
+      state.currentUser=user;
+      $('login-screen').style.display='none';
+      $('main-app').style.display='flex';
+      $('cur-av').textContent=user.initials||user.name[0];
+      $('cur-name').textContent=user.name;
+      document.querySelectorAll('.manager-only').forEach(el=>el.style.display=isManager()?'':'none');
+      syncAll();
+    }
+  } else {
+    // Still sync to get latest users for login dropdown
+    syncAll().then(()=>initLogin());
+  }
 });
 </script>
 </body>
