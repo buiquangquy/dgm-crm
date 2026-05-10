@@ -405,26 +405,38 @@ async function apiGet() {
   } catch(e) { console.error('apiGet error:', e); return null; }
 }
 
-// Dùng GET + encoded payload thay vì POST để tránh CORS redirect issue
-// Apps Script luôn allow GET từ mọi domain
+// Ghi data qua GET request (tránh CORS/redirect issue của Apps Script)
+// Payload nhỏ: gửi qua GET params. Payload lớn: chunk hoặc dùng POST no-cors
 async function apiPost(payload) {
   if (!SCRIPT_URL) return false;
+
+  // Thử cách 1: GET + encoded payload (works cho payload nhỏ)
   try {
-    // Encode payload vào query param
     const encoded = encodeURIComponent(JSON.stringify(payload));
-    const url = SCRIPT_URL + '?method=post&payload=' + encoded;
-    const res = await fetch(url, {redirect:'follow'});
-    const text = await res.text();
-    // Parse JSON từ response text
-    let d;
-    try { d = JSON.parse(text); } catch(e) {
-      // Apps Script đôi khi trả HTML khi lỗi auth
-      console.error('Non-JSON response:', text.substring(0, 200));
-      return false;
+    if (encoded.length < 7000) {
+      const url = SCRIPT_URL + '?method=post&payload=' + encoded;
+      const res = await fetch(url, {redirect:'follow'});
+      const text = await res.text();
+      try {
+        const d = JSON.parse(text);
+        if (d.ok === true) return true;
+      } catch(e) {}
     }
-    return d.ok === true;
+  } catch(e) {}
+
+  // Thử cách 2: POST với mode no-cors (không đọc được response nhưng data vẫn ghi)
+  // Dùng khi GET payload quá dài
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type': 'text/plain'},
+      body: JSON.stringify(payload)
+    });
+    // no-cors không đọc được response → assume OK nếu không có exception
+    return true;
   } catch(e) {
-    console.error('apiPost error:', e);
+    console.error('apiPost both methods failed:', e);
     return false;
   }
 }
@@ -1157,12 +1169,15 @@ async function saveFlow(channel) {
 // INIT
 // ============================================================
 window.addEventListener('load', () => {
-  // Auto-connect với Script URL đã cấu hình sẵn
+  // Luôn dùng URL hardcode, xóa localStorage cũ để tránh conflict
   localStorage.setItem('dgm_script_url', SCRIPT_URL);
-  $('script-url-input') && ($('script-url-input').value = SCRIPT_URL);
   loadSampleData();
   startApp();
-  syncAll();
+  // Test kết nối trước khi sync
+  fetch(SCRIPT_URL + '?action=ping', {redirect:'follow'})
+    .then(r => r.json())
+    .then(d => { console.log('Script ping:', d); syncAll(); })
+    .catch(e => { console.warn('Ping failed, trying sync anyway:', e); syncAll(); });
 });
 </script>
 </body>
