@@ -400,20 +400,38 @@ function CM(){$('mc').innerHTML=''}
 function initLogin(){
   const users=state.users.length?aUsers():DEFAULT_USERS;
   const sel=$('lu');
+  const sid=localStorage.getItem('dgm_uid');
+  const sem=localStorage.getItem('dgm_em');
+
   sel.innerHTML='<option value="">-- Chọn tên --</option>'+
     users.map(u=>`<option value="${u.id}">${u.name} (${u.role==='manager'?'Manager':u.position||u.role})</option>`).join('');
-  const sid=localStorage.getItem('dgm_uid');
-  if(sid)sel.value=sid;
-  const sem=localStorage.getItem('dgm_em');
+
+  // Pre-fill email
   if(sem)$('le').value=sem;
-  // Show/hide password field
-  sel.onchange=()=>{
+
+  // Hàm toggle password field
+  function togglePW(){
     const u=users.find(x=>x.id===sel.value);
-    $('pw-label').style.display=u&&u.role==='manager'?'none':'block';
-    $('lpw').style.display=u&&u.role==='manager'?'none':'block';
-  };
-  // Trigger onchange for pre-selected
-  if(sid)sel.dispatchEvent(new Event('change'));
+    const isMgr2=u&&u.role==='manager';
+    $('pw-label').style.display=isMgr2?'none':'block';
+    $('lpw').style.display=isMgr2?'none':'block';
+    $('lpw').required=!isMgr2;
+  }
+
+  sel.onchange=togglePW;
+
+  // Pre-select saved user
+  if(sid){
+    // Try exact id match first
+    const opt=sel.querySelector('option[value="'+sid+'"]');
+    if(opt){sel.value=sid;}
+    else{
+      // Try match by email
+      const u=users.find(x=>x.email&&sem&&x.email.toLowerCase()===sem.toLowerCase());
+      if(u)sel.value=u.id;
+    }
+  }
+  togglePW();
 }
 
 function doLogin(){
@@ -1334,13 +1352,17 @@ async function saveFlow(eid){
 
 // ---- INIT ----
 window.addEventListener('load',()=>{
+  // Luôn load DEFAULT_USERS trước để login dropdown có data ngay
   state.users=DEFAULT_USERS;
   state.config=DEFAULT_FLOWS;
+
   const sid=localStorage.getItem('dgm_uid');
   const sem=localStorage.getItem('dgm_em');
+
+  // Thử auto-login với default users trước
   if(sid&&sem){
-    const u=DEFAULT_USERS.find(x=>x.id===sid);
-    if(u&&u.email.toLowerCase()===sem.toLowerCase()){
+    const u=DEFAULT_USERS.find(x=>x.id===sid&&x.email&&x.email.toLowerCase()===sem.toLowerCase());
+    if(u){
       state.currentUser=u;
       $('login').style.display='none';
       $('app').style.display='flex';
@@ -1349,11 +1371,19 @@ window.addEventListener('load',()=>{
       document.querySelectorAll('.mgr-only').forEach(el=>el.style.display=isMgr()?'':'none');
       const sp2=localStorage.getItem('dgm_page')||'kanban';
       showPage(sp2,null);
-      syncAll();return;
+      // Sync trong background rồi refresh data
+      syncAll();
+      return;
     }
   }
+
+  // Không auto-login được → show login form với default users
   initLogin();
-  syncAll().then(()=>initLogin());
+
+  // Sync Sheet trong background → update dropdown với users thật
+  syncAll().then(()=>{
+    if(!state.currentUser)initLogin();
+  });
 });
 </script>
 </body>
