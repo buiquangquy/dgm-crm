@@ -274,6 +274,7 @@ tr:hover .tab{opacity:1}
         <div class="sd" id="sd"></div><span id="sl">...</span>
       </div>
       <button class="btn btn-sm" onclick="syncAll()" title="Sync">↻</button>
+      <button class="btn btn-sm" id="my-profile-btn" onclick="openMyProfile()" style="display:none" title="Xem tài khoản của tôi">👤</button>
       <div class="up" onclick="doLogout()">
         <div class="av" id="cav">?</div>
         <span id="cnm">...</span>
@@ -532,6 +533,9 @@ function doLogin(){
   $('cav').textContent=user.initials||user.name[0];
   $('cnm').textContent=user.name;
   document.querySelectorAll('.mgr-only').forEach(el=>el.style.display=isMgr()?'':'none');
+  // Sales/Trade: hiện nút profile thay vì tab Team
+  const profileBtn=document.getElementById('my-profile-btn');
+  if(profileBtn)profileBtn.style.display=isMgr()?'none':'inline-flex';
   const savedPage=localStorage.getItem('dgm_page')||'kanban';
   showPage(savedPage,null);
   syncAll();
@@ -732,7 +736,23 @@ function showPage(nm,btn){
   localStorage.setItem('dgm_page',nm);
   if(nm==='customers')renderCustomers();
   else if(nm==='products')renderProducts();
-  else if(nm==='users')renderUsers();
+  else if(nm==='users'){
+    if(!isMgr()){
+      // Sales: không vào được bảng team — show profile riêng
+      openMyProfile();
+      // Không active tab này
+      $('pg-users').classList.remove('active');
+      if(btn)btn.classList.remove('active');
+      // Giữ tab hiện tại
+      const prev=localStorage.getItem('dgm_page')||'kanban';
+      $('pg-'+prev).classList.add('active');
+      document.querySelectorAll('.nb').forEach(b=>{
+        if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'"+prev+"'"))b.classList.add('active');
+      });
+      return;
+    }
+    renderUsers();
+  }
   else if(nm==='config'){if(isMgr())renderConfig();else toast('Chỉ Manager','warn');}
   else renderKanban();
 }
@@ -1329,6 +1349,14 @@ async function saveProd(eid){
 
 // ---- USERS ----
 function renderUsers(){
+  // Nếu không phải manager: chỉ thấy thông tin của chính mình
+  const me=state.currentUser;
+  if(!isMgr()){
+    // Sales/Trade: redirect về profile của chính mình
+    openMyProfile();
+    return;
+  }
+  // Manager: thấy tất cả
   $('utb').innerHTML=aUsers().map(u=>`
     <tr>
       <td><strong>${u.name}</strong></td>
@@ -1341,6 +1369,61 @@ function renderUsers(){
       <td><div class="av">${u.initials||'?'}</div></td>
       <td><div class="tab"><button class="btn btn-xs" onclick="openUserForm('${u.id}')">✎</button></div></td>
     </tr>`).join('');
+}
+
+// Profile của chính mình (Sales/Trade)
+function openMyProfile(){
+  const u=state.currentUser;
+  if(!u)return;
+  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" style="max-width:420px" onclick="event.stopPropagation()">
+    <div class="mh"><div class="mti">👤 Thông tin tài khoản của tôi</div><button class="mcl" onclick="CM()">×</button></div>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:1rem;padding:12px;background:var(--s2);border-radius:var(--r)">
+      <div class="av" style="width:44px;height:44px;font-size:15px">${u.initials||u.name[0]}</div>
+      <div><div style="font-size:16px;font-weight:600">${u.name}</div>
+        <div style="font-size:12px;color:var(--t2)">${u.position||u.role}</div>
+      </div>
+    </div>
+    <div class="g2" style="margin-bottom:10px">
+      <div class="cf"><div class="cfl">Email</div><div class="cfv" style="font-size:12px">${u.email}</div></div>
+      <div class="cf"><div class="cfl">Kênh</div><div class="cfv"><span class="b b${u.channel==='MT'?'MT':u.channel==='GT'?'GT':'gr'}">${u.channel||'—'}</span></div></div>
+      <div class="cf"><div class="cfl">Vùng</div><div class="cfv">${u.region||'—'}</div></div>
+      <div class="cf"><div class="cfl">Initials</div><div class="cfv">${u.initials||'—'}</div></div>
+    </div>
+    <div class="cf" style="margin-bottom:12px"><div class="cfl">Mật khẩu hiện tại</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span id="pw-display" style="font-family:monospace;letter-spacing:3px">••••</span>
+        <button class="btn btn-xs" onclick="togglePWDisplay('${u.id}')">Hiện</button>
+      </div>
+    </div>
+    <div class="fr"><label class="fl">Đổi mật khẩu mới (4 số)</label>
+      <div style="display:flex;gap:8px">
+        <input type="password" id="new-pw" class="fi" maxlength="6" placeholder="Nhập mật khẩu mới..." style="flex:1">
+        <button class="btn btn-p btn-sm" onclick="changeMyPW()">Lưu</button>
+      </div>
+    </div>
+    <div class="fa" style="margin-top:8px">
+      <button class="btn btn-sm" onclick="CM()">Đóng</button>
+    </div>
+  </div></div>`;
+}
+
+function togglePWDisplay(uid){
+  const u=state.users.find(x=>x.id===uid);
+  const el=document.getElementById('pw-display');
+  if(!el||!u)return;
+  el.textContent=el.textContent==='••••'?(u.password||'(chưa đặt)'):'••••';
+}
+
+async function changeMyPW(){
+  const inp=document.getElementById('new-pw');
+  if(!inp||!inp.value.trim()){toast('Nhập mật khẩu mới','warn');return;}
+  const pw=inp.value.trim();
+  if(!/^\d{4,6}$/.test(pw)){toast('Mật khẩu phải là 4-6 chữ số','warn');return;}
+  state.currentUser.password=pw;
+  const u=state.users.find(x=>x.id===state.currentUser.id);
+  if(u){u.password=pw;await saveMaster('Users',u);}
+  toast('Đã đổi mật khẩu ✓');
+  CM();
 }
 
 function openUserForm(eid){
