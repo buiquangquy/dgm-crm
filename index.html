@@ -2,1240 +2,1389 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>DGM Sales Survey</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>DGM Sales CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --primary:#C8102E;--primary-dark:#9e0c24;--primary-light:#fde8ec;
-  --green:#2e7d32;--green-light:#e8f5e9;
-  --blue:#1565c0;--blue-light:#e3f2fd;
-  --gray:#f5f5f5;--border:#ddd;--text:#212121;--text2:#666;
-  --radius:10px;--shadow:0 2px 8px rgba(0,0,0,.12);
+  --bg:#F5F4F1;--s:#fff;--s2:#F0EEE9;--bd:rgba(0,0,0,.09);--bd2:rgba(0,0,0,.14);
+  --t:#1A1917;--t2:#6B6860;--t3:#9B9890;
+  --blue:#185FA5;--blt:#E6F1FB;--bdk:#0C447C;
+  --grn:#0F6E56;--glt:#E1F5EE;
+  --red:#A32D2D;--rlt:#FCEBEB;
+  --amb:#854F0B;--alt:#FAEEDA;
+  --nvy:#1B3A57;
+  --r:8px;--rl:12px;--rx:16px;
 }
-body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:var(--text);min-height:100vh;font-size:15px}
-.screen{display:none;min-height:100vh;flex-direction:column}
-.screen.active{display:flex}
-.header{background:var(--primary);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;box-shadow:0 2px 6px rgba(0,0,0,.2)}
-.header h1{font-size:16px;font-weight:700;flex:1}
-.header .sub{font-size:12px;opacity:.85}
-.btn-back{background:rgba(255,255,255,.2);border:none;color:#fff;width:34px;height:34px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.content{flex:1;padding:16px;overflow-y:auto;padding-bottom:80px}
-.card{background:#fff;border-radius:var(--radius);padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
-.card h3{font-size:14px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;font-weight:600}
-label{display:block;font-size:13px;color:var(--text2);margin-bottom:4px;font-weight:500}
-input[type=text],input[type=number],input[type=date],select,textarea{
-  width:100%;padding:11px 12px;border:1.5px solid var(--border);border-radius:8px;
-  font-size:15px;color:var(--text);background:#fff;outline:none;
-  transition:border-color .2s;-webkit-appearance:none;
-}
-input:focus,select:focus,textarea:focus{border-color:var(--primary)}
-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
-textarea{resize:vertical;min-height:80px}
-.field{margin-bottom:14px}
-.field.required label::after{content:" *";color:var(--primary)}
-/* STORE MULTI-SELECT */
-.store-checklist{max-height:260px;overflow-y:auto;border:1.5px solid var(--border);border-radius:8px;background:#fff;margin-top:6px}
-.store-check-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background .15s}
-.store-check-item:last-child{border-bottom:none}
-.store-check-item:active{background:var(--primary-light)}
-.store-check-item input[type=checkbox]{width:18px;height:18px;accent-color:var(--primary);flex-shrink:0;cursor:pointer}
-.store-check-item label{font-size:14px;color:var(--text);cursor:pointer;flex:1;line-height:1.3}
-.store-count-badge{background:var(--primary);color:#fff;border-radius:12px;padding:2px 10px;font-size:12px;font-weight:700;display:inline-block;margin-left:6px}
-.store-count-badge.zero{background:#ccc}
-/* PHOTO GRID 30 */
-.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
-.photo-grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:6px}
-.photo-slot{aspect-ratio:1;border:2px dashed var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;position:relative;background:#fafafa;transition:border-color .2s}
-.photo-slot:hover{border-color:var(--primary)}
-.photo-slot img{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0}
-.photo-slot .slot-label{font-size:11px;color:var(--text2);text-align:center;padding:4px;z-index:1}
-.photo-slot .slot-icon{font-size:24px;margin-bottom:4px;z-index:1}
-.photo-slot input{display:none}
-.photo-slot .del-btn{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;z-index:2;display:none}
-.photo-slot.has-img .del-btn{display:flex;align-items:center;justify-content:center}
-.photo-actions{display:flex;gap:6px;margin-top:4px}
-.photo-btn{flex:1;padding:8px 6px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer;background:#fff;text-align:center;transition:all .2s}
-.photo-btn:hover{border-color:var(--primary);background:var(--primary-light)}
-.photo-btn.camera{border-color:var(--primary);color:var(--primary)}
-/* GPS */
-.gps-box{background:var(--green-light);border:1.5px solid #a5d6a7;border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px;margin-top:6px}
-.gps-box .icon{font-size:20px}
-.gps-info{flex:1;font-size:13px}
-.gps-info strong{display:block;color:var(--green);font-size:12px}
-.gps-fail{background:#fff3e0;border-color:#ffcc80}
-.gps-fail strong{color:#e65100}
-/* SKU TABLE */
-.sku-table{width:100%;border-collapse:collapse}
-.sku-table th{font-size:11px;background:#f5f5f5;padding:7px 6px;text-align:center;border-bottom:2px solid var(--border);position:sticky;top:0}
-.sku-table th:first-child{text-align:left;min-width:130px}
-.sku-table td{padding:6px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
-.sku-table td:first-child{font-size:13px;font-weight:500;color:var(--text)}
-.sku-table td.qty-cell{text-align:center}
-.qty-input{width:62px;padding:5px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;text-align:center}
-.qty-input:focus{border-color:var(--primary);outline:none}
-.status-sel{font-size:12px;padding:5px 4px;border:1.5px solid var(--border);border-radius:6px;width:100%;min-width:90px;-webkit-appearance:none;background:#fff}
-.cat-header td{background:var(--primary-light);font-size:11px;font-weight:700;color:var(--primary);letter-spacing:.3px;padding:5px 6px}
-/* CHIPS */
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-.chip{padding:8px 12px;border:1.5px solid var(--border);border-radius:20px;font-size:13px;cursor:pointer;transition:all .2s;background:#fff;user-select:none}
-.chip.active{background:var(--primary);border-color:var(--primary);color:#fff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);color:var(--t)}
+button,input,select,textarea{font-family:inherit}
+a{color:var(--blue)}
+
+/* LOGIN */
+.lw{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--nvy)}
+.lc{background:var(--s);border-radius:var(--rx);padding:2rem;width:360px;box-shadow:0 8px 40px rgba(0,0,0,.25)}
+.ll{width:48px;height:48px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;margin:0 auto 1rem}
+.lt{font-size:18px;font-weight:600;text-align:center;margin-bottom:4px}
+.ls{font-size:12px;color:var(--t3);text-align:center;margin-bottom:1.5rem}
+.lf{width:100%;font-size:13px;padding:9px 12px;border:.5px solid var(--bd2);border-radius:var(--r);margin-bottom:10px}
+.lb{width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer}
+.lb:hover{background:var(--bdk)}
+.lerr{font-size:12px;color:var(--red);text-align:center;margin-top:8px;min-height:20px}
+
+/* APP */
+.app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.tb{display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;height:52px;background:var(--s);border-bottom:.5px solid var(--bd);flex-shrink:0;gap:10px}
+.brnd{display:flex;align-items:center;gap:8px}
+.bm{width:28px;height:28px;border-radius:6px;background:var(--blue);display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700}
+.bn{font-size:14px;font-weight:600}
+.bs{font-size:11px;color:var(--t3)}
+.nm{display:flex;gap:3px}
+.nb{font-size:12px;padding:5px 11px;border:.5px solid transparent;border-radius:var(--r);background:none;color:var(--t2);cursor:pointer}
+.nb:hover{background:var(--s2)}
+.nb.active{background:var(--blt);color:var(--bdk);border-color:rgba(24,95,165,.2);font-weight:500}
+.tr{display:flex;align-items:center;gap:8px}
+.sd{width:7px;height:7px;border-radius:50%;background:var(--t3)}
+.sd.ok{background:#1D9E75}
+.sd.sy{background:var(--amb);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.up{display:flex;align-items:center;gap:6px;font-size:12px;padding:4px 10px;border:.5px solid var(--bd);border-radius:20px;background:var(--s);cursor:pointer}
+.up:hover{background:var(--s2)}
+.av{width:24px;height:24px;border-radius:50%;background:var(--blt);color:var(--bdk);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+.avs{width:20px;height:20px;font-size:8px}
+.pg{flex:1;overflow-y:auto;padding:1.25rem;display:none}
+.pg.active{display:block}
+
 /* BUTTONS */
-.btn{width:100%;padding:14px;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s}
-.btn-primary{background:var(--primary);color:#fff}
-.btn-primary:active{background:var(--primary-dark)}
-.btn-secondary{background:#fff;color:var(--primary);border:2px solid var(--primary)}
-.btn-green{background:var(--green);color:#fff}
-/* TABS */
-.tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:16px}
-.tab{flex:1;padding:10px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
-.tab.active{color:var(--primary);border-bottom-color:var(--primary)}
-.tab-content{display:none}
-.tab-content.active{display:block}
-/* BOTTOM BAR */
-.bottom-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:12px 16px;box-shadow:0 -2px 8px rgba(0,0,0,.1);z-index:99}
-/* STAFF */
-.staff-list{display:flex;flex-direction:column;gap:8px}
-.staff-item{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#fff;border-radius:12px;border:1.5px solid var(--border);cursor:pointer;transition:all .15s}
-.staff-item:active{background:var(--primary-light);border-color:var(--primary)}
-.staff-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;flex-shrink:0}
-.staff-info{flex:1}
-.staff-name{font-weight:600;font-size:15px;color:var(--text)}
-.staff-arrow{color:#ccc;font-size:20px}
-.type-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
-.type-card{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:16px;text-align:center;cursor:pointer;transition:all .15s}
-.type-card:active{background:var(--primary-light);border-color:var(--primary)}
-.type-card .icon{font-size:28px;margin-bottom:6px}
-.type-card .title{font-weight:700;font-size:14px;color:var(--text)}
-.type-card .desc{font-size:11px;color:var(--text2);margin-top:3px}
-.staff-btn{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1.5px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;transition:all .2s;text-align:left;width:100%}
-.staff-btn:hover{border-color:var(--primary);background:var(--primary-light)}
-.staff-avatar{width:38px;height:38px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0}
-.staff-info{flex:1}
-.staff-name{font-weight:600;font-size:14px}
-.staff-team{font-size:12px;color:var(--text2);margin-top:2px}
-.team-badge{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600}
-.badge-mt{background:#e3f2fd;color:#1565c0}
-.badge-gtn{background:#f3e5f5;color:#6a1b9a}
-.badge-gtc{background:#fff3e0;color:#e65100}
-.badge-gts{background:#e8f5e9;color:#2e7d32}
-.badge-bo{background:#f5f5f5;color:#666}
-.badge-mtgt{background:#f0e6ff;color:#5e0099}
-/* TYPE CARDS */
-.type-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
-.type-card{padding:16px 12px;border:2px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;transition:all .2s;background:#fff}
-.type-card:hover{border-color:var(--primary);background:var(--primary-light)}
-.type-card .icon{font-size:30px;margin-bottom:8px}
-.type-card .title{font-size:13px;font-weight:700}
-.type-card .desc{font-size:11px;color:var(--text2);margin-top:3px}
-/* SUCCESS */
-.success-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:32px;text-align:center}
-.success-icon{font-size:72px;margin-bottom:16px}
-.success-title{font-size:22px;font-weight:700;color:var(--green)}
-.success-sub{color:var(--text2);margin-top:8px;font-size:14px}
-.success-detail{background:var(--green-light);border-radius:10px;padding:14px;margin-top:20px;font-size:13px;color:var(--green);width:100%;text-align:left}
-/* TOAST & LOADING */
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:#323232;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;pointer-events:none}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.loading{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;flex-direction:column;gap:12px}
-.loading.show{display:flex}
-.spinner{width:44px;height:44px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
-.loading p{color:#fff;font-size:14px}
+.btn{font-size:12px;padding:6px 12px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--s);color:var(--t);cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s}
+.btn:hover{background:var(--s2)}
+.btn-p{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-p:hover{background:var(--bdk)}
+.btn-g{background:var(--grn);color:#fff;border-color:var(--grn)}
+.btn-d{color:var(--red);border-color:rgba(163,45,45,.3)}
+.btn-d:hover{background:var(--rlt)}
+.btn-w{background:var(--amb);color:#fff;border-color:var(--amb)}
+.btn-sm{font-size:11px;padding:4px 9px}
+.btn-xs{font-size:10px;padding:2px 7px}
+
+/* BADGES */
+.b{font-size:10px;padding:2px 7px;border-radius:8px;font-weight:500;white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
+.bMT{background:var(--blt);color:var(--bdk)}
+.bGT{background:#EAF3DE;color:#3B6D11}
+.bB2B{background:var(--alt);color:var(--amb)}
+.bHoReCa{background:#FBEAF0;color:#72243E}
+.btodo{background:var(--s2);color:var(--t2)}
+.binprogress{background:var(--blt);color:var(--bdk)}
+.breview{background:var(--alt);color:var(--amb)}
+.bdone{background:var(--glt);color:var(--grn)}
+.bdone_fail{background:var(--rlt);color:var(--red)}
+.bov{background:var(--rlt);color:var(--red)}
+.bsoon{background:var(--alt);color:var(--amb)}
+.bgr{background:var(--s2);color:var(--t2)}
+.bmgr{background:#EDE9FE;color:#5B21B6}
+
+/* STATS */
+.sr{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:1rem}
+.sc{background:var(--s);border:.5px solid var(--bd);border-radius:var(--rl);padding:10px 14px}
+.sl{font-size:11px;color:var(--t2);margin-bottom:3px}
+.sv{font-size:22px;font-weight:600}
+
+/* KANBAN */
+.fb{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.fc{font-size:11px;padding:3px 10px;border:.5px solid var(--bd);border-radius:10px;background:var(--s);color:var(--t2);cursor:pointer}
+.fc.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;align-items:start}
+.kol{background:var(--s2);border-radius:var(--rx);padding:8px;min-height:160px}
+.kh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:6px;border-bottom:.5px solid var(--bd)}
+.kt{font-size:12px;font-weight:600}
+.kc{font-size:10px;background:var(--s);border:.5px solid var(--bd);border-radius:8px;padding:1px 7px;color:var(--t2)}
+.kol.krev .kh{border-bottom-color:var(--amb)}
+.kol.kdon .kh{border-bottom-color:var(--grn)}
+.kol.kfail .kh{border-bottom-color:var(--red)}
+.tc{background:var(--s);border:.5px solid var(--bd);border-radius:var(--rl);padding:9px;margin-bottom:6px;cursor:pointer;transition:all .15s}
+.tc:hover{border-color:var(--bd2);box-shadow:0 1px 4px rgba(0,0,0,.1);transform:translateY(-1px)}
+.tc.drag{opacity:.45}
+.kol.dov{background:var(--blt);border:1.5px dashed var(--blue)}
+.tt{font-size:12px;font-weight:500;margin-bottom:5px;line-height:1.4}
+.tb2{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:5px}
+.tstep{font-size:10px;color:var(--bdk);background:var(--blt);padding:2px 7px;border-radius:6px;display:inline-block;margin-bottom:4px}
+.spb{height:3px;background:var(--s2);border-radius:2px;overflow:hidden;margin-top:4px}
+.spf{height:100%;background:#1D9E75;border-radius:2px}
+.spt{font-size:10px;color:var(--t3);margin-top:2px}
+.tf{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+.tdl{font-size:10px;color:var(--t3)}
+.tdl.ov{color:var(--red)}
+.tdl.sn{color:var(--amb)}
+.pics{display:flex}
+.pics .avs{border:1.5px solid var(--s);margin-left:-4px}
+.mvb{display:flex;gap:3px;margin-top:5px}
+.mb{font-size:10px;padding:2px 7px;border:.5px solid var(--bd);border-radius:var(--r);background:var(--s2);color:var(--t2);cursor:pointer}
+.mb:hover{background:var(--s)}
+.ec{font-size:11px;color:var(--t3);text-align:center;padding:16px 0;border:1px dashed var(--bd);border-radius:var(--rl)}
+.apbtn{width:100%;margin-top:5px;font-size:11px;padding:4px;background:var(--alt);color:var(--amb);border:.5px solid var(--amb);border-radius:var(--r);cursor:pointer;font-weight:500}
+.apbtn:hover{background:var(--amb);color:#fff}
+
+/* MODAL */
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.38);display:flex;align-items:flex-start;justify-content:center;padding-top:48px;z-index:1000}
+.mo{background:var(--s);border-radius:var(--rx);border:.5px solid var(--bd);padding:1.25rem;width:100%;max-width:560px;max-height:87vh;overflow-y:auto;box-shadow:0 8px 48px rgba(0,0,0,.2)}
+.mo-lg{max-width:680px}
+.mh{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1rem;gap:10px}
+.mti{font-size:15px;font-weight:600;line-height:1.4}
+.mcl{font-size:20px;background:none;border:none;color:var(--t3);cursor:pointer;padding:0 4px;flex-shrink:0}
+.mcl:hover{color:var(--t)}
+
+/* FORMS */
+.fr{margin-bottom:10px}
+.fl{font-size:11px;color:var(--t2);font-weight:500;margin-bottom:4px;display:block}
+.fi{width:100%;font-size:13px;padding:7px 10px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--s);color:var(--t)}
+.fi:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(24,95,165,.1)}
+textarea.fi{resize:vertical;min-height:56px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.fa{display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap}
+.iab{background:var(--blt);border:.5px solid rgba(24,95,165,.2);border-radius:var(--r);padding:10px;margin-bottom:8px}
+.iat{font-size:11px;font-weight:600;color:var(--bdk);margin-bottom:8px}
+
+/* DETAIL */
+.dmg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.dmi .dl{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.dmi .dv{font-size:13px;font-weight:500}
+.ds{margin-bottom:14px}
+.dst{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.ft{display:flex;align-items:center;flex-wrap:wrap;gap:0;margin-top:4px}
+.fn{font-size:11px;padding:4px 10px;background:var(--s2);border:.5px solid var(--bd);color:var(--t2);white-space:nowrap}
+.fn:first-child{border-radius:var(--r) 0 0 var(--r)}
+.fn:last-child{border-radius:0 var(--r) var(--r) 0}
+.fn.cur{background:var(--blt);color:var(--bdk);border-color:rgba(24,95,165,.3);font-weight:500}
+.fn.don{background:var(--glt);color:var(--grn);border-color:rgba(15,110,86,.2)}
+.nb2{font-size:12px;background:var(--s2);border-radius:var(--r);padding:8px 10px;line-height:1.6;white-space:pre-wrap}
+
+/* COMMENTS */
+.cl{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;max-height:240px;overflow-y:auto}
+.ci{display:flex;gap:8px}
+.cb{flex:1;background:var(--s2);border-radius:0 var(--rl) var(--rl) var(--rl);padding:8px 10px}
+.ca{font-size:11px;font-weight:600}
+.ctm{font-size:10px;color:var(--t3)}
+.ctx{font-size:12px;line-height:1.5;white-space:pre-wrap;margin-top:2px}
+.cir{display:flex;gap:8px;margin-top:6px}
+.cir textarea{flex:1;font-size:12px;padding:7px 10px;border:.5px solid var(--bd2);border-radius:var(--r);min-height:38px;resize:none}
+.sys-cm{text-align:center;margin:3px 0}
+.sys-cm span{font-size:10px;color:var(--t3);background:var(--s2);padding:2px 8px;border-radius:8px}
+
+/* SUBTASKS */
+.sui{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:.5px solid var(--bd)}
+.sui:last-child{border-bottom:none}
+.sui input[type=checkbox]{margin-top:2px;width:14px;height:14px;accent-color:var(--blue);flex-shrink:0}
+.sut{font-size:12px;flex:1}
+.sut.done{text-decoration:line-through;color:var(--t3)}
+.sud{font-size:14px;background:none;border:none;color:var(--t3);cursor:pointer;opacity:0}
+.sui:hover .sud{opacity:1}
+.asr{display:flex;gap:6px;margin-top:6px}
+.asr input{flex:1;font-size:12px;padding:5px 8px;border:.5px solid var(--bd2);border-radius:var(--r)}
+
+/* PIC CHIPS */
+.pmc{display:flex;flex-wrap:wrap;gap:6px;padding:6px 0}
+.pch{display:flex;align-items:center;gap:5px;font-size:11px;padding:3px 8px;border:.5px solid var(--bd2);border-radius:10px;background:var(--s);cursor:pointer}
+.pch.sel{background:var(--blt);border-color:var(--blue);color:var(--bdk);font-weight:500}
+
+/* TABLE */
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sti{font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px}
+.tw{border:.5px solid var(--bd);border-radius:var(--rl);overflow:hidden;margin-bottom:1.5rem}
+table{width:100%;border-collapse:collapse}
+thead th{font-size:11px;font-weight:600;color:var(--t2);padding:9px 12px;text-align:left;background:var(--s2);border-bottom:.5px solid var(--bd);white-space:nowrap}
+tbody td{font-size:12px;padding:8px 12px;border-bottom:.5px solid var(--bd);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--s2)}
+.tab{display:flex;gap:4px;opacity:0}
+tr:hover .tab{opacity:1}
+
+/* ATTACHMENTS */
+.atch{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+.ati{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--s2);border-radius:var(--r);font-size:12px}
+.ati-n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ati-s{font-size:10px;color:var(--t3)}
+
+/* CONFIG */
+.fer{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px 10px;background:var(--s2);border-radius:var(--r)}
+.fsp{display:flex;align-items:center;gap:2px;flex-wrap:wrap;flex:1}
+.fsb{font-size:10px;padding:2px 7px;background:var(--s);border:.5px solid var(--bd);border-radius:5px}
+
+/* TOAST */
+.toc{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:6px;z-index:9999}
+.to{font-size:12px;padding:10px 14px;background:var(--t);color:#fff;border-radius:var(--rl);box-shadow:0 4px 16px rgba(0,0,0,.2);display:flex;align-items:center;gap:8px;animation:si .2s ease}
+.to.ok{background:var(--grn)}
+.to.err{background:var(--red)}
+.to.warn{background:var(--amb)}
+@keyframes si{from{transform:translateX(60px);opacity:0}to{transform:translateX(0);opacity:1}}
 @keyframes spin{to{transform:rotate(360deg)}}
-.divider{height:1px;background:var(--border);margin:4px 0 14px}
-.info-row{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--text2);margin-bottom:8px}
-.info-row strong{color:var(--text)}
-.date-display{background:var(--blue-light);border-radius:8px;padding:10px 12px;font-size:14px;font-weight:600;color:var(--blue);text-align:center;margin-bottom:4px}
-/* Search input */
-.search-input{margin-bottom:8px}
+.sp{display:inline-block;width:12px;height:12px;border:2px solid var(--bd2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px}
+
+/* CUST DETAIL */
+.cig{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.cf{background:var(--s2);border-radius:var(--r);padding:8px 10px}
+.cfl{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.cfv{font-size:13px;font-weight:500;word-break:break-word}
 </style>
 </head>
 <body>
 
-<div id="dbgOv" style="display:none;position:fixed;bottom:0;left:0;right:0;max-height:50vh;overflow-y:auto;background:rgba(0,0,0,.9);color:#0f0;font-family:monospace;font-size:11px;padding:8px;z-index:9999"><button onclick="document.getElementById('dbgOv').style.display='none'" style="float:right;background:#f00;color:#fff;border:none;padding:2px 8px;border-radius:4px">✕</button><div id="dbgLog"></div></div>
-<div class="toast" id="toast"></div>
-<div class="loading" id="loading"><div class="spinner"></div><p id="loadingMsg">Đang gửi...</p></div>
+<!-- LOGIN -->
+<div id="login" class="lw">
+  <div class="lc">
+    <div class="ll">DGM</div>
+    <div class="lt">DGM Sales CRM</div>
+    <div class="ls">Ayam Brand · Alce Nero · Duchef</div>
+    <label style="font-size:11px;color:var(--t2);font-weight:500;margin-bottom:4px;display:block">Chọn tài khoản</label>
+    <select id="lu" class="lf"></select>
+    <label style="font-size:11px;color:var(--t2);font-weight:500;margin-bottom:4px;display:block">Email Gmail</label>
+    <input type="email" id="le" class="lf" placeholder="email@gmail.com">
+    <label style="font-size:11px;color:var(--t2);font-weight:500;margin-bottom:4px;display:block" id="pw-label">Mật khẩu</label>
+    <input type="password" id="lpw" class="lf" placeholder="Nhập mật khẩu..." onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="lb" onclick="doLogin()">Đăng nhập</button>
+    <div class="lerr" id="lerr"></div>
+  </div>
+</div>
 
-<!-- SCREEN: LOGIN -->
-<div class="screen active" id="scLogin">
-  <div style="background:var(--primary);padding:24px 20px 20px;text-align:center;color:#fff;position:relative">
-    <div style="font-size:36px;margin-bottom:8px">🏷️</div>
-    <h2 style="font-size:20px;font-weight:700">DGM Sales Survey</h2>
-    <p style="font-size:13px;opacity:.85;margin-top:4px">Ayam Brand · Denis G.M.</p>
-  </div>
-  <div id="urlConfigBox" style="display:none;background:#fff3cd;border-bottom:2px solid #ffc107;padding:12px 16px">
-    <p style="font-size:12px;font-weight:600;color:#856404;margin-bottom:6px">⚙️ Apps Script Web App URL</p>
-    <input type="text" id="urlConfigInput" style="width:100%;padding:8px;border:1.5px solid #ffc107;border-radius:6px;font-size:12px;margin-bottom:8px" placeholder="https://script.google.com/macros/s/.../exec">
-    <div style="display:flex;gap:8px">
-      <button onclick="saveUrlConfig()" style="flex:1;padding:8px;background:#28a745;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer">💾 Lưu</button>
-      <button onclick="document.getElementById('urlConfigBox').style.display='none'" style="flex:1;padding:8px;background:#6c757d;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer">Đóng</button>
+<!-- APP -->
+<div class="app" id="app" style="display:none">
+  <div class="tb">
+    <div class="brnd">
+      <div class="bm">DGM</div>
+      <div><div class="bn">DGM Sales CRM</div><div class="bs">Ayam Brand · Alce Nero · Duchef</div></div>
     </div>
-    <p id="urlStatusMsg" style="font-size:11px;color:#666;margin-top:6px;text-align:center"></p>
-  </div>
-  <div class="content">
-    <div class="card">
-      <h3>Chọn tên nhân viên</h3>
-      <div class="staff-list" id="staffList"></div>
+    <div class="nm" id="nav">
+      <button class="nb active" onclick="showPage('kanban',this)">📋 Kanban</button>
+      <button class="nb" onclick="showPage('customers',this)">🏢 Khách hàng</button>
+      <button class="nb" onclick="showPage('products',this)">📦 Sản phẩm</button>
+      <button class="nb mgr-only" onclick="showPage('users',this)">👥 Team</button>
+      <button class="nb mgr-only" onclick="showPage('config',this)">⚙️ Cấu hình</button>
     </div>
-    <div class="card" style="border:1.5px dashed #ddd;background:#fafafa">
-      <h3 style="color:var(--text2);font-size:12px">✏️ Nhập thủ công (nếu chưa có trong danh sách)</h3>
-      <div class="field" style="margin-bottom:10px">
-        <label>Họ và tên</label>
-        <input type="text" id="manualName" placeholder="Nhập họ tên đầy đủ..." style="margin-bottom:8px">
-        <label style="margin-top:8px">Khu vực làm việc</label>
-        <select id="manualTeam">
-          <option value="">— Chọn khu vực —</option>
-          <option value="MT">MT — Modern Trade</option>
-          <option value="GT South">GT Miền Nam</option>
-          <option value="GT Central">GT Miền Trung</option>
-          <option value="GT North">GT Miền Bắc</option>
-          <option value="MT/GT">MT + GT (Quản lý)</option>
-        </select>
+    <div class="tr">
+      <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t3)">
+        <div class="sd" id="sd"></div><span id="sl">...</span>
       </div>
-      <button class="btn btn-primary" onclick="selectManualUser()" style="padding:11px">Bắt đầu khảo sát →</button>
+      <button class="btn btn-sm" onclick="syncAll()" title="Sync">↻</button>
+      <div class="up" onclick="doLogout()">
+        <div class="av" id="cav">?</div>
+        <span id="cnm">...</span>
+        <span style="font-size:10px;color:var(--t3)">↩</span>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- SCREEN: SURVEY TYPE -->
-<div class="screen" id="scType">
-  <div class="header">
-    <button class="btn-back" onclick="goTo('scLogin')">←</button>
-    <div><h1 id="typeTitle">Chọn loại khảo sát</h1><div class="sub" id="typeSubtitle"></div></div>
+  <div class="pg active" id="pg-kanban">
+    <div class="sr" id="stats"></div>
+    <div class="fb" id="fbar"></div>
+    <div class="board" id="board"></div>
   </div>
-  <div class="content">
-    <div class="card" id="typeCards"></div>
-  </div>
-</div>
 
-<!-- SCREEN: MT FORM -->
-<div class="screen" id="scMT">
-  <div class="header">
-    <button class="btn-back" onclick="goTo('scType')">←</button>
-    <div><h1>Khảo Sát MT</h1><div class="sub" id="mtSubtitle"></div></div>
-  </div>
-  <div class="content" id="mtContent"></div>
-  <div class="bottom-bar"><button class="btn btn-primary" onclick="submitMT()">📤 Gửi Báo Cáo</button></div>
-</div>
-
-<!-- SCREEN: GT DAILY FORM -->
-<div class="screen" id="scGTDaily">
-  <div class="header">
-    <button class="btn-back" onclick="goTo('scType')">←</button>
-    <div><h1>Khảo Sát GT Daily</h1><div class="sub" id="gtSubtitle"></div></div>
-  </div>
-  <div class="content" id="gtContent"></div>
-  <div class="bottom-bar"><button class="btn btn-primary" onclick="submitGT()">📤 Gửi Báo Cáo</button></div>
-</div>
-
-<!-- SCREEN: GT NEW CUSTOMER -->
-<div class="screen" id="scGTNew">
-  <div class="header">
-    <button class="btn-back" onclick="goTo('scType')">←</button>
-    <div><h1>Điểm Bán Mới</h1><div class="sub" id="gtnewSubtitle"></div></div>
-  </div>
-  <div class="content" id="gtnewContent"></div>
-  <div class="bottom-bar"><button class="btn btn-primary" onclick="submitGTNew()">📤 Gửi Báo Cáo</button></div>
-</div>
-
-<!-- SCREEN: SUCCESS -->
-<div class="screen" id="scSuccess">
-  <div class="content">
-    <div class="success-screen">
-      <div class="success-icon">✅</div>
-      <div class="success-title">Đã gửi thành công!</div>
-      <div class="success-sub" id="successSub">Dữ liệu đã được lưu vào hệ thống</div>
-      <div class="success-detail" id="successDetail"></div>
-      <p style="font-size:13px;color:var(--text2);margin-top:16px">Tự động về màn hình chính sau <span id="successCountdown">2</span>s...</p>
-      <button class="btn btn-primary" style="margin-top:16px;max-width:300px" onclick="goTo('scType')">Khảo sát tiếp</button>
-      <button class="btn btn-secondary" style="margin-top:10px;max-width:300px" onclick="goTo('scLogin')">Đổi người dùng</button>
+  <div class="pg" id="pg-customers">
+    <div class="sh">
+      <div class="sti">🏢 Khách hàng</div>
+      <button class="btn btn-p btn-sm" onclick="openCustForm()">+ Thêm</button>
     </div>
+    <div class="tw"><table>
+      <thead><tr><th>Tên</th><th>Kênh</th><th>Vùng</th><th>Hình thức KD</th><th>PIC</th><th>Liên hệ</th><th>SĐT</th><th>Số CH</th><th>Tasks</th><th></th></tr></thead>
+      <tbody id="ctb"></tbody>
+    </table></div>
+  </div>
+
+  <div class="pg" id="pg-products">
+    <div class="sh">
+      <div class="sti">📦 Sản phẩm</div>
+      <div id="prod-add-btn"></div>
+    </div>
+    <div class="tw"><table>
+      <thead><tr><th>Tên sản phẩm</th><th>Brand</th><th>Danh mục</th><th>SKU</th><th>Đơn vị</th><th>Trạng thái</th><th></th></tr></thead>
+      <tbody id="ptb"></tbody>
+    </table></div>
+  </div>
+
+  <div class="pg" id="pg-users">
+    <div class="sh">
+      <div class="sti">👥 Team</div>
+      <button class="btn btn-p btn-sm" onclick="openUserForm()">+ Thêm</button>
+    </div>
+    <div class="tw"><table>
+      <thead><tr><th>Tên</th><th>Role</th><th>Kênh</th><th>Vùng</th><th>Chức vụ</th><th>Email</th><th>Password</th><th>Initials</th><th></th></tr></thead>
+      <tbody id="utb"></tbody>
+    </table></div>
+  </div>
+
+  <div class="pg" id="pg-config">
+    <div class="sh">
+      <div class="sti">⚙️ Cấu hình Flow <span style="font-size:10px;background:#EDE9FE;color:#5B21B6;padding:2px 7px;border-radius:6px;font-weight:500">Manager only</span></div>
+      <button class="btn btn-p btn-sm" onclick="openFlowForm()">+ Thêm flow</button>
+    </div>
+    <div id="cfg-body"></div>
   </div>
 </div>
+
+<div id="mc"></div>
+<div class="toc" id="toasts"></div>
 
 <script>
-// ============ DATA ============
-const TEAM = [
-  {
-    "name": "Hồ Anh Tài",
-    "team": "MT"
-  },
-  {
-    "name": "Nguyễn Hoàng Thiên Thanh",
-    "team": "MT"
-  },
-  {
-    "name": "Liêu Văn Vủ",
-    "team": "MT"
-  },
-  {
-    "name": "Hồ Thị Thắm",
-    "team": "MT"
-  },
-  {
-    "name": "Lê Thị Cẩm Loan",
-    "team": "MT"
-  },
-  {
-    "name": "Hồ Ngọc Anh",
-    "team": "GT Central"
-  },
-  {
-    "name": "Đặng Thị Thanh Hoa",
-    "team": "GT Central"
-  },
-  {
-    "name": "Nguyễn Thị Thùy Nhung",
-    "team": "GT Central"
-  },
-  {
-    "name": "Phương Ngọc Chánh",
-    "team": "GT South"
-  },
-  {
-    "name": "Nguyễn Thị Thúy Oanh",
-    "team": "GT South"
-  },
-  {
-    "name": "Hồ Ngọc Giàu",
-    "team": "GT South"
-  },
-  {
-    "name": "Nguyễn Thanh Tùng",
-    "team": "GT South"
-  },
-  {
-    "name": "Huỳnh Thị Đào",
-    "team": "GT South"
-  },
-  {
-    "name": "Nguyễn Xuân Đức",
-    "team": "GT North"
-  },
-  {
-    "name": "Bùi Thị Thoa",
-    "team": "GT North"
-  },
-  {
-    "name": "Phạm Thị Phương",
-    "team": "GT North"
-  },
-  {
-    "name": "Bùi Quang Quý",
-    "team": "MT/GT"
-  }
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwfdPEtl9BBW-xHuXBMuCvZSN40CUbQHZsMNvA0CkXjgHR7CrfUSj06fssMZJmm-MMX/exec';
+const STATUSES=['todo','inprogress','review','done','done_fail'];
+const SL={todo:'To Do',inprogress:'In Progress',review:'Chờ duyệt',done:'✅ Hoàn thành',done_fail:'❌ Không thành công'};
+const CHANNELS=['MT','GT','B2B','HoReCa'];
+
+// ---- DEFAULT DATA (fallback khi Sheet chưa kết nối) ----
+// Password 4 số, khác nhau cho mỗi người (manager không cần)
+const DEFAULT_USERS=[
+  {id:'u1',name:'Bùi Quang Quý',email:'quangquy.bui@gmail.com',role:'manager',position:'Sales & Marketing Manager',channel:'ALL',region:'ALL',initials:'QB',password:'',status:'Active'},
+  {id:'u2',name:'Hồ Anh Tài',email:'taihathuy@gmail.com',role:'sales',position:'Sales Representative',channel:'MT',region:'ALL',initials:'HAT',password:'2847',status:'Active'},
+  {id:'u3',name:'Thiên Thanh',email:'ng.thienthanh1696@gmail.com',role:'sales',position:'Sales Representative',channel:'MT',region:'ALL',initials:'TT',password:'5193',status:'Active'},
+  {id:'u4',name:'Nguyễn Xuân Đức',email:'nguyenxuanduc13091987@gmail.com',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Bắc',initials:'NXD',password:'7062',status:'Active'},
+  {id:'u5',name:'Phương Ngọc Chánh',email:'chanhphuong86@gmail.com',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Nam',initials:'PNC',password:'3815',status:'Active'},
+  {id:'u6',name:'Hồ Ngọc Anh',email:'honguyennguyenan2016@gmail.com',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Trung',initials:'HNA',password:'9274',status:'Active'},
+  {id:'u7',name:'Phương Thi',email:'phuongthi21@gmail.com',role:'trade',position:'Trade Marketing',channel:'ALL',region:'ALL',initials:'DPT',password:'6538',status:'Active'},
 ];
 
-const MT_CHAINS = {"K-Market": ["K-Market Vh Golden River", "K-Market Vinhomes", "K-Market Vinhomes 2", "K-Market Vinhomes 3", "K-Market Thảo Điền", "K-Market Greenview", "K-Market Sky Garden 1", "K-Market Lexington", "K-Market Sunrise", "K-Market Masteri", "K-Market Parkview", "K-Market Scenic Valley", "K-Market Sky Garden 2", "K-Market Avanue 2", "K-Market Saigon South", "K-Market Bình Dương", "K-Market Somerset", "K-Market Midtown 2", "K-Market Safira", "K-Market Thảo Điền"], "Mega Market": ["Mega Market An Giang", "Mega Market An Phú", "Mega Market Biên Hòa", "Mega Market BìNh Dương", "Mega Market BìNh ĐịNh", "Mega Market Bình Phú", "Mega Market Buôn Ma ThuộT", "Mega Market Đà NẵNg", "Mega Market Hà Đông", "Mega Market HảI PhòNg", "Mega Market HiệP Phú", "Mega Market Hoàng Mai", "Mega Market Hồng Bàng", "Mega Market Hưng LợI", "Mega Market Hưng Phú", "Mega Market Kiên Giang", "Mega Market Nha Trang", "Mega Market QuảNg Ninh", "Mega Market Super Centar Đà Nẵng", "Mega Market Thanh Xuân", "Mega Market Thăng Long", "Mega Market VũNg TàU"], "Mekong": ["Mekong Gourmet"], "Nam An Gourmet": ["Nam An Mai Chí Thọ", "Nam An Nguyễn Lương Bằng", "Nam An Nguyễn Thị Minh Khai", "Nam An Nguyễn Văn Trổi", "Nam An Thảo Điền"], "Roots Organic": ["Root Organic Store"], "An Phú": ["St An Phú"], "Menas": ["St Mena Trường Sơn", "St Menas Celesta Rise", "St Menas Huỳnh Tấn Phát", "St Menas Nguyễn Thị Thập", "St Menas Võ Vân Ngân"], "Lotte Mart": ["Lotte Bình Dương", "Lotte Cần Thơ", "Lotte Đà Nẵng", "Lotte Đồng Nai", "Lotte Gò Vấp", "Lotte Hanoi Center", "Lotte Nam Sài Gòn", "Lotte Nha Trang", "Lotte Nha Trang Gold Coast", "Lotte Phan Thiết", "Lotte Phú Thọ", "Lotte Tân Bình", "Lotte Vinh", "Lotte Vũng Tàu", "Lotte West Lake", "Lotte Bắc Giang", "Lotte Tây Ninh"], "Go!": ["Go! An Lạc", "Go! An Nhơn", "Go! Bà Rịa", "Go! Bắc Giang", "Go! Bạc Liêu", "Go! Bến Tre", "Go! Bình Định", "Go! Bình Dương", "Go! Buôn Ma Thuột", "Go! Cần Thơ", "Go! Đà Lạt", "Go! Đà Nẵng", "Go! Dĩ An", "Go! Điện Bàn", "Go! Đồng Nai", "Go! Gò Dầu", "Go! Gò Vấp", "Go! Hà Đông", "Go! Hạ Long", "Go! Hà Nam", "Go! Hải Dương", "Go! Hải Phòng", "Go! Hòa Thành", "Go! Hồng Ngự", "Go! Huế", "Go! Hưng Yên", "Go! Hương Trà", "Go! Lào Cai", "Go! Lấp Vò", "Go! Lộc Ninh", "Go! Long Biên", "Go! Mê Linh", "Go! Miền Đông", "Go! Mỹ Tho", "Go! Nam Định", "Go! Nguyễn Thị Thập", "Go! Nha Trang", "Go! Nhơn Trạch", "Go! Ninh Bình", "Go! Ninh Thuận", "Go! Phú Mỹ", "Go! Phú Thạnh", "Go! Quảng Ngãi", "Go! Rạch Giá", "Go! Tam Kỳ", "Go! Tân Hiệp", "Go! Tân Uyên", "Go! Thái Bình", "Go! Thái Nguyên", "Go! Thăng Long", "Go! Thanh Bình", "Go! Thanh Hóa", "Go! Trà Vinh", "Go! Trường Chinh", "Go! Việt Trì", "Go! Vinh", "Go! Vĩnh Phúc", "Go! Vũng Tàu"], "Tops": ["Tops Market An Phú", "Tops Market Âu Cơ", "Tops Market Eco Green", "Tops Market Garden", "Tops Market Hồ Gươm", "Tops Market Lê Trọng Tấn", "Tops Market Moonlight", "Tops Market Parkcity", "Tops Market Thảo Điền"], "An Nam Gourmet": ["Ân Nam 41 Thảo Điền (An Phú)", "Ân Nam Ascentia (Nguyễn Lương Bằng)", "Ân Nam Estella", "Ân Nam Feliz En Vista", "Ân Nam Gourmet Q2 (Võ Trường Toản)", "Ân Nam Hai Bà Trưng", "Ân Nam Landmark 81", "Ân Nam Nguyễn Văn Trỗi", "Ân Nam Phú Mỹ Hưng (Nguyễn Đức Cảnh)", "Ân Nam Sài Gòn Pearl", "Ân Nam Saigon Center", "Ân Nam Thảo Điền Green", "Ân Nam Q2 Terrace", "Ân Nam The Vista", "Ân Nam Xuân Diệu", "Annam Gourmet Store - Vincom Plaza Long Biên", "Annam Gourmet - Hanoi Centre​ (Tiến Bộ)"], "King Food": ["King Food 0.01 Chung cư An Cư An Phú", "King Food 01 Đường Số 10 Tân Kiểng", "King Food 01.18 Pegasuite", "King Food 0105 B4 Era Town", "King Food 17 Hồ Thị Nhung", "King Food 09 Lâm Văn Bền", "King Food 10 Phạm Hùng", "King Food 107 Bình Quới", "King Food 108 Ngô Tất Tố", "King Food 116 Gò Dầu", "King Food 1-19 The Privia", "King Food 126 Chợ Lớn", "King Food 128 Vườn Lài", "King Food 14 Huỳnh Tịnh Của", "King Food 1426 Nguyễn Duy Trinh", "King Food 15 Nguyên Hồng", "King Food 165 Hoàng Hoa Thám", "King Food 166E Lê Văn Lương", "King Food 195 Thống Nhất", "King Food 22 Hoàng Hoa Thám", "King Food 222-224 Lê Văn Thịnh", "King Food 233 Phạm Hữu Lầu", "King Food 305 Nguyễn Duy Trinh", "King Food 308 Lê Văn Thọ", "King Food 31 Tân Mỹ", "King Food 367 Nguyễn Văn Tăng", "King Food 371 Nguyễn Kiệm", "King Food 372 Dương Quảng Hàm", "King Food 410 Phan Huy Ích", "King Food 42 Nguyễn Văn Đậu", "King Food 43 Bùi Văn Ba", "King Food 436 Nguyễn Thị Thập", "King Food 46 Nguyễn Thị Tú", "King Food 48 CN1", "King Food 511 Quốc Lộ 50", "King Food 539 Đỗ Xuân Hợp", "King Food 54 Vũ Huy Tấn", "King Food 571 Huỳnh Tấn Phát", "King Food 59 Quốc Hương", "King Food 63 Đường Số 3", "King Food 64A Cửu Long", "King Food 85 Cây Keo", "King Food 86B Vũ Tùng", "King Food 97 Lê Thị Chợ", "King Food 98 Khánh Hội", "King Food 99 Đường Số 7", "King Food A10-0.02 Ehome 3", "King Food A7-8 Valora Mizuki", "King Food T4, T5 Block D Chung Cư Akari City", "King Food AS19 Block A Prosper Plaza", "King Food BB17 Trường Sơn", "King Food 66/70 Bình Thành", "King Food Block B Imperia An Phú", "King Food C0.01 Riverside Phú Mỹ Hưng", "King Food Lô H10-05 Chung Cư Citihome Cát Lái", "King Food Chung Cư CT1 MT Eastmark City", "King Food D1-1.24 Safira Khang Điền", "King Food D-2.01A Westgate An Gia", "King Food Block C Diamond Riverside", "King Food E72 Phú Thuận", "King Food A0.01 EhomeS Phú Hữu", "King Food Block D Gia Hòa The Art", "King Food Block C Harmona", "King Food Him Lam Phú Đông", "King Food Him Lam Riverside", "King Food 296 Hoàng Ngân", "King Food Block B1 Hưng Ngân Garden", "King Food Block A Jamila Khang Điền", "King Food 10D Kỳ Đồng", "King Food Lô CD L1-12 Q7 Riverside Đào Trí", "King Food 39 Lý Phục Man", "King Food B0.07-B0.08 Nam Sài Gòn Residences", "King Food 160A Nguyễn Thị Định", "King Food 75 Nguyễn Trãi", "King Food 299 Nguyễn Văn Khối", "King Food 678 Nguyễn Văn Quá", "King Food Tháp B Tầng 1 Opal Skyline", "King Food R13 Hưng Vượng 2", "King Food RS4 Richstar", "King Food S01.05 Vinhomes Grand Park", "King Food S01.11 Block A1 Charm Sapphire", "King Food S03.05 Vinhomes Grand Park", "King Food S06.06 Vinhomes Grand Park", "King Food S07.02 Vinhomes Grand Park", "King Food S1.0.38 Block A5 Diamond Celadon City", "King Food S10.02 Vinhomes Grand Park", "King Food SAV_04-00.03 The Sun Avenue", "King Food B0.02 Lô MD4-4 Scenic Valley", "King Food SH01 Bcons Garden", "King Food SH14-15 Saigon South Residences", "King Food SH16 Eco Green", "King Food 229A Tân Hoà Đông", "King Food TMDV2 Mizuki Park", "King Food 46 Trần Não", "King Food 66 Trương Vĩnh Ký", "King Food Vạn Phúc City", "King Food 27 Tân Lập", "King Food 446 - 448 Phạm Văn Bạch", "King Food 02 Tạ Hiện", "King Food 128A Kha Vạn Cân", "King Food Vinhomes Grandpark 1.10-1.15-1.16 GH5", "King Food Vinhomes Grandpark 1.06-1.07 BS11", "Emart Gò Vấp", "Emart Phan Huy Ích", "Emart Sala", "King Food Cây Keo - Thủ Đức", "King Food Trần Trọng Cung", "King Food Nguyễn Trọng Tuyển", "King Food Phan Văn Hân", "King Food Hà Đô"], "Coop Xtra": ["Coop Xtra Tân Phong", "Coop Xtra Tạ Quang Bửu", "Coop Xtra Linh Trung", "Coop Xtra Long Bình", "Coop Xtra Sư Vạn Hạnh"], "Finelife": ["Finelife Hà Đô", "Finelife Urban Hill", "Finelife Rivera Point", "Finelife Lumiere An Phú", "Finelife Lexington", "Finelife Zeit River"], "Genshai": ["Genshai Vista", "Genshai Vista", "Genshai Verde", "Genshai Riverside", "Genshai Richmond", "Genshai Empire City", "Genshai Lavita Charm", "Genshai Riverside Complex"], "Emart": ["Emart Gò Vấp", "Emart Phan Huy Ích", "Emart Sala"]};
-
-const GT_NORTH_STORES = [{"store": "Mai Quang", "market": "Chợ Đồng Xuân", "address": "Ha Noi"}, {"store": "Hà Chính ( Ms Hương ) -", "market": "1B Cao Thắng - Chợ Đồng Xuân", "address": "Ha Noi"}, {"store": "Hải Trang", "market": "Chợ Đồng Xuân", "address": "Ha Noi"}, {"store": "Mai Thoa ( Tuyết Tiếp )", "market": "11 Cao Thắng - Chợ Đồng Xuân", "address": "Ha Noi"}, {"store": "Cô Mận dãy a3 chợ long biên", "market": "Chợ Long Biên", "address": "Ha Noi"}, {"store": "Cô Thoa- 26 cao thắng", "market": "Chợ Đồng Xuân", "address": "Ha Noi"}, {"store": "Bình Chung 15 chợ cao thắng", "market": "Chợ Đồng Xuân", "address": "Ha Noi"}, {"store": "Hồng Ngọc 15 chợ cao thắng", "market": "Chợ Đồng Xuân", "address": "Ha Noi"}, {"store": "Long Thoa", "market": "Chợ 19/12", "address": "Ha Noi"}, {"store": "Hào Hương", "market": "Chợ 19/12", "address": "Ha Noi"}, {"store": "Hạnh Anh", "market": "Chợ 19/12", "address": "Ha Noi"}, {"store": "Cô Tâm", "market": "Chợ 19/12", "address": "Ha Noi"}, {"store": "Bình Hoan", "market": "Chợ 19/12", "address": "Ha Noi"}, {"store": "Chị Thêu", "market": "Chợ 19/12", "address": "Ha Noi"}, {"store": "Cô Thu", "market": "Chợ 19/12", "address": "Ha Noi"}, {"store": "18 Phùng Hưng- Hoàn Kiếm", "market": "Cô Liên Hoa", "address": "Ha Noi"}, {"store": "HOME CITY 177 TRUNG KÍNH", "market": "Siêu Thi K&K", "address": "Ha Noi"}, {"store": "118 quán thánh", "market": "Aus Food", "address": "Ha Noi"}, {"store": "29 Hàng Vôi", "market": "L's Place", "address": "Ha Noi"}, {"store": "63 Lý Thường Kiệt", "market": "L's Place", "address": "Ha Noi"}, {"store": "166 Quán Thánh- Ba Đình", "market": "Qt Mart", "address": "Ha Noi"}, {"store": "chợ hàng da", "market": "Kios Mùi Hoà", "address": "Ha Noi"}, {"store": "Chợ Hôm- Trần Xuân Soạn- Hai Bà Trưng", "market": "Chị Quyên", "address": "Ha Noi"}, {"store": "Chợ Hôm- Trần Xuân Soạn- Hai Bà Trưng", "market": "Đặng Dung- Kiot 14", "address": "Ha Noi"}, {"store": "Chợ Hôm- Trần Xuân Soạn- Hai Bà Trưng", "market": "Cô Loan- Kiot 15,16", "address": "Ha Noi"}, {"store": "Chợ Hôm- Trần Xuân Soạn- Hai Bà Trưng", "market": "Tuân Thúy Kiot 4", "address": "Ha Noi"}, {"store": "40 Yên Phụ- Ba Đình", "market": "Top5 Mart", "address": "Ha Noi"}, {"store": "Tòa Park 7, Time City", "market": "Đà Lạt Mart", "address": "Ha Noi"}, {"store": "toà g2 s03 sunshie garden - dương văn bé", "market": "Td Mart", "address": "Ha Noi"}, {"store": "A5 12 sunshie city ciputra", "market": "Ausfood", "address": "Ha Noi"}, {"store": "24 Phú Gia", "market": "Hung Long Phu Gia", "address": "Ha Noi"}, {"store": "Khu Đô Thị Ciputra", "market": "L's Place", "address": "Ha Noi"}, {"store": "Khu Đô Thị Ciputra", "market": "L's Place", "address": "Ha Noi"}, {"store": "S6 SUNSHINE CITY CIPUTRA", "market": "Green Potota Mart", "address": "Ha Noi"}, {"store": "L4 KĐT Ciputra", "market": "Dailys Mart", "address": "Ha Noi"}, {"store": "S6 KĐT Ciputra", "market": "Smart", "address": "Ha Noi"}, {"store": "105 Xuân Diệu- Tây Hồ", "market": "Fresh Food", "address": "Ha Noi"}, {"store": "1 Xuân Diêu", "market": "L's Place", "address": "Ha Noi"}, {"store": "71b Xuân Diệu", "market": "Minimart Hung Long Xuan Dieu", "address": "Ha Noi"}, {"store": "74 Tô Ngọc Vân", "market": "Minimart Quang Ba", "address": "Ha Noi"}, {"store": "3 Tây Hồ", "market": "Minimart Sedona", "address": "Ha Noi"}, {"store": "15c ngõ 12 Đặng Thái Mai", "market": "Sieu Thi Xóm Chùa", "address": "Ha Noi"}, {"store": "1 Đặng Thái Mai", "market": "Thanh Long Food", "address": "Ha Noi"}, {"store": "22 Từ Hoa", "market": "Thủy Thành", "address": "Ha Noi"}, {"store": "76 Từ Hoa", "market": "Minan Mart", "address": "Ha Noi"}, {"store": "19 Tô Ngọc Vân", "market": "Mini Food", "address": "Ha Noi"}, {"store": "21 Tô Ngọc Vân", "market": "Houseing", "address": "Ha Noi"}, {"store": "Chợ Ngô Sỹ Liên- Đống Đa", "market": "Cô Lan Đức", "address": "Ha Noi"}, {"store": "Chợ Ngô Sỹ Liên- Đống Đa", "market": "Cô Vinh Nhuân", "address": "Ha Noi"}, {"store": "Chợ Ngô Sỹ Liên", "market": "Hùng Thơm", "address": "Ha Noi"}, {"store": "Trần phú - Hà đông", "market": "Fuji Mart", "address": "Ha Noi"}, {"store": "TÂN MAI", "market": "Fuji Mart", "address": "Ha Noi"}, {"store": "89 Lạc long quân", "market": "Fuji Mart", "address": "Ha Noi"}, {"store": "134 Lạc Long QUân", "market": "Fuji Mart", "address": "Ha Noi"}, {"store": "1 Thái Thịnh- Đống Đa", "market": "Fuji Mart", "address": "Ha Noi"}, {"store": "142 Lê Duẩn- Đống Đa", "market": "Fuji Mart", "address": "Ha Noi"}, {"store": "36 Hoàng Cầu- Đống Đa", "market": "Fuji Mart", "address": "Ha Noi"}, {"store": "b11 kim liên", "market": "Fuji Mart", "address": "Ha Noi"}, {"store": "Trần Phú - BA ĐÌNH", "market": "Fuji Mart", "address": "Ha Noi"}, {"store": "36 vạn bảo", "market": "Teekiu Mart", "address": "Ha Noi"}, {"store": "thành công", "market": "Brg Thành Công", "address": "Ha Noi"}, {"store": "59 châu long - ba đình", "market": "Shop Thành Tâm", "address": "Ha Noi"}, {"store": "Hòa Bình Green - 376 Đường Bưởi", "market": "Dan'S Shop", "address": "Ha Noi"}, {"store": "195 Nghi Tàm", "market": "L's Place", "address": "Ha Noi"}, {"store": "26 Liễu Giai", "market": "L's Place", "address": "Ha Noi"}, {"store": "Chợ Đồng Xuân- Hoàn Kiếm", "market": "Loan Thuận", "address": "Ha Noi"}, {"store": "Sảnh chung cư 162 Thụy Khuê", "market": "Chị Huyền Anh", "address": "Ha Noi"}, {"store": "KĐT Vinsmartcity", "market": "Tk Mart", "address": "Ha Noi"}, {"store": "masteri smart city", "market": "One Mart", "address": "Ha Noi"}, {"store": "masteri smart city", "market": "St Đức Thành", "address": "Ha Noi"}, {"store": "Kđt Vinsmartcity", "market": "Tomo Mart", "address": "Ha Noi"}, {"store": "KĐT Vinsmartcity", "market": "Chị Hằng Vinsmart", "address": "Ha Noi"}, {"store": "tòa zone 4 Kdt vinsmartcity", "market": "Daily Mart Zone 4", "address": "Ha Noi"}, {"store": "tòa s105 kdt vinsmartcity", "market": "Daily Mart S105", "address": "Ha Noi"}, {"store": "MỄ TRÌ HẠ", "market": "St Hà Đăng", "address": "Ha Noi"}, {"store": "THÀNH THÁI", "market": "Hà Đăng Mart", "address": "Ha Noi"}, {"store": "CT1 Trần Văn Lai", "market": "L's Place", "address": "Ha Noi"}, {"store": "6 Chính Kinh", "market": "Fuji Mart", "address": "Ha Noi"}, {"store": "6 Lê Văn Thiêm- Thanh Xuân", "market": "Family Mart", "address": "Ha Noi"}, {"store": "65 vũ trọng phụng", "market": "Won Mart", "address": "Ha Noi"}, {"store": "ocean park s2-02", "market": "Đức Loan Mart", "address": "Ha Noi"}, {"store": "ocean park", "market": "Thực Phẩm Sạch Mini Mart", "address": "Ha Noi"}, {"store": "ocean park s1-08", "market": "Xanh Mart", "address": "Ha Noi"}, {"store": "ocean park", "market": "Tý Mart", "address": "Ha Noi"}, {"store": "ocean park", "market": "Daily Mart", "address": "Ha Noi"}, {"store": "Kdt oceanpark", "market": "24H Mart", "address": "Ha Noi"}, {"store": "HH2B Linh Đường,quận hoàng mai", "market": "Mường Thanh Mart", "address": "Ha Noi"}, {"store": "KĐT Định Công- Thanh Xuân", "market": "St Đức Thành", "address": "Ha Noi"}, {"store": "176 định công,quận hoàng mai", "market": "Daily Mart Định Công", "address": "Ha Noi"}, {"store": "37a bà triệu chợ Hà Đông", "market": "Shop Hương Vĩnh", "address": "Ha Noi"}, {"store": "8 đinh tiên hoàng chợ Hà Đông", "market": "Shop Mai Tá", "address": "Ha Noi"}, {"store": "N01-T4 KĐT Ngoại Giao Đoàn- Bắc Từ Liêm", "market": "St Đức Thành", "address": "Ha Noi"}, {"store": "3-T 1-10 chung cư starlake", "market": "Linh Mart", "address": "Ha Noi"}, {"store": "N03 -T5 KĐT Ngoại Giao Đoàn", "market": "Đồng Xanh Food", "address": "Ha Noi"}, {"store": "CHỢ HÀNG DA KIOT B461-B463", "market": "Ch Mùi Hòa Chợ Hàng Da", "address": "Ha Noi"}, {"store": "Cô Phương KIOT 1+4 KHU B DÃY 1", "market": "Chợ Ngọc Hà", "address": "Ha Noi"}, {"store": "5 CHỢ NGỌC HÀ", "market": "Chợ Ngọc Hà", "address": "Ha Noi"}, {"store": "Cô Miên 94/10 QUỲNH MAI", "market": "Chợ Quỳnh Mai", "address": "Ha Noi"}, {"store": "Cô Hương 30 NGÕ 10 QUỲNH MAI", "market": "Chợ Quỳnh Mai", "address": "Ha Noi"}, {"store": "Bác Khuê", "market": "Chợ Quỳnh Mai", "address": "Ha Noi"}, {"store": "Bà Yến", "market": "Chợ Quỳnh Mai", "address": "Ha Noi"}, {"store": "Ms Dung", "market": "Chợ Quỳnh Mai", "address": "Ha Noi"}, {"store": "KIOT I14 CHỢ KHƯƠNG ĐÌNH", "market": "Chợ Khương Đình", "address": "Ha Noi"}, {"store": "Kiot 12-13 Lê Thị Thuỷ", "market": "Chợ Khương Đình", "address": "Ha Noi"}, {"store": "Kiot 18 Lê Thị Bích Ngọc", "market": "Chợ Khương Đình", "address": "Ha Noi"}, {"store": "KIOT TRONG CHƠ GIA LÂM", "market": "Ch Cô Minh Lý", "address": "Ha Noi"}, {"store": "17T9 Nguyễn Thị Định", "market": "Tiện Lợi Mart", "address": "Ha Noi"}, {"store": "park 7 time city", "market": "Hoồng Phúc Mart", "address": "Ha Noi"}, {"store": "3 Lò đúc", "market": "Aus Food", "address": "Ha Noi"}, {"store": "240 Chợ khâm thiên", "market": "Anh Đào Mart", "address": "Ha Noi"}, {"store": "Shop house VL2–SP-20 Vinsmart city", "market": "TD Mart", "address": "Ha Noi"}, {"store": "số 1 ngách 36/58/44 ngõ 44 Phố Đức Giang,Việt Hưng-Long Biên", "market": "C Ngân Anh", "address": "Ha Noi"}, {"store": "Lân Mart", "market": "Chợ Kim Hoa", "address": "Ha Noi"}, {"store": "Chị Trang", "market": "Chợ Kim Hoa", "address": "Ha Noi"}, {"store": "Chị Mùa", "market": "Chợ Kim Hoa", "address": "Ha Noi"}, {"store": "Ms Hoa", "market": "Chợ THành Công", "address": "Ha Noi"}, {"store": "Cô Lan Anh", "market": "Chợ Châu Long", "address": "Ha Noi"}, {"store": "Cô Thu", "market": "Chợ Yên Phụ", "address": "Ha Noi"}, {"store": "Chị Thuận", "market": "Chợ Yên Phụ", "address": "Ha Noi"}, {"store": "Chị Oanh", "market": "Chợ Yên Phụ", "address": "Ha Noi"}, {"store": "Cô Sợi", "market": "Chợ Nam Đồng", "address": "Ha Noi"}, {"store": "Cô Dương", "market": "Chợ Nam Đồng", "address": "Ha Noi"}, {"store": "Cô Cẩm", "market": "Chợ Nam Đồng", "address": "Ha Noi"}, {"store": "Mr Khánh", "market": "Chợ Nam Đồng", "address": "Ha Noi"}, {"store": "Cô Dào", "market": "Chợ Quan Thổ", "address": "Ha Noi"}, {"store": "Cô Nga", "market": "Chợ Quan Thổ", "address": "Ha Noi"}, {"store": "Cô Minh", "market": "Chợ Kim Liên", "address": "Ha Noi"}, {"store": "Tạp Hóa Nga Cường", "market": "Chợ Kim Liên", "address": "Ha Noi"}, {"store": "Mr Thái", "market": "Chợ Khương Thượng", "address": "Ha Noi"}, {"store": "Ms Thắm", "market": "Chợ Khương Thượng", "address": "Ha Noi"}, {"store": "Tạp Hóa Cô Hinh", "market": "Chợ Khương Thượng", "address": "Ha Noi"}, {"store": "Cô Nga", "market": "Chợ Thái Hà", "address": "Ha Noi"}, {"store": "Cô Lan", "market": "Chợ Thái Hà", "address": "Ha Noi"}, {"store": "Ms An", "market": "Chợ Vĩnh Hồ", "address": "Ha Noi"}, {"store": "81 ngõ chợ khâm thiên", "market": "Đại Lý Hậu Dung", "address": "Ha Noi"}];
-
-const GT_NORTH = {"Chợ Đồng Xuân": ["Mai Quang", "Hải Trang", "Cô Thoa- 26 cao thắng", "Bình Chung 15 chợ cao thắng", "Hồng Ngọc 15 chợ cao thắng"], "1B Cao Thắng - Chợ Đồng Xuân": ["Hà Chính ( Ms Hương ) -"], "11 Cao Thắng - Chợ Đồng Xuân": ["Mai Thoa ( Tuyết Tiếp )"], "Chợ Long Biên": ["Cô Mận dãy a3 chợ long biên"], "Chợ 19/12": ["Long Thoa", "Hào Hương", "Hạnh Anh", "Cô Tâm", "Bình Hoan", "Chị Thêu", "Cô Thu"], "Cô Liên Hoa": ["18 Phùng Hưng- Hoàn Kiếm"], "Siêu Thi K&K": ["HOME CITY 177 TRUNG KÍNH"], "Aus Food": ["118 quán thánh", "3 Lò đúc"], "L's Place": ["29 Hàng Vôi", "63 Lý Thường Kiệt", "Khu Đô Thị Ciputra", "Khu Đô Thị Ciputra", "1 Xuân Diêu", "195 Nghi Tàm", "26 Liễu Giai", "CT1 Trần Văn Lai"], "Qt Mart": ["166 Quán Thánh- Ba Đình"], "Kios Mùi Hoà": ["chợ hàng da"], "Chị Quyên": ["Chợ Hôm- Trần Xuân Soạn- Hai Bà Trưng"], "Đặng Dung- Kiot 14": ["Chợ Hôm- Trần Xuân Soạn- Hai Bà Trưng"], "Cô Loan- Kiot 15,16": ["Chợ Hôm- Trần Xuân Soạn- Hai Bà Trưng"], "Tuân Thúy Kiot 4": ["Chợ Hôm- Trần Xuân Soạn- Hai Bà Trưng"], "Top5 Mart": ["40 Yên Phụ- Ba Đình"], "Đà Lạt Mart": ["Tòa Park 7, Time City"], "Td Mart": ["toà g2 s03 sunshie garden - dương văn bé"], "Ausfood": ["A5 12 sunshie city ciputra"], "Hung Long Phu Gia": ["24 Phú Gia"], "Green Potota Mart": ["S6 SUNSHINE CITY CIPUTRA"], "Dailys Mart": ["L4 KĐT Ciputra"], "Smart": ["S6 KĐT Ciputra"], "Fresh Food": ["105 Xuân Diệu- Tây Hồ"], "Minimart Hung Long Xuan Dieu": ["71b Xuân Diệu"], "Minimart Quang Ba": ["74 Tô Ngọc Vân"], "Minimart Sedona": ["3 Tây Hồ"], "Sieu Thi Xóm Chùa": ["15c ngõ 12 Đặng Thái Mai"], "Thanh Long Food": ["1 Đặng Thái Mai"], "Thủy Thành": ["22 Từ Hoa"], "Minan Mart": ["76 Từ Hoa"], "Mini Food": ["19 Tô Ngọc Vân"], "Houseing": ["21 Tô Ngọc Vân"], "Cô Lan Đức": ["Chợ Ngô Sỹ Liên- Đống Đa"], "Cô Vinh Nhuân": ["Chợ Ngô Sỹ Liên- Đống Đa"], "Hùng Thơm": ["Chợ Ngô Sỹ Liên"], "Fuji Mart": ["Trần phú - Hà đông", "TÂN MAI", "89 Lạc long quân", "134 Lạc Long QUân", "1 Thái Thịnh- Đống Đa", "142 Lê Duẩn- Đống Đa", "36 Hoàng Cầu- Đống Đa", "b11 kim liên", "Trần Phú - BA ĐÌNH", "6 Chính Kinh"], "Teekiu Mart": ["36 vạn bảo"], "Brg Thành Công": ["thành công"], "Shop Thành Tâm": ["59 châu long - ba đình"], "Dan'S Shop": ["Hòa Bình Green - 376 Đường Bưởi"], "Loan Thuận": ["Chợ Đồng Xuân- Hoàn Kiếm"], "Chị Huyền Anh": ["Sảnh chung cư 162 Thụy Khuê"], "Tk Mart": ["KĐT Vinsmartcity"], "One Mart": ["masteri smart city"], "St Đức Thành": ["masteri smart city", "KĐT Định Công- Thanh Xuân", "N01-T4 KĐT Ngoại Giao Đoàn- Bắc Từ Liêm"], "Tomo Mart": ["Kđt Vinsmartcity"], "Chị Hằng Vinsmart": ["KĐT Vinsmartcity"], "Daily Mart Zone 4": ["tòa zone 4 Kdt vinsmartcity"], "Daily Mart S105": ["tòa s105 kdt vinsmartcity"], "St Hà Đăng": ["MỄ TRÌ HẠ"], "Hà Đăng Mart": ["THÀNH THÁI"], "Family Mart": ["6 Lê Văn Thiêm- Thanh Xuân"], "Won Mart": ["65 vũ trọng phụng"], "Đức Loan Mart": ["ocean park s2-02"], "Thực Phẩm Sạch Mini Mart": ["ocean park"], "Xanh Mart": ["ocean park s1-08"], "Tý Mart": ["ocean park"], "Daily Mart": ["ocean park"], "24H Mart": ["Kdt oceanpark"], "Mường Thanh Mart": ["HH2B Linh Đường,quận hoàng mai"], "Daily Mart Định Công": ["176 định công,quận hoàng mai"], "Shop Hương Vĩnh": ["37a bà triệu chợ Hà Đông"], "Shop Mai Tá": ["8 đinh tiên hoàng chợ Hà Đông"], "Linh Mart": ["3-T 1-10 chung cư starlake"], "Đồng Xanh Food": ["N03 -T5 KĐT Ngoại Giao Đoàn"], "Ch Mùi Hòa Chợ Hàng Da": ["CHỢ HÀNG DA KIOT B461-B463"], "Chợ Ngọc Hà": ["Cô Phương KIOT 1+4 KHU B DÃY 1", "5 CHỢ NGỌC HÀ"], "Chợ Quỳnh Mai": ["Cô Miên 94/10 QUỲNH MAI", "Cô Hương 30 NGÕ 10 QUỲNH MAI", "Bác Khuê", "Bà Yến", "Ms Dung"], "Chợ Khương Đình": ["KIOT I14 CHỢ KHƯƠNG ĐÌNH", "Kiot 12-13 Lê Thị Thuỷ", "Kiot 18 Lê Thị Bích Ngọc"], "Ch Cô Minh Lý": ["KIOT TRONG CHƠ GIA LÂM"], "Tiện Lợi Mart": ["17T9 Nguyễn Thị Định"], "Hoồng Phúc Mart": ["park 7 time city"], "Anh Đào Mart": ["240 Chợ khâm thiên"], "TD Mart": ["Shop house VL2–SP-20 Vinsmart city"], "C Ngân Anh": ["số 1 ngách 36/58/44 ngõ 44 Phố Đức Giang,Việt Hưng-Long Biên"], "Chợ Kim Hoa": ["Lân Mart", "Chị Trang", "Chị Mùa"], "Chợ THành Công": ["Ms Hoa"], "Chợ Châu Long": ["Cô Lan Anh"], "Chợ Yên Phụ": ["Cô Thu", "Chị Thuận", "Chị Oanh"], "Chợ Nam Đồng": ["Cô Sợi", "Cô Dương", "Cô Cẩm", "Mr Khánh"], "Chợ Quan Thổ": ["Cô Dào", "Cô Nga"], "Chợ Kim Liên": ["Cô Minh", "Tạp Hóa Nga Cường"], "Chợ Khương Thượng": ["Mr Thái", "Ms Thắm", "Tạp Hóa Cô Hinh"], "Chợ Thái Hà": ["Cô Nga", "Cô Lan"], "Chợ Vĩnh Hồ": ["Ms An"], "Đại Lý Hậu Dung": ["81 ngõ chợ khâm thiên"]};  // [{store, address}]
-
-const GT_CENTRAL = {"Chợ Mai": ["Cô Nguyệt", "Chị Lộc", "Chị Tâm", "Cô Thủy", "Chị Thanh", "Cô Thu", "Chị Bé", "Dì Một", "Chị Duyên", "Chị Hiệp", "Cô Nga"], "Chợ Mân Thái": ["Chị Thu", "Chị Thảo", "Chị Trinh", "Chị Xuân", "Chị Tý", "Cô Tứ", "Cô Hà", "Chị Vân"], "Chợ Nại Hiên Đông": ["Chị Vương", "Chị Lung", "Chị Lòng", "Chị Hoa", "Chị Hải", "Chị Thanh", "Cô Muôn", "Cô Gái", "Chị Chúc", "Cô Phúc", "Chị Thảo", "Chị Hiền", "Chị Ngân", "Chị Tây(Âu Lạc)"], "Chợ An Hải Bắc": ["Chị Tuyết", "Cúc Na", "Cúc Quỳnh", "Cô Sương", "Phượng Hồng", "Cô Bông", "Chị Duyên", "Chị Hạnh", "Cô Thạnh", "Cô Hài", "Chị Bé", "Cúc Na", "Chị Bài", "Chị Mười", "Cô Hương", "Cô Hoàng"], "Chợ Hà Thân": ["Chị Nhung", "Cô Liêm", "Chị Huệ", "Chị Xí", "Cô Sửu", "Cô Lời", "Cô Liễu", "Chị Lan"], "Chợ Siêu Thị": ["Chị Thúy", "Cô Thủy", "Cô Gái", "Cô Phượng", "Hà Thanh", "Cô Chờ", "Cô Nhạn", "Cô Sen", "Cô Hồng", "Mai B", "Lan (Thôi )", "Nhơn Hồng", "Chị Vy", "Cô Đông", "Thùy Linh", "Kim Lan", "Chị Vân", "Thanh Vẫn", "Hải Hà", "Tí Huyền", "Cô Phượng", "Anh Diệp", "Kim Khánh", "Cô Hạnh", "Cô Mai"], "Chợ Thanh Khê": ["Cô Nhân", "Chị Liên", "Vân Anh", "Cô Nhật", "Cô Định", "Chị Nguyên", "Chị B Ốm", "Thái Hòa", "Cô Châu", "Chị Sương ( Trong )", "Chị Thúy", "Chị B Mập", "Chi Sương ( Ngoài )", "Cô Chốt", "Chị Chín", "Chị Thanh", "Chị Yến Vẹn", "Chị Nỡ", "Cô Cương"], "Chợ Kim Liên": ["Cô Cúc", "Cô Kim", "Chị Chúng", "Chị Hát", "Chị Hải"], "Chợ Nam Ô": ["Cô Nhựt", "Cô Hòa", "Cô Thêm", "Cô Hà", "Vân Cam", "Cô Đấu", "Cô Huệ", "Cô Tròn", "Chị Châu", "Cô Liễu", "Chị Hạnh", "Cô Tự", "Cô Hồng", "Cô Nhỏ", "Chị Mai"], "Chợ Hòa Khánh( Đình Dưới )": ["Cô Huế", "Cô Tuyết", "Dì Bính", "Cô Sang", "Cô Đường", "Chị Toàn", "Cô Thu"], "Chợ Hòa Khánh": ["Bé Thúy", "Bé Thu", "Hà Sơn", "Chị Bông", "Cô Đường", "Thu Phương", "Tuyên Cúc", "Chín Thương", "Chị Xuân", "Nga Bảy", "Hồng Thao", "Chị Thảo"], "Chợ Hòa Mỹ": ["Chị Hải", "Cô Một", "Ngọc Trai", "Cô Tầm", "Bé Út", "Ngọc Lan", "Cô Hải", "Chị Ty", "Cô Quý( Bé Ù)", "Cô Thứ", "Cô Vân", "Cô Hường", "Chị Nguyệt", "Chị Đông"], "Chợ Hòa An": ["Chị Hạnh", "Minh Lễ", "Chị Lào", "Minh Phụng", "Chị Hay", "Chị Lan", "Cô Đông"], "Chợ Non Nước": ["Cô Thu", "Cô Linh", "Cô Hoài", "Cô Bé", "Cô Kiều", "Chị Oanh", "Chị Ngọc", "Chị Hạnh", "Cô Nữ", "Chị Liên", "Cô Tám", "Cô Tín", "Cô Giỏi", "Cô Vân", "Cô Lộc", "Cô Loan", "Ngọc Nhỏ", "Chị Minh", "Cô Nhi"], "Chợ Bắc Mỹ An": ["Chị Liên", "Chị Yên", "Thanh Hồng", "Cô Yên", "Chị Hồng", "Cô Lai", "Cô Tâm", "Cô Bình", "Cô Hoa"], "Chợ An Hải Đông": ["Cô Sáu", "Cô Quý", "Cô Nhàn", "Cô Vân", "Kim Liên", "Cô Hòa", "Cô Thanh", "Chị Xuân", "Chị Hoa", "Chị Hạnh", "Bích Hường", "Chị Phượng", "Chị Hương", "Kiều Vân", "Dì Hoa", "Cô Xuân"], "Chợ Phước Mỹ": ["Cô Vân", "Bé Tuyền", "Chị Huyền", "Cô Tân", "Cô Thái", "Chị Tú", "Cô Nhi", "Cô Ca", "Cô Đăng", "Cô Tường", "Cô Châu"], "Chợ Đầu Mối": ["Chị Phước", "Út Đủ", "Chị Tuyên", "Chị Bé ( Tuyết )", "Phương Thảo", "Kim Bằng", "Kim Anh", "Gái Chay", "Út Đủ", "Chị Hiền", "Dì Chánh", "Phú Hoa", "Phương Mai", "Cô Hương"], "Chợ Mới": ["Lam Ngọc", "Thu Nhi", "Ty Quế", "Lan Lan", "Trâm Anh", "Mười Đào", "Cô Hạnh", "Thịnh Thịnh", "Thủy Vinh", "Tuấn Ngọc", "Ngọc Hoa", "Kiều Oanh", "An Giàu", "Dạ Thủy", "Loan Ty", "Hà Miên", "Diệu Hằng", "Thanh Tý"], "Chợ Nại Hiên": ["Cô Anh", "Cô Nhung", "Cô Thanh", "Chị Hằng", "Cô Hương", "Cô Mãn"], "Chợ Hòa Cường": ["Kim Thành", "Lài Gạo", "Thủy Gạo", "Cô Huệ", "Mai Ly", "Chị Tâm", "Tuấn Phương"], "Chợ Hàn": ["Dì Thu", "Ngọc Ánh", "Kiều Chinh", "Thuận Nhung", "Bé Xíu", "Chị Bê", "Chị Sương", "Chị Thúy"], "Chợ Nguyễn Tri Phương": ["Chị Hiền", "Chị Hiền", "Minh Trang", "Bích Hòa", "Chị Hà", "Cô Yến"], "Chợ Cẩm Lệ": ["Cô Lý", "Chị Hòa", "Cô Hải", "Kim Ánh", "Cô Hoàng", "Cô Lương", "Chị Hải", "Cô Trung", "Chị Phương", "Cô Mốt", "Cô Bờ", "Cô Tám", "Chị Phương", "Hồng Phượng", "Kim Thảo", "Cô Thanh", "Chị Cẩm"], "Chợ Hòa Xuân": ["Lan Phương", "Nhuận Vương", "Cô Hai", "Chị Sinh", "Cô Tám", "Cô Liên"], "Chợ Hòa xuân": ["Bích Nhung", "Chị Mận"], "Chợ Tân Chính": ["Thiện Hà", "Cô Huệ", "Chị Thủy", "Cô Hồng"], "Chợ Chính Gián": ["Cô Hoa", "Bé Uyên", "Cô Nguyệt", "Cô Huyền"], "Chợ Phú Lộc": ["Hồng Vân", "Ngọc Liên", "Kim Lý", "Cô Mới", "Thuận Thảo", "Chị Thuyền", "Chị Thuyền", "Thùy Hoa"], "Chợ Quán Hộ": ["Dì Mười", "Chị Vinh", "Cô Có", "Cô Thảo", "Chị Sương", "Chị Hòa"], "Chợ Thuận An": ["Cô Hương", "Chị Châu", "Cô Thúy", "Cô Vân", "Cô Nga", "Cô Cảnh", "Cô Anh", "Dì Hiền", "Dì Hóa", "Dì The", "Dì Bé"], "Chợ Tân An": ["Chị Loan", "Chị Mỹ", "Cô Nguyệt", "Chị Thảo", "Cô Hoa", "Chị Nha"], "Chợ Đống Đa": ["Thùy Lan", "Hoàng Hồng", "Thanh Thủy", "Cô Thương", "Ngọc Quý", "Hạ Liên", "Chị Thu", "Trang Ty", "Tường Vân", "Khánh Lạng", "Tuyết Xù", "Kim Nhung", "Cô Hà", "Hoàng Hồng", "Thanh Nga", "Thanh Thủy", "Ngọc Quý", "Cô Chanh", "Cô Thủy", "Cô Dung", "Thục Mỹ", "Cô Mật", "Thu Sang", "Thùy Nhi", "Hoàng Anh"], "Chợ Cồn": ["Chị Hạnh", "Thanh Tằm", "Kim Chi", "Dì Hữu", "Cô Thương", "Cô Gái ( Huệ )", "Chị Mai (Lai )", "Cô Thu", "Cô Tuất", "Túy Nga", "Bích Hòa", "Lợi Mỹ", "Vân Minh", "Hạnh Hùng", "Cô Phia", "Vân Nga", "Thanh Hà", "Hoa Xí", "Mai Lành", "Thúy Hòa", "Cô Thời", "Kim Cúc", "Thanh Nga (Thảo)", "Cô Dung", "Chị Cẩm", "Cô Hương", "Thúy Hòa", "Dì Bê", "Dì Thắng", "Dì Mừng", "Dì Hương", "Dì Mẫn"], "Chợ Thanh Bình": ["Cô Thu", "Cô Đan", "Thu Cao"], "Chợ Thuận Thành": ["Chị Liên", "Chị Vân", "Chị Bé"], "Chợ Tam Thuận": ["Cô Vinh", "Cô Lài", "Chị Hạ", "Chị Trang", "Cô Tầu", "Chị Loan", "Cô Vinh", "Dì Nhung", "Chị Nhung", "Cô Ngô", "Chị Thủy"], "Chợ Ái Nghĩa": ["Cô Mười", "Cô B", "Cô Phương", "Cô Phước", "Cô Hoa", "Cô Điểm", "Cô Chắc", "Cô Bông", "Cô Xanh", "Chị Thuận", "Chị Nhung", "Cô Ba", "Cô Liên", "Cô Hoàng"], "Chợ Bà Lê": ["Cô Mỹ", "Chị Huế", "Chị Lý", "Chị Yến"], "Chợ Vĩnh Điện": ["Chị Lụa", "Chị Hạnh", "Chị Viện", "Chị Thu", "Chị An", "Chị Phong", "Trúc Anh", "Mai Đậu", "Cô Hải", "Cô Hà", "Chị Hoàng", "Chị Trang", "Chị Chị Phượng", "Mai Diệu", "Cô Sen (Chay)"], "Chợ Miếu Bông": ["Chị Mười", "Cô Nga(Hàng Rau)", "Cô Hạnh", "Bốn Hồng", "Cô Bốn", "Cô Hòa", "Chị Ngân"], "Chợ Trà Kiệu": ["Bích Tho", "Hai Ngàn", "Chị Nga"], "Chợ Thần Phù": ["Dì Á", "Chị Bé Em", "Dì Đức", "Chị Lớn", "Chị Nhung"], "Chợ Dạ Lê": ["Dì Tuyết", "Chị Thuỷ"], "Chợ Thôn 1 Thuỷ Dương": ["Chị Dung", "Dì Nguyệt", "Dì Hạnh", "Chị Quyên"], "Chợ Mai Thuỷ Dương": ["Mệ Lợi", "Chị Ty", "Bà Sen", "Dì Khế", "Dì Trang", "Dì Nga", "Bà Hạnh", "Dì Bé"], "Chợ Phú Bài": ["Bé Nhi", "Cô Lợi", "Cô Bá", "Chị Phượng", "Dì Hòa Tin", "Dì Nhung", "Dì Hồng", "Thắm Kha", "Dì Nhỏ", "Thu Thanh", "Dì Na", "Dì Sương"], "Chợ Phù Bài": ["Chị Ngàu", "Chị Lan", "Bà Sen", "Bà Sương"], "Chợ Đông Ba": ["Cô Mậu", "Cô Hiu", "Cô Trang", "Cô Nga", "Cô Yến", "Cô Thiệu", "Cô Tính", "Hạnh Dương", "Cô Hiếu", "Cô Tám", "Cô Thanh", "Yến Sơn", "Chị Chi Ngoài", "Cô Chế", "Cô Lộc", "Hiền Chi", "Dì Hảo Túy", "Dì Diệp", "Bà Đính", "Cô Ngăn", "Bạch Vân", "Bà Hạnh", "Chú Vinh", "Mỹ Ngọc", "Cô Nhung", "Chị Chi Lao", "Cô Nở", "Bé Luật", "Ty Cau", "Cô Hương", "Cô Thảo", "Cô Tỷ", "Dì Vân", "Dì Xuân", "Bà Xê", "Chị Bé Tâm", "Chị Điểm", "Dì Hóa", "Bà Đô", "Dì Dung", "Chị Hằng", "Dì Lục", "Dì Ly"], "Chợ Phú Bình": ["Dì Hạnh", "Dì Tuân", "Dì Nở", "Dì Tý"], "Chợ Tứ Hạ": ["Chị Chi", "Chị Thủy", "Chị Hiền"], "Chợ An Lỗ": ["Chị Bé", "Chị Phúc", "Chị Xê", "Chị Phượng", "Chị Hường", "Bà Thọ", "Chị Bê", "Cô Đua", "Cô Hòa", "Cô Mong", "Chị Dàng", "Cô Nhỏ", "Dì Gái"], "Chợ Văn Xá": ["Dì Hoa", "Dì Lê", "Dì Thảo"], "Chợ Kim Long": ["Chị Diệu", "Anh Vĩnh Nhân", "Cô Bé", "Dì Hương", "Dì Cẩm", "Chị Bé", "Chị Thúy"], "Chợ Bến Ngự": ["Dì Vui", "Dì Cần", "Dì Trung", "Dì Nhỏ", "Kim Chi", "Chị Yến", "Chị Nguyệt", "Dì Lai", "Dì Cúc", "Dì Thu", "Dì Toàn", "Dì Bờm", "Dì Nhớ", "Dì Ty", "Hà Khiêm", "Dì Lan", "Dì Hà"], "49 Phan Đình Phùng": ["Chị Hoa"], "Chợ Phước Vĩnh": ["Dì Ty", "Dì Huyền", "Bà Hạnh", "Chị Trúc", "Dì Xuân"], "Chợ Trường An": ["Chị Hà", "Dì Ý", "Dì Phúc", "Chị Kim Anh", "Dì Năm", "Tiểu Hương", "Hùng Lộc", "Th Cô Thiện", "Chị Yến"], "Chợ Fafim": ["Cô Sinh", "Chị Lan", "Chị Đức", "Cô Hạnh"], "Chợ Tây Lộc": ["Cô Duyên", "Dì Oanh", "Dì Trinh", "Dì Liễu", "Dì Gái", "Chị Phượng"], "Chợ Xép Thuận Lộc": ["Cô Ni", "Chị Huệ", "Cô Gái Thọ", "Dì Na", "Dì Bê", "Dì Như", "Dì Nga", "Dì Hải", "Dì Ngọc"], "Chợ Thuận Hòa": ["Cô Ngân", "Chị Bé", "Cô Hàng", "Cô Huyền", "Dì Thảo"], "Chợ Cống": ["Chị Bo", "Chị Nga", "Cô Gái", "Chị Hà", "Cô Tý", "Cô Tám", "Chị Hoa", "Chị Hiền", "Chị Lập", "Chị Thủy"], "Chợ Cống NĐ": ["Chị Xuân", "Chị Hoa", "Chị Mai"], "Chợ Vỹ Dạ": ["Chị Phúc", "Cô Cư", "Cô Hiền", "Cô Giàu", "Cô Tâm", "Chị Bé", "Cô Thế", "Dì Ni"], "Chợ An Cựu": ["Cô Hùng", "Cô Bưởi", "Chị Hiền", "Chị Cúc", "Cô Phú", "Cô Hương", "Cô Hồng", "Cô Cúc", "Cô Thu", "Cô Chinh", "Chị Trâm", "Chị Ty", "Cô Én", "Cô Ngọc", "Chị Nghi", "Dì Nghĩa", "Bà Mẫn", "Chị Hải"], "Chợ Nam Phổ": ["Chị Út"]};
-
-const GT_SOUTH = {"Chợ Tân Định": ["Sạp 645- Chợ Tân Định", "Sạp 4- Chợ Tân Định", "Sạp 1- Chợ Tân Định", "Sạp 666- Chợ Tân Định", "Sạp 637- Chợ Tân Định", "Sạp 72- Chợ Tân Định", "Sạp 928- Chợ Tân Định", "Sạp 838- Chợ Tân Định", "Sạp 656- Chợ Tân Định", "Sạp 473- Chợ Tân Định", "Sạp 926- Chợ Tân Định", "Sạp 467- Chợ Tân Định", "Sạp 2- Chợ Tân Định", "Sạp 915- Chợ Tân Định", "Sạp 914- Chợ Tân Định", "Sạp 934- Chợ Tân Định", "Sạp 932- Chợ Tân Định", "Shop 36 Mã Lộ, Q1- Chợ Tân Định", "Shop 22 Mã Lộ, Q1- Chợ Tân Định"], "Chợ Thái Bình": ["Sạp 132- Chợ Thái Bình", "Sạp 101- Chợ Thái Bình", "Sạp 188- Chợ Thái Bình", "Sạp 305- Chợ Thái Bình", "Sạp 157- Chợ Thái Bình", "Sạp 62- Chợ Thái Bình", "Sạp 75- Chợ Thái Bình", "Sạp 267- Chợ Thái Bình"], "Quận 1": ["Shop 45 Cô Bắc, Q1", "60 Hàm Nghi, Q1", "71 Hàm Nghi, Q1", "114 Cống Quỳnh", "18A/67 Nguyễn Thị Minh Khai, Q1"], "Chợ Đakao": ["Sạp 108- Chợ Đakao", "Sạp 47- Chợ Đakao", "Shop 21 Trương Hán Siêu- Chợ Đakao", "Shop 48 Trương Hán Siêu- Chợ Đakao", "Sạp 110- Chợ Đakao", "Sạp 94- Chợ Đakao", "Shop 50 Trương Hán Siêu, Q1"], "Quận 2": ["89 Lượng Định Của, Q2"], "Chợ Hòa Hưng": ["Sạp 187- Chợ Hoà Hưng", "Sạp 53- Chợ Hoà Hưng", "Sạp 65- Chợ Hoà Hưng", "Sạp 67- Chợ Hoà Hưng", "Sạp 71- Chợ Hoà Hưng", "Sạp 48- Chợ Hoà Hưng", "Sạp 91- Chợ Hoà Hưng", "Sạp 51- Chợ Hoà Hưng", "193E Trần Văn Đang, Q3", "219E Trần Văn Đang, Q3", "219 Trần Văn Đang, Q3", "372E Trần Văn Đang, Q3", "366 Trần Văn Đang, Q3", "372 Trần Văn Đang, Q3"], "Quận 10": ["50/4 Tô Hiến Thành, Q10", "Shop 177 Nguyễn Lâm-Q10", "Shop 384/55 Lý Thái Tổ -Q10", "Shop 384/44 Lý Thái Tổ -Q10", "Shop 31 Nguyển Ngọc Lộc- Q10", "Shop U2 Cửu Long- Q10", "Shop U2 Cửu Long- Q10", "Shop 135/3 Thành Thái- Q10", "Shop 3/102 Thành Thái- Q10", "Shop 3/140 Thành Thái- Q10", "Shop 606/80 Đường 3/2- Q10", "Shop 100 Nguyễn Ngọc Lộc- Q10", "Shop 285/113 CMT8- Q10"], "Chợ Nguyễn Văn Trỗi": ["Sạp 151- Chợ Nguyễn Văn Trỗi", "Sạp 142- Chợ Nguyễn Văn Trỗi", "Sạp 138- Chợ Nguyễn Văn Trỗi", "Sạp 137- Chợ Nguyễn Văn Trỗi", "Sạp 176- Chợ Nguyễn Văn Trỗi", "Sạp 141- Chợ Nguyễn Văn Trỗi", "Sạp 103- Chợ Nguyễn Văn Trỗi", "Sạp 4- Chợ Nguyễn Văn Trỗi", "Sạp 8- Chợ Nguyễn Văn Trỗi", "Sạp 152- Chợ Nguyễn Văn Trỗi", "Sạp 148- Chợ Nguyễn Văn Trỗi", "Sạp 44- Chợ Nguyễn Văn Trỗi", "Sạp 69- Chợ Nguyễn Văn Trỗi", "Sạp 68- Chợ Nguyễn Văn Trỗi", "Sạp 170- Chợ Nguyễn Văn Trỗi"], "Chợ Vườn Chuối": ["Sạp 23E- Chợ Vườn Chuối", "Shop 430/46 Chợ Vườn Chuối", "Shop 430/40 Chợ Vườn Chuối", "Shop 430/52 Chợ Vườn Chuối", "Shop 430/43 Chợ Vườn Chuối", "Shop 88/27 Chợ Vườn Chuối"], "Chợ Xóm Chiếu": ["Sạp 69- Chợ Xóm Chiếu", "Sạp 71- Chợ Xóm Chiếu", "Sạp 55- Chợ Xóm Chiếu", "Sạp 58- Chợ Xóm Chiếu", "Sạp 29- Chợ Xóm Chiếu", "Sạp 57- Chợ Xóm Chiếu", "Sạp 107- Chợ Xóm Chiếu", "Sạp 224- Chợ Xóm Chiếu", "89 Lê Văn Linh, Q4", "Sạp 67- Chợ Xóm Chiếu", "Sạp 35- Chợ Xóm Chiếu", "Shop 68 Lê Văn Linh, Q4", "Shop 113 Lê Văn Linh, Q4", "Shop 162 Lê Quốc Hưng, Q4", "Sạp 77- Chợ Xóm Chiếu", "Shop 74 Lê Văn Linh, Q4", "Shop 194/8 Lê Quốc Hưng, Q4", "Shop 200 Đoàn Văn Bơ, Q4", "Shop 193 Đoàn Văn Bơ, Q4"], "Chợ Hoà Bình": ["Sạp 132A Chợ Hoà Bình", "Sạp 138A Chợ Hoà Bình", "Sạp 139A Chợ Hoà Bình", "Sạp 136B Chợ Hoà Bình", "Sạp 145A Chợ Hoà Bình", "Sạp 135A Chợ Hoà Bình", "Sạp 140A Chợ Hoà Bình", "Sạp 129B Chợ Hoà Bình", "Kios 2- 37 Bạch Vân- Chợ Hoà Bình", "Kios 9- 37 Bạch Vân- Chợ Hoà Bình", "Kios 6- 37 Bạch Vân- Chợ Hoà Bình", "Kios 1- 37 Bạch Vân- Chợ Hoà Bình"], "Chợ Thực Phẩm An Đông": ["Sạp D4- Chợ Thực Phẩm An Đông", "Sạp D9- Chợ Thực Phẩm An Đông", "Sạp D5- Chợ Thực Phẩm An Đông", "Sạp D1- Chợ Thực Phẩm An Đông", "Sạp D19- Chợ Thực Phẩm An Đông"], "Quận 5": ["165 Nguyễn Tri Phương, Q5"], "Chợ Xã Tây": ["Chợ Xã Tây"], "Chợ Phú Lâm": ["Sạp 457 Chợ Phú Lâm", "Shop 35 Đường Sô 3- Chợ Phú Lâm"], "Chợ Bình Tiên": ["Sạp 205- Chợ Bình Tiên", "Sạp 248- Chợ Bình Tiên", "Sạp 305- Chợ Bình Tiên", "Shop 234/36/2 Phạm Phú Thứ- Chợ Bình Tiên", "Sạp 190- Chợ Bình Tiên", "Sạp 289- Chợ Bình Tiên", "Shop 180/10 Phạm Phú Thứ- Chợ Bình Tiên", "Shop 7 Lô D- Chợ Bình Tiên", "Shop 234/33 Phạm Phú Thứ- Chợ Bình Tiên"], "Quận 6": ["Shop 73 Nguyễn Đình Chi, Q6"], "Chợ Bình Tây": ["Shop 26- Trần Bình- Chợ Bình Tây", "Sạp 19- Trần Bình- Chợ Bình Tây", "Sạp 69- Trần Bình- Chợ Bình Tây", "Shop 13 Nguyễn Xuân Phụng- Chợ Bình Tây", "Shop 108 Phan Văn Khoẻ- Chợ Bình Tây"], "Chợ Tân Mỹ": ["Kios 1- Chợ Tân Mỹ", "Kios 12- Chợ Tân Mỹ", "Kios 28- Chợ Tân Mỹ", "Kios B29- Chợ Tân Mỹ", "Shop 35 Đường Số 8- Chợ Tân Mỹ", "Shop 2H Đường Số 8- Chợ Tân Mỹ", "Shop 33 Đường Số 8- Chợ Tân Mỹ"], "Chợ Tân Quy": ["Sạp 23- Chợ Tân Quy", "Sạp 27- Chợ Tân Quy", "Sạp 14- Chợ Tân Quy", "Sạp 21- Chợ Tân Quy", "Sạp 10- Chợ Tân Quy", "Sạp 26- Chợ Tân Quy", "Shop 247 Đường Số 17- Chợ Tân Quy", "Shop 208 Đường Số 17- Chợ Tân Quy", "Shop Đường Số 15- Chợ Tân Quy", "Shop 49 Đường Số 15- Chợ Tân Quy", "Shop 81 Đường Số 15- Chợ Tân Quy", "Shop 2 Lô H, Đường Số 17- Chợ Tân Quy"], "Quận 7": ["18, Bến Nghé, Q7- KCX TT", "42, Bến Nghé, Q7- KCX TT"], "Horeca": ["Phú Mỹ Hưng- Q7"], "Chợ Phú Lợi 2": ["Shop 180 Ba Tơ, Q8- Chợ Phú Lợi 2", "Sạp 23E- Chợ Phú Lợi 2", "Sạp 23D- Chợ Phú Lợi 2", "Sạp 24E- Chợ Phú Lợi 2", "Shop 205 Ba Tơ, Q8- Chợ Phú Lợi 2"], "Quận 8": ["2883 Phạm Thế Hiển- Q8", "2887 Phạm Thế Hiển- Q8", "2884 Phạm Thế Hiển- Q8", "Shop 119/68/59 Nguyễn Thị Tần- Chợ Rạch Ông", "Shop 2137 Phạm Thế Hiển, Q8", "Shop 2828 Phạm Thế Hiển, Q8", "Shop 301 Bến Bình Đông, Q8", "Shop 8 Mễ Cốc, Q8", "Shop 6 Trần Văn Thành, Q8"], "Chợ Nhị Thiên Đường": ["Sạp 78 Chợ Nhị Thiên Đường", "Sạp 75 Chợ Nhị Thiên Đường", "Sạp 81 Chợ Nhị Thiên Đường", "Sạp 116 Chợ Nhị Thiên Đường", "Shop 113 Hoàng Minh Đạo, P5, Q8", "Shop 15B Hoàng Minh Đạo,P5, Q8", "Shop 79 Bùi Minh Trực, P5, Q8", "Shop 166 Bùi Minh Trực, P5, Q8", "Shop 66 Bùi Minh Trực, P5, Q8"], "Chợ Xóm Củi": ["Sạp 21- Chợ Xóm Củi", "Sạp 130- Chợ Xóm Củi", "Shop 134 Bến Cần Giuộc- Chợ Xóm Củi", "Sạp 224- Chợ Xóm Củi", "Sạp 262- Chợ Xóm Củi", "Sạp 91- Chợ Xóm Củi", "Sạp 269- Chợ Xóm Củi", "Sạp 18B- Chợ Xóm Củi", "Sạp 222- Chợ Xóm Củi", "Sạp 275- Chợ Xóm Củi", "Sạp 272- Chợ Xóm Củi", "Sạp 135- Chợ Xóm Củi", "Sạp 216- Chợ Xóm Củi", "Sạp 266- Chợ Xóm Củi", "Sạp 93- Chợ Xóm Củi"], "Chợ Nguyễn Chế Nghĩa": ["Sạp 3- Chợ Nguyễn Chế Nghĩa", "Sạp 5- Chợ Nguyễn Chế Nghĩa", "Shop 129/6 Nguyễn Chế Nghĩa, Q8"], "Chợ Rạch Ông": ["Sạp 50- Chợ Rạch Ông", "Sạp 29- Chợ Rạch Ông", "Sạp 24- Chợ Rạch Ông", "Sạp 3- Chợ Rạch Ông", "Sạp 21- Chợ Rạch Ông", "Sạp 12- Chợ Rạch Ông", "Shop 6L Nguyễn Thị Tần- Chợ Rạch Ông", "Shop 3L Nguyễn Thị Tần- Chợ Rạch Ông", "Shop 19F Nguyễn Thị Tần- Chợ Rạch Ông", "Sạp 24- Chợ Rạch Ông"], "Chợ Phạm Thế Hiển": ["Sạp 112- Chợ Phạm Thế Hiển", "Sạp 110- Chợ Phạm Thế Hiển", "Sạp 228- Chợ Phạm Thế Hiển", "Sạp 108- Chợ Phạm Thế Hiển", "Sạp 10- Chợ Phạm Thế Hiển", "Shop 92 Đào Cam Mộc- Chợ Phạm Thế Hiển", "Shop 22C cc Phạm Thế Hiển, Q8", "Shop 71 Đào Cam Mộc- Chợ Phạm Thế Hiển", "Shop 160 Đào Cam Mộc- Chợ Phạm Thế Hiển", "Shop 44 Đường Tám Danh, Q8"], "Chợ Phú Lợi 1": ["Sạp k3- Chợ Phú Lợi 1", "Sạp 32- Chợ Phú Lợi 1", "Sạp 12c1- Chợ Phú Lợi 1", "Sạp 10- Chợ Phú Lợi 1"], "Chợ Bình Đông": ["Sạp 85- Chợ Bình Đông", "Sạp 21- Chợ Bình Đông", "Kios 15- Chợ Bình Đông", "Sạp 5- Chợ Bình Đông", "Kios 19- Chợ Bình Đông"], "Chợ Vạn Nguyên": ["Sạp - Chợ Vạn Nguyên"], "Chợ Ba Đình": ["Shop 671 Ba Đình- Chợ Ba Đình", "Shop 70B BA ĐÌNH, Q8 (CHỢ BA ĐÌNH)", "Shop 731 Ba Đình- Chợ Ba Đình", "Shop 72 Ba Đình- Chợ Ba Đình", "Shop 691 Ba Đình- Chợ Ba Đình", "Sạp 15A- Chợ Ba Đình", "Shop 396 Ba Đình- Chợ Ba Đình"], "Chợ Bình An": ["Chợ Bình An"], "Chợ Nguyễn Tri Phương": ["Sạp 582 Khu C- Chợ Nguyễn Tri Phương", "Sạp 581 Khu C- Chợ Nguyễn Tri Phương", "Sạp 212 Khu B- Chợ Nguyễn Tri Phương", "Sạp 216 Khu B- Chợ Nguyễn Tri Phương", "Sạp 225 Khu B- Chợ Nguyễn Tri Phương", "Sạp 168 Khu B- Chợ Nguyễn Tri Phương", "Sạp 338 Khu B- Chợ Nguyễn Tri Phương", "Sạp 334 Khu B- Chợ Nguyễn Tri Phương", "Sạp 341 Khu B- Chợ Nguyễn Tri Phương", "Sạp 264 Khu B- Chợ Nguyễn Tri Phương", "Sạp 210 Khu B- Chợ Nguyễn Tri Phương", "Sạp 326 Khu B- Chợ Nguyễn Tri Phương", "Sạp 570 Khu C- Chợ Nguyễn Tri Phương", "145 Nguyễn Lâm- Chợ Nguyễn Tri Phương", "135 Nguyễn Lâm- Chợ Nguyễn Tri Phương", "62 Nguyễn Lâm- Chợ Nguyễn Tri Phương", "66D Nguyễn Lâm- Chợ Nguyễn Tri Phương", "Sạp 572 Khu B- Chợ Nguyễn Tri Phương", "Sạp 204 Khu B- Chợ Nguyễn Tri Phương", "Sạp 344 Khu B- Chợ Nguyễn Tri Phương", "Sạp 326 Khu B- Chợ Nguyễn Tri Phương"], "Chợ Nhật Tảo": ["Sạp 2- Chợ Nhật Tảo", "Shop 383/21 Bà Hạt- Chợ Nhật Tảo", "Shop 78 Nhật Tảo- Chợ Nhật Tảo", "Sạp 4B- Chợ Nhật Tảo", "Sạp 15- Chợ Nhật Tảo", "Shop 383/2 Bà Hạt- Chợ Nhật Tảo", "Shop 383/6 Bà Hạt- Chợ Nhật Tảo"], "Chợ Nguyễn Duy Dương": ["Sạp 11- Chợ Nguyễn Duy Dương"], "Chợ Lê Hồng Phong": ["Sạp 2- Chợ Lê Hồng Phong", "Sạp C4- Chợ Lê Hồng Phong", "Sạp C15- Chợ Lê Hồng Phong"], "Quận 11": ["Shop 115/6/23 Lò Siêu- Q11"], "Chợ Bình Thới": ["Sạp K1- Chợ Bình Thới", "Sạp K10- Chợ Bình Thới", "Sạp K3- Chợ Bình Thới", "Sạp K30- Chợ Bình Thới", "Sạp K51- Chợ Bình Thới", "Sạp K21- Chợ Bình Thới", "Sạp K52- Chợ Bình Thới", "Sạp K69- Chợ Bình Thới", "Sạp K40- Chợ Bình Thới", "Shop 218 Xóm Đất- Chợ Bình Thới", "Shop 308/11 Xóm Đất- Chợ Bình Thới", "Shop 190/4 Xóm Đất- Chợ Bình Thới", "Shop 186 Xóm Đất- Chợ Bình Thới", "Shop 293 Xóm Đất- Chợ Bình Thới", "Shop 308/14 Xóm Đất- Chợ Bình Thới", "Shop 377/27 Xóm Đất- Chợ Bình Thới", "Shop 377/39 Xóm Đất- Chợ Bình Thới", "Sạp K41- Chợ Bình Thới"], "Chợ Thiếc": ["Sạp 92- Chợ Thiếc", "Sạp 16- Chợ Thiếc", "Sạp 53- Chợ Thiếc", "Sạp 22- Chợ Thiếc", "Sạp 69- Chợ Thiếc", "Sạp 13- Chợ Thiếc", "Sạp 68- Chợ Thiếc", "Sạp 28- Chợ Thiếc", "Sạp 29- Chợ Thiếc", "Sạp 15- Chợ Thiếc", "Sạp - Chợ Thiếc", "Shop 281 Tân Phước- Chợ Thiếc", "Sạp 12- Chợ Thiếc", "Shop 80/1 Trần Quý- Chợ Thiếc", "Shop 80/15 Trần Quý- Chợ Thiếc", "Shop 267 Tân Phước- Chợ Thiếc"], "Chợ Bà Chiểu": ["Sạp 544- Chợ Bà Chiểu", "Sạp 555- Chợ Bà Chiểu", "Sạp 563- Chợ Bà Chiểu", "Sạp 560- Chợ Bà Chiểu", "Sạp 607- Chợ Bà Chiểu", "Sạp 558- Chợ Bà Chiểu", "Sạp 611- Chợ Bà Chiểu", "Sạp 552- Chợ Bà Chiểu", "Shop 324 Bùi Hữu Nghĩa- Chợ Bà Chiểu", "Sạp 565- Chợ Bà Chiểu", "Sạp 625- Chợ Bà Chiểu", "Sạp 602- Chợ Bà Chiểu", "Sạp 594- Chợ Bà Chiểu", "Shop 314 Bùi Hữu Nghĩa- Chợ Bà Chiểu", "Sạp 1465- Chợ Bà Chiểu", "Shop 316 Bùi Hữu Nghĩa- Chợ Bà Chiểu", "Sạp 511- Chợ Bà Chiểu", "Sạp 508- Chợ Bà Chiểu", "Sạp 507- Chợ Bà Chiểu", "Sạp 588- Chợ Bà Chiểu", "Shop 322 Bùi Hữu Nghĩa- Chợ Bà Chiểu"], "Chợ Phú Nhuận": ["Sạp 9- Chợ Phú Nhuận", "23 Cao Thắng- Chợ Phú Nhuận", "58 Cao Thắng- Chợ Phú Nhuận", "15 Cao Thắng- Chợ Phú Nhuận", "17 Cao Thắng- Chợ Phú Nhuận", "102 Cao Thắng- Chợ Phú Nhuận", "Cao Thắng- Chợ Phú Nhuận", "Sạp 62- Chợ Phú Nhuận", "Sạp 98- Chợ Phú Nhuận", "Shop 40B Cao Thắng- Chợ Phú Nhuận"], "Chợ Nguyễn Đình Chiểu": ["Sạp 10- Chợ Nguyễn Đình Chiểu", "Sạp 12- Chợ Nguyễn Đình Chiểu", "Shop I05- Chợ Nguyễn Đình Chiểu", "Sạp 31- Chợ Nguyễn Đình Chiểu", "Sạp 28- Chợ Nguyễn Đình Chiểu", "Sạp 30- Chợ Nguyễn Đình Chiểu", "Sạp 33- Chợ Nguyễn Đình Chiểu", "Shop 30 Lê Tự Tài- Chợ Nguyễn Đình Chiểu", "Shop I01- Chợ Nguyễn Đình Chiểu", "Shop 32/74- Chợ Nguyễn Đình Chiểu", "Shop C2 Lê Tự Tài- Chợ Nguyễn Đình Chiểu", "Sạp C1- Chợ Nguyễn Đình Chiểu", "Shop 606 Nguyễn Kiệm- Q. Phú Nhuân", "Shop 11 Đỗ Tấn Phong, Q. Phú Nhuận"], "Chợ Trần Hữu Trang": ["Sạp 395- Chợ Trần Hữu Trang", "Sạp 394- Chợ Trần Hữu Trang", "Sạp 429- Chợ Trần Hữu Trang", "Kios 37- Chợ Trần Hữu Trang", "Sạp 393- Chợ Trần Hữu Trang", "Sạp 428- Chợ Trần Hữu Trang", "Sạp 397- Chợ Trần Hữu Trang", "Sạp 380- Chợ Trần Hữu Trang", "Sạp 33- Chợ Trần Hữu Trang", "Shop 84A/1D- Chợ Trần Hữu Trang"], "Chợ Hoàng Hoa Thám": ["Sạp C47- Chợ Hoàng Hoa Thám", "Sạp C28- Chợ Hoàng Hoa Thám", "Shop 19/8 HHT- Chợ Hoàng Hoa Thám", "Shop 19/48 HHT- Chợ Hoàng Hoa Thám", "Shop 19/4 HHT- Chợ Hoàng Hoa Thám", "Shop 17/2/11 HHT- Chợ Hoàng Hoa Thám"], "Chợ Tân Bình": ["Sạp 18 Khu FB- Chợ Tân Bình", "Sạp 19 Khu FB- Chợ Tân Bình", "Sạp 20 Khu FB- Chợ Tân Bình", "Sạp 24 Khu FB- Chợ Tân Bình"], "Chợ Phạm Văn Hai": ["Sạp B070- Chợ Phạm Văn Hai", "Sạp B87- Chợ Phạm Văn Hai", "Sạp B180- Chợ Phạm Văn Hai", "Sạp B195- Chợ Phạm Văn Hai", "Shop 99 PHV- Chợ Phạm Văn Hai", "Sạp B204- Chợ Phạm Văn Hai", "Sạp B174- Chợ Phạm Văn Hai", "Sạp B150- Chợ Phạm Văn Hai", "Sạp B181- Chợ Phạm Văn Hai", "Sạp B134- Chợ Phạm Văn Hai", "Sạp B100- Chợ Phạm Văn Hai", "Shop 16 Tân Sơn Hoà- Chợ Phạm Văn Hai"], "Chợ Hiệp Tân": ["Sạp 15/16- Chợ Hiệp Tân", "Sạp H9- Chợ Hiệp Tân", "Sạp F1- Chợ Hiệp Tân", "Sạp H2- Chợ Hiệp Tân", "Sạp H18- Chợ Hiệp Tân", "Shop 68/20 Cây Keo- Chợ Hiệp Tân", "Sạp 16G- Chợ Hiệp Tân", "Shop 65 Chu Thiên- Chợ Hiệp Tân"], "Chợ Tân Phú 1": ["Sạp H11- Chợ Tân Phú 1", "Sạp K2- Chợ Tân Phú 1", "Shop 40 Phố Chợ- Chợ Tân Phú 1", "Shop 44 Phố Chợ- Chợ Tân Phú 1", "Shop 94/12 Phố Chợ- Chợ Tân Phú 1", "Shop 48 Phố Chợ- Chợ Tân Phú 1", "Shop 43 Thống Nhất- Chợ Tân Phú 1", "Shop 94/14 Nguyễn Thái Học- Chợ Tân Phú 1"], "Chợ Tân Phú 2": ["Shop 18/3 Hoàng Ngọc Phách- Chợ Tân Phú 2", "Shop 35 Hoàng Ngọc Phách- Chợ Tân Phú 2", "Shop 18/9 Hoàng Ngọc Phách- Chợ Tân Phú 2", "Shop 37 Hoàng Ngọc Phách- Chợ Tân Phú 2", "Cc Hoàng Ngọc Phách- Chợ Tân Phú 2", "Shop 35 Lê Đại- Chợ Tân Phú 2", "Sạp 9R- Chợ Tân Phú 2", "Shop 53 Hoàng Ngọc Phách- Chợ Tân Phú 2"], "Chợ Thị Nghè": ["Sạp B90- Chợ Thị Nghè", "Sạp B101- Chợ Thị Nghè", "Sạp 101- Chợ Thị Nghè", "Sạp 84- Chợ Thị Nghè", "Shop 01 Phan Huy Ôn- Chợ Thị Nghè", "Shop 52 Phan Huy Ôn- Chợ Thị Nghè", "Shop 22 Phan Huy Ôn- Chợ Thị Nghè", "Sạp 45- Chợ Thị Nghè", "Shop 56 Nguyễn Ngọc Phương- Chợ Thị Nghè", "Sạp 1- Chợ Thị Nghè"], "Chợ Tân Hương": ["Kios KB10- Chợ Tân Hương", "Kios- Chợ Tân Hương", "Sạp C3/1- Chợ Tân Hương", "Sạp B1/15- Chợ Tân Hương", "Sạp- Chợ Tân Hương", "Sạp C3/18- Chợ Tân Hương", "Shop 182/27 Tân Hương- Chợ Tân Hương", "Sạp C3/21 - Chợ Tân Hương"], "Chợ Phường 11": ["Shop 101 Trần Mai Ninh- Chợ Phường 11", "Shop 137 Trần Mai Ninh- Chợ Phường 11", "Shop 140 Trần Mai Ninh- Chợ Phường 11", "Shop 123 Trần Mai Ninh- Chợ Phường 11", "Shop 120 Trần Mai Ninh- Chợ Phường 11", "Shop 150 Trần Mai Ninh- Chợ Phường 11", "Shop 132 Trần Mai Ninh- Chợ Phường 11", "Shop 100 Sơn Hưng- Chợ Phường 11", "Shop 101 Bùi Thế Mỹ- Chợ Phường 11"], "Chợ Nghĩa Hoà": ["Shop 79 Nghĩa Phát- Chợ Nghĩa Hoà", "Shop 146 Nghĩa Phát- Chợ Nghĩa Hoà", "Shop 53 Nghĩa Phát- Chợ Nghĩa Hoà", "Shop 156 Nghĩa Phát- Chợ Nghĩa Hoà"], "Chợ Tân Hưng": ["Shop 373/95/4 Lý Thường Kiệt- Chợ Tân Hưng", "Shop 373/95/6 Lý Thường Kiệt- Chợ Tân Hưng", "Shop 373/95/18 Lý Thường Kiệt- Chợ Tân Hưng", "Sạp 12- Chợ Tân Hưng", "Shop 373/65/54 Lý Thường Kiệt- Chợ Tân Hưng", "Shop 373/95/1 Lý Thường Kiệt- Chợ Tân Hưng", "Chợ Tân Hưng", "Chợ Tân Hưng", "Chợ Tân Hưng", "Sạp 19- Chợ Tân Hưng"], "Chợ Nam Hoà": ["Shop 204 Đất Thánh- Chợ Nam Hoà", "Sạp- Chợ Nam Hoà", "Shop 88 Đất Thánh- Chợ Nam Hoà"], "Chợ Bình Chánh": ["Sạp C16- Chợ Bình Chánh", "Sạp C18- Chợ Bình Chánh", "Shop D7/66 Trịnh Như Khuê- Chợ Bình Chánh", "Shop 11 Trịnh Như Khuê- Chợ Bình Chánh", "Sạp A18- Chợ Bình Chánh", "Shop 84 ĐS18- Chợ Bình Chánh", "Shop 19A Trịnh Như Khuê- Chợ Bình Chánh"], "Chợ An Lạc": ["Sạp 301- Chợ An Lạc", "Sạp 103- Chợ An Lạc", "Sạp 100- Chợ An Lạc", "Sạp 303- Chợ An Lạc", "Sạp 302- Chợ An Lạc"], "Chợ Phú Trung": ["Sạp G15- Chợ Phú Trung"], "Chợ Bình Trị Đông": ["Sạp 24- Chợ Bình Trị Đông", "Shop 29 Bình Trị Đông- Chợ Bình Trị Đông Cũ", "Shop 254 Lê Văn Quới- Bình Tân", "Shop 79 Bình Trị Đông- Chợ Bình Trị Đông Cũ", "Shop 77 Bình Trị Đông- Chợ Bình Trị Đông Cũ"], "Chợ Khu Phố 2": ["Shop 483/8 Hồ Ngọc Lãm- Chợ Khu Phố 2", "Sạp 6- Chợ Khu Phố 2", "Shop 483/21 Hồ Ngọc Lãm- Chợ Khu Phố 2"], "Chợ Hưng Long": ["Kios 62 Chợ Hưng Long", "Sạp Rau- Chợ Hưng Long", "Sạp 8- Chợ Hưng Long", "Sạp 97- Chợ Hưng Long"], "Chợ Bình Long": ["Kios 49A/A16- Chợ Bình Long", "Kios 49A/A16- Chợ Bình Long", "Kios 16- Chợ Bình Long", "Kios 49A/A10- Chợ Bình Long", "Sạp 18- Chợ Bình Long", "Kios 53- Chợ Bình Long", "Kios 49A/6B- Chợ Bình Long"], "Chợ Thuận Đạt": ["Sạp 43- Chợ Thuận Đạt", "Sạp- Chợ Thuận Đạt", "Sạp 89- Chợ Thuận Đạt"], "Chợ Bờ Đất Mới": ["Shop 332/13 An Phú Tây", "Shop 326A/13 An Phú Tây"], "Chợ An Dương Vương": ["Sạp 183 - Chợ An Dương Vương", "Shop 598 - Chợ An Dương Vương"], "Quận Bình Tân": ["Shop 21 Lê Đình Cẩn- Bình Tân", "Shop 234B Lê Đình Cẩn- Bình Tân", "Shop 213 Lê Đình Cẩn- Bình Tân", "Shop 248 Lê Đình Cẩn- Bình Tân", "Shop 232 Lê Đình Cẩn- Bình Tân", "Shop 142A Tân Hoà Đông- Bình Tân", "Shop 124A Tân Hoà Đông- Bình Tân", "Shop 272 Phan Anh- Chợ Bốn Xã", "Shop 295 Phan Anh- Bình Tân", "Shop 295/5 Ấp Chiến Lược- Bình Tân", "Shop 732 Hương Lộ 2- Bình Tân"], "Chợ Đệm": ["Kios 5- Chợ Đệm", "Kios 28- Chợ Đệm", "Sạp 15B- Chợ Đệm", "Sạp E11- Chợ Đệm", "Shop 1B2- Chợ Đệm"], "Chợ Tân Phước": ["Sạp 6 - Chợ Tân Phước", "Sạp 15- Chợ Tân Phước", "Shop 86/38- Chợ Tân Phước", "Sạp 8- Chợ Tân Phước", "Sạp E1- Chợ Tân Phước", "Chợ Tân Phước", "Shop 144/20/11 Âu Cơ- Tân Bình"], "Chợ Bốn Xã": ["Chợ Bốn Xã"], "Chợ Phú Định": ["Shop 710/27- Chợ Phú Định", "Sạp 3- Chợ Phú Định", "Shop 710/21A- Chợ Phú Định"], "Chợ Hồ Trọng Quý": ["Sạp 79- Chợ Hồ Trọng Quý", "Shop 14 Lô U- Chợ Hồ Trọng Quý", "Sạp 70- Chợ Hồ Trọng Quý", "Shop 19 Lô U- Chợ Hồ Trọng Quý", "Sạp 54- Chợ Hồ Trọng Quý"], "Chợ Linh Trung": ["Chợ Linh Trung", "Chợ Linh Trung", "Chợ Linh Trung", "Chợ Linh Trung"], "Chợ Bình Khánh": ["Sạp K04- Chợ Bình Khánh", "Sạp K53- Chợ Bình Khánh", "Sạp - Chợ Bình Khánh"], "Chợ Thảo Điền": ["Sạp K160- Chợ Thảo Điền", "Sạp K52- Chợ Thảo Điền"], "Chợ Hiệp Phú": ["Shop 267/7A Lê Văn Việt- Chợ Hiệp Phú"], "Chợ Tân Nhơn Phú A": ["Sạp 48- Chợ Tân Nhơn Phú A"], "Chợ Tân Nhơn Phú B": ["Chợ Tân Nhơn Phú B"], "Chợ Thủ Đức": ["Sạp 314- Chợ Thủ Đức", "Sạp 313- Chợ Thủ Đức", "Shop 18 Đoàn Công Hớn- Chợ Thủ Đức", "Sạp 238B- Chợ Thủ Đức", "Shop 144/9- Chợ Thủ Đức", "Shop 144/9- Chợ Thủ Đức"], "Huyện Bình Chánh": ["Shop 196 đường Công Nghệ Mới, Vĩnh Lộc B."]};
-
-const MT_SKUS_CATS = {
-  "Đậu & Đậu Hạt": ["Đậu Sốt Cà Chua 230g","Đậu Sốt Cà Chua 425g","Đậu Sốt Cà Chua Phô Mai 425g","Đậu Trắng 425g","Đậu Gà 425g","Đậu Đỏ 425g"],
-  "Cà Chua": ["Puree Cà Chua 220g","Puree Cà Chua 430g"],
-  "Nước Cốt Dừa": ["Nước Cốt Dừa Nguyên Chất 270ml","Nước Cốt Dừa NC 400ml","Nước Cốt Dừa 400ml","Nước Cốt Dừa 65ml"],
-  "Cá Trích": ["Cá Trích Sốt Cà Chua 155g","Cá Trích Sốt Cà Chua 120g","Cá Trích Ngâm Olive 120g","Cá Trích Ngâm Ớt Olive 120g"],
-  "Cá Thu": ["Cá Thu Sốt Cà Chua 155g","Cá Thu Sốt Cà Chua 230g"],
-  "Cá Ngừ": ["Cá Ngừ Ngâm Nước 150g","Cá Ngừ Ít Béo Ngâm Nước 150g","Cá Ngừ Dầu Hướng Dương 150g","Cá Ngừ Khúc Dầu HĐ 150g","Cá Ngừ Dầu Olive 150g","Cá Ngừ Khúc Dầu Olive 150g","Cá Ngừ Ngâm Ớt 160g"],
-  "Khác": ["Tương Ớt Sriracha 235ml","Bắp Hạt 425g","Mỳ Ý Hữu Cơ Alce Nero 500g","Nui Ống Hữu Cơ Alce Nero 500g","Sốt Mỳ Ý Hữu Cơ Alce Nero 350g"]
-};
-
-const MT_SKUS_ALL = Object.values(MT_SKUS_CATS).flat();
-
-const GT_SKUS_DAILY = [
-  "Đậu Sốt Cà Chua 230g","Đậu Sốt Cà Chua 425g","Đậu Sốt Cà Chua Phô Mai 425g",
-  "Đậu Trắng 425g","Đậu Gà 425g","Đậu Đỏ 425g",
-  "Puree Cà Chua 220g","Puree Cà Chua 430g",
-  "Nước Cốt Dừa 65ml","Nước Cốt Dừa Nguyên Chất 270ml","Nước Cốt Dừa NC 400ml","Nước Cốt Dừa 400ml",
-  "Cá Trích (tổng kệ)","Cá Thu (tổng kệ)","Cá Ngừ (tổng kệ)",
-  "Tương Ớt Sriracha 235ml","Bắp Hạt 425g"
+const DEFAULT_FLOWS=[
+  {id:'f1',name:'General Task',channel:'ALL',task_type:'General',steps:['To Do','In Progress','Done']},
+  {id:'f2',name:'MT – Trading Term',channel:'MT',task_type:'Trading Term',steps:['Nhận','Gửi proposal','Phản hồi','Đàm phán','Đồng ý','Trình ký']},
+  {id:'f3',name:'MT – New Product Listing',channel:'MT',task_type:'Listing',steps:['Lấy mẫu','Gửi mẫu','Xác nhận','Lên kệ']},
+  {id:'f4',name:'POSM / Design',channel:'ALL',task_type:'Activation',steps:['Ý tưởng','Thiết kế','Duyệt TK','Làm việc NCC','Ký HĐ','Giao hàng']},
+  {id:'f5',name:'Sampling / Activation',channel:'ALL',task_type:'Activation',steps:['Lên KH','Gửi duyệt','Duyệt KH','Đăng ký KH','Chuẩn bị','Thực hiện']},
+  {id:'f6',name:'GT – Trade Program',channel:'ALL',task_type:'Trade Program',steps:['Lên chương trình','Thông báo','Gửi sales','Gửi khách','Order']},
+  {id:'f7',name:'GT – Phát triển điểm bán',channel:'GT',task_type:'Expansion',steps:['Khảo sát','Tiếp cận','Chào hàng','Trưng bày','Review']},
+  {id:'f8',name:'MT – Khách hàng mới',channel:'MT',task_type:'Expansion',steps:['Tiếp cận','Gửi SP/giá','Đàm phán TT','Ký HĐ','Bắt đầu bán']},
 ];
 
-// ⚙️ SCRIPT URL — Update this when you redeploy Apps Script
-// ⚙️ Script URL — cập nhật khi deploy lại Apps Script
-// Có thể thay đổi trực tiếp trên app bằng nút ⚙️ Script URL
-const HARDCODED_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOUERbdlDa69wnEcdaGLVyy0hnmyGT7ToJoWMVtc2o_pJfyrD9pkp0cG1ibJ9f1cqSTQ/exec';
+let state={tasks:[],customers:[],products:[],users:[],config:[],currentUser:null,fCh:'all',fPIC:'all',syncing:false,lastSync:null};
 
-let state = {
-  user: null,
-  gps: null,
-  photos: {},
-  skuData: {},
-  // URL hardcoded — không dùng localStorage để tránh conflict
-  scriptUrl: HARDCODED_SCRIPT_URL
-};
+// ---- UTILS ----
+const $=id=>document.getElementById(id);
+function fmtD(d){if(!d)return'—';return new Date(d).toLocaleDateString('vi-VN')}
+function fmtDT(d){if(!d)return'';const dt=new Date(d);return dt.toLocaleDateString('vi-VN')+' '+dt.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}
+function daysFrom(d){return Math.round((new Date(d)-new Date())/864e5)}
+function isMgr(){return state.currentUser&&(state.currentUser.role==='manager')}
+function isMgrOrTM(){return state.currentUser&&(state.currentUser.role==='manager'||state.currentUser.role==='trade')}
+function aUsers(){return state.users.filter(u=>u.status==='Active'||!u.status)}
+function getCust(id){return state.customers.find(c=>String(c.id)===String(id))}
+function getUser(id){return state.users.find(u=>u.id===id||u.email===id||String(u.id)===String(id))}
+function getFlowSteps(flowName){
+  const f=state.config.find(x=>x.name===flowName||x.id===flowName);
+  if(!f)return['To Do','In Progress','Done'];
+  return Array.isArray(f.steps)?f.steps:f.steps.split(/[→=>\n]/).map(s=>s.trim()).filter(Boolean);
+}
+function subProg(t){
+  const s=Array.isArray(t.subtasks)?t.subtasks:[];
+  if(!s.length)return null;
+  const d=s.filter(x=>x.done).length;
+  return{done:d,total:s.length,pct:Math.round(d/s.length*100)};
+}
+function getPics(t){
+  let ids=Array.isArray(t.pic_ids)?t.pic_ids:String(t.pic_ids||'').split(',').filter(Boolean);
+  if(!ids.length&&t.pic_id)ids=[t.pic_id];
+  return ids.map(id=>getUser(id)).filter(Boolean);
+}
+function toast(msg,type='ok'){
+  const el=document.createElement('div');
+  el.className='to '+type;
+  el.innerHTML='<span>'+(type==='ok'?'✓':type==='warn'?'⚠':'✕')+'</span>'+msg;
+  $('toasts').appendChild(el);
+  setTimeout(()=>el.remove(),3500);
+}
+function setSS(s){
+  const d=$('sd'),l=$('sl');
+  if(s==='ok'){d.className='sd ok';l.textContent=state.lastSync?'Sync '+state.lastSync.toLocaleTimeString('vi-VN'):'Đã kết nối';}
+  else if(s==='sy'){d.className='sd sy';l.textContent='Đang sync...';}
+  else{d.className='sd';l.textContent='Offline';}
+}
+function CM(){$('mc').innerHTML=''}
 
-// ============ INIT ============
-document.addEventListener('DOMContentLoaded', () => {
-  renderStaffList();
-  // Auto-sync offline queue khi load trang (nếu có mạng)
-  if (navigator.onLine && state.scriptUrl) syncOffline();
-});
+// ---- LOGIN ----
+function initLogin(){
+  const users=state.users.length?aUsers():DEFAULT_USERS;
+  const sel=$('lu');
+  const sid=localStorage.getItem('dgm_uid');
+  const sem=localStorage.getItem('dgm_em');
 
-// Auto-retry khi có mạng lại
-window.addEventListener('online', () => {
-  if (state.scriptUrl) {
-    toast('📶 Đã có mạng — đang sync dữ liệu offline...');
-    setTimeout(syncOffline, 1500);
+  sel.innerHTML='<option value="">-- Chọn tên --</option>'+
+    users.map(u=>`<option value="${u.id}">${u.name} (${u.role==='manager'?'Manager':u.position||u.role})</option>`).join('');
+
+  // Pre-fill email
+  if(sem)$('le').value=sem;
+
+  // Hàm toggle password field
+  function togglePW(){
+    const u=users.find(x=>x.id===sel.value);
+    const isMgr2=u&&u.role==='manager';
+    $('pw-label').style.display=isMgr2?'none':'block';
+    $('lpw').style.display=isMgr2?'none':'block';
+    $('lpw').required=!isMgr2;
   }
-});
 
-// ── STAFF LIST ────────────────────────────────────────────
-function renderStaffList() {
-  var badges = {'MT':'badge-mt','GT North':'badge-gtn','GT Central':'badge-gtc','GT South':'badge-gts','MT/GT':'badge-mtgt'};
-  var colors = ['#C8102E','#2E75B6','#1E7145','#7030A0','#E36C09'];
-  function ini(n){return n.split(' ').pop()[0].toUpperCase();}
-  function col(n){return colors[n.charCodeAt(0)%colors.length];}
-  var list=document.getElementById('staffList');
-  if(!list)return;
-  list.innerHTML=TEAM.map(function(u){
-    var b=badges[u.team]||'badge-bo';
-    return '<div class="staff-item" onclick="selectUser('+JSON.stringify(u).replace(/'/g,"\'")+')">'+
-      '<div class="staff-avatar" style="background:'+col(u.name)+'">'+ini(u.name)+'</div>'+
-      '<div class="staff-info"><div class="staff-name">'+u.name+'</div>'+
-      '<span class="badge '+b+'">'+u.team+'</span></div>'+
-      '<div class="staff-arrow">›</div></div>';
+  sel.onchange=togglePW;
+
+  // Pre-select saved user
+  if(sid){
+    // Try exact id match first
+    const opt=sel.querySelector('option[value="'+sid+'"]');
+    if(opt){sel.value=sid;}
+    else{
+      // Try match by email
+      const u=users.find(x=>x.email&&sem&&x.email.toLowerCase()===sem.toLowerCase());
+      if(u)sel.value=u.id;
+    }
+  }
+  togglePW();
+}
+
+function doLogin(){
+  const uid=$('lu').value;
+  const email=$('le').value.trim().toLowerCase();
+  const pw=$('lpw').value;
+  const users=state.users.length?aUsers():DEFAULT_USERS;
+  const user=users.find(u=>u.id===uid)||users.find(u=>u.email&&u.email.toLowerCase()===email);
+  if(!user){$('lerr').textContent='Vui lòng chọn tài khoản.';return;}
+  if(!email){$('lerr').textContent='Vui lòng nhập email.';return;}
+  if(user.email&&user.email.toLowerCase()!==email){$('lerr').textContent='Email không khớp tài khoản.';return;}
+  // Password check (manager không cần)
+  if(user.role!=='manager'){
+    if(!pw){$('lerr').textContent='Vui lòng nhập mật khẩu.';return;}
+    if(String(user.password)!==String(pw)){$('lerr').textContent='Mật khẩu không đúng.';return;}
+  }
+  state.currentUser=user;
+  localStorage.setItem('dgm_uid',uid);
+  localStorage.setItem('dgm_em',email);
+  $('login').style.display='none';
+  $('app').style.display='flex';
+  $('cav').textContent=user.initials||user.name[0];
+  $('cnm').textContent=user.name;
+  document.querySelectorAll('.mgr-only').forEach(el=>el.style.display=isMgr()?'':'none');
+  const savedPage=localStorage.getItem('dgm_page')||'kanban';
+  showPage(savedPage,null);
+  syncAll();
+}
+
+function doLogout(){
+  state.currentUser=null;
+  localStorage.removeItem('dgm_uid');
+  $('app').style.display='none';
+  $('login').style.display='flex';
+  $('lerr').textContent='';
+  $('lpw').value='';
+}
+
+// ---- API ----
+// Maps Sheet Vietnamese headers → app field names
+function mapUser(row){
+  const name=row.name||row['Họ và tên']||'';
+  const email=row.email||row['Email Gmail (đăng nhập app)']||row['Email Gmail']||'';
+  const role=(row.role||row['Role']||'sales').toLowerCase();
+  // Generate consistent id from email if no id field
+  const id=row.id&&row.id!==''?String(row.id):('u_'+email.replace(/[@.]/g,'_'));
+  return{
+    id,name,email,role,
+    position:row.position||row['Chức vụ / Position']||'',
+    channel:row.channel||row['Kênh phụ trách']||'ALL',
+    region:row.region||row['Vùng phụ trách']||'',
+    initials:row.initials||row['Initials (2-3 ký tự)']||'?',
+    password:row.password||row['Password']||'',
+    status:row.status||row['Trạng thái']||'Active',
+  };
+}
+function mapCustomer(row){
+  return{
+    id:row.id||row['STT'],
+    name:row.name||row['Tên khách hàng']||'',
+    channel:row.channel||row['Kênh (Channel)']||row['Kênh']||'',
+    region:row.region||row['Vùng / Miền']||row['Vùng']||'',
+    business_type:row.business_type||row['Hình thức KD']||'',
+    contact_name:row.contact_name||row['Người liên hệ']||'',
+    phone:row.phone||row['SĐT']||'',
+    email:row.email||row['Email']||'',
+    notes:row.notes||row['Ghi chú']||'',
+    status:row.status||row['Trạng thái']||'Active',
+    num_stores:row.num_stores||'',
+    resources:row.resources||'',
+    financial:row.financial||'',
+    pic_id:row.pic_id||row['PIC']||'',
+  };
+}
+function mapProduct(row){
+  return{
+    id:row.id||row['STT'],
+    name:row.name||row['Tên sản phẩm']||'',
+    brand:row.brand||row['Brand']||'',
+    category:row.category||row['Danh mục']||'',
+    sku:row.sku||row['SKU / Mã SP']||'',
+    unit:row.unit||row['Đơn vị']||'',
+    size:row.size||row['Trọng lượng / Thể tích']||'',
+    notes:row.notes||row['Ghi chú']||'',
+    status:row.status||row['Trạng thái']||'Active',
+  };
+}
+function mapFlow(row){
+  const stepsRaw=row.steps||row['Các bước (cách nhau bởi →)']||row['steps']||'';
+  const steps=Array.isArray(stepsRaw)?stepsRaw:stepsRaw.split(/[→=>\n]/).map(s=>s.trim().replace(/^=+/,'')).filter(Boolean);
+  return{
+    id:row.id||row['STT'],
+    name:row.name||row['Tên flow']||'',
+    channel:row.channel||row['Kênh']||'ALL',
+    task_type:row.task_type||row['Loại công việc']||'',
+    steps,
+    description:row.description||row['Mô tả']||'',
+    status:row.status||row['Trạng thái']||'Active',
+  };
+}
+function mapTask(row){
+  let subs=row.subtasks||[];
+  if(typeof subs==='string'){try{subs=JSON.parse(subs);}catch(e){subs=[];}}
+  let comms=row.comments||[];
+  if(typeof comms==='string'){try{comms=JSON.parse(comms);}catch(e){comms=[];}}
+  let atch=row.attachments||[];
+  if(typeof atch==='string'){try{atch=JSON.parse(atch);}catch(e){atch=[];}}
+  let picIds=row.pic_ids||[];
+  if(typeof picIds==='string')picIds=picIds.split(',').filter(Boolean);
+  return{...row,subtasks:subs,comments:comms,attachments:atch,pic_ids:picIds};
+}
+
+async function apiPost(payload){
+  if(!SCRIPT_URL)return false;
+  try{
+    const enc=encodeURIComponent(JSON.stringify(payload));
+    if(enc.length<6000){
+      const r=await fetch(SCRIPT_URL+'?method=post&payload='+enc,{redirect:'follow'});
+      const t=await r.text();
+      try{const d=JSON.parse(t);if(d.ok===true)return true;}catch(e){}
+    }
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
+    return true;
+  }catch(e){console.error(e);return false;}
+}
+
+async function uploadFile(file,taskId){
+  if(!SCRIPT_URL)return null;
+  if(file.size>4*1024*1024){toast('File quá lớn. Giới hạn 4MB.','err');return null;}
+  toast('Đang upload '+file.name+'...');
+  return new Promise(resolve=>{
+    const rd=new FileReader();
+    rd.onload=async e=>{
+      try{
+        const b64=e.target.result.split(',')[1];
+        const payload={action:'upload',filename:file.name,mimeType:file.type||'application/octet-stream',base64data:b64,taskId:taskId||'general'};
+        const enc=encodeURIComponent(JSON.stringify(payload));
+        if(enc.length<7000){
+          const res=await fetch(SCRIPT_URL+'?action=upload&payload='+enc,{redirect:'follow'});
+          const d=await res.json();
+          if(d.ok){toast('Upload OK: '+file.name);resolve(d);}
+          else{toast('Upload lỗi: '+d.error,'err');resolve(null);}
+        }else{
+          await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
+          resolve({ok:true,fileName:file.name,viewUrl:'#',size:file.size});
+        }
+      }catch(err){toast('Upload lỗi','err');resolve(null);}
+    };
+    rd.readAsDataURL(file);
+  });
+}
+
+async function syncAll(){
+  if(!SCRIPT_URL)return;
+  state.syncing=true;setSS('sy');
+  try{
+    const res=await fetch(SCRIPT_URL+'?action=all',{redirect:'follow'});
+    const d=await res.json();
+    if(d.ok&&d.data){
+      const dt=d.data;
+      // Map with Vietnamese field name support
+      if(dt.users&&dt.users.length)state.users=dt.users.map(mapUser).filter(u=>u.name&&u.email&&!['STT','stt','Trạng thái'].includes(u.name));
+      else state.users=DEFAULT_USERS;
+      state.customers=(dt.customers||dt.Customers||[]).map(mapCustomer).filter(c=>c.name&&!['▶','STT'].some(x=>String(c.name).startsWith(x)));
+      state.products=(dt.products||dt.Products||[]).map(mapProduct).filter(p=>p.name&&!['▶','STT'].some(x=>String(p.name).startsWith(x)));
+      const flows=dt.flows||dt.Flows||[];
+      state.config=flows.length?flows.map(mapFlow).filter(f=>f.name&&!['▶','STT'].some(x=>String(f.name).startsWith(x))):DEFAULT_FLOWS;
+      state.tasks=(dt.tasks||dt.Tasks||[]).map(mapTask).filter(t=>t.title||t.id);
+      state.lastSync=new Date();setSS('ok');
+    }
+  }catch(e){
+    if(!state.users.length)state.users=DEFAULT_USERS;
+    if(!state.config.length)state.config=DEFAULT_FLOWS;
+    setSS('error');
+  }
+  state.syncing=false;
+  if(!state.currentUser){initLogin();return;}
+  // Update login dropdown với users mới từ Sheet
+  initLogin();
+  renderAll();
+}
+
+async function saveTask(task){
+  const payload={action:'upsert',sheet:'Tasks',data:{
+    ...task,
+    subtasks:JSON.stringify(Array.isArray(task.subtasks)?task.subtasks:[]),
+    comments:JSON.stringify(Array.isArray(task.comments)?task.comments:[]),
+    attachments:JSON.stringify(Array.isArray(task.attachments)?task.attachments:[]),
+    pic_ids:Array.isArray(task.pic_ids)?task.pic_ids.join(','):task.pic_ids||'',
+  }};
+  const ok=await apiPost(payload);
+  if(ok){state.lastSync=new Date();setSS('ok');}
+  else toast('Lưu thất bại','warn');
+  return ok;
+}
+async function saveMaster(sheet,data){
+  const ok=await apiPost({action:'upsert',sheet,data});
+  if(ok)toast(sheet+' đã lưu ✓');
+  return ok;
+}
+
+// ---- NAV ----
+function showPage(nm,btn){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  $('pg-'+nm).classList.add('active');
+  if(btn)btn.classList.add('active');
+  else{// restore nav button active state
+    const nb=document.querySelector('.nb[onclick*="''+nm+''"]');
+    if(nb)nb.classList.add('active');
+  }
+  localStorage.setItem('dgm_page',nm);
+  if(nm==='customers')renderCustomers();
+  else if(nm==='products')renderProducts();
+  else if(nm==='users')renderUsers();
+  else if(nm==='config'){if(isMgr())renderConfig();else toast('Chỉ Manager','warn');}
+  else renderKanban();
+}
+function renderAll(){
+  const active=document.querySelector('.pg.active');
+  const pid=active?active.id:'pg-kanban';
+  if(pid==='pg-kanban')renderKanban();
+  else if(pid==='pg-customers')renderCustomers();
+  else if(pid==='pg-products')renderProducts();
+  else if(pid==='pg-users')renderUsers();
+  else if(pid==='pg-config')renderConfig();
+  else renderKanban();
+}
+
+// ---- KANBAN ----
+function getVisible(){
+  let list=state.tasks;
+  if(!isMgr()){
+    const uid=state.currentUser.id,uemail=state.currentUser.email;
+    list=list.filter(t=>{
+      const ids=Array.isArray(t.pic_ids)?t.pic_ids:String(t.pic_ids||'').split(',').filter(Boolean);
+      return ids.includes(uid)||ids.includes(uemail)||t.pic_id===uid||t.pic_email===uemail;
+    });
+  }
+  if(state.fCh!=='all')list=list.filter(t=>t.channel===state.fCh);
+  if(state.fPIC!=='all')list=list.filter(t=>{
+    const ids=Array.isArray(t.pic_ids)?t.pic_ids:String(t.pic_ids||'').split(',');
+    return ids.includes(state.fPIC)||t.pic_id===state.fPIC;
+  });
+  return list;
+}
+
+function renderKanban(){
+  if(!state.currentUser)return;
+  const vis=getVisible();
+  const ov=vis.filter(t=>!['done','done_fail'].includes(t.status)&&t.deadline&&daysFrom(t.deadline)<0).length;
+  $('stats').innerHTML=`
+    <div class="sc"><div class="sl">Tổng tasks</div><div class="sv">${vis.length}</div></div>
+    <div class="sc"><div class="sl">Đang làm</div><div class="sv" style="color:var(--blue)">${vis.filter(t=>t.status==='inprogress').length}</div></div>
+    <div class="sc"><div class="sl">Chờ duyệt</div><div class="sv" style="color:var(--amb)">${vis.filter(t=>t.status==='review').length}</div></div>
+    <div class="sc"><div class="sl">Hoàn thành ✓</div><div class="sv" style="color:var(--grn)">${vis.filter(t=>t.status==='done').length}</div></div>
+    <div class="sc"><div class="sl">Không thành công</div><div class="sv" style="color:var(--red)">${vis.filter(t=>t.status==='done_fail').length}</div></div>`;
+
+  const sus=aUsers().filter(u=>u.role!=='manager');
+  $('fbar').innerHTML=`
+    <span style="font-size:11px;color:var(--t3)">Kênh:</span>
+    <button class="fc ${state.fCh==='all'?'active':''}" onclick="setF('ch','all')">Tất cả</button>
+    ${CHANNELS.map(c=>`<button class="fc ${state.fCh===c?'active':''}" onclick="setF('ch','${c}')">${c}</button>`).join('')}
+    ${isMgr()?`<span style="font-size:11px;color:var(--t3);margin-left:8px">PIC:</span>
+    <button class="fc ${state.fPIC==='all'?'active':''}" onclick="setF('pic','all')">Tất cả</button>
+    ${sus.map(u=>`<button class="fc ${state.fPIC===u.id?'active':''}" onclick="setF('pic','${u.id}')">${u.name}</button>`).join('')}`:''}
+    <button class="btn btn-p btn-sm" style="margin-left:auto" onclick="openTaskForm()">+ Thêm task</button>`;
+
+  const KCL={todo:'',inprogress:'',review:'krev',done:'kdon',done_fail:'kfail'};
+  const KTI={todo:'To Do',inprogress:'In Progress',review:'⏳ Chờ duyệt',done:'✅ Hoàn thành',done_fail:'❌ Không thành công'};
+  $('board').innerHTML=STATUSES.map(st=>{
+    const col=vis.filter(t=>t.status===st);
+    return`<div class="kol ${KCL[st]}" id="kol-${st}"
+      ondragover="dov(event,'${st}')" ondragleave="dlv(event,'${st}')" ondrop="drp(event,'${st}')">
+      <div class="kh"><span class="kt">${KTI[st]}</span><span class="kc">${col.length}</span></div>
+      ${col.length?col.map(t=>rCard(t)).join(''):`<div class="ec">Không có task</div>`}
+    </div>`;
   }).join('');
 }
 
-function selectUser(user) {
-  if (typeof user === 'string') user = JSON.parse(user);
-  state.user = user;
-  document.getElementById('typeTitle').textContent = 'Xin chào, ' + user.name.split(' ').pop() + '!';
-  document.getElementById('typeSubtitle').textContent = user.team;
-  renderTypeCards(user.team);
-  goTo('scType');
-  initGPS();
-}
-
-function selectManualUser() {
-  var name = document.getElementById('manualName') ? document.getElementById('manualName').value.trim() : '';
-  var team = document.getElementById('manualTeam') ? document.getElementById('manualTeam').value : '';
-  if (!name) { toast('⚠️ Vui lòng nhập họ tên'); return; }
-  if (!team) { toast('⚠️ Vui lòng chọn khu vực làm việc'); return; }
-  selectUser({name: name, team: team});
-}
-
-// ── TYPE CARDS ────────────────────────────────────────────
-function renderTypeCards(team) {
-  var html = '';
-  if (team === 'MT') {
-    html = '<div class="type-cards">'+
-      '<div class="type-card" onclick="startMT('daily')"><div class="icon">🏪</div><div class="title">MT Daily</div><div class="desc">Khảo sát điểm MT hàng ngày</div></div>'+
-      '<div class="type-card" onclick="startMT('other')"><div class="icon">📝</div><div class="title">MT Khác</div><div class="desc">Công việc MT khác</div></div>'+
-      '</div>';
-  } else if (team === 'GT South' || team === 'GT Central' || team === 'GT North') {
-    html = '<div class="type-cards">'+
-      '<div class="type-card" onclick="startGTDaily()"><div class="icon">📊</div><div class="title">GT Daily</div><div class="desc">Khảo sát điểm GT hàng ngày</div></div>'+
-      '<div class="type-card" onclick="startGTNew()"><div class="icon">➕</div><div class="title">GT Điểm Mới</div><div class="desc">Khảo sát điểm bán mới GT</div></div>'+
-      '</div>';
-  } else if (team === 'MT/GT') {
-    html = '<div class="type-cards">'+
-      '<div class="type-card" onclick="startMT('daily')"><div class="icon">🏪</div><div class="title">MT Daily</div><div class="desc">Khảo sát điểm MT hàng ngày</div></div>'+
-      '<div class="type-card" onclick="startMT('other')"><div class="icon">📝</div><div class="title">MT Khác</div><div class="desc">Công việc MT khác</div></div>'+
-      '<div class="type-card" onclick="showGTRegionPicker()"><div class="icon">📊</div><div class="title">GT Daily</div><div class="desc">Khảo sát điểm GT hàng ngày</div></div>'+
-      '<div class="type-card" onclick="showGTRegionPicker('new')"><div class="icon">➕</div><div class="title">GT Điểm Mới</div><div class="desc">Khảo sát điểm bán mới GT</div></div>'+
-      '</div>';
-  } else {
-    html = '<div style="padding:20px;text-align:center;color:var(--text2)"><div style="font-size:40px">👁️</div><p style="margin-top:12px">Tài khoản Back Office / Marketing chỉ xem dashboard.</p></div>';
+function rCard(t){
+  const c=getCust(t.customer_id);
+  const pics=getPics(t);
+  const days=t.deadline?daysFrom(t.deadline):null;
+  const ov=!['done','done_fail'].includes(t.status)&&days!==null&&days<0;
+  const sn=!['done','done_fail'].includes(t.status)&&days!==null&&days>=0&&days<=3;
+  const sp=subProg(t);
+  const cms=Array.isArray(t.comments)?t.comments:[];
+  const done=['done','done_fail'].includes(t.status);
+  const st=t.status;
+  let mv='';
+  if(!done){
+    if(st==='inprogress')mv+=`<button class="mb" onclick="event.stopPropagation();mvT('${t.id}','todo')">← To Do</button>`;
+    if(st==='todo')mv+=`<button class="mb" onclick="event.stopPropagation();mvT('${t.id}','inprogress')">→ In Progress</button>`;
+    if(st==='inprogress')mv+=`<button class="mb" onclick="event.stopPropagation();mvT('${t.id}','review')">→ Chờ duyệt</button>`;
+    if(st==='review')mv+=`<button class="mb" onclick="event.stopPropagation();mvT('${t.id}','inprogress')">← In Progress</button>`;
   }
-  document.getElementById('typeCards').innerHTML = html;
-}
-
-// ── GT REGION PICKER (for MT/GT manager) ─────────────────
-function showGTRegionPicker(mode) {
-  var regions = ['GT South','GT Central','GT North'];
-  var labels = {'GT South':'GT Miền Nam 🟢','GT Central':'GT Miền Trung 🟡','GT North':'GT Miền Bắc 🟣'};
-  var div = document.createElement('div');
-  div.id = 'regionPickerOverlay';
-  div.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px';
-  div.innerHTML = '<div style="background:#fff;border-radius:14px;padding:20px;width:100%;max-width:320px">'+
-    '<h3 style="font-size:16px;font-weight:700;margin-bottom:16px;text-align:center">Chọn khu vực GT</h3>'+
-    regions.map(function(r){
-      return '<button onclick="pickGTRegion(''+r+'',''+(mode||'daily')+'')" style="display:block;width:100%;padding:13px;margin-bottom:10px;border:1.5px solid #ddd;border-radius:10px;background:#fff;font-size:15px;cursor:pointer;font-weight:600">'+labels[r]+'</button>';
-    }).join('')+
-    '<button onclick="document.getElementById('regionPickerOverlay').remove()" style="display:block;width:100%;padding:11px;border:none;border-radius:10px;background:#f5f5f5;font-size:14px;cursor:pointer;color:#666">Huỷ</button>'+
-    '</div>';
-  document.body.appendChild(div);
-}
-
-function pickGTRegion(region, mode) {
-  document.getElementById('regionPickerOverlay') && document.getElementById('regionPickerOverlay').remove();
-  var orig = state.user.team;
-  state.user = Object.assign({}, state.user, {team: region});
-  if (mode === 'new') { startGTNew(); } else { startGTDaily(); }
-  state.user = Object.assign({}, state.user, {team: orig});
-}
-
-// ── START MT ──────────────────────────────────────────────
-function startMT(mode) {
-  state.photos = {};
-  state.skuData = {};
-  mtPhotoCount = 4;
-  state.mtMode = mode;
-  document.getElementById('mtSubtitle').textContent = state.user.name;
-  renderMTForm(mode);
-  goTo('scMT');
-  initGPS();
-}
-
-function promptScriptUrl() {
-  setTimeout(() => {
-    const url = prompt("🔧 SETUP — Nhập URL Apps Script Web App:\n(Nhấn Cancel để bỏ qua)");
-    if (url && url.startsWith("https://")) {
-      state.scriptUrl = url;
-          toast('✅ Đã lưu URL Apps Script');
-    }
-  }, 800);
-}
-
-// ============ GPS ============
-function initGPS() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      pos => { state.gps = { lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6) }; updateGPSDisplays(); },
-      () => { state.gps = null; updateGPSDisplays(); },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-  }
-}
-
-function refreshGPS(boxId) {
-  const box = document.getElementById(boxId);
-  if (box) box.innerHTML = gpsBoxHTML(boxId, true);
-  navigator.geolocation && navigator.geolocation.getCurrentPosition(
-    pos => { state.gps = { lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6) }; if (box) box.innerHTML = gpsBoxHTML(boxId, false); },
-    () => { state.gps = null; if (box) box.innerHTML = gpsBoxHTML(boxId, false); },
-    { enableHighAccuracy: true, timeout: 8000 }
-  );
-}
-
-function gpsBoxHTML(id, loading) {
-  if (loading) return `<div class="gps-box"><span class="icon">🔄</span><div class="gps-info"><strong>Đang lấy GPS...</strong></div></div>`;
-  if (state.gps) return `<div class="gps-box"><span class="icon">📍</span><div class="gps-info"><strong>GPS đã xác định</strong>
-      </div>
-      <button onclick="addMTPhotoSlot()" id="mt_add_photo_btn" style="margin-top:10px;width:100%;padding:10px;border:1.5px dashed var(--primary);border-radius:8px;background:var(--primary-light);color:var(--primary);font-size:13px;font-weight:600;cursor:pointer">+ Thêm hình</button>
+  const ap=isMgr()&&st==='review'?`<button class="apbtn" onclick="event.stopPropagation();openApprove('${t.id}')">⚡ Duyệt hoàn thành</button>`:'';
+  return`<div class="tc" id="card-${t.id}" draggable="true"
+    ondragstart="drs(event,'${t.id}')" onclick="openDetail('${t.id}')">
+    <div class="tt">${t.title}</div>
+    <div class="tb2">
+      <span class="b b${t.channel}">${t.channel}</span>
+      ${c?`<span class="b bgr">${c.name}</span>`:''}
+      ${ov?`<span class="b bov">Quá hạn</span>`:''}
+      ${sn&&!ov?`<span class="b bsoon">Sắp hạn</span>`:''}
     </div>
-    <div class="card" style="padding:12px 8px">
-      <h3 style="padding:0 8px 8px">📦 Tồn kho trên kệ</h3>
-      <p style="font-size:12px;color:var(--text2);padding:0 8px 8px">Nhập số lượng lon còn trên kệ + trạng thái</p>
-      <div style="overflow-x:auto">
-        <table class="sku-table">
-          <thead><tr><th style="text-align:left">Sản phẩm</th><th>Tồn (lon)</th><th>Trạng thái</th></tr></thead>
-          <tbody>${skuRows}</tbody>
-        </table>
-      </div>
+    ${t.step?`<div class="tstep">▶ ${t.step}</div>`:''}
+    ${sp?`<div class="spb"><div class="spf" style="width:${sp.pct}%"></div></div><div class="spt">${sp.done}/${sp.total} subtasks</div>`:''}
+    ${cms.length?`<div style="font-size:10px;color:var(--t3);margin-top:3px">💬 ${cms.filter(x=>!x.isSystem).length} comment(s)</div>`:''}
+    <div class="tf">
+      <span class="tdl ${ov?'ov':sn?'sn':''}">${fmtD(t.deadline)}</span>
+      <div class="pics">${pics.slice(0,3).map(u=>`<div class="av avs" title="${u.name}">${u.initials||u.name[0]}</div>`).join('')}${pics.length>3?`<div class="av avs">+${pics.length-3}</div>`:''}</div>
     </div>
-    <div class="card">
-      <h3>✅ Đánh giá điểm bán</h3>
-      <div class="field required"><label>Trưng bày</label>
-        <div class="chips" id="mt_display">
-          ${['Tốt, ngang tầm mắt','Vị trí cao','Vị trí thấp','Góc khó tìm','Thiếu mã'].map(v=>`<span class="chip" onclick="toggleChip(this)">${v}</span>`).join('')}
-        </div>
-      </div>
-      <div class="divider"></div>
-      <div class="field required"><label>Bảng giá</label>
-        <div class="chips" id="mt_price">
-          ${['Đúng giá','Thiếu bảng giá','Sai giá','Chưa tăng giá','Đã tăng giá','Đang KM'].map(v=>`<span class="chip" onclick="toggleChip(this)">${v}</span>`).join('')}
-        </div>
-      </div>
-      <div class="divider"></div>
-      <div class="field required"><label>Tình trạng hàng</label>
-        <div class="chips" id="mt_goods">
-          ${['Đủ mã listing','Một số mã khóa','Một số mã OOS'].map(v=>`<span class="chip" onclick="toggleChip(this)">${v}</span>`).join('')}
-        </div>
-      </div>
-      <div class="divider"></div>
-      <div class="field required"><label>Hạn sử dụng</label>
-        <div class="chips" id="mt_expiry">
-          ${['Tất cả >50% HSD','Có mã <50% HSD','Có mã <6 tháng','Cần hỗ trợ KM cận date'].map(v=>`<span class="chip" onclick="toggleChip(this)">${v}</span>`).join('')}
-        </div>
-      </div>
-      <div class="divider"></div>
-      <div class="field"><label>Ghi chú thêm</label>
-        <textarea id="mt_note" placeholder="Ghi chú tình trạng, yêu cầu hỗ trợ..."></textarea>
-      </div>
-    </div>
-    <div class="card" style="border:1.5px dashed #ddd;background:#fafafa">
-      <h3 style="color:var(--text2)">📌 Đánh giá điểm bán thêm (Không bắt buộc)</h3>
-      <div class="field"><label>Lượng traffic</label>
-        <div class="chips" id="mt_traffic">
-          ${['Cao — đông khách','Trung bình','Thấp — ít khách'].map(v=>`<span class="chip" onclick="selectChip(this,'mt_traffic')">${v}</span>`).join('')}
-        </div>
-      </div>
-      <div class="divider"></div>
-      <div class="field"><label>Khả năng làm sampling</label>
-        <div class="chips" id="mt_sampling">
-          ${['Có thể — nên đăng ký','Có nhưng phức tạp','Không có vị trí'].map(v=>`<span class="chip" onclick="selectChip(this,'mt_sampling')">${v}</span>`).join('')}
-        </div>
-      </div>
-      <div class="divider"></div>
-      <div class="field"><label>Khu vực điểm bán</label>
-        <div class="chips" id="mt_zone">
-          ${['Khu trung tâm','Khu dân cư bình dân','Khu người nước ngoài','Khu văn phòng','Gần bệnh viện/trường học'].map(v=>`<span class="chip" onclick="toggleChip(this)">${v}</span>`).join('')}
-        </div>
-      </div>
-    </div>`;
+    ${mv?`<div class="mvb" onclick="event.stopPropagation()">${mv}</div>`:''}
+    ${ap}
+  </div>`;
+}
 
-  const otherForm = `
-    <div class="card">
-      <h3>📝 Công việc khác / Hoạt động MT</h3>
-      <div class="field required"><label>Ngày thực hiện</label>${dateFieldHTML('mt_other_date')}</div>
-      <div class="field required"><label>Mục đích công việc</label>
-        <input type="text" id="mt_other_purpose" placeholder="VD: Họp trade term, kiểm tra gondola...">
+function setF(tp,v){if(tp==='ch')state.fCh=v;else state.fPIC=v;renderKanban();}
+
+// ---- DRAG & DROP ----
+let dragId=null;
+function drs(e,id){dragId=id;setTimeout(()=>{const c=document.getElementById('card-'+id);if(c)c.classList.add('drag')},0);}
+function dov(e,st){e.preventDefault();document.getElementById('kol-'+st).classList.add('dov');}
+function dlv(e,st){document.getElementById('kol-'+st).classList.remove('dov');}
+async function drp(e,st){
+  e.preventDefault();
+  document.getElementById('kol-'+st).classList.remove('dov');
+  if(dragId===null)return;
+  const c=document.getElementById('card-'+dragId);if(c)c.classList.remove('drag');
+  if(!isMgr()&&(st==='done'||st==='done_fail')){toast('Chỉ Manager mới có thể xác nhận hoàn thành','warn');dragId=null;return;}
+  await mvT(dragId,st);dragId=null;
+}
+async function mvT(id,ns){
+  const t=state.tasks.find(x=>String(x.id)===String(id));
+  if(!t)return;
+  t.status=ns;
+  const steps=getFlowSteps(t.flow_name||t.channel);
+  if(ns==='done'||ns==='done_fail')t.step=steps[steps.length-1]||t.step;
+  addSysCom(t,'Chuyển sang "'+SL[ns]+'" bởi '+state.currentUser.name);
+  renderKanban();
+  await saveTask(t);
+}
+
+// ---- APPROVE ----
+function openApprove(tid){
+  const t=state.tasks.find(x=>String(x.id)===String(tid));
+  if(!t)return;
+  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" onclick="event.stopPropagation()" style="max-width:380px">
+    <div class="mh"><div class="mti">⚡ Duyệt: ${t.title}</div><button class="mcl" onclick="CM()">×</button></div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+      <button class="btn btn-g" style="justify-content:center;padding:12px" onclick="doApprove('${tid}','done')">✅ Hoàn thành thành công</button>
+      <button class="btn btn-d" style="justify-content:center;padding:12px;background:var(--rlt)" onclick="doApprove('${tid}','done_fail')">❌ Không thành công / Cancel</button>
+    </div>
+    <div class="fr"><label class="fl">Ghi chú Manager</label><textarea id="ap-note" class="fi" placeholder="Nhận xét..."></textarea></div>
+  </div></div>`;
+}
+async function doApprove(tid,res){
+  const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
+  const note=$('ap-note')?$('ap-note').value.trim():'';
+  t.status=res;
+  const msg=(res==='done'?'✅ Manager xác nhận HOÀN THÀNH':'❌ Manager đánh dấu KHÔNG THÀNH CÔNG')+(note?' — '+note:'');
+  addSysCom(t,msg);
+  CM();renderKanban();
+  await saveTask(t);
+  toast(res==='done'?'Đã xác nhận hoàn thành ✓':'Đã đánh dấu không thành công');
+}
+
+// ---- COMMENTS ----
+function addSysCom(t,text){
+  if(!Array.isArray(t.comments))t.comments=[];
+  t.comments.push({id:Date.now(),author:'system',authorName:'Hệ thống',text,time:new Date().toISOString(),isSystem:true});
+}
+function addCom(t,text){
+  if(!text||!text.trim())return;
+  if(!Array.isArray(t.comments))t.comments=[];
+  const u=state.currentUser;
+  t.comments.push({id:Date.now(),author:u.id,authorName:u.name,authorInitials:u.initials||u.name[0],text:text.trim(),time:new Date().toISOString(),isSystem:false});
+}
+
+// ---- TASK DETAIL ----
+function openDetail(id){
+  const t=state.tasks.find(x=>String(x.id)===String(id));if(!t)return;
+  const c=getCust(t.customer_id);
+  const pics=getPics(t);
+  const sp=subProg(t);
+  const steps=getFlowSteps(t.flow_name||t.channel);
+  const si=steps.indexOf(t.step);
+  const cms=Array.isArray(t.comments)?t.comments:[];
+  const subs=Array.isArray(t.subtasks)?t.subtasks:[];
+  const atch=Array.isArray(t.attachments)?t.attachments:[];
+  const days=t.deadline?daysFrom(t.deadline):null;
+  const ov=!['done','done_fail'].includes(t.status)&&days!==null&&days<0;
+  const done=['done','done_fail'].includes(t.status);
+
+  const flowH=steps.length?`<div class="ft">
+    ${steps.map((s,i)=>`${i>0?`<span style="font-size:10px;color:var(--t3);padding:0 1px">›</span>`:''}
+    <span class="fn ${i<si?'don':i===si?'cur':''}">${s}</span>`).join('')}
+  </div>`:'';
+
+  const cmH=cms.map(cm=>cm.isSystem?
+    `<div class="sys-cm"><span>${cm.text} · ${fmtDT(cm.time)}</span></div>`:
+    `<div class="ci">
+      <div class="av avs" style="margin-top:2px;flex-shrink:0">${cm.authorInitials||cm.authorName?.[0]||'?'}</div>
+      <div class="cb"><div style="display:flex;align-items:center;gap:6px"><span class="ca">${cm.authorName}</span><span class="ctm">${fmtDT(cm.time)}</span></div>
+      <div class="ctx">${cm.text}</div></div>
+    </div>`).join('');
+
+  const subH=subs.map(s=>`<div class="sui" id="si-${id}-${s.id}">
+    <input type="checkbox" ${s.done?'checked':''} onchange="togSub('${id}',${s.id},this.checked)">
+    <span class="sut ${s.done?'done':''}">${s.text}</span>
+    ${!done?`<button class="sud" onclick="delSub('${id}',${s.id})">×</button>`:''}
+  </div>`).join('');
+
+  const atchH=atch.map(a=>`<div class="ati">
+    <span>${a.mimeType&&a.mimeType.startsWith('image/')?'🖼️':a.mimeType==='application/pdf'?'📄':'📊'}</span>
+    <span class="ati-n"><a href="${a.viewUrl}" target="_blank">${a.fileName}</a></span>
+    <span class="ati-s">${a.size?Math.round(a.size/1024)+'KB':''}</span>
+  </div>`).join('');
+
+  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo mo-lg" onclick="event.stopPropagation()">
+    <div class="mh">
+      <div>
+        <div style="display:flex;gap:4px;margin-bottom:6px">
+          <span class="b b${t.channel}">${t.channel}</span>
+          <span class="b b${t.status}">${SL[t.status]}</span>
+          ${ov?`<span class="b bov">Quá hạn</span>`:''}
+        </div>
+        <div class="mti">${t.title}</div>
       </div>
-      <div class="field required"><label>Địa điểm</label>
-        <input type="text" id="mt_other_location" placeholder="Tên cửa hàng, địa chỉ, văn phòng...">
-      </div>
-      <div class="field required"><label>Nội dung & kết quả</label>
-        <textarea id="mt_other_content" style="min-height:140px" placeholder="Mô tả nội dung công việc, kết quả đạt được, điểm cần theo dõi..."></textarea>
-      </div>
-      <div class="field"><label>GPS vị trí</label>
-        <div id="gpsBoxMT">${gpsBoxHTML('gpsBoxMT',false)}</div>
+      <button class="mcl" onclick="CM()">×</button>
+    </div>
+    <div class="dmg">
+      <div class="dmi"><div class="dl">Khách hàng</div><div class="dv">${c?c.name:'—'}</div></div>
+      <div class="dmi"><div class="dl">Deadline</div><div class="dv" style="${ov?'color:var(--red)':''}">${fmtD(t.deadline)}</div></div>
+      <div class="dmi"><div class="dl">Flow</div><div class="dv" style="font-size:12px">${t.flow_name||'—'}</div></div>
+    </div>
+    <div class="ds"><div class="dst">PICs</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${pics.map(u=>`<div style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--s2);padding:3px 8px;border-radius:8px">
+          <div class="av avs">${u.initials||u.name[0]}</div>${u.name}
+        </div>`).join('')}
       </div>
     </div>
-    <div class="card">
-      <h3>📷 Hình ảnh <span class="store-count-badge zero" id="mt_photo_count_badge">0/30</span> <span style="color:#f00;font-size:12px">*</span></h3>
-      <p style="font-size:12px;color:var(--text2);margin-bottom:10px">Bắt buộc. Chọn tối đa 30 hình từ thư viện (dùng app timestamp để chụp trước).</p>
-      <label style="display:block;width:100%;padding:14px;border:2px dashed var(--primary);border-radius:10px;background:var(--primary-light);color:var(--primary);font-size:14px;font-weight:600;cursor:pointer;text-align:center">
-        📁 Chọn hình từ thư viện
-        <input type="file" id="mt_photo_input" accept="image/*" multiple style="display:none" onchange="handlePhotoUpload(this,'mt')">
+    ${steps.length?`<div class="ds"><div class="dst">Tiến độ flow</div>${flowH}</div>`:''}
+    ${t.notes?`<div class="ds"><div class="dst">Ghi chú</div><div class="nb2">${t.notes}</div></div>`:''}
+    ${!done?`<div class="ds"><div class="dst">Cập nhật bước</div>
+      <select class="fi" style="font-size:12px" onchange="updStep('${id}',this.value)">
+        ${steps.map(s=>`<option value="${s}" ${s===t.step?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </div>`:''}
+    <div class="ds"><div class="dst">Subtasks (${sp?sp.done+'/'+sp.total:'0/0'})</div>
+      <div id="sub-${id}">${subH}</div>
+      ${!done?`<div class="asr"><input type="text" id="ns-${id}" placeholder="Thêm subtask..." onkeydown="if(event.key==='Enter')addSub('${id}')">
+        <button class="btn btn-sm" onclick="addSub('${id}')">+ Thêm</button></div>`:''}
+    </div>
+    <div class="ds"><div class="dst">📎 Đính kèm</div>
+      <div class="atch" id="atch-${id}">${atchH}</div>
+      <label class="btn btn-sm" style="cursor:pointer;margin-top:6px">
+        📎 Đính kèm file (max 4MB)
+        <input type="file" accept="image/*,.pdf,.xlsx,.xls,.doc,.docx" style="display:none" onchange="hdlUpload(event,'${id}')">
       </label>
-      <div id="mt_photo_preview" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"></div>
-    </div>`;
-
-  content.innerHTML = mode === 'other' ? otherForm : dailyForm;
-}
-
-function loadMTStores(chain) {
-  const sel = document.getElementById('mt_store');
-  if (!chain) { sel.innerHTML = '<option value="">— Chọn chain trước —</option>'; return; }
-  const stores = MT_CHAINS[chain] || [];
-  sel.innerHTML = '<option value="">— Chọn điểm bán —</option>' + stores.map(s => `<option value="${escHtml(s)}">${escHtml(s)}</option>`).join('');
-}
-
-// ============ GT DAILY FORM ============
-function startGTDaily() {
-  state.photos = {};
-  state.skuData = {};
-  gtPhotoCount = 4; // reset photo count
-  const region = state.user.team;
-  document.getElementById('gtSubtitle').textContent = state.user.name + ' · ' + region;
-  renderGTDailyForm(region);
-  goTo('scGTDaily');
-  initGPS();
-}
-
-function renderGTDailyForm(region) {
-  const content = document.getElementById('gtContent');
-  
-  let marketSelectHTML = '';
-  let storeSelectHTML = '';
-  
-  if (region === 'GT North') {
-    // GT North: Chọn chợ trước → hiện điểm bán (giống Central/South)
-    const northMarkets = Object.keys(GT_NORTH).sort();
-    const northOpts = northMarkets.map(m => `<option value="${escHtml(m)}">${escHtml(m)}</option>`).join('');
-    marketSelectHTML = `
-      <div class="field required"><label>Chợ / Khu vực (GT Bắc)</label>
-        <select id="gt_market" onchange="loadGTStoresChecklist(this.value,'GT North')">
-          <option value="">— Chọn chợ / khu vực —</option>${northOpts}
-        </select>
-      </div>`;
-    storeSelectHTML = `
-      <div class="field required" id="gt_store_field">
-        <label>Chọn điểm bán <span class="store-count-badge zero" id="gt_store_count">0 đã chọn</span></label>
-        <input type="text" id="gt_store_search" placeholder="🔍 Tìm trong danh sách..." style="margin-bottom:6px" oninput="filterStoreChecklist(this.value)">
-        <div class="store-checklist" id="gt_store_checklist">
-          <div style="padding:16px;text-align:center;color:var(--text2);font-size:13px">← Chọn chợ / khu vực trước</div>
-        </div>
+    </div>
+    <div class="ds"><div class="dst">💬 Comments & Cập nhật</div>
+      <div class="cl" id="cl-${id}">${cmH}</div>
+      <div class="cir">
+        <textarea id="nc-${id}" placeholder="Thêm comment... (Ctrl+Enter để gửi)" onkeydown="if(event.ctrlKey&&event.key==='Enter')subCom('${id}')"></textarea>
+        <button class="btn btn-p btn-sm" onclick="subCom('${id}')">Gửi</button>
       </div>
-      <div class="field"><label>Nhập thủ công (điểm bán chưa có trong list)</label>
-        <input type="text" id="gt_store_manual" placeholder="Tên điểm bán mới...">
-        <input type="text" id="gt_market_manual" placeholder="Tên chợ / khu vực (nếu nhập thủ công)" style="margin-top:6px">
-        <p style="font-size:11px;color:var(--text2);margin-top:4px">💡 Điểm bán nhập thủ công sẽ được ghi nhận theo khu vực của bạn</p>
-      </div>`;
-  } else {
-    const regionData = region === 'GT Central' ? GT_CENTRAL : (region === 'GT North' ? GT_NORTH : GT_SOUTH);
-    const markets = Object.keys(regionData).sort();
-    const marketOpts = markets.map(m => `<option value="${escHtml(m)}">${escHtml(m)}</option>`).join('');
-    marketSelectHTML = `
-      <div class="field required"><label>Chợ / Khu vực</label>
-        <select id="gt_market" onchange="loadGTStoresChecklist(this.value,'${region}')">
-          <option value="">— Chọn chợ —</option>${marketOpts}
-        </select>
-      </div>`;
-    storeSelectHTML = `
-      <div class="field required" id="gt_store_field">
-        <label>Chọn điểm bán <span class="store-count-badge zero" id="gt_store_count">0 đã chọn</span></label>
-        <input type="text" id="gt_store_search" placeholder="🔍 Tìm trong chợ..." style="margin-bottom:6px" oninput="filterStoreChecklist(this.value)">
-        <div class="store-checklist" id="gt_store_checklist">
-          <div style="padding:16px;text-align:center;color:var(--text2);font-size:13px">← Chọn chợ trước</div>
-        </div>
-      </div>
-      <div class="field"><label>Nhập thủ công (điểm bán chưa có trong list)</label>
-        <input type="text" id="gt_store_manual" placeholder="Tên điểm bán mới...">
-        <input type="text" id="gt_market_manual" placeholder="Tên chợ / khu vực (nếu nhập thủ công)" style="margin-top:6px">
-        <p style="font-size:11px;color:var(--text2);margin-top:4px">💡 Điểm bán nhập thủ công sẽ được ghi nhận theo khu vực của bạn</p>
-      </div>`;
+    </div>
+    <div class="fa">
+      ${!done&&isMgr()?`<button class="btn btn-p btn-sm" onclick="CM();openTaskForm('${id}')">✎ Sửa</button>`:''}
+      ${!done&&isMgr()?`<button class="btn btn-d btn-sm" onclick="delTask('${id}')">✕ Xóa</button>`:''}
+      ${isMgr()&&t.status==='review'?`<button class="btn btn-w btn-sm" onclick="CM();openApprove('${id}')">⚡ Duyệt</button>`:''}
+      <button class="btn btn-sm" onclick="CM()">Đóng</button>
+    </div>
+  </div></div>`;
+}
+
+async function hdlUpload(e,tid){
+  const file=e.target.files[0];if(!file)return;
+  const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
+  const r=await uploadFile(file,tid);
+  if(r){
+    if(!Array.isArray(t.attachments))t.attachments=[];
+    t.attachments.push({fileName:file.name,mimeType:file.type,viewUrl:r.viewUrl||'#',size:file.size,uploadedBy:state.currentUser.name,uploadedAt:new Date().toISOString()});
+    addSysCom(t,'📎 Đính kèm: '+file.name+' (bởi '+state.currentUser.name+')');
+    openDetail(tid);renderKanban();await saveTask(t);
   }
+  e.target.value='';
+}
+async function subCom(tid){
+  const inp=$('nc-'+tid);if(!inp||!inp.value.trim())return;
+  const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
+  addCom(t,inp.value);inp.value='';
+  openDetail(tid);renderKanban();await saveTask(t);
+}
+async function togSub(tid,sid,done){
+  const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
+  const s=(t.subtasks||[]).find(x=>String(x.id)===String(sid));if(s)s.done=done;
+  openDetail(tid);renderKanban();await saveTask(t);
+}
+async function addSub(tid){
+  const inp=$('ns-'+tid);if(!inp||!inp.value.trim())return;
+  const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
+  if(!Array.isArray(t.subtasks))t.subtasks=[];
+  t.subtasks.push({id:Date.now(),text:inp.value.trim(),done:false});
+  openDetail(tid);renderKanban();await saveTask(t);
+}
+async function delSub(tid,sid){
+  const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
+  t.subtasks=(t.subtasks||[]).filter(x=>String(x.id)!==String(sid));
+  openDetail(tid);renderKanban();await saveTask(t);
+}
+async function updStep(tid,step){
+  const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
+  t.step=step;
+  addSysCom(t,'Cập nhật bước: "'+step+'" bởi '+state.currentUser.name);
+  openDetail(tid);renderKanban();await saveTask(t);
+}
+async function delTask(id){
+  if(!confirm('Xoá task này?'))return;
+  state.tasks=state.tasks.filter(t=>String(t.id)!==String(id));
+  CM();renderKanban();
+  await apiPost({action:'delete',sheet:'Tasks',id});
+  toast('Đã xóa task');
+}
 
-  const skuRows = GT_SKUS_DAILY.map(sku => `
+// ---- TASK FORM ----
+function openTaskForm(editId){
+  const t=editId?state.tasks.find(x=>String(x.id)===String(editId)):null;
+  const d=t||{title:'',customer_id:'',channel:'MT',pic_ids:[],status:'todo',step:'',flow_name:'',deadline:'',notes:'',subtasks:[],comments:[]};
+  const tPics=Array.isArray(d.pic_ids)?d.pic_ids:String(d.pic_ids||'').split(',').filter(Boolean);
+  const flows=state.config.filter(f=>f.channel===d.channel||f.channel==='ALL');
+  const flow=getFlowSteps(d.flow_name||d.channel);
+  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo mo-lg" onclick="event.stopPropagation()">
+    <div class="mh"><div class="mti">${t?'Sửa task':'Thêm task mới'}</div><button class="mcl" onclick="CM()">×</button></div>
+    <div class="fr"><label class="fl">Tiêu đề *</label><input type="text" id="ft" class="fi" value="${d.title||''}" placeholder="Tên task..."></div>
+    <div class="g2">
+      <div class="fr"><label class="fl">Kênh *</label>
+        <select id="fch" class="fi" onchange="onChChange()">
+          ${CHANNELS.map(c=>`<option value="${c}" ${d.channel===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="fr"><label class="fl">Flow / Quy trình</label>
+        <select id="ffn" class="fi" onchange="onFlowChange()">
+          ${flows.map(f=>`<option value="${f.name}" ${f.name===d.flow_name?'selected':''}>${f.name}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="fr"><label class="fl">Khách hàng *</label>
+      <select id="fcu" class="fi" onchange="onCuChange()">
+        <option value="">-- Chọn KH --</option>
+        ${state.customers.filter(c=>c.status==='Active'||!c.status).map(c=>`<option value="${c.id}" ${String(d.customer_id)===String(c.id)?'selected':''}>${c.name}${c.channel?' ('+c.channel+')':''}</option>`).join('')}
+        <option value="__new__">➕ Thêm KH mới...</option>
+      </select>
+    </div>
+    <div id="ncb" style="display:none" class="iab">
+      <div class="iat">➕ THÊM KHÁCH HÀNG MỚI</div>
+      <div class="g2">
+        <div class="fr"><label class="fl">Tên *</label><input type="text" id="nc-n" class="fi" placeholder="Tên KH..."></div>
+        <div class="fr"><label class="fl">Kênh</label><select id="nc-ch" class="fi">${CHANNELS.map(c=>`<option>${c}</option>`).join('')}</select></div>
+      </div>
+      <div class="g3">
+        <div class="fr"><label class="fl">Vùng</label><input type="text" id="nc-r" class="fi" placeholder="HCM..."></div>
+        <div class="fr"><label class="fl">Liên hệ</label><input type="text" id="nc-c" class="fi" placeholder="Tên..."></div>
+        <div class="fr"><label class="fl">SĐT</label><input type="text" id="nc-p" class="fi" placeholder="0901..."></div>
+      </div>
+    </div>
+    <div class="fr"><label class="fl">PICs / Người phụ trách (chọn nhiều)</label>
+      <div class="pmc" id="pmc">
+        ${aUsers().map(u=>`<div class="pch ${tPics.includes(u.id)?'sel':''}" id="pc-${u.id}" onclick="togPIC('${u.id}')">
+          <div class="av avs">${u.initials||u.name[0]}</div>${u.name}
+        </div>`).join('')}
+      </div>
+    </div>
+    <div class="g2">
+      <div class="fr"><label class="fl">Trạng thái</label>
+        <select id="fst" class="fi">
+          ${['todo','inprogress','review'].map(s=>`<option value="${s}" ${d.status===s?'selected':''}>${SL[s]}</option>`).join('')}
+        </select>
+      </div>
+      <div class="fr"><label class="fl">Bước hiện tại</label>
+        <select id="fsp" class="fi">
+          ${flow.map(s=>`<option value="${s}" ${d.step===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="fr"><label class="fl">Deadline</label><input type="date" id="fdl" class="fi" value="${d.deadline||''}"></div>
+    <div class="fr"><label class="fl">Ghi chú</label><textarea id="fnt" class="fi">${d.notes||''}</textarea></div>
+    <div class="fa">
+      <button class="btn btn-p" onclick="saveTF('${editId||''}')">💾 ${t?'Lưu thay đổi':'Tạo task'}</button>
+      <button class="btn" onclick="CM()">Huỷ</button>
+    </div>
+  </div></div>`;
+}
+
+function onChChange(){
+  const ch=$('fch').value;
+  const ffn=$('ffn');
+  if(ffn){
+    const flows=state.config.filter(f=>f.channel===ch||f.channel==='ALL');
+    ffn.innerHTML=flows.map(f=>`<option value="${f.name}">${f.name}</option>`).join('');
+    onFlowChange();
+  }
+}
+function onFlowChange(){
+  const fn=$('ffn')?$('ffn').value:'';
+  const steps=getFlowSteps(fn);
+  const sp=$('fsp');
+  if(sp)sp.innerHTML=steps.map(s=>`<option value="${s}">${s}</option>`).join('');
+}
+function onCuChange(){
+  const v=$('fcu').value;
+  const b=$('ncb');if(b)b.style.display=v==='__new__'?'block':'none';
+}
+function togPIC(uid){
+  const ch=document.getElementById('pc-'+uid);
+  if(ch)ch.classList.toggle('sel');
+}
+
+async function saveTF(editId){
+  const title=$('ft').value.trim();
+  if(!title){alert('Vui lòng điền tiêu đề.');return;}
+  let cid=$('fcu').value;
+  if(cid==='__new__'){
+    const nm=($('nc-n')||{}).value?.trim();
+    if(!nm){alert('Nhập tên KH mới.');return;}
+    const nC={id:Date.now(),name:nm,channel:($('nc-ch')||{}).value||'',region:($('nc-r')||{}).value||'',contact_name:($('nc-c')||{}).value||'',phone:($('nc-p')||{}).value||'',status:'Active'};
+    state.customers.push(nC);cid=nC.id;
+    await saveMaster('Customers',nC);toast('Đã thêm KH: '+nm);
+  }
+  if(!cid){alert('Vui lòng chọn KH.');return;}
+  const selPics=aUsers().filter(u=>document.getElementById('pc-'+u.id)?.classList.contains('sel')).map(u=>u.id);
+  if(!selPics.length){alert('Chọn ít nhất 1 PIC.');return;}
+  const fn=$('ffn')?$('ffn').value:'';
+  const data={title,customer_id:cid,channel:$('fch').value,pic_ids:selPics,pic_id:selPics[0]||'',
+    pic_email:(getUser(selPics[0])||{}).email||'',flow_name:fn,
+    status:$('fst').value,step:$('fsp').value,deadline:$('fdl').value,notes:$('fnt').value.trim()};
+  let task;
+  if(editId){task=state.tasks.find(x=>String(x.id)===String(editId));if(task)Object.assign(task,data);}
+  else{task={id:Date.now(),subtasks:[],comments:[],attachments:[],...data};addSysCom(task,'Task tạo bởi '+state.currentUser.name);state.tasks.push(task);}
+  CM();renderKanban();
+  if(task)await saveTask(task);
+}
+
+// ---- CUSTOMERS ----
+function renderCustomers(){
+  const u=state.currentUser;
+  $('ctb').innerHTML=state.customers
+    .filter(c=>c.status==='Active'||!c.status)
+    .filter(c=>isMgr()||u.channel==='ALL'||!c.channel||c.channel===u.channel)
+    .map(c=>{
+      const cnt=state.tasks.filter(t=>String(t.customer_id)===String(c.id)&&!['done','done_fail'].includes(t.status)).length;
+      const pic=c.pic_id?getUser(c.pic_id):null;
+      return`<tr>
+        <td><strong style="cursor:pointer;color:var(--blue)" onclick="openCustDet('${c.id}')">${c.name}</strong></td>
+        <td><span class="b b${c.channel}">${c.channel||'—'}</span></td>
+        <td>${c.region||'—'}</td>
+        <td style="font-size:11px">${c.business_type||'—'}</td>
+        <td>${pic?`<div style="display:flex;align-items:center;gap:5px"><div class="av avs">${pic.initials||'?'}</div>${pic.name}</div>`:'—'}</td>
+        <td>${c.contact_name||'—'}</td>
+        <td>${c.phone||'—'}</td>
+        <td style="text-align:center">${c.num_stores||'—'}</td>
+        <td>${cnt>0?`<span style="color:var(--blue);font-weight:500">${cnt}</span>`:'0'}</td>
+        <td><div class="tab">
+          <button class="btn btn-xs" onclick="openCustForm('${c.id}')">✎</button>
+        </div></td>
+      </tr>`;}).join('');
+}
+
+function openCustDet(cid){
+  const c=state.customers.find(x=>String(x.id)===String(cid));if(!c)return;
+  const tasks=state.tasks.filter(t=>String(t.customer_id)===String(cid));
+  const pic=c.pic_id?getUser(c.pic_id):null;
+  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo mo-lg" onclick="event.stopPropagation()">
+    <div class="mh">
+      <div><span class="b b${c.channel}" style="margin-bottom:5px;display:inline-flex">${c.channel}</span>
+        <div class="mti">${c.name}</div></div>
+      <button class="mcl" onclick="CM()">×</button>
+    </div>
+    <div class="cig">
+      <div class="cf"><div class="cfl">Vùng</div><div class="cfv">${c.region||'—'}</div></div>
+      <div class="cf"><div class="cfl">Hình thức KD</div><div class="cfv">${c.business_type||'—'}</div></div>
+      <div class="cf"><div class="cfl">Người liên hệ</div><div class="cfv">${c.contact_name||'—'}</div></div>
+      <div class="cf"><div class="cfl">SĐT</div><div class="cfv">${c.phone||'—'}</div></div>
+      <div class="cf"><div class="cfl">Số cửa hàng</div><div class="cfv">${c.num_stores||'—'}</div></div>
+      <div class="cf"><div class="cfl">Tài chính</div><div class="cfv">${c.financial||'—'}</div></div>
+      <div class="cf"><div class="cfl">PIC phụ trách</div><div class="cfv">${pic?pic.name:'—'}</div></div>
+      <div class="cf"><div class="cfl">Email KH</div><div class="cfv">${c.email||'—'}</div></div>
+    </div>
+    ${c.resources?`<div class="ds"><div class="dst">Nguồn lực</div><div class="nb2">${c.resources}</div></div>`:''}
+    ${c.notes?`<div class="ds"><div class="dst">Ghi chú</div><div class="nb2">${c.notes}</div></div>`:''}
+    <div class="ds"><div class="dst">Tasks (${tasks.length})</div>
+      ${tasks.length?tasks.map(t=>`<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:.5px solid var(--bd)">
+        <span class="b b${t.status}">${SL[t.status]}</span>
+        <span style="font-size:12px;flex:1">${t.title}</span>
+        <span style="font-size:11px;color:var(--t3)">${fmtD(t.deadline)}</span>
+      </div>`).join(''):'<span style="font-size:12px;color:var(--t3)">Chưa có task</span>'}
+    </div>
+    <div class="fa">
+      <button class="btn btn-p btn-sm" onclick="CM();openCustForm('${c.id}')">✎ Sửa</button>
+      <button class="btn btn-sm" onclick="CM()">Đóng</button>
+    </div>
+  </div></div>`;
+}
+
+function openCustForm(editId){
+  const u=state.currentUser;
+  const c=editId?state.customers.find(x=>String(x.id)===String(editId)):null;
+  if(c&&!isMgr()&&u.channel!=='ALL'&&c.channel&&c.channel!==u.channel){toast('Bạn chỉ sửa KH trong kênh của mình','warn');return;}
+  const d=c||{name:'',channel:u.channel!=='ALL'?u.channel:'MT',region:u.region||'',business_type:'',contact_name:'',phone:'',email:'',num_stores:'',resources:'',financial:'',notes:'',pic_id:''};
+  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo mo-lg" onclick="event.stopPropagation()">
+    <div class="mh"><div class="mti">${c?'Sửa khách hàng':'Thêm khách hàng mới'}</div><button class="mcl" onclick="CM()">×</button></div>
+    <div class="g2">
+      <div class="fr"><label class="fl">Tên *</label><input type="text" id="cn" class="fi" value="${d.name}"></div>
+      <div class="fr"><label class="fl">Kênh</label><select id="cch" class="fi">${CHANNELS.map(x=>`<option ${d.channel===x?'selected':''}>${x}</option>`).join('')}</select></div>
+    </div>
+    <div class="g2">
+      <div class="fr"><label class="fl">Vùng / Khu vực</label><input type="text" id="crg" class="fi" value="${d.region||''}"></div>
+      <div class="fr"><label class="fl">Hình thức KD</label><input type="text" id="cbt" class="fi" value="${d.business_type||''}" placeholder="Siêu thị, Đại lý..."></div>
+    </div>
+    <div class="g2">
+      <div class="fr"><label class="fl">Người liên hệ</label><input type="text" id="cct" class="fi" value="${d.contact_name||''}"></div>
+      <div class="fr"><label class="fl">SĐT</label><input type="text" id="cph" class="fi" value="${d.phone||''}"></div>
+    </div>
+    <div class="g2">
+      <div class="fr"><label class="fl">Email KH</label><input type="text" id="cem" class="fi" value="${d.email||''}"></div>
+      <div class="fr"><label class="fl">Số cửa hàng / điểm bán</label><input type="text" id="cns" class="fi" value="${d.num_stores||''}" placeholder="VD: 12"></div>
+    </div>
+    <div class="fr"><label class="fl">PIC phụ trách</label>
+      <select id="cpic" class="fi">
+        <option value="">-- Chọn PIC --</option>
+        ${aUsers().map(u=>`<option value="${u.id}" ${d.pic_id===u.id?'selected':''}>${u.name} (${u.initials})</option>`).join('')}
+      </select>
+    </div>
+    <div class="fr"><label class="fl">Nguồn lực (nhân sự, kho bãi...)</label><textarea id="crs" class="fi">${d.resources||''}</textarea></div>
+    <div class="fr"><label class="fl">Khả năng tài chính</label><textarea id="cfn" class="fi" style="min-height:48px">${d.financial||''}</textarea></div>
+    <div class="fr"><label class="fl">Ghi chú thêm</label><textarea id="cno" class="fi">${d.notes||''}</textarea></div>
+    <div class="fa">
+      <button class="btn btn-p" onclick="saveCust('${editId||''}')">💾 Lưu vào Sheet</button>
+      <button class="btn" onclick="CM()">Huỷ</button>
+    </div>
+  </div></div>`;
+}
+
+async function saveCust(editId){
+  const name=$('cn').value.trim();if(!name){alert('Nhập tên KH');return;}
+  const data={name,channel:$('cch').value,region:$('crg').value,business_type:$('cbt').value,
+    contact_name:$('cct').value,phone:$('cph').value,email:$('cem').value,
+    num_stores:$('cns').value,pic_id:$('cpic').value,
+    resources:$('crs').value,financial:$('cfn').value,notes:$('cno').value,status:'Active'};
+  if(editId){const c=state.customers.find(x=>String(x.id)===String(editId));if(c){data.id=c.id;Object.assign(c,data);await saveMaster('Customers',c);}}
+  else{const nc={id:Date.now(),...data};state.customers.push(nc);await saveMaster('Customers',nc);}
+  CM();renderCustomers();
+}
+
+// ---- PRODUCTS ----
+function renderProducts(){
+  const canEdit=isMgrOrTM();
+  $('prod-add-btn').innerHTML=canEdit?`<button class="btn btn-p btn-sm" onclick="openProdForm()">+ Thêm</button>`:`<span style="font-size:11px;background:#EDE9FE;color:#5B21B6;padding:2px 8px;border-radius:6px">Manager / Trade Marketing only</span>`;
+  $('ptb').innerHTML=state.products.filter(p=>p.name).map(p=>`
     <tr>
-      <td>${escHtml(sku)}</td>
-      <td class="qty-cell"><input type="number" class="qty-input" id="gt_qty_${escId(sku)}" min="0" placeholder="0" inputmode="numeric"></td>
-      <td><select class="status-sel" id="gt_st_${escId(sku)}">
-        <option value="OK">OK</option>
-        <option value="Sắp hết">⚠ Sắp hết</option>
-        <option value="Hết hàng">❌ Hết</option>
-        <option value="Ngưng mã">🚫 Ngưng</option>
-        <option value="Chưa bán">— Chưa bán</option>
-      </select></td>
+      <td><strong>${p.name}</strong></td>
+      <td><span class="b bgr">${p.brand||'—'}</span></td>
+      <td>${p.category||'—'}</td>
+      <td style="font-size:11px;color:var(--t2)">${p.sku||'—'}</td>
+      <td>${p.unit||'—'}</td>
+      <td><span class="b ${p.status==='Active'?'bdone':p.status==='Discontinued'?'bdone_fail':'bgr'}">${p.status||'Active'}</span></td>
+      <td>${canEdit?`<div class="tab"><button class="btn btn-xs" onclick="openProdForm('${p.id}')">✎</button></div>`:''}</td>
     </tr>`).join('');
+}
 
-  content.innerHTML = `
-    <div class="card">
-      <h3>📋 Thông tin khảo sát</h3>
-      <div class="field required"><label>Ngày khảo sát</label>${dateFieldHTML('gt_date')}</div>
-      ${marketSelectHTML}
-      ${storeSelectHTML}
-      <div class="field"><label>GPS vị trí</label>
-        <div id="gpsBoxGT">${gpsBoxHTML('gpsBoxGT',false)}</div>
-      </div>
+function openProdForm(eid){
+  if(!isMgrOrTM()){toast('Không có quyền','warn');return;}
+  const p=eid?state.products.find(x=>String(x.id)===String(eid)):null;
+  const d=p||{name:'',brand:'Ayam Brand',category:'',sku:'',unit:'',status:'Active'};
+  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" onclick="event.stopPropagation()">
+    <div class="mh"><div class="mti">${p?'Sửa SP':'Thêm SP'}</div><button class="mcl" onclick="CM()">×</button></div>
+    <div class="fr"><label class="fl">Tên *</label><input type="text" id="pn" class="fi" value="${d.name}"></div>
+    <div class="g2">
+      <div class="fr"><label class="fl">Brand</label><select id="pb" class="fi">
+        ${['Ayam Brand','Alce Nero','Duchef','Latino Bella','Kelly Beans'].map(b=>`<option ${d.brand===b?'selected':''}>${b}</option>`).join('')}
+      </select></div>
+      <div class="fr"><label class="fl">Danh mục</label><input type="text" id="pc" class="fi" value="${d.category||''}"></div>
     </div>
-    <div class="card">
-      <h3>📷 Hình ảnh <span class="store-count-badge zero" id="gt_photo_count_badge">0/30</span> <span style="color:#f00;font-size:12px">*</span></h3>
-      <p style="font-size:12px;color:var(--text2);margin-bottom:10px">Bắt buộc. Chọn tối đa 30 hình từ thư viện (dùng app timestamp để chụp trước).</p>
-      <label style="display:block;width:100%;padding:14px;border:2px dashed var(--primary);border-radius:10px;background:var(--primary-light);color:var(--primary);font-size:14px;font-weight:600;cursor:pointer;text-align:center">
-        📁 Chọn hình từ thư viện
-        <input type="file" id="gt_photo_input" accept="image/*" multiple style="display:none" onchange="handlePhotoUpload(this,'gt')">
-      </label>
-      <div id="gt_photo_preview" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"></div>
+    <div class="g2">
+      <div class="fr"><label class="fl">SKU</label><input type="text" id="psk" class="fi" value="${d.sku||''}"></div>
+      <div class="fr"><label class="fl">Đơn vị</label><input type="text" id="pu" class="fi" value="${d.unit||''}"></div>
     </div>
-    <div class="card" style="padding:12px 8px">
-      <h3 style="padding:0 8px 8px">📦 Tồn kho trên kệ</h3>
-      <div style="overflow-x:auto">
-        <table class="sku-table">
-          <thead><tr><th style="text-align:left">Sản phẩm</th><th>Tồn (lon)</th><th>Trạng thái</th></tr></thead>
-          <tbody>${skuRows}</tbody>
-        </table>
-      </div>
+    <div class="fr"><label class="fl">Trạng thái</label><select id="ps" class="fi">
+      ${['Active','Discontinued','New'].map(s=>`<option ${d.status===s?'selected':''}>${s}</option>`).join('')}
+    </select></div>
+    <div class="fa">
+      <button class="btn btn-p" onclick="saveProd('${eid||''}')">💾 Lưu</button>
+      <button class="btn" onclick="CM()">Huỷ</button>
     </div>
-    <div class="card">
-      <h3>🛒 Đặt hàng & Ghi chú</h3>
-      <div class="field required"><label>Thông tin đặt hàng</label>
-        <div class="chips" id="gt_order">
-          ${['Đã đặt hàng thêm','Không đặt hàng','Sẽ đặt sau'].map(v=>`<span class="chip" onclick="selectChip(this,'gt_order')">${v}</span>`).join('')}
+  </div></div>`;
+}
+
+async function saveProd(eid){
+  const name=$('pn').value.trim();if(!name){alert('Nhập tên SP');return;}
+  const data={name,brand:$('pb').value,category:$('pc').value,sku:$('psk').value,unit:$('pu').value,status:$('ps').value};
+  if(eid){const p=state.products.find(x=>String(x.id)===String(eid));if(p){data.id=p.id;Object.assign(p,data);await saveMaster('Products',p);}}
+  else{const np={id:Date.now(),...data};state.products.push(np);await saveMaster('Products',np);}
+  CM();renderProducts();
+}
+
+// ---- USERS ----
+function renderUsers(){
+  $('utb').innerHTML=aUsers().map(u=>`
+    <tr>
+      <td><strong>${u.name}</strong></td>
+      <td><span class="b ${u.role==='manager'?'bmgr':'bgr'}">${u.role}</span></td>
+      <td><span class="b b${u.channel==='MT'?'MT':u.channel==='GT'?'GT':u.channel==='B2B'?'B2B':'gr'}">${u.channel||'—'}</span></td>
+      <td style="font-size:11px">${u.region||'—'}</td>
+      <td style="font-size:11px;color:var(--t2)">${u.position||'—'}</td>
+      <td style="color:var(--t2)">${u.email||'—'}</td>
+      <td><span style="font-family:monospace;background:var(--s2);padding:2px 6px;border-radius:4px;font-size:11px">${u.role==='manager'?'—':u.password||'chưa đặt'}</span></td>
+      <td><div class="av">${u.initials||'?'}</div></td>
+      <td><div class="tab"><button class="btn btn-xs" onclick="openUserForm('${u.id}')">✎</button></div></td>
+    </tr>`).join('');
+}
+
+function openUserForm(eid){
+  const u=eid?state.users.find(x=>x.id===eid):null;
+  const d=u||{name:'',role:'sales',position:'',channel:'MT',region:'',initials:'',email:'',password:''};
+  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" onclick="event.stopPropagation()">
+    <div class="mh"><div class="mti">${u?'Sửa thành viên':'Thêm thành viên'}</div><button class="mcl" onclick="CM()">×</button></div>
+    <div class="g2">
+      <div class="fr"><label class="fl">Tên *</label><input type="text" id="un" class="fi" value="${d.name}"></div>
+      <div class="fr"><label class="fl">Initials</label><input type="text" id="ui" class="fi" value="${d.initials}" maxlength="4"></div>
+    </div>
+    <div class="g2">
+      <div class="fr"><label class="fl">Role</label><select id="ur" class="fi">
+        <option value="sales" ${d.role==='sales'?'selected':''}>Sales</option>
+        <option value="manager" ${d.role==='manager'?'selected':''}>Manager</option>
+        <option value="trade" ${d.role==='trade'?'selected':''}>Trade Marketing</option>
+      </select></div>
+      <div class="fr"><label class="fl">Chức vụ</label><input type="text" id="upo" class="fi" value="${d.position||''}"></div>
+    </div>
+    <div class="g2">
+      <div class="fr"><label class="fl">Kênh</label><select id="uch" class="fi">
+        ${['MT','GT','B2B','HoReCa','ALL'].map(c=>`<option ${d.channel===c?'selected':''}>${c}</option>`).join('')}
+      </select></div>
+      <div class="fr"><label class="fl">Vùng</label><input type="text" id="urg" class="fi" value="${d.region||''}"></div>
+    </div>
+    <div class="fr"><label class="fl">Email Gmail (bắt buộc)</label><input type="email" id="uem" class="fi" value="${d.email||''}"></div>
+    <div class="fr"><label class="fl">Mật khẩu (4 số, để trống nếu là Manager)</label><input type="text" id="upw" class="fi" value="${d.password||''}" maxlength="6" placeholder="VD: 1234"></div>
+    <div class="fa">
+      <button class="btn btn-p" onclick="saveUser('${eid||''}')">💾 Lưu</button>
+      <button class="btn" onclick="CM()">Huỷ</button>
+    </div>
+  </div></div>`;
+}
+
+async function saveUser(eid){
+  const name=$('un').value.trim();if(!name){alert('Nhập tên');return;}
+  const data={name,initials:$('ui').value.toUpperCase(),role:$('ur').value,position:$('upo').value,
+    channel:$('uch').value,region:$('urg').value,email:$('uem').value,password:$('upw').value,status:'Active'};
+  if(eid){const u=state.users.find(x=>x.id===eid);if(u){data.id=u.id;Object.assign(u,data);await saveMaster('Users',u);}}
+  else{const nu={id:'u'+Date.now(),...data};state.users.push(nu);await saveMaster('Users',nu);}
+  CM();renderUsers();
+}
+
+// ---- CONFIG ----
+function renderConfig(){
+  $('cfg-body').innerHTML=state.config.map(f=>{
+    const steps=Array.isArray(f.steps)?f.steps:[];
+    return`<div class="fer">
+      <div style="min-width:180px">
+        <div style="font-size:12px;font-weight:500">${f.name}</div>
+        <div style="display:flex;gap:4px;margin-top:3px">
+          <span class="b b${f.channel==='MT'?'MT':f.channel==='GT'?'GT':f.channel==='B2B'?'B2B':'gr'}">${f.channel}</span>
+          <span style="font-size:10px;color:var(--t3)">${f.task_type||''}</span>
         </div>
       </div>
-      <div class="divider"></div>
-      <div class="field"><label>Ghi chú</label>
-        <textarea id="gt_note" placeholder="Ghi chú tình trạng, yêu cầu..."></textarea>
-      </div>
-    </div>
-    <div class="card" style="border:1.5px dashed #ddd;background:#fafafa">
-      <h3 style="color:var(--text2)">📌 Thông tin bổ sung (Không bắt buộc)</h3>
-      <div class="field"><label>Điểm bán có khả năng làm trưng bày</label>
-        <div class="chips" id="gt_display_potential">
-          ${['Có — nên đề xuất','Không có vị trí','Chưa xác định'].map(v=>`<span class="chip" onclick="selectChip(this,'gt_display_potential')">${v}</span>`).join('')}
-        </div>
-      </div>
-      <div class="field"><label>Điểm bán tốt nhất trong khu vực</label>
-        <div class="chips" id="gt_best_store">
-          ${['Có — top điểm bán','Bình thường','Dưới trung bình'].map(v=>`<span class="chip" onclick="selectChip(this,'gt_best_store')">${v}</span>`).join('')}
-        </div>
-      </div>
-      <div class="field"><label>Ghi chú khác</label>
-        <textarea id="gt_extra_note" placeholder="Thông tin bổ sung, cơ hội, vấn đề cần xử lý..."></textarea>
-      </div>
+      <div class="fsp">${steps.map((s,i)=>`${i>0?'<span style="font-size:10px;color:var(--t3);margin:0 2px">›</span>':''}<span class="fsb">${s}</span>`).join('')}</div>
+      <button class="btn btn-xs" onclick="openFlowForm('${f.id||f.name}')">✎ Sửa</button>
     </div>`;
-
-  content.dataset.region = region;
+  }).join('');
 }
 
-function loadGTStoresChecklist(market, region) {
-  const cl = document.getElementById('gt_store_checklist');
-  if (!cl) return;
-  if (!market) { cl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text2);font-size:13px">← Chọn chợ trước</div>'; updateStoreCount(); return; }
-  const regionData = region === 'GT Central' ? GT_CENTRAL : (region === 'GT North' ? GT_NORTH : GT_SOUTH);
-  const stores = regionData[market] || [];
-  cl.innerHTML = stores.length === 0
-    ? '<div style="padding:16px;text-align:center;color:var(--text2);font-size:13px">Không có điểm bán</div>'
-    : stores.map((s,i) => `
-        <div class="store-check-item" onclick="toggleStoreCheck(${i})">
-          <input type="checkbox" id="gt_cb_${i}" value="${escHtml(s)}" onchange="updateStoreCount()">
-          <label for="gt_cb_${i}">${escHtml(s)}</label>
-        </div>`).join('');
-  updateStoreCount();
-}
-
-function filterStoreChecklist(query) {
-  const q = query.toLowerCase().trim();
-  document.querySelectorAll('#gt_store_checklist .store-check-item').forEach(item => {
-    const label = (function(){var _l=item.querySelector('label');return _l&&_l.textContent?_l.textContent.toLowerCase():''})();
-    item.style.display = (!q || label.includes(q)) ? '' : 'none';
-  });
-}
-
-
-function toggleStoreCheck(index) {
-  const cb = document.getElementById(`gt_cb_${index}`);
-  if (cb) { cb.checked = !cb.checked; updateStoreCount(); }
-}
-
-function updateStoreCount() {
-  const checked = document.querySelectorAll('#gt_store_checklist input[type=checkbox]:checked').length;
-  const badge = document.getElementById('gt_store_count');
-  if (badge) {
-    badge.textContent = checked + ' đã chọn';
-    badge.className = 'store-count-badge' + (checked === 0 ? ' zero' : '');
-  }
-}
-
-function getSelectedStores() {
-  return Array.from(document.querySelectorAll('#gt_store_checklist input[type=checkbox]:checked')).map(cb => cb.value);
-}
-
-// ============ GT NEW CUSTOMER ============
-function startGTNew() {
-  state.photos = {};
-  document.getElementById('gtnewSubtitle').textContent = state.user.name;
-  renderGTNewForm();
-  goTo('scGTNew');
-  initGPS();
-}
-
-function renderGTNewForm() {
-  const content = document.getElementById('gtnewContent');
-  const products = ["Đậu sốt cà","Puree cà chua","Đậu trắng","Đậu gà","Cá ngừ","Cá trích","Cá thu","Bắp","Nước cốt dừa","Tương ớt Sriracha"];
-  const bizTypes = ["Tiệm tạp hóa","Siêu thị mini / CVS","Nhà buôn (bán sỉ)","Sạp trong chợ","Nhà hàng / Khách sạn"];
-  const potentials = ["Cao - Nên mở ngay","Trung bình - Theo dõi thêm","Thấp - Không phù hợp"];
-
-  content.innerHTML = `
-    <div class="card">
-      <h3>📍 Thông tin điểm bán</h3>
-      <div class="field required"><label>Ngày khảo sát</label>${dateFieldHTML('gtnew_date')}</div>
-      <div class="field required"><label>Tên điểm bán</label>
-        <input type="text" id="gtnew_store" placeholder="Tên cửa hàng, sạp...">
-      </div>
-      <div class="field"><label>Địa chỉ</label>
-        <input type="text" id="gtnew_addr" placeholder="Địa chỉ cụ thể">
-      </div>
-      <div class="field required"><label>Hình thức kinh doanh</label>
-        <div class="chips" id="gtnew_biztype">
-          ${bizTypes.map(v=>`<span class="chip" onclick="selectChip(this,'gtnew_biztype')">${v}</span>`).join('')}
-        </div>
-      </div>
-      <div class="field"><label>GPS vị trí</label>
-        <div id="gpsBoxGTNew">${gpsBoxHTML('gpsBoxGTNew',false)}</div>
-      </div>
+function openFlowForm(eid){
+  const f=eid?state.config.find(x=>x.id===eid||x.name===eid):null;
+  const d=f||{name:'',channel:'ALL',task_type:'',steps:[],description:''};
+  const stepsStr=Array.isArray(d.steps)?d.steps.join(' → '):d.steps||'';
+  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" onclick="event.stopPropagation()">
+    <div class="mh"><div class="mti">${f?'Sửa flow':'Thêm flow'}</div><button class="mcl" onclick="CM()">×</button></div>
+    <div class="g2">
+      <div class="fr"><label class="fl">Tên flow *</label><input type="text" id="gn" class="fi" value="${d.name}"></div>
+      <div class="fr"><label class="fl">Kênh</label><select id="gch" class="fi">
+        ${['MT','GT','B2B','HoReCa','ALL'].map(c=>`<option ${d.channel===c?'selected':''}>${c}</option>`).join('')}
+      </select></div>
     </div>
-    <div class="card">
-      <h3>🛒 Sản phẩm chào hàng</h3>
-      <div class="field required" style="margin-bottom:0"><label>Sản phẩm chào hàng</label></div><div class="chips" id="gtnew_products">
-        ${products.map(v=>`<span class="chip" onclick="toggleChip(this)">${v}</span>`).join('')}
-      </div>
+    <div class="fr"><label class="fl">Loại công việc</label><input type="text" id="gtp" class="fi" value="${d.task_type||''}"></div>
+    <div class="fr"><label class="fl">Các bước (cách nhau bởi →)</label>
+      <textarea id="gst" class="fi" style="min-height:80px" placeholder="Bước 1 → Bước 2 → Bước 3">${stepsStr}</textarea>
     </div>
-    <div class="card">
-      <h3>⭐ Đánh giá & Hình ảnh</h3>
-      <div class="field required"><label>Tiềm năng</label>
-        <div class="chips" id="gtnew_potential">
-          ${potentials.map(v=>`<span class="chip" onclick="selectChip(this,'gtnew_potential')">${v}</span>`).join('')}
-        </div>
-      </div>
-      <div class="divider"></div>
-      <div class="field"><label>Ghi chú & nhận xét</label>
-        <textarea id="gtnew_note" placeholder="Mô tả tiềm năng, ghi chú đặc biệt..."></textarea>
-      </div>
-      <div class="field"><label>Hình ảnh (tối đa 4)</label>
-        <div class="photo-grid">
-
-        </div>
-      </div>
-    </div>`;
+    <div class="fr"><label class="fl">Mô tả</label><textarea id="gds" class="fi">${d.description||''}</textarea></div>
+    <div class="fa">
+      <button class="btn btn-p" onclick="saveFlow('${eid||''}')">💾 Lưu</button>
+      <button class="btn" onclick="CM()">Huỷ</button>
+    </div>
+  </div></div>`;
 }
 
-// ============ SUBMIT MT ============
-async function submitMT() {
-  const mode = state.mtMode || 'daily';
-  
-  if (mode === 'other') {
-    const purpose = (function(){var _e=document.getElementById('mt_other_purpose');return _e&&_e.value?_e.value.trim():''})();
-    const location = (function(){var _e=document.getElementById('mt_other_location');return _e&&_e.value?_e.value.trim():''})();
-    const content_val = (function(){var _e=document.getElementById('mt_other_content');return _e&&_e.value?_e.value.trim():''})();
-    if (!purpose) { toast('⚠️ Vui lòng nhập mục đích công việc'); return; }
-    if (!location) { toast('⚠️ Vui lòng nhập địa điểm'); return; }
-    if (!content_val) { toast('⚠️ Vui lòng nhập nội dung'); return; }
-    const payload = {
-      type: 'MT_Other',
-      date: getDateValue('mt_other_date'),
-      salesperson: state.user.name,
-      channel: 'MT',
-      purpose,
-      location_note: location,
-      content: content_val,
-      gps: state.gps ? `${state.gps.lat},${state.gps.lng}` : '',
-      photos: state.photos
-    };
-    var mtP = Object.keys(state.photos).filter(function(k){return k.startsWith('mt_');});
-    if (mtP.length === 0) { toast('⚠️ Vui lòng upload ít nhất 1 hình'); return; }
-    await sendData(payload, 'MT Công việc khác');
-    return;
-  }
-  
-  const chain = (document.getElementById('mt_chain')?document.getElementById('mt_chain').value:'');
-  const store = (document.getElementById('mt_store')?document.getElementById('mt_store').value:'');
-  if (!chain) { toast('⚠️ Vui lòng chọn chain'); return; }
-  if (!store) { toast('⚠️ Vui lòng chọn điểm bán'); return; }
-  if (!getChips('mt_display'))  { toast('⚠️ Vui lòng chọn Tình trạng trưng bày'); return; }
-  if (!getChips('mt_price'))    { toast('⚠️ Vui lòng chọn Thông tin bảng giá'); return; }
-  if (!getChips('mt_goods'))    { toast('⚠️ Vui lòng chọn Tình trạng hàng hóa'); return; }
-  if (!getChips('mt_expiry'))   { toast('⚠️ Vui lòng chọn Tình trạng HSD'); return; }
-
-  const skus = collectSKUs('mt', MT_SKUS_ALL);
-  const payload = {
-    type: 'MT_Daily',
-    date: getDateValue('mt_date'),
-    salesperson: state.user.name,
-    channel: 'MT',
-    chain: chain,
-    store_name: store,
-    address_note: (document.getElementById('mt_addr')?document.getElementById('mt_addr').value:'') || '',
-    gps: state.gps ? `${state.gps.lat},${state.gps.lng}` : '',
-    display: getChips('mt_display'),
-    price_info: getChips('mt_price'),
-    goods_status: getChips('mt_goods'),
-    expiry_status: getChips('mt_expiry'),
-    note: (document.getElementById('mt_note')?document.getElementById('mt_note').value:'') || '',
-    traffic: getChips('mt_traffic') || '',
-    sampling: getChips('mt_sampling') || '',
-    zone: getChips('mt_zone') || '',
-    sku_data: skus,
-    photos: state.photos
-  };
-  var mtP = Object.keys(state.photos).filter(function(k){return k.startsWith('mt_');});
-  if (mtP.length === 0) { toast('⚠️ Vui lòng upload ít nhất 1 hình'); return; }
-  await sendData(payload, 'MT Daily');
+async function saveFlow(eid){
+  const name=$('gn').value.trim();if(!name){alert('Nhập tên flow');return;}
+  const steps=$('gst').value.split('→').map(s=>s.trim()).filter(Boolean);
+  const data={name,channel:$('gch').value,task_type:$('gtp').value,steps,description:$('gds').value,status:'Active'};
+  if(eid){const f=state.config.find(x=>x.id===eid||x.name===eid);
+    if(f){if(!f.id)f.id='flow_'+Date.now();data.id=f.id;Object.assign(f,data);await saveMaster('Flows',f);}}
+  else{const nf={id:'flow_'+Date.now(),...data};state.config.push(nf);await saveMaster('Flows',nf);}
+  CM();renderConfig();toast('Flow đã lưu ✓');
 }
 
-// ============ SUBMIT GT DAILY ============
-async function submitGT() {
-  const region = (function(){var _el=document.getElementById('gtContent');return (_el&&_el.dataset&&_el.dataset.region)?_el.dataset.region:state.user.team})();
-  let market = '', store = '';
-  
-  // Collect multi-selected stores + manual
-  const selectedStores = getSelectedStores();
-  const storeManual = (function(){var _e=document.getElementById('gt_store_manual');return _e&&_e.value?_e.value.trim():''})() || '';
-  const marketManual = (function(){var _e=document.getElementById('gt_market_manual');return _e&&_e.value?_e.value.trim():''})() || '';
+// ---- INIT ----
+window.addEventListener('load',()=>{
+  // Luôn load DEFAULT_USERS trước để login dropdown có data ngay
+  state.users=DEFAULT_USERS;
+  state.config=DEFAULT_FLOWS;
 
-  if (region === 'GT North') {
-    market = (function(){var _el=document.getElementById('gt_market');return _el&&_el.value?_el.value:''})() || marketManual || '';
-    if (!market) { toast('⚠️ Vui lòng chọn chợ / khu vực'); return; }
-    const allSelected = [...selectedStores, ...(storeManual ? [storeManual] : [])];
-    if (allSelected.length === 0) { toast('⚠️ Vui lòng chọn ít nhất 1 điểm bán'); return; }
-    store = allSelected.join(' | ');
-  } else {
-    market = (document.getElementById('gt_market')?document.getElementById('gt_market').value:'') || marketManual || '';
-    const allSelected = [...selectedStores, ...(storeManual ? [storeManual] : [])];
-    if (!market) { toast('⚠️ Vui lòng chọn chợ'); return; }
-    if (allSelected.length === 0) { toast('⚠️ Vui lòng chọn ít nhất 1 điểm bán'); return; }
-    store = allSelected.join(' | ');
-  }
+  const sid=localStorage.getItem('dgm_uid');
+  const sem=localStorage.getItem('dgm_em');
 
-  if (!getChips('gt_order')) { toast('⚠️ Vui lòng chọn Thông tin đặt hàng'); return; }
-
-  const skus = collectSKUs('gt', GT_SKUS_DAILY);
-  const payload = {
-    type: 'GT_Daily',
-    date: getDateValue('gt_date'),
-    salesperson: state.user.name,
-    region: state.user.team,
-    market,
-    store_name: store,
-    gps: state.gps ? `${state.gps.lat},${state.gps.lng}` : '',
-    order_info: getChips('gt_order'),
-    note: (document.getElementById('gt_note')?document.getElementById('gt_note').value:'') || '',
-    display_potential: getChips('gt_display_potential') || '',
-    best_store: getChips('gt_best_store') || '',
-    extra_note: (document.getElementById('gt_extra_note')?document.getElementById('gt_extra_note').value:'') || '',
-    store_count: store.split(' | ').length,
-    sku_data: skus,
-    photos: state.photos
-  };
-  var gtP = Object.keys(state.photos).filter(function(k){return k.startsWith('gt_');});
-  if (gtP.length === 0) { toast('⚠️ Vui lòng upload ít nhất 1 hình'); return; }
-  await sendData(payload, 'GT Daily');
-}
-
-// ============ SUBMIT GT NEW ============
-async function submitGTNew() {
-  const store = (function(){var _e=document.getElementById('gtnew_store');return _e&&_e.value?_e.value.trim():''})();
-  if (!store) { toast('⚠️ Vui lòng nhập tên điểm bán'); return; }
-  if (!getChips('gtnew_biztype')) { toast('⚠️ Vui lòng chọn Hình thức kinh doanh'); return; }
-  if (!getChips('gtnew_products')) { toast('⚠️ Vui lòng chọn Sản phẩm chào hàng'); return; }
-  if (!getChips('gtnew_potential')) { toast('⚠️ Vui lòng chọn Đánh giá tiềm năng'); return; }
-
-  const payload = {
-    type: 'GT_NewCustomer',
-    date: getDateValue('gtnew_date'),
-    salesperson: state.user.name,
-    region: state.user.team,
-    store_name: store,
-    address: (document.getElementById('gtnew_addr')?document.getElementById('gtnew_addr').value:'') || '',
-    biz_type: getChips('gtnew_biztype'),
-    products_pitched: getChips('gtnew_products'),
-    potential: getChips('gtnew_potential'),
-    note: (document.getElementById('gtnew_note')?document.getElementById('gtnew_note').value:'') || '',
-    gps: state.gps ? `${state.gps.lat},${state.gps.lng}` : '',
-    photos: state.photos
-  };
-  await sendData(payload, 'GT New Customer');
-}
-
-// ── PHOTO UPLOAD HANDLER ──────────────────────────────────
-function handlePhotoUpload(input, prefix) {
-  var files = Array.from(input.files);
-  var previewEl = document.getElementById(prefix + '_photo_preview');
-  var badgeEl   = document.getElementById(prefix + '_photo_count_badge');
-
-  // Count existing photos for this prefix
-  var existing = Object.keys(state.photos).filter(function(k){ return k.startsWith(prefix + '_'); }).length;
-  var remaining = PHOTO_MAX - existing;
-
-  if (files.length > remaining) {
-    toast('⚠️ Chỉ còn có thể thêm ' + remaining + ' hình (tối đa ' + PHOTO_MAX + ')');
-    files = files.slice(0, remaining);
-  }
-
-  files.forEach(function(file, i) {
-    var key = prefix + '_' + (existing + i + 1);
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      // Store in state
-      state.photos[key] = e.target.result;
-
-      // Thumbnail preview
-      var thumb = document.createElement('div');
-      thumb.style.cssText = 'position:relative;width:72px;height:72px';
-      var img = document.createElement('img');
-      img.src = e.target.result;
-      img.style.cssText = 'width:72px;height:72px;object-fit:cover;border-radius:8px;border:2px solid var(--border)';
-      var del = document.createElement('button');
-      del.textContent = '✕';
-      del.style.cssText = 'position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;padding:0;line-height:20px;text-align:center';
-      del.onclick = function() {
-        delete state.photos[key];
-        thumb.remove();
-        updatePhotoBadge(prefix);
-      };
-      thumb.appendChild(img);
-      thumb.appendChild(del);
-      if (previewEl) previewEl.appendChild(thumb);
-      updatePhotoBadge(prefix);
-    };
-    reader.readAsDataURL(file);
-  });
-
-  // Reset input so same files can be re-selected
-  input.value = '';
-}
-
-function updatePhotoBadge(prefix) {
-  var count = Object.keys(state.photos).filter(function(k){ return k.startsWith(prefix + '_'); }).length;
-  var badge = document.getElementById(prefix + '_photo_count_badge');
-  if (badge) {
-    badge.textContent = count + '/' + PHOTO_MAX;
-    badge.className = 'store-count-badge' + (count === 0 ? ' zero' : '');
-  }
-}
-
-// ── DEBUG LOGGER ──────────────────────────────────────────
-function dbg(msg, col) {
-  var ov = document.getElementById('dbgOv');
-  var lg = document.getElementById('dbgLog');
-  if (!ov||!lg) return;
-  ov.style.display='block';
-  var d=document.createElement('div');
-  d.style.cssText='color:'+(col||'#0f0')+';border-bottom:1px solid #222;padding:2px 0';
-  d.textContent=new Date().toLocaleTimeString()+' | '+String(msg);
-  lg.appendChild(d);
-  ov.scrollTop=ov.scrollHeight;
-}
-// ============ SEND DATA — FIXED v4 ============
-// Dùng GET no-cors → Apps Script doGet(e) nhận e.parameter.data
-// Không thể xác nhận server response với no-cors → dùng Image ping trick
-// để detect lỗi network vs success
-async function sendData(payload, label) {
-  if (!state.scriptUrl) {
-      saveOffline(payload);
-    showSuccess(label, payload, true);
-    return;
-  }
-  showLoading('Đang gửi dữ liệu...');
-  try {
-      const compressed = await compressPhotos(payload);
-        const jsonStr = JSON.stringify(compressed);
-      var b64;
-    try { b64 = btoa(unescape(encodeURIComponent(jsonStr))); dbg('btoa OK:'+b64.length,'#0f0'); }
-    catch(be) { dbg('btoa ERR:'+be.message,'#f00'); throw be; }
-    dbg('size:'+b64.length,'#ff0');
-    dbg('POST→'+state.scriptUrl.slice(0,50),'#ff0');
-
-    // Image ping GET — tương thích 100% Safari iOS/Android mọi đời
-    var getUrl = state.scriptUrl + '?data=' + encodeURIComponent(b64) + '&_t=' + Date.now();
-    dbg('GET size:'+getUrl.length,'#ff0');
-
-    await new Promise(function(resolve) {
-      var done = false;
-      var watchdog = setTimeout(function() {
-        dbg('timeout 12s','#f00');
-        done = true; resolve();
-      }, 12000);
-      var img = new Image();
-      img.onload = function() {
-        if (done) return; done = true;
-        clearTimeout(watchdog);
-        dbg('img onload OK','#0f0');
-        resolve();
-      };
-      img.onerror = function() {
-        if (done) return; done = true;
-        clearTimeout(watchdog);
-        dbg('img onerror (bình thường với GAS)','#ff0');
-        resolve();
-      };
-      img.src = getUrl;
-    });
-    hideLoading();
-    showSuccess(label, payload, false);
-  } catch (err) {
-      hideLoading();
-    saveOffline(payload);
-    showSuccess(label, payload, true);
-  }
-}
-
-async function syncOfflineSend(item) {
-  const jsonStr = JSON.stringify(item);
-  const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
-  const url = state.scriptUrl + '?data=' + encodeURIComponent(b64);
-  const controller = new AbortController();
-  const timer = setTimeout(function() { controller.abort(); }, 12000);
-  await fetch(url, { method: 'GET', mode: 'no-cors', redirect: 'follow', signal: controller.signal });
-  clearTimeout(timer);
-}
-
-async function compressPhotos(payload) {
-  // Không gửi ảnh qua server — chỉ ghi số lượng
-  // Giảm payload từ 130KB+ xuống ~2KB
-  var photoCount = Object.keys(payload.photos || {}).length;
-  var out = Object.assign({}, payload, {photos: {}, photo_count: photoCount});
-  return out;
-}
-
-function resizeImage(dataUrl, maxSize) {
-  return new Promise(res => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      let w = img.width, h = img.height;
-      if (w > maxSize || h > maxSize) {
-        if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
-        else { w = Math.round(w * maxSize / h); h = maxSize; }
-      }
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      res(canvas.toDataURL('image/jpeg', 0.75));
-    };
-    img.src = dataUrl;
-  });
-}
-
-function saveOffline(payload) {
-  const queue = JSON.parse(localStorage.getItem('dgm_offline') || '[]');
-  queue.push({ ...payload, photos: {} });  // exclude photos from offline queue to save space
-  localStorage.setItem('dgm_offline', JSON.stringify(queue));
-}
-
-function showSuccess(label, payload, offline) {
-  hideLoading();
-  const surveyId = genID(payload.type);
-  document.getElementById('successSub').textContent = offline
-    ? '⚠️ Chưa kết nối — đã lưu offline, sẽ gửi khi có mạng'
-    : `✅ Đã lưu vào Google Sheet · ID: ${surveyId}`;
-  document.getElementById('successDetail').innerHTML = `
-    <b>📋 ${label}</b><br>
-    👤 ${payload.salesperson}<br>
-    🏪 ${escHtml(payload.store_name || payload.location_note || '')}<br>
-    📅 ${payload.date}<br>
-    📍 GPS: ${payload.gps || 'Không xác định'}<br>
-    ${offline ? '💾 <b>Offline mode</b>' : '✅ Đữ liệu đã gửi thành công'}
-  `;
-  goTo('scSuccess');
-
-  let countdown = 2;
-  const countEl = document.getElementById('successCountdown');
-  if (countEl) countEl.textContent = countdown;
-  const timer = setInterval(() => {
-    countdown--;
-    if (countEl) countEl.textContent = countdown;
-    if (countdown <= 0) {
-      clearInterval(timer);
-      state.photos = {};
-      state.skuData = {};
-      state.user = null;
-      goTo('scLogin');
+  // Thử auto-login với default users trước
+  if(sid&&sem){
+    const u=DEFAULT_USERS.find(x=>x.id===sid&&x.email&&x.email.toLowerCase()===sem.toLowerCase());
+    if(u){
+      state.currentUser=u;
+      $('login').style.display='none';
+      $('app').style.display='flex';
+      $('cav').textContent=u.initials||u.name[0];
+      $('cnm').textContent=u.name;
+      document.querySelectorAll('.mgr-only').forEach(el=>el.style.display=isMgr()?'':'none');
+      const sp2=localStorage.getItem('dgm_page')||'kanban';
+      showPage(sp2,null);
+      // Sync trong background rồi refresh data
+      syncAll();
+      return;
     }
-  }, 1000);
-  
-  if (!offline && state.scriptUrl) syncOffline();
-}
-
-async function syncOffline() {
-  const queue = JSON.parse(localStorage.getItem('dgm_offline') || '[]');
-  if (!queue.length) return;
-  const remaining = [];
-  for (const item of queue) {
-    try {
-      await syncOfflineSend(item);
-    } catch (e) { remaining.push(item); }
   }
-  localStorage.setItem('dgm_offline', JSON.stringify(remaining));
-  if (remaining.length < queue.length) toast(`✅ Đã sync ${queue.length - remaining.length} báo cáo offline`);
-}
 
-// ============ UTILS ============
-function goTo(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  window.scrollTo(0, 0);
-}
-function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function escId(s) { return String(s).replace(/[^a-zA-Z0-9]/g,'_'); }
-function genID(type) { return (type||'XX').substr(0,2).toUpperCase()+'-'+new Date().toISOString().slice(0,10).replace(/-/g,'')+'-'+String(Math.floor(Math.random()*999)+1).padStart(3,'0'); }
-function toast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
-function showLoading(msg) { document.getElementById('loadingMsg').textContent=msg||'Đang xử lý...'; document.getElementById('loading').classList.add('show'); }
-function hideLoading() { document.getElementById('loading').classList.remove('show'); }
+  // Không auto-login được → show login form với default users
+  initLogin();
 
-
-function saveUrlConfig() {
-  const val = document.getElementById('urlConfigInput').value.trim();
-  if (!val || !val.includes('script.google.com')) {
-    document.getElementById('urlStatusMsg').textContent = '❌ URL không hợp lệ';
-    document.getElementById('urlStatusMsg').style.color = '#dc3545';
-    return;
-  }
-  state.scriptUrl = val;
-  document.getElementById('urlStatusMsg').textContent = '✅ Đã lưu thành công!';
-  document.getElementById('urlStatusMsg').style.color = '#28a745';
-  setTimeout(() => { document.getElementById('urlConfigBox').style.display = 'none'; }, 1200);
-}
+  // Sync Sheet trong background → update dropdown với users thật
+  syncAll().then(()=>{
+    if(!state.currentUser)initLogin();
+  });
+});
 </script>
 </body>
 </html>
