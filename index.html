@@ -219,6 +219,10 @@ tr:hover .tab{opacity:1}
 @keyframes si{from{transform:translateX(60px);opacity:0}to{transform:translateX(0);opacity:1}}
 @keyframes spin{to{transform:rotate(360deg)}}
 .sp{display:inline-block;width:12px;height:12px;border:2px solid var(--bd2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px}
+.sui select.fi{height:26px;padding:2px 4px;font-size:10px;border-radius:var(--r);opacity:.7}
+.sui select.fi:focus{opacity:1}
+.cust-opt:hover{background:var(--s2)}
+.cust-opt input{flex-shrink:0}
 
 /* CUST DETAIL */
 .cig{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
@@ -947,11 +951,21 @@ function openDetail(id){
       <div class="ctx">${cm.text}</div></div>
     </div>`).join('');
 
-  const subH=subs.map(s=>`<div class="sui" id="si-${id}-${s.id}">
-    <input type="checkbox" ${s.done?'checked':''} onchange="togSub('${id}',${s.id},this.checked)">
-    <span class="sut ${s.done?'done':''}">${s.text}</span>
-    ${!done?`<button class="sud" onclick="delSub('${id}',${s.id})">×</button>`:''}
-  </div>`).join('');
+  const subH=subs.map(s=>{
+    const sa=s.assignee?getUser(s.assignee):null;
+    return`<div class="sui" id="si-${id}-${s.id}">
+      <input type="checkbox" ${s.done?'checked':''} onchange="togSub('${id}',${s.id},this.checked)">
+      <div style="flex:1;min-width:0">
+        <span class="sut ${s.done?'done':''}">${s.text}</span>
+        ${sa?`<span style="font-size:10px;color:var(--t3);margin-left:6px">@${sa.initials||sa.name}</span>`:''}
+      </div>
+      ${!done?`<select class="fi" style="font-size:10px;padding:2px 4px;width:auto;min-width:80px;color:var(--t2)" onchange="assignSub('${id}',${s.id},this.value)" title="Assign cho ai">
+        <option value="">Assign...</option>
+        ${aUsers().map(u=>`<option value="${u.id}" ${s.assignee===u.id?'selected':''}>${u.initials||u.name}</option>`).join('')}
+      </select>`:''}
+      ${!done?`<button class="sud" onclick="delSub('${id}',${s.id})">×</button>`:''}
+    </div>`;
+  }).join('');
 
   const atchH=atch.map(a=>`<div class="ati">
     <span>${a.mimeType&&a.mimeType.startsWith('image/')?'🖼️':a.mimeType==='application/pdf'?'📄':'📊'}</span>
@@ -992,8 +1006,14 @@ function openDetail(id){
     </div>`:''}
     <div class="ds"><div class="dst">Subtasks (${sp?sp.done+'/'+sp.total:'0/0'})</div>
       <div id="sub-${id}">${subH}</div>
-      ${!done?`<div class="asr"><input type="text" id="ns-${id}" placeholder="Thêm subtask..." onkeydown="if(event.key==='Enter')addSub('${id}')">
-        <button class="btn btn-sm" onclick="addSub('${id}')">+ Thêm</button></div>`:''}
+      ${!done?`<div class="asr" style="flex-wrap:wrap;gap:4px">
+        <input type="text" id="ns-${id}" placeholder="Thêm subtask..." style="flex:1;min-width:160px" onkeydown="if(event.key==='Enter')addSub('${id}')">
+        <select id="na-${id}" class="fi" style="font-size:11px;padding:5px 6px;width:auto">
+          <option value="">Assign...</option>
+          ${aUsers().map(u=>`<option value="${u.id}">${u.initials||u.name}</option>`).join('')}
+        </select>
+        <button class="btn btn-sm" onclick="addSub('${id}')">+ Thêm</button>
+      </div>`:''}
     </div>
     <div class="ds"><div class="dst">📎 Đính kèm</div>
       <div class="atch" id="atch-${id}">${atchH}</div>
@@ -1009,11 +1029,16 @@ function openDetail(id){
         <button class="btn btn-p btn-sm" onclick="subCom('${id}')">Gửi</button>
       </div>
     </div>
-    <div class="fa">
-      ${!done&&isMgr()?`<button class="btn btn-p btn-sm" onclick="CM();openTaskForm('${id}')">✎ Sửa</button>`:''}
-      ${!done&&isMgr()?`<button class="btn btn-d btn-sm" onclick="delTask('${id}')">✕ Xóa</button>`:''}
-      ${isMgr()&&t.status==='review'?`<button class="btn btn-w btn-sm" onclick="CM();openApprove('${id}')">⚡ Duyệt</button>`:''}
-      <button class="btn btn-sm" onclick="CM()">Đóng</button>
+    <div class="fa" style="justify-content:space-between;align-items:center">
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-g btn-sm" onclick="saveDetailChanges('${id}')">💾 Lưu</button>
+        ${!done&&isMgr()?`<button class="btn btn-p btn-sm" onclick="CM();openTaskForm('${id}')">✎ Sửa task</button>`:''}
+        ${isMgr()&&t.status==='review'?`<button class="btn btn-w btn-sm" onclick="CM();openApprove('${id}')">⚡ Duyệt</button>`:''}
+      </div>
+      <div style="display:flex;gap:6px">
+        ${!done&&isMgr()?`<button class="btn btn-d btn-sm" onclick="delTask('${id}')">✕ Xóa</button>`:''}
+        <button class="btn btn-sm" onclick="CM()">Đóng</button>
+      </div>
     </div>
   </div></div>`;
 }
@@ -1045,8 +1070,16 @@ async function addSub(tid){
   const inp=$('ns-'+tid);if(!inp||!inp.value.trim())return;
   const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
   if(!Array.isArray(t.subtasks))t.subtasks=[];
-  t.subtasks.push({id:Date.now(),text:inp.value.trim(),done:false});
+  const assignSel=$('na-'+tid);
+  const assignee=assignSel?assignSel.value:'';
+  t.subtasks.push({id:Date.now(),text:inp.value.trim(),done:false,assignee});
   openDetail(tid);renderKanban();await saveTask(t);
+}
+
+async function assignSub(tid,sid,uid){
+  const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
+  const s=(t.subtasks||[]).find(x=>String(x.id)===String(sid));
+  if(s){s.assignee=uid;await saveTask(t);}
 }
 async function delSub(tid,sid){
   const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
@@ -1059,6 +1092,26 @@ async function updStep(tid,step){
   addSysCom(t,'Cập nhật bước: "'+step+'" bởi '+state.currentUser.name);
   openDetail(tid);renderKanban();await saveTask(t);
 }
+async function saveDetailChanges(tid){
+  const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
+  // Lưu bước hiện tại nếu có thay đổi
+  const stepSel=document.querySelector(`#mc select[onchange*="updStep('${tid}"]`);
+  if(stepSel&&stepSel.value&&stepSel.value!==t.step){
+    t.step=stepSel.value;
+    addSysCom(t,'Cập nhật bước: "'+stepSel.value+'" bởi '+state.currentUser.name);
+  }
+  // Lưu comment nếu có nội dung trong ô
+  const cmInp=document.getElementById('nc-'+tid);
+  if(cmInp&&cmInp.value.trim()){
+    addCom(t,cmInp.value.trim());
+    cmInp.value='';
+  }
+  await saveTask(t);
+  toast('Đã lưu ✓');
+  openDetail(tid);
+  renderKanban();
+}
+
 async function delTask(id){
   if(!confirm('Xoá task này?'))return;
   state.tasks=state.tasks.filter(t=>String(t.id)!==String(id));
@@ -1089,12 +1142,17 @@ function openTaskForm(editId){
         </select>
       </div>
     </div>
-    <div class="fr"><label class="fl">Khách hàng *</label>
-      <select id="fcu" class="fi" onchange="onCuChange()">
-        <option value="">-- Chọn KH --</option>
-        ${state.customers.filter(c=>c.status==='Active'||!c.status).map(c=>`<option value="${c.id}" ${String(d.customer_id)===String(c.id)?'selected':''}>${c.name}${c.channel?' ('+c.channel+')':''}</option>`).join('')}
-        <option value="__new__">➕ Thêm KH mới...</option>
-      </select>
+    <div class="fr"><label class="fl">Khách hàng * (chọn nhiều)</label>
+      <div style="border:.5px solid var(--bd2);border-radius:var(--r);max-height:160px;overflow-y:auto;padding:4px 0" id="cust-list">
+        ${state.customers.filter(c=>c.status==='Active'||!c.status).map(c=>{
+          const sel=Array.isArray(d.customer_ids)?d.customer_ids.map(String).includes(String(c.id)):(String(d.customer_id)===String(c.id));
+          return `<label style="display:flex;align-items:center;gap:8px;padding:5px 10px;cursor:pointer;font-size:12px" class="cust-opt">
+            <input type="checkbox" value="${c.id}" ${sel?'checked':''} style="width:14px;height:14px;accent-color:var(--blue)">
+            <span>${c.name}</span><span class="b b${c.channel}" style="font-size:10px">${c.channel}</span>
+          </label>`;
+        }).join('')}
+      </div>
+      <button type="button" class="btn btn-sm" style="margin-top:6px;width:100%;justify-content:center" onclick="toggleNewCust()">➕ Thêm khách hàng mới...</button>
     </div>
     <div id="ncb" style="display:none" class="iab">
       <div class="iat">➕ THÊM KHÁCH HÀNG MỚI</div>
@@ -1107,6 +1165,7 @@ function openTaskForm(editId){
         <div class="fr"><label class="fl">Liên hệ</label><input type="text" id="nc-c" class="fi" placeholder="Tên..."></div>
         <div class="fr"><label class="fl">SĐT</label><input type="text" id="nc-p" class="fi" placeholder="0901..."></div>
       </div>
+      <button type="button" class="btn btn-p btn-sm" onclick="saveNewCustInline()">✓ Thêm vào danh sách</button>
     </div>
     <div class="fr"><label class="fl">PICs / Người phụ trách (chọn nhiều)</label>
       <div class="pmc" id="pmc">
@@ -1152,8 +1211,36 @@ function onFlowChange(){
   if(sp)sp.innerHTML=steps.map(s=>`<option value="${s}">${s}</option>`).join('');
 }
 function onCuChange(){
-  const v=$('fcu').value;
+  const v=$('fcu')?$('fcu').value:'';
   const b=$('ncb');if(b)b.style.display=v==='__new__'?'block':'none';
+}
+function toggleNewCust(){
+  const b=$('ncb');if(b)b.style.display=b.style.display==='none'?'block':'none';
+}
+async function saveNewCustInline(){
+  const nm=($('nc-n')||{}).value?.trim();
+  if(!nm){toast('Nhập tên KH','warn');return;}
+  const nC={id:Date.now(),name:nm,channel:($('nc-ch')||{}).value||'',
+    region:($('nc-r')||{}).value||'',contact_name:($('nc-c')||{}).value||'',
+    phone:($('nc-p')||{}).value||'',status:'Active'};
+  state.customers.push(nC);
+  await saveMaster('Customers',nC);
+  toast('Đã thêm: '+nm);
+  // Thêm checkbox mới vào list
+  const list=$('cust-list');
+  if(list){
+    const lbl=document.createElement('label');
+    lbl.style.cssText='display:flex;align-items:center;gap:8px;padding:5px 10px;cursor:pointer;font-size:12px';
+    lbl.innerHTML=`<input type="checkbox" value="${nC.id}" checked style="width:14px;height:14px;accent-color:var(--blue)">
+      <span>${nC.name}</span><span class="b b${nC.channel||'gr'}" style="font-size:10px">${nC.channel}</span>`;
+    list.appendChild(lbl);
+  }
+  // Clear form
+  if($('nc-n'))$('nc-n').value='';
+  if($('nc-r'))$('nc-r').value='';
+  if($('nc-c'))$('nc-c').value='';
+  if($('nc-p'))$('nc-p').value='';
+  const b=$('ncb');if(b)b.style.display='none';
 }
 function togPIC(uid){
   const ch=document.getElementById('pc-'+uid);
@@ -1163,19 +1250,15 @@ function togPIC(uid){
 async function saveTF(editId){
   const title=$('ft').value.trim();
   if(!title){alert('Vui lòng điền tiêu đề.');return;}
-  let cid=$('fcu').value;
-  if(cid==='__new__'){
-    const nm=($('nc-n')||{}).value?.trim();
-    if(!nm){alert('Nhập tên KH mới.');return;}
-    const nC={id:Date.now(),name:nm,channel:($('nc-ch')||{}).value||'',region:($('nc-r')||{}).value||'',contact_name:($('nc-c')||{}).value||'',phone:($('nc-p')||{}).value||'',status:'Active'};
-    state.customers.push(nC);cid=nC.id;
-    await saveMaster('Customers',nC);toast('Đã thêm KH: '+nm);
-  }
-  if(!cid){alert('Vui lòng chọn KH.');return;}
+  // Collect all checked customers
+  const checkedCusts=Array.from(document.querySelectorAll('#cust-list input[type=checkbox]:checked')).map(cb=>cb.value);
+  if(!checkedCusts.length){alert('Vui lòng chọn ít nhất 1 khách hàng.');return;}
+  const cid=checkedCusts[0]; // primary customer_id (first selected)
   const selPics=aUsers().filter(u=>document.getElementById('pc-'+u.id)?.classList.contains('sel')).map(u=>u.id);
   if(!selPics.length){alert('Chọn ít nhất 1 PIC.');return;}
   const fn=$('ffn')?$('ffn').value:'';
-  const data={title,customer_id:cid,channel:$('fch').value,pic_ids:selPics,pic_id:selPics[0]||'',
+  const data={title,customer_id:cid,customer_ids:checkedCusts,
+    channel:$('fch').value,pic_ids:selPics,pic_id:selPics[0]||'',
     pic_email:(getUser(selPics[0])||{}).email||'',flow_name:fn,
     status:$('fst').value,step:$('fsp').value,deadline:$('fdl').value,notes:$('fnt').value.trim()};
   let task;
