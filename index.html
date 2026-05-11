@@ -348,18 +348,82 @@ const DEFAULT_USERS=[
   {id:"u4",name:"Nguy\u1ec5n Xu\u00e2n \u0110\u1ee9c",email:"nguyenxuanduc13091987@gmail.com",role:"sales",position:"Sales Representative",channel:"GT",region:"Mi\u1ec1n B\u1eafc",initials:"NXD",password:"7062",status:"Active"},
   {id:"u5",name:"Ph\u01b0\u01a1ng Ng\u1ecdc Ch\u00e1nh",email:"chanhphuong86@gmail.com",role:"sales",position:"Sales Representative",channel:"GT",region:"Mi\u1ec1n Nam",initials:"PNC",password:"3815",status:"Active"},
   {id:"u6",name:"H\u1ed3 Ng\u1ecdc Anh",email:"honguyennguyenan2016@gmail.com",role:"sales",position:"Sales Representative",channel:"GT",region:"Mi\u1ec1n Trung",initials:"HNA",password:"9274",status:"Active"},
-  {id:"u7",name:"Ph\u01b0\u01a1ng Thi",email:"phuongthi21@gmail.com",role:"trade",position:"Trade Marketing",channel:"ALL",region:"ALL",initials:"DPT",password:"6538",status:"Active"},
+  {id:"u7",name:"Ph\u01b0\u01a1ng Thi",email:"phuongthi21@gmail.com",role:"trade",position:"Trade Marketing",channel:"ALL",region:"ALL",initials:"DPT",password:"6538",status:"Active"}
 ];
 
 const DEFAULT_FLOWS=[
   {id:"f1",name:"General Task",channel:"ALL",task_type:"General",steps:["To Do","In Progress","Done"]},
-  {id:"f2",name:"MT \u2013 Trading Term",channel:"MT",task_type:"Trading Term",steps:["Nh\u1eadn","G\u1eedi proposal","Ph\u1ea3n h\u1ed3i","\u0110\u00e0m ph\u00e1n","\u0110\u1ed3ng \u00fd","Tr\u00ecnh k\u00fd"]},
+  {id:"f2",name:"MT \u2013 Trading Term",channel:"MT",task_type:"Trading Term",steps:["Nh\u1eadn","G\u1eedi proposal ph\u1ea3n h\u1ed3i","\u0110\u00e0m ph\u00e1n","\u0110\u1ed3ng \u00fd","Tr\u00ecnh k\u00ed"]},
   {id:"f3",name:"MT \u2013 New Product Listing",channel:"MT",task_type:"Listing",steps:["L\u1ea5y m\u1eabu","G\u1eedi m\u1eabu","X\u00e1c nh\u1eadn","L\u00ean k\u1ec7"]},
-  {id:"f4",name:"POSM / Design",channel:"ALL",task_type:"Activation",steps:["\u00dd t\u01b0\u1edfng","Thi\u1ebft k\u1ebf","Duy\u1ec7t TK","L\u00e0m vi\u1ec7c NCC","K\u00fd H\u0110","Giao h\u00e0ng"]},
-  {id:"f5",name:"Sampling / Activation",channel:"ALL",task_type:"Activation",steps:["L\u00ean KH","G\u1eedi duy\u1ec7t","Duy\u1ec7t KH","\u0110\u0103ng k\u00fd KH","Chu\u1ea9n b\u1ecb","Th\u1ef1c hi\u1ec7n"]},
+  {id:"f4",name:"POSM/ Design",channel:"ALL",task_type:"Activation",steps:["\u00dd t\u01b0\u1edfng","thi\u1ebft k\u1ebf","duy\u1ec7t thi\u1ebft k\u1ebf","l\u00e0m vi\u1ec7c v\u1edbi NCC","k\u00ed h\u1ee3p \u0111\u1ed3ng","giao h\u00e0ng"]},
+  {id:"f5",name:"Sampling/ Activation",channel:"ALL",task_type:"Activation",steps:["L\u00ean k\u1ebf ho\u1ea1ch","G\u1eedi ch\u1edd duy\u1ec7t","Duy\u1ec7t k\u1ebf ho\u1ea1ch","\u0110\u0103ng k\u00ed v\u1edbi kh\u00e1ch h\u00e0ng","chu\u1ea9n b\u1ecb v\u1eadt d\u1ee5ng","th\u1ef1c hi\u1ec7n"]},
   {id:"f6",name:"GT \u2013 Trade Program",channel:"ALL",task_type:"Trade Program",steps:["L\u00ean ch\u01b0\u01a1ng tr\u00ecnh","Th\u00f4ng b\u00e1o","G\u1eedi sales","G\u1eedi kh\u00e1ch","Order"]},
   {id:"f7",name:"GT \u2013 Ph\u00e1t tri\u1ec3n \u0111i\u1ec3m b\u00e1n",channel:"GT",task_type:"Expansion",steps:["Kh\u1ea3o s\u00e1t","Ti\u1ebfp c\u1eadn","Ch\u00e0o h\u00e0ng","Tr\u01b0ng b\u00e0y","Review"]},
-  {id:"f8",name:"MT \u2013 Kh\u00e1ch h\u00e0ng m\u1edbi",channel:"MT",task_type:"Expansion",steps:["Ti\u1ebfp c\u1eadn","G\u1eedi SP/gi\u00e1","\u0110\u00e0m ph\u00e1n TT","K\u00fd H\u0110","B\u1eaft \u0111\u1ea7u b\u00e1n"]},
+  {id:"f8",name:"MT - kh\u00e1ch h\u00e0ng m\u1edbi",channel:"MT",task_type:"Expansion",steps:["Ti\u1ebfp c\u1eadn","G\u1eedi th\u00f4ng tin s\u1ea3n ph\u1ea9m, gi\u00e1","\u0111\u00e0m ph\u00e1n trading term/ h\u1ee3p \u0111\u1ed3ng","k\u00ed h\u1ee3p \u0111\u1ed3ng","b\u1eaft \u0111\u1ea7u b\u00e1n h\u00e0ng"]}
+];
+
+const DEFAULT_CUSTOMERS=[
+  {id:1,name:"Mega Market",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"\u0110\u1ea1i si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:2,name:"Co.op Xtra",channel:"MT",region:"Mi\u1ec1n Nam",business_type:"Si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:3,name:"Lotte Mart",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"\u0110\u1ea1i si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:4,name:"Central Retail",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"\u0110\u1ea1i si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:5,name:"Co.op Finelife",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"Si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:6,name:"An Nam Gourmet",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"Si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:7,name:"Nam An Market",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"Si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:8,name:"Emart",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"\u0110\u1ea1i si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:9,name:"King Food",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"C\u1eeda h\u00e0ng ti\u1ec7n l\u1ee3i",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:10,name:"Sai Gon HD",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"Si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:11,name:"K Market (An Cat)",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"Si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:12,name:"Menas Gourmet",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"Si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:13,name:"Roots Organic",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"Si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:14,name:"Ho\u00e0ng Thi\u00ean Ph\u00e1t",channel:"GT",region:"Mi\u1ec1n Nam",business_type:"\u0110\u1ea1i l\u00fd c\u1ea5p 1",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:15,name:"Moon Milk",channel:"GT",region:"Mi\u1ec1n Nam",business_type:"\u0110\u1ea1i l\u00fd c\u1ea5p 1",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:16,name:"Minh Duoc",channel:"GT",region:"Mi\u1ec1n Nam",business_type:"\u0110\u1ea1i l\u00fd c\u1ea5p 1",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:17,name:"Th\u1ef1c Ph\u1ea9m Plaza",channel:"GT",region:"Mi\u1ec1n B\u1eafc",business_type:"\u0110\u1ea1i l\u00fd c\u1ea5p 1",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:18,name:"Mi\u1ec1n Th\u1ef1c Ph\u1ea9m",channel:"GT",region:"Mi\u1ec1n B\u1eafc",business_type:"FS",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:19,name:"Leenkim",channel:"GT",region:"Mi\u1ec1n Nam",business_type:"Production",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:20,name:"V\u00e2n V\u0169",channel:"GT",region:"Mi\u1ec1n B\u1eafc",business_type:"FS",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:21,name:"Th\u00e1i \u0110\u00f4ng H\u01b0ng",channel:"GT",region:"Mi\u1ec1n Trung",business_type:"\u0110\u1ea1i l\u00fd c\u1ea5p 1",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:22,name:"Vi\u1ec7t H\u1ea3i",channel:"GT",region:"Mi\u1ec1n Trung",business_type:"FS",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:23,name:"An Nam OEM",channel:"B2B",region:"To\u00e0n qu\u1ed1c",business_type:"Trader",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:24,name:"Ho\u00e0ng L\u00e2m Food",channel:"B2B",region:"To\u00e0n qu\u1ed1c",business_type:"Production",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
+  {id:25,name:"CFF",channel:"B2B",region:"To\u00e0n qu\u1ed1c",business_type:"Trader",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"}
+];
+
+const DEFAULT_PRODUCTS=[
+  {id:1,name:"Baked Beans In Tomato Sauce - Vietnam 24 x425g",brand:"Ayam Brand",category:"Beans & Peas",sku:"",unit:"lon",status:"Active"},
+  {id:2,name:"Baked Beans In Tomato Sauce - Vietnam 48 x230g",brand:"Ayam Brand",category:"Beans & Peas",sku:"",unit:"lon",status:"Active"},
+  {id:3,name:"Baked Beans In Tomato Sauce Cheeze - Vietnam 24 x 425g",brand:"Ayam Brand",category:"Beans & Peas",sku:"",unit:"lon",status:"Active"},
+  {id:4,name:"Chickpeas In Brine - Vietnam 24 x 425g",brand:"Ayam Brand",category:"Beans & Peas",sku:"",unit:"lon",status:"Active"},
+  {id:5,name:"Chilli Tuna 24 x 160g",brand:"Ayam Brand",category:"Tuna",sku:"",unit:"lon",status:"Active"},
+  {id:6,name:"Coconut Milk 46 x 65ml",brand:"Ayam Brand",category:"Coconut",sku:"",unit:"g\u00f3i",status:"Active"},
+  {id:7,name:"Light Coconut Milk 24 x 400ml",brand:"Ayam Brand",category:"Coconut",sku:"",unit:"lon",status:"Active"},
+  {id:8,name:"Mackerel In Tomato Sauce 12 x 155g",brand:"Ayam Brand",category:"Mackerel",sku:"",unit:"lon",status:"Active"},
+  {id:9,name:"Mackerel In Tomato Sauce 48 x 230g",brand:"Ayam Brand",category:"Mackerel",sku:"",unit:"lon",status:"Active"},
+  {id:10,name:"Premium Coconut Milk 24 x 400ml",brand:"Ayam Brand",category:"Coconut",sku:"",unit:"lon",status:"Active"},
+  {id:11,name:"Processed Peas - Vietnam 24 x 425g",brand:"Ayam Brand",category:"Beans & Peas",sku:"",unit:"lon",status:"Discontinued"},
+  {id:12,name:"Pure Coconut Cream 12 x 270ml",brand:"Ayam Brand",category:"Coconut",sku:"",unit:"lon",status:"Active"},
+  {id:13,name:"Sardine In Extra Virgin Olive Oil 24 x120g",brand:"Ayam Brand",category:"Sardine",sku:"",unit:"lon",status:"Active"},
+  {id:14,name:"Sardine In Extra Virgin Olive Oil And Chilli 24 x 120g",brand:"Ayam Brand",category:"Sardine",sku:"",unit:"lon",status:"Active"},
+  {id:15,name:"Sardine In Tomato Sauce 12 x 155g",brand:"Ayam Brand",category:"Sardine",sku:"",unit:"lon",status:"Active"},
+  {id:16,name:"Sardines In Tomato Sauce 24 x 120g",brand:"Ayam Brand",category:"Sardine",sku:"",unit:"lon",status:"Active"},
+  {id:17,name:"Sriracha Sauce Piment 12 x 235ml (Printed Bottle)",brand:"Ayam Brand",category:"Sauce",sku:"",unit:"chai",status:"Active"},
+  {id:18,name:"Tomato Puree - Vietnam 24 x 220g",brand:"Ayam Brand",category:"Tomato",sku:"",unit:"lon",status:"Active"},
+  {id:19,name:"Tomato Puree - Vietnam 24 x 430g",brand:"Ayam Brand",category:"Tomato",sku:"",unit:"lon",status:"Active"},
+  {id:20,name:"Tuna Chunks In Olive Oil Light 24 x 150g",brand:"Ayam Brand",category:"Tuna",sku:"",unit:"lon",status:"Active"},
+  {id:21,name:"Tuna Chunks In Sunflower Oil 24 x 150g",brand:"Ayam Brand",category:"Tuna",sku:"",unit:"lon",status:"Active"},
+  {id:22,name:"Tuna Chunks In Water 24 x 150g",brand:"Ayam Brand",category:"Tuna",sku:"",unit:"lon",status:"Active"},
+  {id:23,name:"Tuna Flakes In Olive Oil Light 24 x 150g",brand:"Ayam Brand",category:"Tuna",sku:"",unit:"lon",status:"Active"},
+  {id:24,name:"Tuna Flakes In Sunflower Oil 24 x 150g",brand:"Ayam Brand",category:"Tuna",sku:"",unit:"lon",status:"Active"},
+  {id:25,name:"Tuna Flakes In Water Light 24 x 150g",brand:"Ayam Brand",category:"Tuna",sku:"",unit:"lon",status:"Active"},
+  {id:26,name:"White Beans In Brine - Vietnam 24 x 425g",brand:"Ayam Brand",category:"Beans & Peas",sku:"",unit:"lon",status:"Active"},
+  {id:27,name:"Whole Kernel Corn 24 x 425g",brand:"Ayam Brand",category:"Corn",sku:"",unit:"lon",status:"Active"},
+  {id:28,name:"Alce Nero Organic Macaroni 12 x 500g",brand:"Alce Nero",category:"",sku:"",unit:"",status:"Active"},
+  {id:29,name:"Alce Nero Organic Pasta Sauce Onion & Basil 12 x 350g",brand:"Alce Nero",category:"",sku:"",unit:"",status:"Active"},
+  {id:30,name:"Alce Nero Organic Spaghetti 12 x 500g",brand:"Alce Nero",category:"",sku:"",unit:"",status:"Active"},
+  {id:31,name:"Duchef Baked Beans In Tomato Sauce - Vietnam 24 x 425g",brand:"Duchef",category:"Beans & Peas",sku:"",unit:"",status:"Active"},
+  {id:32,name:"Latino Bella Baked Beans In Tomato Sauce",brand:"Latino Bella",category:"Beans & Peas",sku:"",unit:"",status:"Active"},
+  {id:33,name:"Great Northern Beans",brand:"Kelly Beans",category:"Dry Beans",sku:"",unit:"",status:"Active"}
 ];
 
 let state={tasks:[],customers:[],products:[],users:[],config:[],currentUser:null,fCh:'all',fPIC:'all',syncing:false,lastSync:null};
@@ -370,7 +434,12 @@ function fmtD(d){if(!d)return'—';return new Date(d).toLocaleDateString('vi-VN'
 function fmtDT(d){if(!d)return'';const dt=new Date(d);return dt.toLocaleDateString('vi-VN')+' '+dt.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}
 function daysFrom(d){return Math.round((new Date(d)-new Date())/864e5)}
 function isMgr(){return state.currentUser&&(state.currentUser.role==='manager')}
-function isMgrOrTM(){return state.currentUser&&(state.currentUser.role==='manager'||state.currentUser.role==='trade')}
+function isMgrOrTM(){
+  const u=state.currentUser;
+  if(!u)return false;
+  return u.role==='manager'||u.role==='trade'||u.role==='marketing'||
+    (u.position&&(u.position.toLowerCase().includes('trade')||u.position.toLowerCase().includes('marketing')));
+}
 function aUsers(){return state.users.filter(u=>u.status==='Active'||!u.status)}
 function getCust(id){return state.customers.find(c=>String(c.id)===String(id))}
 function getUser(id){return state.users.find(u=>u.id===id||u.email===id||String(u.id)===String(id))}
@@ -600,12 +669,19 @@ async function syncAll(){
     if(d.ok&&d.data){
       const dt=d.data;
       // Map with Vietnamese field name support
-      if(dt.users&&dt.users.length)state.users=dt.users.map(mapUser).filter(u=>u.name&&u.email&&!['STT','stt','Trạng thái'].includes(u.name));
-      else state.users=DEFAULT_USERS;
-      state.customers=(dt.customers||dt.Customers||[]).map(mapCustomer).filter(c=>c.name&&!['▶','STT'].some(x=>String(c.name).startsWith(x)));
-      state.products=(dt.products||dt.Products||[]).map(mapProduct).filter(p=>p.name&&!['▶','STT'].some(x=>String(p.name).startsWith(x)));
-      const flows=dt.flows||dt.Flows||[];
-      state.config=flows.length?flows.map(mapFlow).filter(f=>f.name&&!['▶','STT'].some(x=>String(f.name).startsWith(x))):DEFAULT_FLOWS;
+            // Users
+      const rawUsers=(dt.users||[]).map(mapUser).filter(u=>u.name&&u.email&&!/^(STT|▶|←|⚠)/.test(u.name));
+      state.users=rawUsers.length?rawUsers:DEFAULT_USERS;
+      // Customers
+      const rawCusts=(dt.customers||dt.Customers||[]).map(mapCustomer).filter(c=>c.name&&!/^(▶|STT|🏢)/.test(c.name));
+      state.customers=rawCusts.length?rawCusts:DEFAULT_CUSTOMERS;
+      // Products
+      const rawProds=(dt.products||dt.Products||[]).map(mapProduct).filter(p=>p.name&&!/^(▶|STT|📦|Other)/.test(p.name));
+      state.products=rawProds.length?rawProds:DEFAULT_PRODUCTS;
+      // Flows
+      const rawFlows=(dt.flows||dt.Flows||[]).map(mapFlow).filter(f=>f.name&&!/^(▶|STT|⚙️)/.test(f.name));
+      state.config=rawFlows.length?rawFlows:DEFAULT_FLOWS;
+      // Tasks
       state.tasks=(dt.tasks||dt.Tasks||[]).map(mapTask).filter(t=>t.title||t.id);
       state.lastSync=new Date();setSS('ok');
     }
@@ -1362,8 +1438,12 @@ async function saveFlow(eid){
 
 // ---- INIT ----
 window.addEventListener('load',()=>{
+  // Load tất cả default data ngay lập tức
   state.users=DEFAULT_USERS;
   state.config=DEFAULT_FLOWS;
+  state.customers=DEFAULT_CUSTOMERS;
+  state.products=DEFAULT_PRODUCTS;
+  state.tasks=[];
 
   const sid=localStorage.getItem('dgm_uid');
   const sem=localStorage.getItem('dgm_em');
