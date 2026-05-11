@@ -236,7 +236,16 @@ tr:hover .tab{opacity:1}
     <div class="lt">DGM Sales CRM</div>
     <div class="ls">Ayam Brand · Alce Nero · Duchef</div>
     <label style="font-size:11px;color:var(--t2);font-weight:500;margin-bottom:4px;display:block">Chọn tài khoản</label>
-    <select id="lu" class="lf"></select>
+    <select id="lu" class="lf">
+      <option value="">-- Chọn tên --</option>
+      <option value="u1">Bùi Quang Quý (Manager)</option>
+      <option value="u2">Hồ Anh Tài (Sales Representative)</option>
+      <option value="u3">Thiên Thanh (Sales Representative)</option>
+      <option value="u4">Nguyễn Xuân Đức (Sales Representative)</option>
+      <option value="u5">Phương Ngọc Chánh (Sales Representative)</option>
+      <option value="u6">Hồ Ngọc Anh (Sales Representative)</option>
+      <option value="u7">Phương Thi (Trade Marketing)</option>
+    </select>
     <label style="font-size:11px;color:var(--t2);font-weight:500;margin-bottom:4px;display:block">Email Gmail</label>
     <input type="email" id="le" class="lf" placeholder="email@gmail.com">
     <label style="font-size:11px;color:var(--t2);font-weight:500;margin-bottom:4px;display:block" id="pw-label">Mật khẩu</label>
@@ -403,31 +412,29 @@ function initLogin(){
   const sid=localStorage.getItem('dgm_uid');
   const sem=localStorage.getItem('dgm_em');
 
+  // Luôn rebuild options với data mới nhất
   sel.innerHTML='<option value="">-- Chọn tên --</option>'+
     users.map(u=>`<option value="${u.id}">${u.name} (${u.role==='manager'?'Manager':u.position||u.role})</option>`).join('');
 
   // Pre-fill email
-  if(sem)$('le').value=sem;
+  if(sem&&$('le'))$('le').value=sem;
 
-  // Hàm toggle password field
+  // Toggle password visibility
   function togglePW(){
-    const u=users.find(x=>x.id===sel.value);
-    const isMgr2=u&&u.role==='manager';
-    $('pw-label').style.display=isMgr2?'none':'block';
-    $('lpw').style.display=isMgr2?'none':'block';
-    $('lpw').required=!isMgr2;
+    const uid=sel.value;
+    const u=users.find(x=>x.id===uid);
+    const noPass=!u||u.role==='manager';
+    if($('pw-label'))$('pw-label').style.display=noPass?'none':'block';
+    if($('lpw')){$('lpw').style.display=noPass?'none':'block';$('lpw').required=!noPass;}
   }
-
   sel.onchange=togglePW;
 
-  // Pre-select saved user
+  // Restore pre-selected user
   if(sid){
-    // Try exact id match first
     const opt=sel.querySelector('option[value="'+sid+'"]');
-    if(opt){sel.value=sid;}
-    else{
-      // Try match by email
-      const u=users.find(x=>x.email&&sem&&x.email.toLowerCase()===sem.toLowerCase());
+    if(opt)sel.value=sid;
+    else if(sem){
+      const u=users.find(x=>x.email&&x.email.toLowerCase()===sem.toLowerCase());
       if(u)sel.value=u.id;
     }
   }
@@ -1352,14 +1359,16 @@ async function saveFlow(eid){
 
 // ---- INIT ----
 window.addEventListener('load',()=>{
-  // Luôn load DEFAULT_USERS trước để login dropdown có data ngay
   state.users=DEFAULT_USERS;
   state.config=DEFAULT_FLOWS;
 
   const sid=localStorage.getItem('dgm_uid');
   const sem=localStorage.getItem('dgm_em');
 
-  // Thử auto-login với default users trước
+  // Gọi initLogin NGAY để dropdown có data (dùng DEFAULT_USERS)
+  initLogin();
+
+  // Thử auto-login
   if(sid&&sem){
     const u=DEFAULT_USERS.find(x=>x.id===sid&&x.email&&x.email.toLowerCase()===sem.toLowerCase());
     if(u){
@@ -1371,16 +1380,12 @@ window.addEventListener('load',()=>{
       document.querySelectorAll('.mgr-only').forEach(el=>el.style.display=isMgr()?'':'none');
       const sp2=localStorage.getItem('dgm_page')||'kanban';
       showPage(sp2,null);
-      // Sync trong background rồi refresh data
       syncAll();
       return;
     }
   }
 
-  // Không auto-login được → show login form với default users
-  initLogin();
-
-  // Sync Sheet trong background → update dropdown với users thật
+  // Sync Sheet để cập nhật thêm users mới nếu có
   syncAll().then(()=>{
     if(!state.currentUser)initLogin();
   });
