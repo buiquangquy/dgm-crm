@@ -336,30 +336,30 @@ tr:hover .tab{opacity:1}
 <script>
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwfdPEtl9BBW-xHuXBMuCvZSN40CUbQHZsMNvA0CkXjgHR7CrfUSj06fssMZJmm-MMX/exec';
 const STATUSES=['todo','inprogress','review','done','done_fail'];
-const SL={todo:'To Do',inprogress:'In Progress',review:'Chờ duyệt',done:'✅ Hoàn thành',done_fail:'❌ Không thành công'};
+const SL={todo:"To Do",inprogress:"In Progress",review:"Ch\u1edd duy\u1ec7t",done:"\u2705 Ho\u00e0n th\u00e0nh",done_fail:"\u274c Kh\u00f4ng th\u00e0nh c\u00f4ng"};
 const CHANNELS=['MT','GT','B2B','HoReCa'];
 
 // ---- DEFAULT DATA (fallback khi Sheet chưa kết nối) ----
 // Password 4 số, khác nhau cho mỗi người (manager không cần)
 const DEFAULT_USERS=[
-  {id:'u1',name:'Bùi Quang Quý',email:'quangquy.bui@gmail.com',role:'manager',position:'Sales & Marketing Manager',channel:'ALL',region:'ALL',initials:'QB',password:'',status:'Active'},
-  {id:'u2',name:'Hồ Anh Tài',email:'taihathuy@gmail.com',role:'sales',position:'Sales Representative',channel:'MT',region:'ALL',initials:'HAT',password:'2847',status:'Active'},
-  {id:'u3',name:'Thiên Thanh',email:'ng.thienthanh1696@gmail.com',role:'sales',position:'Sales Representative',channel:'MT',region:'ALL',initials:'TT',password:'5193',status:'Active'},
-  {id:'u4',name:'Nguyễn Xuân Đức',email:'nguyenxuanduc13091987@gmail.com',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Bắc',initials:'NXD',password:'7062',status:'Active'},
-  {id:'u5',name:'Phương Ngọc Chánh',email:'chanhphuong86@gmail.com',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Nam',initials:'PNC',password:'3815',status:'Active'},
-  {id:'u6',name:'Hồ Ngọc Anh',email:'honguyennguyenan2016@gmail.com',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Trung',initials:'HNA',password:'9274',status:'Active'},
-  {id:'u7',name:'Phương Thi',email:'phuongthi21@gmail.com',role:'trade',position:'Trade Marketing',channel:'ALL',region:'ALL',initials:'DPT',password:'6538',status:'Active'},
+  {id:"u1",name:"B\u00f9i Quang Qu\u00fd",email:"quangquy.bui@gmail.com",role:"manager",position:"Sales & Marketing Manager",channel:"ALL",region:"ALL",initials:"QB",password:"",status:"Active"},
+  {id:"u2",name:"H\u1ed3 Anh T\u00e0i",email:"taihathuy@gmail.com",role:"sales",position:"Sales Representative",channel:"MT",region:"ALL",initials:"HAT",password:"2847",status:"Active"},
+  {id:"u3",name:"Thi\u00ean Thanh",email:"ng.thienthanh1696@gmail.com",role:"sales",position:"Sales Representative",channel:"MT",region:"ALL",initials:"TT",password:"5193",status:"Active"},
+  {id:"u4",name:"Nguy\u1ec5n Xu\u00e2n \u0110\u1ee9c",email:"nguyenxuanduc13091987@gmail.com",role:"sales",position:"Sales Representative",channel:"GT",region:"Mi\u1ec1n B\u1eafc",initials:"NXD",password:"7062",status:"Active"},
+  {id:"u5",name:"Ph\u01b0\u01a1ng Ng\u1ecdc Ch\u00e1nh",email:"chanhphuong86@gmail.com",role:"sales",position:"Sales Representative",channel:"GT",region:"Mi\u1ec1n Nam",initials:"PNC",password:"3815",status:"Active"},
+  {id:"u6",name:"H\u1ed3 Ng\u1ecdc Anh",email:"honguyennguyenan2016@gmail.com",role:"sales",position:"Sales Representative",channel:"GT",region:"Mi\u1ec1n Trung",initials:"HNA",password:"9274",status:"Active"},
+  {id:"u7",name:"Ph\u01b0\u01a1ng Thi",email:"phuongthi21@gmail.com",role:"trade",position:"Trade Marketing",channel:"ALL",region:"ALL",initials:"DPT",password:"6538",status:"Active"},
 ];
 
 const DEFAULT_FLOWS=[
-  {id:'f1',name:'General Task',channel:'ALL',task_type:'General',steps:['To Do','In Progress','Done']},
-  {id:'f2',name:'MT – Trading Term',channel:'MT',task_type:'Trading Term',steps:['Nhận','Gửi proposal','Phản hồi','Đàm phán','Đồng ý','Trình ký']},
-  {id:'f3',name:'MT – New Product Listing',channel:'MT',task_type:'Listing',steps:['Lấy mẫu','Gửi mẫu','Xác nhận','Lên kệ']},
-  {id:'f4',name:'POSM / Design',channel:'ALL',task_type:'Activation',steps:['Ý tưởng','Thiết kế','Duyệt TK','Làm việc NCC','Ký HĐ','Giao hàng']},
-  {id:'f5',name:'Sampling / Activation',channel:'ALL',task_type:'Activation',steps:['Lên KH','Gửi duyệt','Duyệt KH','Đăng ký KH','Chuẩn bị','Thực hiện']},
-  {id:'f6',name:'GT – Trade Program',channel:'ALL',task_type:'Trade Program',steps:['Lên chương trình','Thông báo','Gửi sales','Gửi khách','Order']},
-  {id:'f7',name:'GT – Phát triển điểm bán',channel:'GT',task_type:'Expansion',steps:['Khảo sát','Tiếp cận','Chào hàng','Trưng bày','Review']},
-  {id:'f8',name:'MT – Khách hàng mới',channel:'MT',task_type:'Expansion',steps:['Tiếp cận','Gửi SP/giá','Đàm phán TT','Ký HĐ','Bắt đầu bán']},
+  {id:"f1",name:"General Task",channel:"ALL",task_type:"General",steps:["To Do","In Progress","Done"]},
+  {id:"f2",name:"MT \u2013 Trading Term",channel:"MT",task_type:"Trading Term",steps:["Nh\u1eadn","G\u1eedi proposal","Ph\u1ea3n h\u1ed3i","\u0110\u00e0m ph\u00e1n","\u0110\u1ed3ng \u00fd","Tr\u00ecnh k\u00fd"]},
+  {id:"f3",name:"MT \u2013 New Product Listing",channel:"MT",task_type:"Listing",steps:["L\u1ea5y m\u1eabu","G\u1eedi m\u1eabu","X\u00e1c nh\u1eadn","L\u00ean k\u1ec7"]},
+  {id:"f4",name:"POSM / Design",channel:"ALL",task_type:"Activation",steps:["\u00dd t\u01b0\u1edfng","Thi\u1ebft k\u1ebf","Duy\u1ec7t TK","L\u00e0m vi\u1ec7c NCC","K\u00fd H\u0110","Giao h\u00e0ng"]},
+  {id:"f5",name:"Sampling / Activation",channel:"ALL",task_type:"Activation",steps:["L\u00ean KH","G\u1eedi duy\u1ec7t","Duy\u1ec7t KH","\u0110\u0103ng k\u00fd KH","Chu\u1ea9n b\u1ecb","Th\u1ef1c hi\u1ec7n"]},
+  {id:"f6",name:"GT \u2013 Trade Program",channel:"ALL",task_type:"Trade Program",steps:["L\u00ean ch\u01b0\u01a1ng tr\u00ecnh","Th\u00f4ng b\u00e1o","G\u1eedi sales","G\u1eedi kh\u00e1ch","Order"]},
+  {id:"f7",name:"GT \u2013 Ph\u00e1t tri\u1ec3n \u0111i\u1ec3m b\u00e1n",channel:"GT",task_type:"Expansion",steps:["Kh\u1ea3o s\u00e1t","Ti\u1ebfp c\u1eadn","Ch\u00e0o h\u00e0ng","Tr\u01b0ng b\u00e0y","Review"]},
+  {id:"f8",name:"MT \u2013 Kh\u00e1ch h\u00e0ng m\u1edbi",channel:"MT",task_type:"Expansion",steps:["Ti\u1ebfp c\u1eadn","G\u1eedi SP/gi\u00e1","\u0110\u00e0m ph\u00e1n TT","K\u00fd H\u0110","B\u1eaft \u0111\u1ea7u b\u00e1n"]},
 ];
 
 let state={tasks:[],customers:[],products:[],users:[],config:[],currentUser:null,fCh:'all',fPIC:'all',syncing:false,lastSync:null};
@@ -377,7 +377,7 @@ function getUser(id){return state.users.find(u=>u.id===id||u.email===id||String(
 function getFlowSteps(flowName){
   const f=state.config.find(x=>x.name===flowName||x.id===flowName);
   if(!f)return['To Do','In Progress','Done'];
-  return Array.isArray(f.steps)?f.steps:f.steps.split(/[→=>\n]/).map(s=>s.trim()).filter(Boolean);
+  return Array.isArray(f.steps)?f.steps:f.steps.split('\u2192').join('|').split('=>').join('|').split('|').map(s=>s.trim()).filter(Boolean);
 }
 function subProg(t){
   const s=Array.isArray(t.subtasks)?t.subtasks:[];
@@ -528,7 +528,7 @@ function mapProduct(row){
 }
 function mapFlow(row){
   const stepsRaw=row.steps||row['Các bước (cách nhau bởi →)']||row['steps']||'';
-  const steps=Array.isArray(stepsRaw)?stepsRaw:stepsRaw.split(/[→=>\n]/).map(s=>s.trim().replace(/^=+/,'')).filter(Boolean);
+  const steps=Array.isArray(stepsRaw)?stepsRaw:stepsRaw.split('\u2192').join('|').split('=>').join('|').split('|').map(s=>s.trim().replace(/^=+/,'')).filter(Boolean);
   return{
     id:row.id||row['STT'],
     name:row.name||row['Tên flow']||'',
@@ -647,8 +647,11 @@ function showPage(nm,btn){
   $('pg-'+nm).classList.add('active');
   if(btn)btn.classList.add('active');
   else{// restore nav button active state
-    const nb=document.querySelector('.nb[onclick*="''+nm+''"]');
-    if(nb)nb.classList.add('active');
+    // restore nav button - match by data-page or onclick content
+    document.querySelectorAll('.nb').forEach(b=>{
+      if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'"+nm+"'"))
+        b.classList.add('active');
+    });
   }
   localStorage.setItem('dgm_page',nm);
   if(nm==='customers')renderCustomers();
@@ -1326,7 +1329,7 @@ function renderConfig(){
 function openFlowForm(eid){
   const f=eid?state.config.find(x=>x.id===eid||x.name===eid):null;
   const d=f||{name:'',channel:'ALL',task_type:'',steps:[],description:''};
-  const stepsStr=Array.isArray(d.steps)?d.steps.join(' → '):d.steps||'';
+  const stepsStr=Array.isArray(d.steps)?d.steps.join(' \u2192 '):d.steps||'';
   $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" onclick="event.stopPropagation()">
     <div class="mh"><div class="mti">${f?'Sửa flow':'Thêm flow'}</div><button class="mcl" onclick="CM()">×</button></div>
     <div class="g2">
@@ -1349,7 +1352,7 @@ function openFlowForm(eid){
 
 async function saveFlow(eid){
   const name=$('gn').value.trim();if(!name){alert('Nhập tên flow');return;}
-  const steps=$('gst').value.split('→').map(s=>s.trim()).filter(Boolean);
+  const steps=$('gst').value.split('\u2192').map(s=>s.trim()).filter(Boolean);
   const data={name,channel:$('gch').value,task_type:$('gtp').value,steps,description:$('gds').value,status:'Active'};
   if(eid){const f=state.config.find(x=>x.id===eid||x.name===eid);
     if(f){if(!f.id)f.id='flow_'+Date.now();data.id=f.id;Object.assign(f,data);await saveMaster('Flows',f);}}
