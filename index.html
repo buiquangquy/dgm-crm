@@ -1145,7 +1145,7 @@ function openTaskForm(editId){
         </select>
       </div>
     </div>
-    <div class="fr"><label class="fl">Khách hàng * (chọn nhiều)</label>
+    <div class="fr"><label class="fl" id="cust-label">Khách hàng * (chọn nhiều)</label>
       <div style="border:.5px solid var(--bd2);border-radius:var(--r);max-height:160px;overflow-y:auto;padding:4px 0" id="cust-list">
         ${state.customers.filter(c=>c.status==='Active'||!c.status).map(c=>{
           const sel=Array.isArray(d.customer_ids)?d.customer_ids.map(String).includes(String(c.id)):(String(d.customer_id)===String(c.id));
@@ -1204,14 +1204,23 @@ function onChChange(){
   if(ffn){
     const flows=state.config.filter(f=>f.channel===ch||f.channel==='ALL');
     ffn.innerHTML=flows.map(f=>`<option value="${f.name}">${f.name}</option>`).join('');
-    onFlowChange();
   }
+  onFlowChange();
 }
 function onFlowChange(){
   const fn=$('ffn')?$('ffn').value:'';
   const steps=getFlowSteps(fn);
   const sp=$('fsp');
   if(sp)sp.innerHTML=steps.map(s=>`<option value="${s}">${s}</option>`).join('');
+  // General Task => KH tuỳ chọn
+  const ch=$('fch')?$('fch').value:'';
+  const isGeneral=!fn||fn==='General Task'||fn.toLowerCase().includes('general')||ch==='ALL';
+  const lbl=document.getElementById('cust-label');
+  if(lbl)lbl.textContent=isGeneral
+    ?'Khách hàng (tuỳ chọn — General Task)'
+    :'Khách hàng * (chọn nhiều)';
+  const cl=document.getElementById('cust-list');
+  if(cl)cl.setAttribute('data-optional',isGeneral?'1':'0');
 }
 function onCuChange(){
   const v=$('fcu')?$('fcu').value:'';
@@ -1255,8 +1264,12 @@ async function saveTF(editId){
   if(!title){alert('Vui lòng điền tiêu đề.');return;}
   // Collect all checked customers
   const checkedCusts=Array.from(document.querySelectorAll('#cust-list input[type=checkbox]:checked')).map(cb=>cb.value);
-  if(!checkedCusts.length){alert('Vui lòng chọn ít nhất 1 khách hàng.');return;}
-  const cid=checkedCusts[0]; // primary customer_id (first selected)
+  const custList=document.getElementById('cust-list');
+  const custOptional=custList&&custList.getAttribute('data-optional')==='1';
+  if(!checkedCusts.length&&!custOptional){
+    alert('Vui lòng chọn ít nhất 1 khách hàng.');return;
+  }
+  const cid=checkedCusts[0]||''; // empty for General Task
   const selPics=aUsers().filter(u=>document.getElementById('pc-'+u.id)?.classList.contains('sel')).map(u=>u.id);
   if(!selPics.length){alert('Chọn ít nhất 1 PIC.');return;}
   const fn=$('ffn')?$('ffn').value:'';
