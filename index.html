@@ -339,7 +339,7 @@ tr:hover .tab{opacity:1}
 <div class="toc" id="toasts"></div>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwfdPEtl9BBW-xHuXBMuCvZSN40CUbQHZsMNvA0CkXjgHR7CrfUSj06fssMZJmm-MMX/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwYc9_eSV9oBuOfLtGJGHGY7p0VXYK_Rsq_pmuqMRKBLN3Wx9EI3CRuCkmSFqZEl7wL/exec';
 const STATUSES=['todo','inprogress','review','done','done_fail'];
 const SL={todo:"To Do",inprogress:"In Progress",review:"Ch\u1edd duy\u1ec7t",done:"\u2705 Ho\u00e0n th\u00e0nh",done_fail:"\u274c Kh\u00f4ng th\u00e0nh c\u00f4ng"};
 const CHANNELS=['MT','GT','B2B','HoReCa'];
@@ -573,21 +573,24 @@ function mapUser(row){
   };
 }
 function mapCustomer(row){
+  const id=row.id||row['STT']||row['id']||'';
+  const name=row.name||row['Tên khách hàng']||'';
+  const channel=row.channel||row['Kênh (Channel)']||row['Kênh']||'';
+  if(!name||/^(▶|STT|🏢|←|⚠)/.test(String(name)))return{name:''};
   return{
-    id:row.id||row['STT'],
-    name:row.name||row['Tên khách hàng']||'',
-    channel:row.channel||row['Kênh (Channel)']||row['Kênh']||'',
-    region:row.region||row['Vùng / Miền']||row['Vùng']||'',
+    id,name,channel,
+    region:      row.region||row['Vùng / Miền']||row['Vùng']||'',
     business_type:row.business_type||row['Hình thức KD']||'',
-    contact_name:row.contact_name||row['Người liên hệ']||'',
-    phone:row.phone||row['SĐT']||'',
-    email:row.email||row['Email']||'',
-    notes:row.notes||row['Ghi chú']||'',
-    status:row.status||row['Trạng thái']||'Active',
-    num_stores:row.num_stores||'',
-    resources:row.resources||'',
-    financial:row.financial||'',
-    pic_id:row.pic_id||row['PIC']||'',
+    contact_name:row.contact_name||row['Người liên hệ']||row['contact']||'',
+    phone:       row.phone||row['SĐT']||'',
+    email:       row.email||row['Email']||'',
+    notes:       row.notes||row['Ghi chú']||'',
+    status:      row.status||row['Trạng thái']||'Active',
+    pic_id:      row.pic_id||row['PIC']||'',
+    num_stores:  row.num_stores||row['Số cửa hàng']||'',
+    resources:   row.resources||row['Nguồn lực']||'',
+    financial:   row.financial||row['Khả năng tài chính']||'',
+    active:true,
   };
 }
 function mapProduct(row){
@@ -681,7 +684,7 @@ async function syncAll(){
       const rawUsers=(dt.users||[]).map(mapUser).filter(u=>u.name&&u.email&&!/^(STT|▶|←|⚠)/.test(u.name));
       state.users=rawUsers.length?rawUsers:DEFAULT_USERS;
       // Customers
-      const rawCusts=(dt.customers||dt.Customers||[]).map(mapCustomer).filter(c=>c.name&&!/^(▶|STT|🏢)/.test(c.name));
+      const rawCusts=(dt.customers||dt.Customers||[]).map(mapCustomer).filter(c=>c&&c.name&&c.name.length>0&&!/^(▶|STT|🏢|←|⚠)/.test(c.name));
       state.customers=rawCusts.length?rawCusts:DEFAULT_CUSTOMERS;
       // Products
       const rawProds=(dt.products||dt.Products||[]).map(mapProduct).filter(p=>p.name&&!/^(▶|STT|📦|Other)/.test(p.name));
@@ -1370,13 +1373,32 @@ function openCustForm(editId){
 
 async function saveCust(editId){
   const name=$('cn').value.trim();if(!name){alert('Nhập tên KH');return;}
-  const data={name,channel:$('cch').value,region:$('crg').value,business_type:$('cbt').value,
-    contact_name:$('cct').value,phone:$('cph').value,email:$('cem').value,
-    num_stores:$('cns').value,pic_id:$('cpic').value,
-    resources:$('crs').value,financial:$('cfn').value,notes:$('cno').value,status:'Active'};
-  if(editId){const c=state.customers.find(x=>String(x.id)===String(editId));if(c){data.id=c.id;Object.assign(c,data);await saveMaster('Customers',c);}}
-  else{const nc={id:Date.now(),...data};state.customers.push(nc);await saveMaster('Customers',nc);}
+  const data={
+    name,
+    channel:$('cch').value,
+    region:$('crg').value,
+    business_type:$('cbt').value,
+    contact_name:$('cct').value,
+    phone:$('cph').value,
+    email:$('cem').value,
+    num_stores:$('cns').value,
+    pic_id:$('cpic').value,
+    resources:$('crs').value,
+    financial:$('cfn').value,
+    notes:$('cno').value,
+    status:'Active',
+    active:true,
+  };
+  if(editId){
+    const c=state.customers.find(x=>String(x.id)===String(editId));
+    if(c){data.id=c.id;Object.assign(c,data);await saveMaster('Customers',c);}
+  }else{
+    const nc={id:Date.now(),...data};
+    state.customers.push(nc);
+    await saveMaster('Customers',nc);
+  }
   CM();renderCustomers();
+  toast('Đã lưu khách hàng ✓');
 }
 
 // ---- PRODUCTS ----
