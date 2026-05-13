@@ -229,6 +229,128 @@ tr:hover .tab{opacity:1}
 .cf{background:var(--s2);border-radius:var(--r);padding:8px 10px}
 .cfl{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
 .cfv{font-size:13px;font-weight:500;word-break:break-word}
+
+/* ============================================================
+   MOBILE RESPONSIVE — màn hình dọc ≤ 768px
+   ============================================================ */
+@media (max-width: 768px) {
+
+  /* Topbar */
+  .tb{padding:0 .75rem;height:48px;gap:6px}
+  .bn{font-size:13px}
+  .bs{display:none}
+  .nm{display:none} /* Nav tabs ẩn → dùng bottom nav */
+  .tr{gap:5px}
+  .up span:last-child{display:none}
+  #sync-label{display:none}
+
+  /* Pages */
+  .pg{padding:.75rem;padding-bottom:80px} /* space for bottom nav */
+
+  /* Stats row */
+  .sr{grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:.75rem}
+  .sc{padding:8px 10px}
+  .sv{font-size:18px}
+  .sl{font-size:10px}
+
+  /* Filter bar */
+  .fb{gap:4px;margin-bottom:.75rem;overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}
+  .fb::-webkit-scrollbar{height:2px}
+  .fc{white-space:nowrap;flex-shrink:0;font-size:11px;padding:3px 9px}
+  .fb .btn{flex-shrink:0;white-space:nowrap}
+
+  /* Kanban board → single column scroll */
+  .board{display:flex;flex-direction:column;gap:8px}
+  .kol{border-radius:var(--rl)}
+
+  /* Task cards */
+  .tc{padding:10px}
+  .tt{font-size:13px}
+
+  /* Tables → card layout */
+  .tw{border:none;border-radius:0;margin-bottom:0}
+  table thead{display:none}
+  table tbody tr{
+    display:flex;flex-direction:column;
+    background:var(--s);border:.5px solid var(--bd);
+    border-radius:var(--rl);margin-bottom:8px;padding:10px 12px;
+  }
+  table tbody td{
+    padding:3px 0;border:none;font-size:12px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  table tbody td:empty{display:none}
+  table tbody td::before{
+    content:attr(data-label);
+    font-size:10px;color:var(--t3);font-weight:600;
+    text-transform:uppercase;letter-spacing:.04em;
+    min-width:80px;flex-shrink:0;
+  }
+  /* Show/hide table action buttons always on mobile */
+  .tab{opacity:1!important}
+
+  /* Section header */
+  .sh{margin-bottom:8px}
+  .sti{font-size:13px}
+
+  /* Modal */
+  .mbg{padding-top:0;align-items:flex-end}
+  .mo{max-width:100%!important;border-radius:var(--rx) var(--rx) 0 0;max-height:92vh;padding:1rem}
+  .mo-lg{max-width:100%!important}
+
+  /* Forms */
+  .g2{grid-template-columns:1fr}
+  .g3{grid-template-columns:1fr}
+
+  /* Customer checkbox list */
+  #cust-list{max-height:120px}
+
+  /* PIC chips */
+  .pmc{gap:5px}
+  .pch{font-size:11px;padding:3px 7px}
+
+  /* Flow track */
+  .ft{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}
+  .ft::-webkit-scrollbar{height:2px}
+  .fn{flex-shrink:0}
+
+  /* Detail meta */
+  .dmg{grid-template-columns:1fr 1fr;gap:8px}
+
+  /* Config flow rows */
+  .fer{flex-direction:column;align-items:flex-start;gap:6px}
+  .fsp{overflow-x:auto;flex-wrap:nowrap}
+  .fsb{flex-shrink:0}
+
+  /* Login card */
+  .lw{padding:1rem;align-items:flex-end}
+  .lc{width:100%;border-radius:var(--rx) var(--rx) 0 0;padding:1.5rem 1.25rem}
+}
+
+/* Bottom Navigation Bar (mobile only) */
+@media (max-width: 768px) {
+  .bottom-nav{
+    display:flex;position:fixed;bottom:0;left:0;right:0;
+    background:var(--s);border-top:.5px solid var(--bd);
+    height:60px;z-index:200;
+  }
+  .bnav-btn{
+    flex:1;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:2px;font-size:10px;color:var(--t2);
+    background:none;border:none;cursor:pointer;padding:4px 0;
+    transition:color .15s;
+  }
+  .bnav-btn.active{color:var(--blue)}
+  .bnav-btn svg{width:20px;height:20px}
+  .bnav-btn .bnav-lbl{font-size:10px}
+}
+
+/* Desktop: ẩn bottom nav */
+@media (min-width: 769px) {
+  .bottom-nav{display:none!important}
+  .nm{display:flex}
+}
+
 </style>
 </head>
 <body>
@@ -336,13 +458,49 @@ tr:hover .tab{opacity:1}
 </div>
 
 <div id="mc"></div>
+
+<!-- Bottom Navigation (mobile only) -->
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="bnav-btn active" onclick="mobileNav('kanban',this)" id="mnav-kanban">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="3" y="3" width="7" height="18"/><rect x="14" y="3" width="7" height="10"/><rect x="14" y="17" width="7" height="4"/>
+    </svg>
+    <span class="bnav-lbl">Kanban</span>
+  </button>
+  <button class="bnav-btn" onclick="mobileNav('customers',this)" id="mnav-customers">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+    <span class="bnav-lbl">KH</span>
+  </button>
+  <button class="bnav-btn" onclick="openTaskForm()" id="mnav-add" style="color:var(--blue)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <circle cx="12" cy="12" r="10" fill="var(--blue)" stroke="none"/>
+      <line x1="12" y1="8" x2="12" y2="16" stroke="#fff"/><line x1="8" y1="12" x2="16" y2="12" stroke="#fff"/>
+    </svg>
+    <span class="bnav-lbl" style="color:var(--blue)">Thêm</span>
+  </button>
+  <button class="bnav-btn" onclick="mobileNav('products',this)" id="mnav-products">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+    </svg>
+    <span class="bnav-lbl">SP</span>
+  </button>
+  <button class="bnav-btn" onclick="mobileNav('more',this)" id="mnav-more">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="19" r="1" fill="currentColor"/>
+    </svg>
+    <span class="bnav-lbl">Thêm</span>
+  </button>
+</nav>
 <div class="toc" id="toasts"></div>
 
 <script>
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbxVBfHwL58O2hT7iAIpt-ZSk4d0eczLinvZmgwnubwNPigOeMXg79D6an8UWL2SXBih/exec';
 const STATUSES=['todo','inprogress','review','done','done_fail'];
 const SL={todo:"To Do",inprogress:"In Progress",review:"Ch\u1edd duy\u1ec7t",done:"\u2705 Ho\u00e0n th\u00e0nh",done_fail:"\u274c Kh\u00f4ng th\u00e0nh c\u00f4ng"};
-const CHANNELS=['MT','GT','B2B','HoReCa'];
+const CHANNELS=["ALL","MT","GT","B2B","HoReCa"];
 
 // ---- DEFAULT DATA (fallback khi Sheet chưa kết nối) ----
 // Password 4 số, khác nhau cho mỗi người (manager không cần)
@@ -847,7 +1005,7 @@ function rCard(t){
     ondragstart="drs(event,'${t.id}')" onclick="openDetail('${t.id}')">
     <div class="tt">${t.title}</div>
     <div class="tb2">
-      <span class="b b${t.channel}">${t.channel}</span>
+      <span class="b ${t.channel==='ALL'?'bgr':'b'+t.channel}">${t.channel==='ALL'?'ALL':t.channel}</span>
       ${c?`<span class="b bgr">${c.name}</span>`:''}
       ${ov?`<span class="b bov">Quá hạn</span>`:''}
       ${sn&&!ov?`<span class="b bsoon">Sắp hạn</span>`:''}
@@ -980,7 +1138,7 @@ function openDetail(id){
     <div class="mh">
       <div>
         <div style="display:flex;gap:4px;margin-bottom:6px">
-          <span class="b b${t.channel}">${t.channel}</span>
+          <span class="b ${t.channel==='ALL'?'bgr':'b'+t.channel}">${t.channel==='ALL'?'ALL':t.channel}</span>
           <span class="b b${t.status}">${SL[t.status]}</span>
           ${ov?`<span class="b bov">Quá hạn</span>`:''}
         </div>
@@ -1136,7 +1294,7 @@ function openTaskForm(editId){
     <div class="g2">
       <div class="fr"><label class="fl">Kênh *</label>
         <select id="fch" class="fi" onchange="onChChange()">
-          ${CHANNELS.map(c=>`<option value="${c}" ${d.channel===c?'selected':''}>${c}</option>`).join('')}
+          ${CHANNELS.map(c=>`<option value="${c}" ${d.channel===c?'selected':''}>${c==='ALL'?'ALL — Tất cả kênh':c}</option>`).join('')}
         </select>
       </div>
       <div class="fr"><label class="fl">Flow / Quy trình</label>
@@ -1202,23 +1360,51 @@ function onChChange(){
   const ch=$('fch').value;
   const ffn=$('ffn');
   if(ffn){
-    const flows=state.config.filter(f=>f.channel===ch||f.channel==='ALL');
+    // ALL channel => hiện tất cả flows; kênh cụ thể => filter theo kênh + ALL flows
+    const flows=ch==='ALL'
+      ? state.config
+      : state.config.filter(f=>f.channel===ch||f.channel==='ALL');
     ffn.innerHTML=flows.map(f=>`<option value="${f.name}">${f.name}</option>`).join('');
+    // Auto-select General Task khi chọn ALL
+    if(ch==='ALL'){
+      const genOpt=Array.from(ffn.options).find(o=>o.value==='General Task');
+      if(genOpt)ffn.value='General Task';
+    }
   }
+  // Update customer list filter
+  _filterCustomerList(ch);
   onFlowChange();
+}
+
+function _filterCustomerList(ch){
+  const list=document.getElementById('cust-list');
+  if(!list)return;
+  // Lưu các giá trị đang checked
+  const checked=new Set(Array.from(list.querySelectorAll('input:checked')).map(x=>x.value));
+  // Rebuild list theo kênh
+  const custs=ch==='ALL'
+    ? state.customers.filter(c=>c.status==='Active'||!c.status)
+    : state.customers.filter(c=>(c.status==='Active'||!c.status)&&(!c.channel||c.channel===ch));
+  list.innerHTML=custs.map(c=>{
+    const sel=checked.has(String(c.id));
+    return`<label style="display:flex;align-items:center;gap:8px;padding:5px 10px;cursor:pointer;font-size:12px" class="cust-opt">
+      <input type="checkbox" value="${c.id}" ${sel?'checked':''} style="width:14px;height:14px;accent-color:var(--blue)">
+      <span>${c.name}</span><span class="b b${c.channel||'gr'}" style="font-size:10px">${c.channel||''}</span>
+    </label>`;
+  }).join('');
 }
 function onFlowChange(){
   const fn=$('ffn')?$('ffn').value:'';
+  const ch=$('fch')?$('fch').value:'';
   const steps=getFlowSteps(fn);
   const sp=$('fsp');
   if(sp)sp.innerHTML=steps.map(s=>`<option value="${s}">${s}</option>`).join('');
-  // General Task => KH tuỳ chọn
-  const ch=$('fch')?$('fch').value:'';
+  // ALL channel hoặc General Task => KH tuỳ chọn
   const isGeneral=!fn||fn==='General Task'||fn.toLowerCase().includes('general')||ch==='ALL';
   const lbl=document.getElementById('cust-label');
-  if(lbl)lbl.textContent=isGeneral
-    ?'Khách hàng (tuỳ chọn — General Task)'
-    :'Khách hàng * (chọn nhiều)';
+  if(lbl)lbl.innerHTML=isGeneral
+    ?'Khách hàng <span style="color:var(--t3);font-weight:400">(tuỳ chọn)</span>'
+    :'Khách hàng <span style="color:var(--red)">*</span> (chọn nhiều)';
   const cl=document.getElementById('cust-list');
   if(cl)cl.setAttribute('data-optional',isGeneral?'1':'0');
 }
@@ -1257,8 +1443,9 @@ async function saveNewCustInline(){
 function togPIC(uid){
   const ch=document.getElementById('pc-'+uid);
   if(ch)ch.classList.toggle('sel');
+  // Trigger initial filter after DOM renders
+  setTimeout(()=>{onChChange();onFlowChange();},0);
 }
-
 async function saveTF(editId){
   const title=$('ft').value.trim();
   if(!title){alert('Vui lòng điền tiêu đề.');return;}
@@ -1269,7 +1456,7 @@ async function saveTF(editId){
   if(!checkedCusts.length&&!custOptional){
     alert('Vui lòng chọn ít nhất 1 khách hàng.');return;
   }
-  const cid=checkedCusts[0]||''; // empty for General Task
+  const cid=checkedCusts.length>0?checkedCusts[0]:''; // empty ok for General/ALL
   const selPics=aUsers().filter(u=>document.getElementById('pc-'+u.id)?.classList.contains('sel')).map(u=>u.id);
   if(!selPics.length){alert('Chọn ít nhất 1 PIC.');return;}
   const fn=$('ffn')?$('ffn').value:'';
@@ -1294,15 +1481,15 @@ function renderCustomers(){
       const cnt=state.tasks.filter(t=>String(t.customer_id)===String(c.id)&&!['done','done_fail'].includes(t.status)).length;
       const pic=c.pic_id?getUser(c.pic_id):null;
       return`<tr>
-        <td><strong style="cursor:pointer;color:var(--blue)" onclick="openCustDet('${c.id}')">${c.name}</strong></td>
-        <td><span class="b b${c.channel}">${c.channel||'—'}</span></td>
-        <td>${c.region||'—'}</td>
-        <td style="font-size:11px">${c.business_type||'—'}</td>
-        <td>${pic?`<div style="display:flex;align-items:center;gap:5px"><div class="av avs">${pic.initials||'?'}</div>${pic.name}</div>`:'—'}</td>
-        <td>${c.contact_name||'—'}</td>
-        <td>${c.phone||'—'}</td>
-        <td style="text-align:center">${c.num_stores||'—'}</td>
-        <td>${cnt>0?`<span style="color:var(--blue);font-weight:500">${cnt}</span>`:'0'}</td>
+        <td data-label="Tên"><strong style="cursor:pointer;color:var(--blue)" onclick="openCustDet('${c.id}')">${c.name}</strong></td>
+        <td data-label="Kênh"><span class="b b${c.channel}">${c.channel||'—'}</span></td>
+        <td data-label="Vùng">${c.region||'—'}</td>
+        <td data-label="Hình thức KD" style="font-size:11px">${c.business_type||'—'}</td>
+        <td data-label="PIC">${pic?`<div style="display:flex;align-items:center;gap:5px"><div class="av avs">${pic.initials||'?'}</div>${pic.name}</div>`:'—'}</td>
+        <td data-label="Liên hệ">${c.contact_name||'—'}</td>
+        <td data-label="SĐT">${c.phone||'—'}</td>
+        <td data-label="Số CH" style="text-align:center">${c.num_stores||'—'}</td>
+        <td data-label="Tasks">${cnt>0?`<span style="color:var(--blue);font-weight:500">${cnt}</span>`:'0'}</td>
         <td><div class="tab">
           <button class="btn btn-xs" onclick="openCustForm('${c.id}')">✎</button>
         </div></td>
@@ -1420,12 +1607,12 @@ function renderProducts(){
   $('prod-add-btn').innerHTML=canEdit?`<button class="btn btn-p btn-sm" onclick="openProdForm()">+ Thêm</button>`:`<span style="font-size:11px;background:#EDE9FE;color:#5B21B6;padding:2px 8px;border-radius:6px">Manager / Trade Marketing only</span>`;
   $('ptb').innerHTML=state.products.filter(p=>p.name).map(p=>`
     <tr>
-      <td><strong>${p.name}</strong></td>
-      <td><span class="b bgr">${p.brand||'—'}</span></td>
-      <td>${p.category||'—'}</td>
-      <td style="font-size:11px;color:var(--t2)">${p.sku||'—'}</td>
-      <td>${p.unit||'—'}</td>
-      <td><span class="b ${p.status==='Active'?'bdone':p.status==='Discontinued'?'bdone_fail':'bgr'}">${p.status||'Active'}</span></td>
+      <td data-label="Tên"><strong>${p.name}</strong></td>
+      <td data-label="Brand"><span class="b bgr">${p.brand||'—'}</span></td>
+      <td data-label="Danh mục">${p.category||'—'}</td>
+      <td data-label="SKU" style="font-size:11px;color:var(--t2)">${p.sku||'—'}</td>
+      <td data-label="Đơn vị">${p.unit||'—'}</td>
+      <td data-label="Trạng thái"><span class="b ${p.status==='Active'?'bdone':p.status==='Discontinued'?'bdone_fail':'bgr'}">${p.status||'Active'}</span></td>
       <td>${canEdit?`<div class="tab"><button class="btn btn-xs" onclick="openProdForm('${p.id}')">✎</button></div>`:''}</td>
     </tr>`).join('');
 }
@@ -1477,14 +1664,14 @@ function renderUsers(){
   // Manager: thấy tất cả
   $('utb').innerHTML=aUsers().map(u=>`
     <tr>
-      <td><strong>${u.name}</strong></td>
-      <td><span class="b ${u.role==='manager'?'bmgr':'bgr'}">${u.role}</span></td>
-      <td><span class="b b${u.channel==='MT'?'MT':u.channel==='GT'?'GT':u.channel==='B2B'?'B2B':'gr'}">${u.channel||'—'}</span></td>
-      <td style="font-size:11px">${u.region||'—'}</td>
-      <td style="font-size:11px;color:var(--t2)">${u.position||'—'}</td>
-      <td style="color:var(--t2)">${u.email||'—'}</td>
-      <td><span style="font-family:monospace;background:var(--s2);padding:2px 6px;border-radius:4px;font-size:11px">${u.role==='manager'?'—':u.password||'chưa đặt'}</span></td>
-      <td><div class="av">${u.initials||'?'}</div></td>
+      <td data-label="Tên"><strong>${u.name}</strong></td>
+      <td data-label="Role"><span class="b ${u.role==='manager'?'bmgr':'bgr'}">${u.role}</span></td>
+      <td data-label="Kênh"><span class="b b${u.channel==='MT'?'MT':u.channel==='GT'?'GT':u.channel==='B2B'?'B2B':'gr'}">${u.channel||'—'}</span></td>
+      <td data-label="Vùng" style="font-size:11px">${u.region||'—'}</td>
+      <td data-label="Chức vụ" style="font-size:11px;color:var(--t2)">${u.position||'—'}</td>
+      <td data-label="Email" style="color:var(--t2)">${u.email||'—'}</td>
+      <td data-label="Password"><span style="font-family:monospace;background:var(--s2);padding:2px 6px;border-radius:4px;font-size:11px">${u.role==='manager'?'—':u.password||'chưa đặt'}</span></td>
+      <td data-label="Initials"><div class="av">${u.initials||'?'}</div></td>
       <td><div class="tab"><button class="btn btn-xs" onclick="openUserForm('${u.id}')">✎</button></div></td>
     </tr>`).join('');
 }
@@ -1635,6 +1822,36 @@ async function saveFlow(eid){
     if(f){if(!f.id)f.id='flow_'+Date.now();data.id=f.id;Object.assign(f,data);await saveMaster('Flows',f);}}
   else{const nf={id:'flow_'+Date.now(),...data};state.config.push(nf);await saveMaster('Flows',nf);}
   CM();renderConfig();toast('Flow đã lưu ✓');
+}
+
+// ---- MOBILE NAV ----
+function mobileNav(nm, btn){
+  // "more" menu
+  if(nm==='more'){
+    openMobileMore();return;
+  }
+  // Update bottom nav active state
+  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  // Find and click top nav button
+  showPage(nm, null);
+}
+
+function openMobileMore(){
+  const isMgr2=isMgr();
+  const mc=document.getElementById('mc');
+  mc.innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" style="max-width:100%" onclick="event.stopPropagation()">
+    <div class="mh"><div class="mti">Menu</div><button class="mcl" onclick="CM()">×</button></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${isMgr2?`<button class="btn" style="justify-content:flex-start;padding:12px" onclick="CM();mobileNav2('users')">👥 Team</button>`:''}
+      ${isMgr2?`<button class="btn" style="justify-content:flex-start;padding:12px" onclick="CM();mobileNav2('config')">⚙️ Cấu hình</button>`:''}
+      <button class="btn" style="justify-content:flex-start;padding:12px" onclick="CM();openMyProfile()">👤 Tài khoản của tôi</button>
+      <button class="btn btn-d" style="justify-content:flex-start;padding:12px" onclick="doLogout()">↩ Đăng xuất</button>
+    </div>
+  </div></div>`;
+}
+function mobileNav2(nm){
+  showPage(nm,null);
 }
 
 // ---- INIT ----
