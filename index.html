@@ -7,20 +7,19 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#F5F4F1;--s:#fff;--s2:#F0EEE9;--bd:rgba(0,0,0,.09);--bd2:rgba(0,0,0,.14);
-  --t:#1A1917;--t2:#6B6860;--t3:#9B9890;
-  --blue:#185FA5;--blt:#E6F1FB;--bdk:#0C447C;
-  --grn:#0F6E56;--glt:#E1F5EE;
-  --red:#A32D2D;--rlt:#FCEBEB;
-  --amb:#854F0B;--alt:#FAEEDA;
-  --nvy:#1B3A57;
-  --r:8px;--rl:12px;--rx:16px;
+--bg:#F5F4F1;--s:#fff;--s2:#F0EEE9;--bd:rgba(0,0,0,.09);--bd2:rgba(0,0,0,.14);
+--t:#1A1917;--t2:#6B6860;--t3:#9B9890;
+--blue:#185FA5;--blt:#E6F1FB;--bdk:#0C447C;
+--grn:#0F6E56;--glt:#E1F5EE;
+--red:#A32D2D;--rlt:#FCEBEB;
+--amb:#854F0B;--alt:#FAEEDA;
+--nvy:#1B3A57;
+--r:8px;--rl:12px;--rx:16px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);color:var(--t)}
 button,input,select,textarea{font-family:inherit}
 a{color:var(--blue)}
-
 /* LOGIN */
 .lw{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--nvy)}
 .lc{background:var(--s);border-radius:var(--rx);padding:2rem;width:360px;box-shadow:0 8px 40px rgba(0,0,0,.25)}
@@ -31,7 +30,6 @@ a{color:var(--blue)}
 .lb{width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer}
 .lb:hover{background:var(--bdk)}
 .lerr{font-size:12px;color:var(--red);text-align:center;margin-top:8px;min-height:20px}
-
 /* APP */
 .app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
 .tb{display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;height:52px;background:var(--s);border-bottom:.5px solid var(--bd);flex-shrink:0;gap:10px}
@@ -54,7 +52,6 @@ a{color:var(--blue)}
 .avs{width:20px;height:20px;font-size:8px}
 .pg{flex:1;overflow-y:auto;padding:1.25rem;display:none}
 .pg.active{display:block}
-
 /* BUTTONS */
 .btn{font-size:12px;padding:6px 12px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--s);color:var(--t);cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s}
 .btn:hover{background:var(--s2)}
@@ -66,13 +63,13 @@ a{color:var(--blue)}
 .btn-w{background:var(--amb);color:#fff;border-color:var(--amb)}
 .btn-sm{font-size:11px;padding:4px 9px}
 .btn-xs{font-size:10px;padding:2px 7px}
-
 /* BADGES */
 .b{font-size:10px;padding:2px 7px;border-radius:8px;font-weight:500;white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
 .bMT{background:var(--blt);color:var(--bdk)}
 .bGT{background:#EAF3DE;color:#3B6D11}
 .bB2B{background:var(--alt);color:var(--amb)}
 .bHoReCa{background:#FBEAF0;color:#72243E}
+.bALL{background:var(--s2);color:var(--t2)}
 .btodo{background:var(--s2);color:var(--t2)}
 .binprogress{background:var(--blt);color:var(--bdk)}
 .breview{background:var(--alt);color:var(--amb)}
@@ -82,13 +79,11 @@ a{color:var(--blue)}
 .bsoon{background:var(--alt);color:var(--amb)}
 .bgr{background:var(--s2);color:var(--t2)}
 .bmgr{background:#EDE9FE;color:#5B21B6}
-
 /* STATS */
 .sr{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:1rem}
 .sc{background:var(--s);border:.5px solid var(--bd);border-radius:var(--rl);padding:10px 14px}
 .sl{font-size:11px;color:var(--t2);margin-bottom:3px}
 .sv{font-size:22px;font-weight:600}
-
 /* KANBAN */
 .fb{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
 .fc{font-size:11px;padding:3px 10px;border:.5px solid var(--bd);border-radius:10px;background:var(--s);color:var(--t2);cursor:pointer}
@@ -123,7 +118,6 @@ a{color:var(--blue)}
 .ec{font-size:11px;color:var(--t3);text-align:center;padding:16px 0;border:1px dashed var(--bd);border-radius:var(--rl)}
 .apbtn{width:100%;margin-top:5px;font-size:11px;padding:4px;background:var(--alt);color:var(--amb);border:.5px solid var(--amb);border-radius:var(--r);cursor:pointer;font-weight:500}
 .apbtn:hover{background:var(--amb);color:#fff}
-
 /* MODAL */
 .mbg{position:fixed;inset:0;background:rgba(0,0,0,.38);display:flex;align-items:flex-start;justify-content:center;padding-top:48px;z-index:1000}
 .mo{background:var(--s);border-radius:var(--rx);border:.5px solid var(--bd);padding:1.25rem;width:100%;max-width:560px;max-height:87vh;overflow-y:auto;box-shadow:0 8px 48px rgba(0,0,0,.2)}
@@ -132,7 +126,6 @@ a{color:var(--blue)}
 .mti{font-size:15px;font-weight:600;line-height:1.4}
 .mcl{font-size:20px;background:none;border:none;color:var(--t3);cursor:pointer;padding:0 4px;flex-shrink:0}
 .mcl:hover{color:var(--t)}
-
 /* FORMS */
 .fr{margin-bottom:10px}
 .fl{font-size:11px;color:var(--t2);font-weight:500;margin-bottom:4px;display:block}
@@ -144,7 +137,6 @@ textarea.fi{resize:vertical;min-height:56px}
 .fa{display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap}
 .iab{background:var(--blt);border:.5px solid rgba(24,95,165,.2);border-radius:var(--r);padding:10px;margin-bottom:8px}
 .iat{font-size:11px;font-weight:600;color:var(--bdk);margin-bottom:8px}
-
 /* DETAIL */
 .dmg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
 .dmi .dl{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
@@ -158,7 +150,6 @@ textarea.fi{resize:vertical;min-height:56px}
 .fn.cur{background:var(--blt);color:var(--bdk);border-color:rgba(24,95,165,.3);font-weight:500}
 .fn.don{background:var(--glt);color:var(--grn);border-color:rgba(15,110,86,.2)}
 .nb2{font-size:12px;background:var(--s2);border-radius:var(--r);padding:8px 10px;line-height:1.6;white-space:pre-wrap}
-
 /* COMMENTS */
 .cl{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;max-height:240px;overflow-y:auto}
 .ci{display:flex;gap:8px}
@@ -170,7 +161,6 @@ textarea.fi{resize:vertical;min-height:56px}
 .cir textarea{flex:1;font-size:12px;padding:7px 10px;border:.5px solid var(--bd2);border-radius:var(--r);min-height:38px;resize:none}
 .sys-cm{text-align:center;margin:3px 0}
 .sys-cm span{font-size:10px;color:var(--t3);background:var(--s2);padding:2px 8px;border-radius:8px}
-
 /* SUBTASKS */
 .sui{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:.5px solid var(--bd)}
 .sui:last-child{border-bottom:none}
@@ -181,12 +171,10 @@ textarea.fi{resize:vertical;min-height:56px}
 .sui:hover .sud{opacity:1}
 .asr{display:flex;gap:6px;margin-top:6px}
 .asr input{flex:1;font-size:12px;padding:5px 8px;border:.5px solid var(--bd2);border-radius:var(--r)}
-
 /* PIC CHIPS */
 .pmc{display:flex;flex-wrap:wrap;gap:6px;padding:6px 0}
 .pch{display:flex;align-items:center;gap:5px;font-size:11px;padding:3px 8px;border:.5px solid var(--bd2);border-radius:10px;background:var(--s);cursor:pointer}
 .pch.sel{background:var(--blt);border-color:var(--blue);color:var(--bdk);font-weight:500}
-
 /* TABLE */
 .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .sti{font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px}
@@ -198,18 +186,15 @@ tbody tr:last-child td{border-bottom:none}
 tbody tr:hover td{background:var(--s2)}
 .tab{display:flex;gap:4px;opacity:0}
 tr:hover .tab{opacity:1}
-
 /* ATTACHMENTS */
 .atch{display:flex;flex-direction:column;gap:5px;margin-top:8px}
 .ati{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--s2);border-radius:var(--r);font-size:12px}
 .ati-n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ati-s{font-size:10px;color:var(--t3)}
-
 /* CONFIG */
 .fer{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px 10px;background:var(--s2);border-radius:var(--r)}
 .fsp{display:flex;align-items:center;gap:2px;flex-wrap:wrap;flex:1}
 .fsb{font-size:10px;padding:2px 7px;background:var(--s);border:.5px solid var(--bd);border-radius:5px}
-
 /* TOAST */
 .toc{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:6px;z-index:9999}
 .to{font-size:12px;padding:10px 14px;background:var(--t);color:#fff;border-radius:var(--rl);box-shadow:0 4px 16px rgba(0,0,0,.2);display:flex;align-items:center;gap:8px;animation:si .2s ease}
@@ -221,372 +206,327 @@ tr:hover .tab{opacity:1}
 .sp{display:inline-block;width:12px;height:12px;border:2px solid var(--bd2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px}
 .sui select.fi{height:26px;padding:2px 4px;font-size:10px;border-radius:var(--r);opacity:.7}
 .sui select.fi:focus{opacity:1}
-.cust-opt:hover{background:var(--s2)}
-.cust-opt input{flex-shrink:0}
-
 /* CUST DETAIL */
 .cig{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .cf{background:var(--s2);border-radius:var(--r);padding:8px 10px}
 .cfl{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
 .cfv{font-size:13px;font-weight:500;word-break:break-word}
-
-/* ============================================================
-   MOBILE RESPONSIVE — màn hình dọc ≤ 768px
-   ============================================================ */
+/* STATUS HINT (FIX 1) */
+.status-hint{font-size:11px;color:var(--blue);margin-top:4px;display:none;padding:4px 8px;background:var(--blt);border-radius:var(--r)}
+/* OFFLINE BANNER */
+.offline-banner{display:none;position:fixed;top:52px;left:0;right:0;background:var(--amb);color:#fff;font-size:12px;text-align:center;padding:5px;z-index:500}
+/* MOBILE RESPONSIVE */
 @media (max-width: 768px) {
-
-  /* Topbar */
-  .tb{padding:0 .75rem;height:48px;gap:6px}
-  .bn{font-size:13px}
-  .bs{display:none}
-  .nm{display:none} /* Nav tabs ẩn → dùng bottom nav */
-  .tr{gap:5px}
-  .up span:last-child{display:none}
-  #sync-label{display:none}
-
-  /* Pages */
-  .pg{padding:.75rem;padding-bottom:80px} /* space for bottom nav */
-
-  /* Stats row */
-  .sr{grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:.75rem}
-  .sc{padding:8px 10px}
-  .sv{font-size:18px}
-  .sl{font-size:10px}
-
-  /* Filter bar */
-  .fb{gap:4px;margin-bottom:.75rem;overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}
-  .fb::-webkit-scrollbar{height:2px}
-  .fc{white-space:nowrap;flex-shrink:0;font-size:11px;padding:3px 9px}
-  .fb .btn{flex-shrink:0;white-space:nowrap}
-
-  /* Kanban board → single column scroll */
-  .board{display:flex;flex-direction:column;gap:8px}
-  .kol{border-radius:var(--rl)}
-
-  /* Task cards */
-  .tc{padding:10px}
-  .tt{font-size:13px}
-
-  /* Tables → card layout */
-  .tw{border:none;border-radius:0;margin-bottom:0}
-  table thead{display:none}
-  table tbody tr{
-    display:flex;flex-direction:column;
-    background:var(--s);border:.5px solid var(--bd);
-    border-radius:var(--rl);margin-bottom:8px;padding:10px 12px;
-  }
-  table tbody td{
-    padding:3px 0;border:none;font-size:12px;
-    display:flex;align-items:center;justify-content:space-between;
-  }
-  table tbody td:empty{display:none}
-  table tbody td::before{
-    content:attr(data-label);
-    font-size:10px;color:var(--t3);font-weight:600;
-    text-transform:uppercase;letter-spacing:.04em;
-    min-width:80px;flex-shrink:0;
-  }
-  /* Show/hide table action buttons always on mobile */
-  .tab{opacity:1!important}
-
-  /* Section header */
-  .sh{margin-bottom:8px}
-  .sti{font-size:13px}
-
-  /* Modal */
-  .mbg{padding-top:0;align-items:flex-end}
-  .mo{max-width:100%!important;border-radius:var(--rx) var(--rx) 0 0;max-height:92vh;padding:1rem}
-  .mo-lg{max-width:100%!important}
-
-  /* Forms */
-  .g2{grid-template-columns:1fr}
-  .g3{grid-template-columns:1fr}
-
-  /* Customer checkbox list */
-  #cust-list{max-height:120px}
-
-  /* PIC chips */
-  .pmc{gap:5px}
-  .pch{font-size:11px;padding:3px 7px}
-
-  /* Flow track */
-  .ft{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}
-  .ft::-webkit-scrollbar{height:2px}
-  .fn{flex-shrink:0}
-
-  /* Detail meta */
-  .dmg{grid-template-columns:1fr 1fr;gap:8px}
-
-  /* Config flow rows */
-  .fer{flex-direction:column;align-items:flex-start;gap:6px}
-  .fsp{overflow-x:auto;flex-wrap:nowrap}
-  .fsb{flex-shrink:0}
-
-  /* Login card */
-  .lw{padding:1rem;align-items:flex-end}
-  .lc{width:100%;border-radius:var(--rx) var(--rx) 0 0;padding:1.5rem 1.25rem}
+.tb{padding:0 .75rem;height:48px;gap:6px}
+.bn{font-size:13px}
+.bs{display:none}
+.nm{display:none}
+.tr{gap:5px}
+.up span:last-child{display:none}
+#sync-label{display:none}
+.pg{padding:.75rem;padding-bottom:80px}
+.sr{grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:.75rem}
+.sc{padding:8px 10px}
+.sv{font-size:18px}
+.sl{font-size:10px}
+.fb{gap:4px;margin-bottom:.75rem;overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}
+.fb::-webkit-scrollbar{height:2px}
+.fc{white-space:nowrap;flex-shrink:0;font-size:11px;padding:3px 9px}
+.fb .btn{flex-shrink:0;white-space:nowrap}
+.board{display:flex;flex-direction:column;gap:8px}
+.kol{border-radius:var(--rl)}
+.tc{padding:10px}
+.tt{font-size:13px}
+.tw{border:none;border-radius:0;margin-bottom:0}
+table thead{display:none}
+table tbody tr{display:flex;flex-direction:column;background:var(--s);border:.5px solid var(--bd);border-radius:var(--rl);margin-bottom:8px;padding:10px 12px}
+table tbody td{padding:3px 0;border:none;font-size:12px;display:flex;align-items:center;justify-content:space-between}
+table tbody td:empty{display:none}
+table tbody td::before{content:attr(data-label);font-size:10px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;min-width:80px;flex-shrink:0}
+.tab{opacity:1!important}
+.sh{margin-bottom:8px}
+.sti{font-size:13px}
+.mbg{padding-top:0;align-items:flex-end}
+.mo{max-width:100%!important;border-radius:var(--rx) var(--rx) 0 0;max-height:92vh;padding:1rem}
+.mo-lg{max-width:100%!important}
+.g2{grid-template-columns:1fr}
+.g3{grid-template-columns:1fr}
+#cust-list{max-height:120px}
+.pmc{gap:5px}
+.pch{font-size:11px;padding:3px 7px}
+.ft{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}
+.ft::-webkit-scrollbar{height:2px}
+.fn{flex-shrink:0}
+.dmg{grid-template-columns:1fr 1fr;gap:8px}
+.fer{flex-direction:column;align-items:flex-start;gap:6px}
+.fsp{overflow-x:auto;flex-wrap:nowrap}
+.fsb{flex-shrink:0}
+.lw{padding:1rem;align-items:flex-end}
+.lc{width:100%;border-radius:var(--rx) var(--rx) 0 0;padding:1.5rem 1.25rem}
 }
-
-/* Bottom Navigation Bar (mobile only) */
 @media (max-width: 768px) {
-  .bottom-nav{
-    display:flex;position:fixed;bottom:0;left:0;right:0;
-    background:var(--s);border-top:.5px solid var(--bd);
-    height:60px;z-index:200;
-  }
-  .bnav-btn{
-    flex:1;display:flex;flex-direction:column;align-items:center;
-    justify-content:center;gap:2px;font-size:10px;color:var(--t2);
-    background:none;border:none;cursor:pointer;padding:4px 0;
-    transition:color .15s;
-  }
-  .bnav-btn.active{color:var(--blue)}
-  .bnav-btn svg{width:20px;height:20px}
-  .bnav-btn .bnav-lbl{font-size:10px}
+.bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--s);border-top:.5px solid var(--bd);height:60px;z-index:200}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;color:var(--t2);background:none;border:none;cursor:pointer;padding:4px 0;transition:color .15s}
+.bnav-btn.active{color:var(--blue)}
+.bnav-btn svg{width:20px;height:20px}
+.bnav-btn .bnav-lbl{font-size:10px}
 }
-
-/* Desktop: ẩn bottom nav */
 @media (min-width: 769px) {
-  .bottom-nav{display:none!important}
-  .nm{display:flex}
+.bottom-nav{display:none!important}
+.nm{display:flex}
 }
-
 </style>
 </head>
 <body>
+<!-- OFFLINE BANNER -->
+<div id="offline-banner" class="offline-banner">📶 Mạng đang yếu — đang dùng dữ liệu cache</div>
 
 <!-- LOGIN -->
 <div id="login" class="lw">
-  <div class="lc">
-    <div class="ll">DGM</div>
-    <div class="lt">DGM Sales CRM</div>
-    <div class="ls">Ayam Brand · Alce Nero · Duchef</div>
-    <label style="font-size:11px;color:var(--t2);font-weight:500;margin-bottom:4px;display:block">Chọn tài khoản</label>
-    <select id="lu" class="lf">
-      <option value="">-- Chọn tên --</option>
-      <option value="u1">Bùi Quang Quý (Manager)</option>
-      <option value="u2">Hồ Anh Tài (Sales Representative)</option>
-      <option value="u3">Thiên Thanh (Sales Representative)</option>
-      <option value="u4">Nguyễn Xuân Đức (Sales Representative)</option>
-      <option value="u5">Phương Ngọc Chánh (Sales Representative)</option>
-      <option value="u6">Hồ Ngọc Anh (Sales Representative)</option>
-      <option value="u7">Phương Thi (Trade Marketing)</option>
-    </select>
-    <label style="font-size:11px;color:var(--t2);font-weight:500;margin-bottom:4px;display:block">Email Gmail</label>
-    <input type="email" id="le" class="lf" placeholder="email@gmail.com">
-    <label style="font-size:11px;color:var(--t2);font-weight:500;margin-bottom:4px;display:block" id="pw-label">Mật khẩu</label>
-    <input type="password" id="lpw" class="lf" placeholder="Nhập mật khẩu..." onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="lb" onclick="doLogin()">Đăng nhập</button>
-    <div class="lerr" id="lerr"></div>
-  </div>
+<div class="lc">
+<div class="ll">DGM</div>
+<div class="lt">DGM Sales CRM</div>
+<div class="ls">Ayam Brand · Alce Nero · Duchef</div>
+<label style="font-size:11px;color:var(--t2);font-weight:500;margin-bottom:4px;display:block">Chọn tài khoản</label>
+<select id="lu" class="lf">
+<option value="">-- Chọn tên --</option>
+<option value="u1">Bùi Quang Quý (Manager)</option>
+<option value="u2">Hồ Anh Tài (Sales Representative)</option>
+<option value="u3">Thiên Thanh (Sales Representative)</option>
+<option value="u4">Nguyễn Xuân Đức (Sales Representative)</option>
+<option value="u5">Phương Ngọc Chánh (Sales Representative)</option>
+<option value="u6">Hồ Ngọc Anh (Sales Representative)</option>
+<option value="u7">Phương Thi (Trade Marketing)</option>
+</select>
+<label style="font-size:11px;color:var(--t2);font-weight:500;margin-bottom:4px;display:block">Email Gmail</label>
+<input type="email" id="le" class="lf" placeholder="email@gmail.com">
+<label style="font-size:11px;color:var(--t2);font-weight:500;margin-bottom:4px;display:block" id="pw-label">Mật khẩu</label>
+<input type="password" id="lpw" class="lf" placeholder="Nhập mật khẩu..." onkeydown="if(event.key==='Enter')doLogin()">
+<button class="lb" onclick="doLogin()">Đăng nhập</button>
+<div class="lerr" id="lerr"></div>
+</div>
 </div>
 
 <!-- APP -->
 <div class="app" id="app" style="display:none">
-  <div class="tb">
-    <div class="brnd">
-      <div class="bm">DGM</div>
-      <div><div class="bn">DGM Sales CRM</div><div class="bs">Ayam Brand · Alce Nero · Duchef</div></div>
-    </div>
-    <div class="nm" id="nav">
-      <button class="nb active" onclick="showPage('kanban',this)">📋 Kanban</button>
-      <button class="nb" onclick="showPage('customers',this)">🏢 Khách hàng</button>
-      <button class="nb" onclick="showPage('products',this)">📦 Sản phẩm</button>
-      <button class="nb mgr-only" onclick="showPage('users',this)">👥 Team</button>
-      <button class="nb mgr-only" onclick="showPage('config',this)">⚙️ Cấu hình</button>
-    </div>
-    <div class="tr">
-      <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t3)">
-        <div class="sd" id="sd"></div><span id="sl">...</span>
-      </div>
-      <button class="btn btn-sm" onclick="syncAll()" title="Sync">↻</button>
-      <button class="btn btn-sm" id="my-profile-btn" onclick="openMyProfile()" style="display:none" title="Xem tài khoản của tôi">👤</button>
-      <div class="up" onclick="doLogout()">
-        <div class="av" id="cav">?</div>
-        <span id="cnm">...</span>
-        <span style="font-size:10px;color:var(--t3)">↩</span>
-      </div>
-    </div>
-  </div>
+<div class="tb">
+<div class="brnd">
+<div class="bm">DGM</div>
+<div><div class="bn">DGM Sales CRM</div><div class="bs">Ayam Brand · Alce Nero · Duchef</div></div>
+</div>
+<div class="nm" id="nav">
+<button class="nb active" onclick="showPage('kanban',this)">📋 Kanban</button>
+<button class="nb" onclick="showPage('customers',this)">🏢 Khách hàng</button>
+<button class="nb" onclick="showPage('products',this)">📦 Sản phẩm</button>
+<button class="nb mgr-only" onclick="showPage('users',this)">👥 Team</button>
+<button class="nb mgr-only" onclick="showPage('config',this)">⚙️ Cấu hình</button>
+</div>
+<div class="tr">
+<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t3)">
+<div class="sd" id="sd"></div><span id="sl">...</span>
+</div>
+<button class="btn btn-sm" onclick="syncAll()" title="Sync">↻</button>
+<button class="btn btn-sm" id="my-profile-btn" onclick="openMyProfile()" style="display:none" title="Xem tài khoản của tôi">👤</button>
+<div class="up" onclick="doLogout()">
+<div class="av" id="cav">?</div>
+<span id="cnm">...</span>
+<span style="font-size:10px;color:var(--t3)">↩</span>
+</div>
+</div>
+</div>
 
-  <div class="pg active" id="pg-kanban">
-    <div class="sr" id="stats"></div>
-    <div class="fb" id="fbar"></div>
-    <div class="board" id="board"></div>
-  </div>
+<div class="pg active" id="pg-kanban">
+<div class="sr" id="stats"></div>
+<div class="fb" id="fbar"></div>
+<div class="board" id="board"></div>
+</div>
 
-  <div class="pg" id="pg-customers">
-    <div class="sh">
-      <div class="sti">🏢 Khách hàng</div>
-      <button class="btn btn-p btn-sm" onclick="openCustForm()">+ Thêm</button>
-    </div>
-    <div class="tw"><table>
-      <thead><tr><th>Tên</th><th>Kênh</th><th>Vùng</th><th>Hình thức KD</th><th>PIC</th><th>Liên hệ</th><th>SĐT</th><th>Số CH</th><th>Tasks</th><th></th></tr></thead>
-      <tbody id="ctb"></tbody>
-    </table></div>
-  </div>
+<div class="pg" id="pg-customers">
+<div class="sh">
+<div class="sti">🏢 Khách hàng</div>
+<button class="btn btn-p btn-sm" onclick="openCustForm()">+ Thêm</button>
+</div>
+<div class="tw"><table>
+<thead><tr><th>Tên</th><th>Kênh</th><th>Vùng</th><th>Hình thức KD</th><th>PIC</th><th>Liên hệ</th><th>SĐT</th><th>Số CH</th><th>Tasks</th><th></th></tr></thead>
+<tbody id="ctb"></tbody>
+</table></div>
+</div>
 
-  <div class="pg" id="pg-products">
-    <div class="sh">
-      <div class="sti">📦 Sản phẩm</div>
-      <div id="prod-add-btn"></div>
-    </div>
-    <div class="tw"><table>
-      <thead><tr><th>Tên sản phẩm</th><th>Brand</th><th>Danh mục</th><th>SKU</th><th>Đơn vị</th><th>Trạng thái</th><th></th></tr></thead>
-      <tbody id="ptb"></tbody>
-    </table></div>
-  </div>
+<div class="pg" id="pg-products">
+<div class="sh">
+<div class="sti">📦 Sản phẩm</div>
+<div id="prod-add-btn"></div>
+</div>
+<div class="tw"><table>
+<thead><tr><th>Tên sản phẩm</th><th>Brand</th><th>Danh mục</th><th>SKU</th><th>Đơn vị</th><th>Trạng thái</th><th></th></tr></thead>
+<tbody id="ptb"></tbody>
+</table></div>
+</div>
 
-  <div class="pg" id="pg-users">
-    <div class="sh">
-      <div class="sti">👥 Team</div>
-      <button class="btn btn-p btn-sm" onclick="openUserForm()">+ Thêm</button>
-    </div>
-    <div class="tw"><table>
-      <thead><tr><th>Tên</th><th>Role</th><th>Kênh</th><th>Vùng</th><th>Chức vụ</th><th>Email</th><th>Password</th><th>Initials</th><th></th></tr></thead>
-      <tbody id="utb"></tbody>
-    </table></div>
-  </div>
+<div class="pg" id="pg-users">
+<div class="sh">
+<div class="sti">👥 Team</div>
+<button class="btn btn-p btn-sm" onclick="openUserForm()">+ Thêm</button>
+</div>
+<div class="tw"><table>
+<thead><tr><th>Tên</th><th>Role</th><th>Kênh</th><th>Vùng</th><th>Chức vụ</th><th>Email</th><th>Password</th><th>Initials</th><th></th></tr></thead>
+<tbody id="utb"></tbody>
+</table></div>
+</div>
 
-  <div class="pg" id="pg-config">
-    <div class="sh">
-      <div class="sti">⚙️ Cấu hình Flow <span style="font-size:10px;background:#EDE9FE;color:#5B21B6;padding:2px 7px;border-radius:6px;font-weight:500">Manager only</span></div>
-      <button class="btn btn-p btn-sm" onclick="openFlowForm()">+ Thêm flow</button>
-    </div>
-    <div id="cfg-body"></div>
-  </div>
+<div class="pg" id="pg-config">
+<div class="sh">
+<div class="sti">⚙️ Cấu hình Flow <span style="font-size:10px;background:#EDE9FE;color:#5B21B6;padding:2px 7px;border-radius:6px;font-weight:500">Manager only</span></div>
+<button class="btn btn-p btn-sm" onclick="openFlowForm()">+ Thêm flow</button>
+</div>
+<div id="cfg-body"></div>
+</div>
 </div>
 
 <div id="mc"></div>
 
 <!-- Bottom Navigation (mobile only) -->
 <nav class="bottom-nav" id="bottom-nav">
-  <button class="bnav-btn active" onclick="mobileNav('kanban',this)" id="mnav-kanban">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <rect x="3" y="3" width="7" height="18"/><rect x="14" y="3" width="7" height="10"/><rect x="14" y="17" width="7" height="4"/>
-    </svg>
-    <span class="bnav-lbl">Kanban</span>
-  </button>
-  <button class="bnav-btn" onclick="mobileNav('customers',this)" id="mnav-customers">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-    </svg>
-    <span class="bnav-lbl">KH</span>
-  </button>
-  <button class="bnav-btn" onclick="openTaskForm()" id="mnav-add" style="color:var(--blue)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <circle cx="12" cy="12" r="10" fill="var(--blue)" stroke="none"/>
-      <line x1="12" y1="8" x2="12" y2="16" stroke="#fff"/><line x1="8" y1="12" x2="16" y2="12" stroke="#fff"/>
-    </svg>
-    <span class="bnav-lbl" style="color:var(--blue)">Thêm</span>
-  </button>
-  <button class="bnav-btn" onclick="mobileNav('products',this)" id="mnav-products">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-    </svg>
-    <span class="bnav-lbl">SP</span>
-  </button>
-  <button class="bnav-btn" onclick="mobileNav('more',this)" id="mnav-more">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="19" r="1" fill="currentColor"/>
-    </svg>
-    <span class="bnav-lbl">Thêm</span>
-  </button>
+<button class="bnav-btn active" onclick="mobileNav('kanban',this)" id="mnav-kanban">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<rect x="3" y="3" width="7" height="18"/><rect x="14" y="3" width="7" height="10"/><rect x="14" y="17" width="7" height="4"/>
+</svg>
+<span class="bnav-lbl">Kanban</span>
+</button>
+<button class="bnav-btn" onclick="mobileNav('customers',this)" id="mnav-customers">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+<path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+</svg>
+<span class="bnav-lbl">KH</span>
+</button>
+<button class="bnav-btn" onclick="openTaskForm()" id="mnav-add" style="color:var(--blue)">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+<circle cx="12" cy="12" r="10" fill="var(--blue)" stroke="none"/>
+<line x1="12" y1="8" x2="12" y2="16" stroke="#fff"/><line x1="8" y1="12" x2="16" y2="12" stroke="#fff"/>
+</svg>
+<span class="bnav-lbl" style="color:var(--blue)">Thêm</span>
+</button>
+<button class="bnav-btn" onclick="mobileNav('products',this)" id="mnav-products">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+</svg>
+<span class="bnav-lbl">SP</span>
+</button>
+<button class="bnav-btn" onclick="mobileNav('more',this)" id="mnav-more">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="19" r="1" fill="currentColor"/>
+</svg>
+<span class="bnav-lbl">Thêm</span>
+</button>
 </nav>
+
 <div class="toc" id="toasts"></div>
 
 <script>
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbxVBfHwL58O2hT7iAIpt-ZSk4d0eczLinvZmgwnubwNPigOeMXg79D6an8UWL2SXBih/exec';
 const STATUSES=['todo','inprogress','review','done','done_fail'];
-const SL={todo:"To Do",inprogress:"In Progress",review:"Ch\u1edd duy\u1ec7t",done:"\u2705 Ho\u00e0n th\u00e0nh",done_fail:"\u274c Kh\u00f4ng th\u00e0nh c\u00f4ng"};
-const CHANNELS=["ALL","MT","GT","B2B","HoReCa"];
 
-// ---- DEFAULT DATA (fallback khi Sheet chưa kết nối) ----
-// Password 4 số, khác nhau cho mỗi người (manager không cần)
+// ✅ FIX 3: Auto-retry khi mạng phục hồi
+window.addEventListener('online',()=>{
+  const banner=document.getElementById('offline-banner');
+  if(banner)banner.style.display='none';
+  toast('🌐 Mạng đã kết nối lại — đang sync...','ok');
+  setTimeout(syncAll,1000);
+});
+window.addEventListener('offline',()=>{
+  const banner=document.getElementById('offline-banner');
+  if(banner)banner.style.display='block';
+  setSS('error');
+  toast('📶 Mạng bị ngắt — đang dùng cache','warn');
+});
+
+const SL={todo:'To Do',inprogress:'In Progress',review:'Chờ duyệt',done:'✅ Hoàn thành',done_fail:'❌ Không thành công'};
+const CHANNELS=['ALL','MT','GT','B2B','HoReCa'];
+
 const DEFAULT_USERS=[
-  {id:"u1",name:"B\u00f9i Quang Qu\u00fd",email:"quangquy.bui@gmail.com",role:"manager",position:"Sales & Marketing Manager",channel:"ALL",region:"ALL",initials:"QB",password:"",status:"Active"},
-  {id:"u2",name:"H\u1ed3 Anh T\u00e0i",email:"taihathuy@gmail.com",role:"sales",position:"Sales Representative",channel:"MT",region:"ALL",initials:"HAT",password:"2847",status:"Active"},
-  {id:"u3",name:"Thi\u00ean Thanh",email:"ng.thienthanh1696@gmail.com",role:"sales",position:"Sales Representative",channel:"MT",region:"ALL",initials:"TT",password:"5193",status:"Active"},
-  {id:"u4",name:"Nguy\u1ec5n Xu\u00e2n \u0110\u1ee9c",email:"nguyenxuanduc13091987@gmail.com",role:"sales",position:"Sales Representative",channel:"GT",region:"Mi\u1ec1n B\u1eafc",initials:"NXD",password:"7062",status:"Active"},
-  {id:"u5",name:"Ph\u01b0\u01a1ng Ng\u1ecdc Ch\u00e1nh",email:"chanhphuong86@gmail.com",role:"sales",position:"Sales Representative",channel:"GT",region:"Mi\u1ec1n Nam",initials:"PNC",password:"3815",status:"Active"},
-  {id:"u6",name:"H\u1ed3 Ng\u1ecdc Anh",email:"honguyennguyenan2016@gmail.com",role:"sales",position:"Sales Representative",channel:"GT",region:"Mi\u1ec1n Trung",initials:"HNA",password:"9274",status:"Active"},
-  {id:"u7",name:"Ph\u01b0\u01a1ng Thi",email:"phuongthi21@gmail.com",role:"trade",position:"Trade Marketing",channel:"ALL",region:"ALL",initials:"DPT",password:"6538",status:"Active"}
+{id:'u1',name:'Bùi Quang Quý',email:'quangquy.bui@gmail.com',role:'manager',position:'Sales & Marketing Manager',channel:'ALL',region:'ALL',initials:'QB',password:'',status:'Active'},
+{id:'u2',name:'Hồ Anh Tài',email:'taihathuy@gmail.com',role:'sales',position:'Sales Representative',channel:'MT',region:'ALL',initials:'HAT',password:'2847',status:'Active'},
+{id:'u3',name:'Thiên Thanh',email:'ng.thienthanh1696@gmail.com',role:'sales',position:'Sales Representative',channel:'MT',region:'ALL',initials:'TT',password:'5193',status:'Active'},
+{id:'u4',name:'Nguyễn Xuân Đức',email:'nguyenxuanduc13091987@gmail.com',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Bắc',initials:'NXD',password:'7062',status:'Active'},
+{id:'u5',name:'Phương Ngọc Chánh',email:'chanhphuong86@gmail.com',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Nam',initials:'PNC',password:'3815',status:'Active'},
+{id:'u6',name:'Hồ Ngọc Anh',email:'honguyennguyenan2016@gmail.com',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Trung',initials:'HNA',password:'9274',status:'Active'},
+{id:'u7',name:'Phương Thi',email:'phuongthi21@gmail.com',role:'trade',position:'Trade Marketing',channel:'ALL',region:'ALL',initials:'DPT',password:'6538',status:'Active'}
 ];
 
 const DEFAULT_FLOWS=[
-  {id:"f1",name:"General Task",channel:"ALL",task_type:"General",steps:["To Do","In Progress","Done"]},
-  {id:"f2",name:"MT \u2013 Trading Term",channel:"MT",task_type:"Trading Term",steps:["Nh\u1eadn","G\u1eedi proposal ph\u1ea3n h\u1ed3i","\u0110\u00e0m ph\u00e1n","\u0110\u1ed3ng \u00fd","Tr\u00ecnh k\u00ed"]},
-  {id:"f3",name:"MT \u2013 New Product Listing",channel:"MT",task_type:"Listing",steps:["L\u1ea5y m\u1eabu","G\u1eedi m\u1eabu","X\u00e1c nh\u1eadn","L\u00ean k\u1ec7"]},
-  {id:"f4",name:"POSM/ Design",channel:"ALL",task_type:"Activation",steps:["\u00dd t\u01b0\u1edfng","thi\u1ebft k\u1ebf","duy\u1ec7t thi\u1ebft k\u1ebf","l\u00e0m vi\u1ec7c v\u1edbi NCC","k\u00ed h\u1ee3p \u0111\u1ed3ng","giao h\u00e0ng"]},
-  {id:"f5",name:"Sampling/ Activation",channel:"ALL",task_type:"Activation",steps:["L\u00ean k\u1ebf ho\u1ea1ch","G\u1eedi ch\u1edd duy\u1ec7t","Duy\u1ec7t k\u1ebf ho\u1ea1ch","\u0110\u0103ng k\u00ed v\u1edbi kh\u00e1ch h\u00e0ng","chu\u1ea9n b\u1ecb v\u1eadt d\u1ee5ng","th\u1ef1c hi\u1ec7n"]},
-  {id:"f6",name:"GT \u2013 Trade Program",channel:"ALL",task_type:"Trade Program",steps:["L\u00ean ch\u01b0\u01a1ng tr\u00ecnh","Th\u00f4ng b\u00e1o","G\u1eedi sales","G\u1eedi kh\u00e1ch","Order"]},
-  {id:"f7",name:"GT \u2013 Ph\u00e1t tri\u1ec3n \u0111i\u1ec3m b\u00e1n",channel:"GT",task_type:"Expansion",steps:["Kh\u1ea3o s\u00e1t","Ti\u1ebfp c\u1eadn","Ch\u00e0o h\u00e0ng","Tr\u01b0ng b\u00e0y","Review"]},
-  {id:"f8",name:"MT - kh\u00e1ch h\u00e0ng m\u1edbi",channel:"MT",task_type:"Expansion",steps:["Ti\u1ebfp c\u1eadn","G\u1eedi th\u00f4ng tin s\u1ea3n ph\u1ea9m, gi\u00e1","\u0111\u00e0m ph\u00e1n trading term/ h\u1ee3p \u0111\u1ed3ng","k\u00ed h\u1ee3p \u0111\u1ed3ng","b\u1eaft \u0111\u1ea7u b\u00e1n h\u00e0ng"]}
+{id:'f1',name:'General Task',channel:'ALL',task_type:'General',steps:['To Do','In Progress','Done']},
+{id:'f2',name:'MT – Trading Term',channel:'MT',task_type:'Trading Term',steps:['Nhận','Gửi proposal phản hồi','Đàm phán','Đồng ý','Trình ký']},
+{id:'f3',name:'MT – New Product Listing',channel:'MT',task_type:'Listing',steps:['Lấy mẫu','Gửi mẫu','Xác nhận','Lên kệ']},
+{id:'f4',name:'POSM/ Design',channel:'ALL',task_type:'Activation',steps:['Ý tưởng','thiết kế','duyệt thiết kế','làm việc với NCC','ký hợp đồng','giao hàng']},
+{id:'f5',name:'Sampling/ Activation',channel:'ALL',task_type:'Activation',steps:['Lên kế hoạch','Gửi chờ duyệt','Duyệt kế hoạch','Đăng ký với khách hàng','chuẩn bị vật dụng','thực hiện']},
+{id:'f6',name:'GT – Trade Program',channel:'ALL',task_type:'Trade Program',steps:['Lên chương trình','Thông báo','Gửi sales','Gửi khách','Order']},
+{id:'f7',name:'GT – Phát triển điểm bán',channel:'GT',task_type:'Expansion',steps:['Khảo sát','Tiếp cận','Chào hàng','Trưng bày','Review']},
+{id:'f8',name:'MT - khách hàng mới',channel:'MT',task_type:'Expansion',steps:['Tiếp cận','Gửi thông tin sản phẩm, giá','đàm phán trading term/ hợp đồng','ký hợp đồng','bắt đầu bán hàng']}
 ];
 
 const DEFAULT_CUSTOMERS=[
-  {id:1,name:"Mega Market",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"\u0110\u1ea1i si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:2,name:"Co.op Xtra",channel:"MT",region:"Mi\u1ec1n Nam",business_type:"Si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:3,name:"Lotte Mart",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"\u0110\u1ea1i si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:4,name:"Central Retail",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"\u0110\u1ea1i si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:5,name:"Co.op Finelife",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"Si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:6,name:"An Nam Gourmet",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"Si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:7,name:"Nam An Market",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"Si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:8,name:"Emart",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"\u0110\u1ea1i si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:9,name:"King Food",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"C\u1eeda h\u00e0ng ti\u1ec7n l\u1ee3i",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:10,name:"Sai Gon HD",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"Si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:11,name:"K Market (An Cat)",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"Si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:12,name:"Menas Gourmet",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"Si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:13,name:"Roots Organic",channel:"MT",region:"To\u00e0n qu\u1ed1c",business_type:"Si\u00eau th\u1ecb",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:14,name:"Ho\u00e0ng Thi\u00ean Ph\u00e1t",channel:"GT",region:"Mi\u1ec1n Nam",business_type:"\u0110\u1ea1i l\u00fd c\u1ea5p 1",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:15,name:"Moon Milk",channel:"GT",region:"Mi\u1ec1n Nam",business_type:"\u0110\u1ea1i l\u00fd c\u1ea5p 1",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:16,name:"Minh Duoc",channel:"GT",region:"Mi\u1ec1n Nam",business_type:"\u0110\u1ea1i l\u00fd c\u1ea5p 1",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:17,name:"Th\u1ef1c Ph\u1ea9m Plaza",channel:"GT",region:"Mi\u1ec1n B\u1eafc",business_type:"\u0110\u1ea1i l\u00fd c\u1ea5p 1",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:18,name:"Mi\u1ec1n Th\u1ef1c Ph\u1ea9m",channel:"GT",region:"Mi\u1ec1n B\u1eafc",business_type:"FS",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:19,name:"Leenkim",channel:"GT",region:"Mi\u1ec1n Nam",business_type:"Production",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:20,name:"V\u00e2n V\u0169",channel:"GT",region:"Mi\u1ec1n B\u1eafc",business_type:"FS",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:21,name:"Th\u00e1i \u0110\u00f4ng H\u01b0ng",channel:"GT",region:"Mi\u1ec1n Trung",business_type:"\u0110\u1ea1i l\u00fd c\u1ea5p 1",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:22,name:"Vi\u1ec7t H\u1ea3i",channel:"GT",region:"Mi\u1ec1n Trung",business_type:"FS",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:23,name:"An Nam OEM",channel:"B2B",region:"To\u00e0n qu\u1ed1c",business_type:"Trader",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:24,name:"Ho\u00e0ng L\u00e2m Food",channel:"B2B",region:"To\u00e0n qu\u1ed1c",business_type:"Production",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"},
-  {id:25,name:"CFF",channel:"B2B",region:"To\u00e0n qu\u1ed1c",business_type:"Trader",contact_name:"",phone:"",email:"",notes:"",num_stores:"",resources:"",financial:"",pic_id:"",status:"Active"}
+{id:1,name:'Mega Market',channel:'MT',region:'Toàn quốc',business_type:'Đại siêu thị',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:2,name:'Co.op Xtra',channel:'MT',region:'Miền Nam',business_type:'Siêu thị',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:3,name:'Lotte Mart',channel:'MT',region:'Toàn quốc',business_type:'Đại siêu thị',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:4,name:'Central Retail',channel:'MT',region:'Toàn quốc',business_type:'Đại siêu thị',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:5,name:'Co.op Finelife',channel:'MT',region:'Toàn quốc',business_type:'Siêu thị',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:6,name:'An Nam Gourmet',channel:'MT',region:'Toàn quốc',business_type:'Siêu thị',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:7,name:'Nam An Market',channel:'MT',region:'Toàn quốc',business_type:'Siêu thị',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:8,name:'Emart',channel:'MT',region:'Toàn quốc',business_type:'Đại siêu thị',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:9,name:'King Food',channel:'MT',region:'Toàn quốc',business_type:'Cửa hàng tiện lợi',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:10,name:'Sai Gon HD',channel:'MT',region:'Toàn quốc',business_type:'Siêu thị',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:11,name:'K Market (An Cat)',channel:'MT',region:'Toàn quốc',business_type:'Siêu thị',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:12,name:'Menas Gourmet',channel:'MT',region:'Toàn quốc',business_type:'Siêu thị',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:13,name:'Roots Organic',channel:'MT',region:'Toàn quốc',business_type:'Siêu thị',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:14,name:'Hoàng Thiên Phát',channel:'GT',region:'Miền Nam',business_type:'Đại lý cấp 1',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:15,name:'Moon Milk',channel:'GT',region:'Miền Nam',business_type:'Đại lý cấp 1',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:16,name:'Minh Duoc',channel:'GT',region:'Miền Nam',business_type:'Đại lý cấp 1',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:17,name:'Thực Phẩm Plaza',channel:'GT',region:'Miền Bắc',business_type:'Đại lý cấp 1',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:18,name:'Miền Thực Phẩm',channel:'GT',region:'Miền Bắc',business_type:'FS',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:19,name:'Leenkim',channel:'GT',region:'Miền Nam',business_type:'Production',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:20,name:'Vân Vũ',channel:'GT',region:'Miền Bắc',business_type:'FS',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:21,name:'Thái Đông Hưng',channel:'GT',region:'Miền Trung',business_type:'Đại lý cấp 1',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:22,name:'Việt Hải',channel:'GT',region:'Miền Trung',business_type:'FS',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:23,name:'An Nam OEM',channel:'B2B',region:'Toàn quốc',business_type:'Trader',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:24,name:'Hoàng Lâm Food',channel:'B2B',region:'Toàn quốc',business_type:'Production',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'},
+{id:25,name:'CFF',channel:'B2B',region:'Toàn quốc',business_type:'Trader',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'}
 ];
 
 const DEFAULT_PRODUCTS=[
-  {id:1,name:"Baked Beans In Tomato Sauce - Vietnam 24 x425g",brand:"Ayam Brand",category:"Beans & Peas",sku:"",unit:"lon",status:"Active"},
-  {id:2,name:"Baked Beans In Tomato Sauce - Vietnam 48 x230g",brand:"Ayam Brand",category:"Beans & Peas",sku:"",unit:"lon",status:"Active"},
-  {id:3,name:"Baked Beans In Tomato Sauce Cheeze - Vietnam 24 x 425g",brand:"Ayam Brand",category:"Beans & Peas",sku:"",unit:"lon",status:"Active"},
-  {id:4,name:"Chickpeas In Brine - Vietnam 24 x 425g",brand:"Ayam Brand",category:"Beans & Peas",sku:"",unit:"lon",status:"Active"},
-  {id:5,name:"Chilli Tuna 24 x 160g",brand:"Ayam Brand",category:"Tuna",sku:"",unit:"lon",status:"Active"},
-  {id:6,name:"Coconut Milk 46 x 65ml",brand:"Ayam Brand",category:"Coconut",sku:"",unit:"g\u00f3i",status:"Active"},
-  {id:7,name:"Light Coconut Milk 24 x 400ml",brand:"Ayam Brand",category:"Coconut",sku:"",unit:"lon",status:"Active"},
-  {id:8,name:"Mackerel In Tomato Sauce 12 x 155g",brand:"Ayam Brand",category:"Mackerel",sku:"",unit:"lon",status:"Active"},
-  {id:9,name:"Mackerel In Tomato Sauce 48 x 230g",brand:"Ayam Brand",category:"Mackerel",sku:"",unit:"lon",status:"Active"},
-  {id:10,name:"Premium Coconut Milk 24 x 400ml",brand:"Ayam Brand",category:"Coconut",sku:"",unit:"lon",status:"Active"},
-  {id:11,name:"Processed Peas - Vietnam 24 x 425g",brand:"Ayam Brand",category:"Beans & Peas",sku:"",unit:"lon",status:"Discontinued"},
-  {id:12,name:"Pure Coconut Cream 12 x 270ml",brand:"Ayam Brand",category:"Coconut",sku:"",unit:"lon",status:"Active"},
-  {id:13,name:"Sardine In Extra Virgin Olive Oil 24 x120g",brand:"Ayam Brand",category:"Sardine",sku:"",unit:"lon",status:"Active"},
-  {id:14,name:"Sardine In Extra Virgin Olive Oil And Chilli 24 x 120g",brand:"Ayam Brand",category:"Sardine",sku:"",unit:"lon",status:"Active"},
-  {id:15,name:"Sardine In Tomato Sauce 12 x 155g",brand:"Ayam Brand",category:"Sardine",sku:"",unit:"lon",status:"Active"},
-  {id:16,name:"Sardines In Tomato Sauce 24 x 120g",brand:"Ayam Brand",category:"Sardine",sku:"",unit:"lon",status:"Active"},
-  {id:17,name:"Sriracha Sauce Piment 12 x 235ml (Printed Bottle)",brand:"Ayam Brand",category:"Sauce",sku:"",unit:"chai",status:"Active"},
-  {id:18,name:"Tomato Puree - Vietnam 24 x 220g",brand:"Ayam Brand",category:"Tomato",sku:"",unit:"lon",status:"Active"},
-  {id:19,name:"Tomato Puree - Vietnam 24 x 430g",brand:"Ayam Brand",category:"Tomato",sku:"",unit:"lon",status:"Active"},
-  {id:20,name:"Tuna Chunks In Olive Oil Light 24 x 150g",brand:"Ayam Brand",category:"Tuna",sku:"",unit:"lon",status:"Active"},
-  {id:21,name:"Tuna Chunks In Sunflower Oil 24 x 150g",brand:"Ayam Brand",category:"Tuna",sku:"",unit:"lon",status:"Active"},
-  {id:22,name:"Tuna Chunks In Water 24 x 150g",brand:"Ayam Brand",category:"Tuna",sku:"",unit:"lon",status:"Active"},
-  {id:23,name:"Tuna Flakes In Olive Oil Light 24 x 150g",brand:"Ayam Brand",category:"Tuna",sku:"",unit:"lon",status:"Active"},
-  {id:24,name:"Tuna Flakes In Sunflower Oil 24 x 150g",brand:"Ayam Brand",category:"Tuna",sku:"",unit:"lon",status:"Active"},
-  {id:25,name:"Tuna Flakes In Water Light 24 x 150g",brand:"Ayam Brand",category:"Tuna",sku:"",unit:"lon",status:"Active"},
-  {id:26,name:"White Beans In Brine - Vietnam 24 x 425g",brand:"Ayam Brand",category:"Beans & Peas",sku:"",unit:"lon",status:"Active"},
-  {id:27,name:"Whole Kernel Corn 24 x 425g",brand:"Ayam Brand",category:"Corn",sku:"",unit:"lon",status:"Active"},
-  {id:28,name:"Alce Nero Organic Macaroni 12 x 500g",brand:"Alce Nero",category:"",sku:"",unit:"",status:"Active"},
-  {id:29,name:"Alce Nero Organic Pasta Sauce Onion & Basil 12 x 350g",brand:"Alce Nero",category:"",sku:"",unit:"",status:"Active"},
-  {id:30,name:"Alce Nero Organic Spaghetti 12 x 500g",brand:"Alce Nero",category:"",sku:"",unit:"",status:"Active"},
-  {id:31,name:"Duchef Baked Beans In Tomato Sauce - Vietnam 24 x 425g",brand:"Duchef",category:"Beans & Peas",sku:"",unit:"",status:"Active"},
-  {id:32,name:"Latino Bella Baked Beans In Tomato Sauce",brand:"Latino Bella",category:"Beans & Peas",sku:"",unit:"",status:"Active"},
-  {id:33,name:"Great Northern Beans",brand:"Kelly Beans",category:"Dry Beans",sku:"",unit:"",status:"Active"}
+{id:1,name:'Baked Beans In Tomato Sauce - Vietnam 24 x425g',brand:'Ayam Brand',category:'Beans & Peas',sku:'',unit:'lon',status:'Active'},
+{id:2,name:'Baked Beans In Tomato Sauce - Vietnam 48 x230g',brand:'Ayam Brand',category:'Beans & Peas',sku:'',unit:'lon',status:'Active'},
+{id:3,name:'Baked Beans In Tomato Sauce Cheeze - Vietnam 24 x 425g',brand:'Ayam Brand',category:'Beans & Peas',sku:'',unit:'lon',status:'Active'},
+{id:4,name:'Chickpeas In Brine - Vietnam 24 x 425g',brand:'Ayam Brand',category:'Beans & Peas',sku:'',unit:'lon',status:'Active'},
+{id:5,name:'Chilli Tuna 24 x 160g',brand:'Ayam Brand',category:'Tuna',sku:'',unit:'lon',status:'Active'},
+{id:6,name:'Coconut Milk 46 x 65ml',brand:'Ayam Brand',category:'Coconut',sku:'',unit:'gói',status:'Active'},
+{id:7,name:'Light Coconut Milk 24 x 400ml',brand:'Ayam Brand',category:'Coconut',sku:'',unit:'lon',status:'Active'},
+{id:8,name:'Mackerel In Tomato Sauce 12 x 155g',brand:'Ayam Brand',category:'Mackerel',sku:'',unit:'lon',status:'Active'},
+{id:9,name:'Mackerel In Tomato Sauce 48 x 230g',brand:'Ayam Brand',category:'Mackerel',sku:'',unit:'lon',status:'Active'},
+{id:10,name:'Premium Coconut Milk 24 x 400ml',brand:'Ayam Brand',category:'Coconut',sku:'',unit:'lon',status:'Active'},
+{id:11,name:'Processed Peas - Vietnam 24 x 425g',brand:'Ayam Brand',category:'Beans & Peas',sku:'',unit:'lon',status:'Discontinued'},
+{id:12,name:'Pure Coconut Cream 12 x 270ml',brand:'Ayam Brand',category:'Coconut',sku:'',unit:'lon',status:'Active'},
+{id:13,name:'Sardine In Extra Virgin Olive Oil 24 x120g',brand:'Ayam Brand',category:'Sardine',sku:'',unit:'lon',status:'Active'},
+{id:14,name:'Sardine In Extra Virgin Olive Oil And Chilli 24 x 120g',brand:'Ayam Brand',category:'Sardine',sku:'',unit:'lon',status:'Active'},
+{id:15,name:'Sardine In Tomato Sauce 12 x 155g',brand:'Ayam Brand',category:'Sardine',sku:'',unit:'lon',status:'Active'},
+{id:16,name:'Sardines In Tomato Sauce 24 x 120g',brand:'Ayam Brand',category:'Sardine',sku:'',unit:'lon',status:'Active'},
+{id:17,name:'Sriracha Sauce Piment 12 x 235ml (Printed Bottle)',brand:'Ayam Brand',category:'Sauce',sku:'',unit:'chai',status:'Active'},
+{id:18,name:'Tomato Puree - Vietnam 24 x 220g',brand:'Ayam Brand',category:'Tomato',sku:'',unit:'lon',status:'Active'},
+{id:19,name:'Tomato Puree - Vietnam 24 x 430g',brand:'Ayam Brand',category:'Tomato',sku:'',unit:'lon',status:'Active'},
+{id:20,name:'Tuna Chunks In Olive Oil Light 24 x 150g',brand:'Ayam Brand',category:'Tuna',sku:'',unit:'lon',status:'Active'},
+{id:21,name:'Tuna Chunks In Sunflower Oil 24 x 150g',brand:'Ayam Brand',category:'Tuna',sku:'',unit:'lon',status:'Active'},
+{id:22,name:'Tuna Chunks In Water 24 x 150g',brand:'Ayam Brand',category:'Tuna',sku:'',unit:'lon',status:'Active'},
+{id:23,name:'Tuna Flakes In Olive Oil Light 24 x 150g',brand:'Ayam Brand',category:'Tuna',sku:'',unit:'lon',status:'Active'},
+{id:24,name:'Tuna Flakes In Sunflower Oil 24 x 150g',brand:'Ayam Brand',category:'Tuna',sku:'',unit:'lon',status:'Active'},
+{id:25,name:'Tuna Flakes In Water Light 24 x 150g',brand:'Ayam Brand',category:'Tuna',sku:'',unit:'lon',status:'Active'},
+{id:26,name:'White Beans In Brine - Vietnam 24 x 425g',brand:'Ayam Brand',category:'Beans & Peas',sku:'',unit:'lon',status:'Active'},
+{id:27,name:'Whole Kernel Corn 24 x 425g',brand:'Ayam Brand',category:'Corn',sku:'',unit:'lon',status:'Active'},
+{id:28,name:'Alce Nero Organic Macaroni 12 x 500g',brand:'Alce Nero',category:'',sku:'',unit:'',status:'Active'},
+{id:29,name:'Alce Nero Organic Pasta Sauce Onion & Basil 12 x 350g',brand:'Alce Nero',category:'',sku:'',unit:'',status:'Active'},
+{id:30,name:'Alce Nero Organic Spaghetti 12 x 500g',brand:'Alce Nero',category:'',sku:'',unit:'',status:'Active'},
+{id:31,name:'Duchef Baked Beans In Tomato Sauce - Vietnam 24 x 425g',brand:'Duchef',category:'Beans & Peas',sku:'',unit:'',status:'Active'},
+{id:32,name:'Latino Bella Baked Beans In Tomato Sauce',brand:'Latino Bella',category:'Beans & Peas',sku:'',unit:'',status:'Active'},
+{id:33,name:'Great Northern Beans',brand:'Kelly Beans',category:'Dry Beans',sku:'',unit:'',status:'Active'}
 ];
 
 let state={tasks:[],customers:[],products:[],users:[],config:[],currentUser:null,fCh:'all',fPIC:'all',syncing:false,lastSync:null};
@@ -609,7 +549,7 @@ function getUser(id){return state.users.find(u=>u.id===id||u.email===id||String(
 function getFlowSteps(flowName){
   const f=state.config.find(x=>x.name===flowName||x.id===flowName);
   if(!f)return['To Do','In Progress','Done'];
-  return Array.isArray(f.steps)?f.steps:f.steps.split('\u2192').join('|').split('=>').join('|').split('|').map(s=>s.trim()).filter(Boolean);
+  return Array.isArray(f.steps)?f.steps:f.steps.split('→').join('|').split('=>').join('|').split('|').map(s=>s.trim()).filter(Boolean);
 }
 function subProg(t){
   const s=Array.isArray(t.subtasks)?t.subtasks:[];
@@ -643,15 +583,9 @@ function initLogin(){
   const sel=$('lu');
   const sid=localStorage.getItem('dgm_uid');
   const sem=localStorage.getItem('dgm_em');
-
-  // Luôn rebuild options với data mới nhất
   sel.innerHTML='<option value="">-- Chọn tên --</option>'+
     users.map(u=>`<option value="${u.id}">${u.name} (${u.role==='manager'?'Manager':u.position||u.role})</option>`).join('');
-
-  // Pre-fill email
   if(sem&&$('le'))$('le').value=sem;
-
-  // Toggle password visibility
   function togglePW(){
     const uid=sel.value;
     const u=users.find(x=>x.id===uid);
@@ -660,8 +594,6 @@ function initLogin(){
     if($('lpw')){$('lpw').style.display=noPass?'none':'block';$('lpw').required=!noPass;}
   }
   sel.onchange=togglePW;
-
-  // Restore pre-selected user
   if(sid){
     const opt=sel.querySelector('option[value="'+sid+'"]');
     if(opt)sel.value=sid;
@@ -682,7 +614,6 @@ function doLogin(){
   if(!user){$('lerr').textContent='Vui lòng chọn tài khoản.';return;}
   if(!email){$('lerr').textContent='Vui lòng nhập email.';return;}
   if(user.email&&user.email.toLowerCase()!==email){$('lerr').textContent='Email không khớp tài khoản.';return;}
-  // Password check (manager không cần)
   if(user.role!=='manager'){
     if(!pw){$('lerr').textContent='Vui lòng nhập mật khẩu.';return;}
     if(String(user.password)!==String(pw)){$('lerr').textContent='Mật khẩu không đúng.';return;}
@@ -695,7 +626,6 @@ function doLogin(){
   $('cav').textContent=user.initials||user.name[0];
   $('cnm').textContent=user.name;
   document.querySelectorAll('.mgr-only').forEach(el=>el.style.display=isMgr()?'':'none');
-  // Sales/Trade: hiện nút profile thay vì tab Team
   const profileBtn=document.getElementById('my-profile-btn');
   if(profileBtn)profileBtn.style.display=isMgr()?'none':'inline-flex';
   const savedPage=localStorage.getItem('dgm_page')||'kanban';
@@ -713,15 +643,12 @@ function doLogout(){
 }
 
 // ---- API ----
-// Maps Sheet Vietnamese headers → app field names
 function mapUser(row){
   const name=row.name||row['Họ và tên']||'';
   const email=row.email||row['Email Gmail (đăng nhập app)']||row['Email Gmail']||'';
   const role=(row.role||row['Role']||'sales').toLowerCase();
-  // Generate consistent id from email if no id field
   const id=row.id&&row.id!==''?String(row.id):('u_'+email.replace(/[@.]/g,'_'));
-  return{
-    id,name,email,role,
+  return{id,name,email,role,
     position:row.position||row['Chức vụ / Position']||'',
     channel:row.channel||row['Kênh phụ trách']||'ALL',
     region:row.region||row['Vùng phụ trách']||'',
@@ -735,25 +662,23 @@ function mapCustomer(row){
   const name=row.name||row['Tên khách hàng']||'';
   const channel=row.channel||row['Kênh (Channel)']||row['Kênh']||'';
   if(!name||/^(▶|STT|🏢|←|⚠)/.test(String(name)))return{name:''};
-  return{
-    id,name,channel,
-    region:      row.region||row['Vùng / Miền']||row['Vùng']||'',
+  return{id,name,channel,
+    region:row.region||row['Vùng / Miền']||row['Vùng']||'',
     business_type:row.business_type||row['Hình thức KD']||'',
     contact_name:row.contact_name||row['Người liên hệ']||row['contact']||'',
-    phone:       row.phone||row['SĐT']||'',
-    email:       row.email||row['Email']||'',
-    notes:       row.notes||row['Ghi chú']||'',
-    status:      row.status||row['Trạng thái']||'Active',
-    pic_id:      row.pic_id||row['PIC']||'',
-    num_stores:  row.num_stores||row['Số cửa hàng']||'',
-    resources:   row.resources||row['Nguồn lực']||'',
-    financial:   row.financial||row['Khả năng tài chính']||'',
+    phone:row.phone||row['SĐT']||'',
+    email:row.email||row['Email']||'',
+    notes:row.notes||row['Ghi chú']||'',
+    status:row.status||row['Trạng thái']||'Active',
+    pic_id:row.pic_id||row['PIC']||'',
+    num_stores:row.num_stores||row['Số cửa hàng']||'',
+    resources:row.resources||row['Nguồn lực']||'',
+    financial:row.financial||row['Khả năng tài chính']||'',
     active:true,
   };
 }
 function mapProduct(row){
-  return{
-    id:row.id||row['STT'],
+  return{id:row.id||row['STT'],
     name:row.name||row['Tên sản phẩm']||'',
     brand:row.brand||row['Brand']||'',
     category:row.category||row['Danh mục']||'',
@@ -766,9 +691,8 @@ function mapProduct(row){
 }
 function mapFlow(row){
   const stepsRaw=row.steps||row['Các bước (cách nhau bởi →)']||row['steps']||'';
-  const steps=Array.isArray(stepsRaw)?stepsRaw:stepsRaw.split('\u2192').join('|').split('=>').join('|').split('|').map(s=>s.trim().replace(/^=+/,'')).filter(Boolean);
-  return{
-    id:row.id||row['STT'],
+  const steps=Array.isArray(stepsRaw)?stepsRaw:stepsRaw.split('→').join('|').split('=>').join('|').split('|').map(s=>s.trim().replace(/^=+/,'')).filter(Boolean);
+  return{id:row.id||row['STT'],
     name:row.name||row['Tên flow']||'',
     channel:row.channel||row['Kênh']||'ALL',
     task_type:row.task_type||row['Loại công việc']||'',
@@ -837,31 +761,61 @@ async function syncAll(){
     const d=await res.json();
     if(d.ok&&d.data){
       const dt=d.data;
-      // Map with Vietnamese field name support
-            // Users
       const rawUsers=(dt.users||[]).map(mapUser).filter(u=>u.name&&u.email&&!/^(STT|▶|←|⚠)/.test(u.name));
       state.users=rawUsers.length?rawUsers:DEFAULT_USERS;
-      // Customers
       const rawCusts=(dt.customers||dt.Customers||[]).map(mapCustomer).filter(c=>c&&c.name&&c.name.length>0&&!/^(▶|STT|🏢|←|⚠)/.test(c.name));
       state.customers=rawCusts.length?rawCusts:DEFAULT_CUSTOMERS;
-      // Products
       const rawProds=(dt.products||dt.Products||[]).map(mapProduct).filter(p=>p.name&&!/^(▶|STT|📦|Other)/.test(p.name));
       state.products=rawProds.length?rawProds:DEFAULT_PRODUCTS;
-      // Flows
       const rawFlows=(dt.flows||dt.Flows||[]).map(mapFlow).filter(f=>f.name&&!/^(▶|STT|⚙️)/.test(f.name));
       state.config=rawFlows.length?rawFlows:DEFAULT_FLOWS;
-      // Tasks
       state.tasks=(dt.tasks||dt.Tasks||[]).map(mapTask).filter(t=>t.title||t.id);
       state.lastSync=new Date();setSS('ok');
+      // ✅ FIX 3a: Cache data vào localStorage sau mỗi sync thành công
+      try{
+        localStorage.setItem('dgm_cache',JSON.stringify({
+          users:state.users,
+          customers:state.customers,
+          products:state.products,
+          config:state.config,
+          tasks:state.tasks,
+          cachedAt:new Date().toISOString()
+        }));
+      }catch(ce){console.warn('Cache save failed',ce);}
+      // Ẩn offline banner nếu đang hiển thị
+      const banner=document.getElementById('offline-banner');
+      if(banner)banner.style.display='none';
     }
   }catch(e){
-    if(!state.users.length)state.users=DEFAULT_USERS;
-    if(!state.config.length)state.config=DEFAULT_FLOWS;
-    setSS('error');
+    // ✅ FIX 3b: Load từ localStorage cache khi mạng lỗi
+    try{
+      const raw=localStorage.getItem('dgm_cache');
+      if(raw){
+        const cache=JSON.parse(raw);
+        if(cache.users&&cache.users.length)state.users=cache.users;
+        if(cache.customers&&cache.customers.length)state.customers=cache.customers;
+        if(cache.products&&cache.products.length)state.products=cache.products;
+        if(cache.config&&cache.config.length)state.config=cache.config;
+        if(cache.tasks&&cache.tasks.length)state.tasks=cache.tasks;
+        const cAt=cache.cachedAt?new Date(cache.cachedAt).toLocaleTimeString('vi-VN'):'?';
+        setSS('ok');
+        toast('📦 Dùng cache ('+cAt+') — mạng đang yếu','warn');
+        const banner=document.getElementById('offline-banner');
+        if(banner)banner.style.display='block';
+      }else{
+        if(!state.users.length)state.users=DEFAULT_USERS;
+        if(!state.config.length)state.config=DEFAULT_FLOWS;
+        setSS('error');
+        toast('Không có kết nối và chưa có cache','err');
+      }
+    }catch(ce){
+      if(!state.users.length)state.users=DEFAULT_USERS;
+      if(!state.config.length)state.config=DEFAULT_FLOWS;
+      setSS('error');
+    }
   }
   state.syncing=false;
   if(!state.currentUser){initLogin();return;}
-  // Update login dropdown với users mới từ Sheet
   initLogin();
   renderAll();
 }
@@ -879,6 +833,7 @@ async function saveTask(task){
   else toast('Lưu thất bại','warn');
   return ok;
 }
+
 async function saveMaster(sheet,data){
   const ok=await apiPost({action:'upsert',sheet,data});
   if(ok)toast(sheet+' đã lưu ✓');
@@ -891,8 +846,7 @@ function showPage(nm,btn){
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
   $('pg-'+nm).classList.add('active');
   if(btn)btn.classList.add('active');
-  else{// restore nav button active state
-    // restore nav button - match by data-page or onclick content
+  else{
     document.querySelectorAll('.nb').forEach(b=>{
       if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'"+nm+"'"))
         b.classList.add('active');
@@ -903,12 +857,9 @@ function showPage(nm,btn){
   else if(nm==='products')renderProducts();
   else if(nm==='users'){
     if(!isMgr()){
-      // Sales: không vào được bảng team — show profile riêng
       openMyProfile();
-      // Không active tab này
       $('pg-users').classList.remove('active');
       if(btn)btn.classList.remove('active');
-      // Giữ tab hiện tại
       const prev=localStorage.getItem('dgm_page')||'kanban';
       $('pg-'+prev).classList.add('active');
       document.querySelectorAll('.nb').forEach(b=>{
@@ -921,6 +872,31 @@ function showPage(nm,btn){
   else if(nm==='config'){if(isMgr())renderConfig();else toast('Chỉ Manager','warn');}
   else renderKanban();
 }
+
+function mobileNav(nm,btn){
+  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  if(nm==='more'){
+    // Show a simple menu for Team/Config
+    const menu=document.createElement('div');
+    menu.style.cssText='position:fixed;bottom:70px;right:12px;background:var(--s);border:.5px solid var(--bd2);border-radius:var(--rl);padding:8px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:300;min-width:150px';
+    menu.innerHTML='<div style="font-size:11px;color:var(--t3);padding:4px 8px;font-weight:600">Thêm</div>'+
+      (isMgr()?'<button onclick="showPage(\'users\',null);this.parentNode.remove()" style="display:block;width:100%;text-align:left;padding:8px;font-size:13px;background:none;border:none;cursor:pointer;border-radius:var(--r)">👥 Team</button>':'') +
+      (isMgr()?'<button onclick="showPage(\'config\',null);this.parentNode.remove()" style="display:block;width:100%;text-align:left;padding:8px;font-size:13px;background:none;border:none;cursor:pointer;border-radius:var(--r)">⚙️ Cấu hình</button>':'') +
+      (!isMgr()?'<button onclick="openMyProfile();this.parentNode.remove()" style="display:block;width:100%;text-align:left;padding:8px;font-size:13px;background:none;border:none;cursor:pointer;border-radius:var(--r)">👤 Hồ sơ</button>':'') +
+      '<button onclick="syncAll();this.parentNode.remove()" style="display:block;width:100%;text-align:left;padding:8px;font-size:13px;background:none;border:none;cursor:pointer;border-radius:var(--r)">↻ Đồng bộ</button>';
+    document.body.appendChild(menu);
+    setTimeout(()=>{document.addEventListener('click',function rm(){menu.remove();document.removeEventListener('click',rm);},{once:true});},100);
+    return;
+  }
+  showPage(nm,null);
+  // Sync bottom nav active state
+  document.querySelectorAll('.bnav-btn').forEach(b=>{
+    const id=b.id;
+    if(id&&id.includes(nm))b.classList.add('active');
+  });
+}
+
 function renderAll(){
   const active=document.querySelector('.pg.active');
   const pid=active?active.id:'pg-kanban';
@@ -950,36 +926,39 @@ function getVisible(){
   return list;
 }
 
+function setF(type,val){
+  if(type==='ch')state.fCh=val;
+  else state.fPIC=val;
+  renderKanban();
+}
+
 function renderKanban(){
   if(!state.currentUser)return;
   const vis=getVisible();
-  const ov=vis.filter(t=>!['done','done_fail'].includes(t.status)&&t.deadline&&daysFrom(t.deadline)<0).length;
   $('stats').innerHTML=`
-    <div class="sc"><div class="sl">Tổng tasks</div><div class="sv">${vis.length}</div></div>
-    <div class="sc"><div class="sl">Đang làm</div><div class="sv" style="color:var(--blue)">${vis.filter(t=>t.status==='inprogress').length}</div></div>
-    <div class="sc"><div class="sl">Chờ duyệt</div><div class="sv" style="color:var(--amb)">${vis.filter(t=>t.status==='review').length}</div></div>
-    <div class="sc"><div class="sl">Hoàn thành ✓</div><div class="sv" style="color:var(--grn)">${vis.filter(t=>t.status==='done').length}</div></div>
-    <div class="sc"><div class="sl">Không thành công</div><div class="sv" style="color:var(--red)">${vis.filter(t=>t.status==='done_fail').length}</div></div>`;
-
+<div class="sc"><div class="sl">Tổng tasks</div><div class="sv">${vis.length}</div></div>
+<div class="sc"><div class="sl">Đang làm</div><div class="sv" style="color:var(--blue)">${vis.filter(t=>t.status==='inprogress').length}</div></div>
+<div class="sc"><div class="sl">Chờ duyệt</div><div class="sv" style="color:var(--amb)">${vis.filter(t=>t.status==='review').length}</div></div>
+<div class="sc"><div class="sl">Hoàn thành ✓</div><div class="sv" style="color:var(--grn)">${vis.filter(t=>t.status==='done').length}</div></div>
+<div class="sc"><div class="sl">Không thành công</div><div class="sv" style="color:var(--red)">${vis.filter(t=>t.status==='done_fail').length}</div></div>`;
   const sus=aUsers().filter(u=>u.role!=='manager');
   $('fbar').innerHTML=`
-    <span style="font-size:11px;color:var(--t3)">Kênh:</span>
-    <button class="fc ${state.fCh==='all'?'active':''}" onclick="setF('ch','all')">Tất cả</button>
-    ${CHANNELS.map(c=>`<button class="fc ${state.fCh===c?'active':''}" onclick="setF('ch','${c}')">${c}</button>`).join('')}
-    ${isMgr()?`<span style="font-size:11px;color:var(--t3);margin-left:8px">PIC:</span>
-    <button class="fc ${state.fPIC==='all'?'active':''}" onclick="setF('pic','all')">Tất cả</button>
-    ${sus.map(u=>`<button class="fc ${state.fPIC===u.id?'active':''}" onclick="setF('pic','${u.id}')">${u.name}</button>`).join('')}`:''}
-    <button class="btn btn-p btn-sm" style="margin-left:auto" onclick="openTaskForm()">+ Thêm task</button>`;
-
+<span style="font-size:11px;color:var(--t3)">Kênh:</span>
+<button class="fc ${state.fCh==='all'?'active':''}" onclick="setF('ch','all')">Tất cả</button>
+${CHANNELS.map(c=>`<button class="fc ${state.fCh===c?'active':''}" onclick="setF('ch','${c}')">${c}</button>`).join('')}
+${isMgr()?`<span style="font-size:11px;color:var(--t3);margin-left:8px">PIC:</span>
+<button class="fc ${state.fPIC==='all'?'active':''}" onclick="setF('pic','all')">Tất cả</button>
+${sus.map(u=>`<button class="fc ${state.fPIC===u.id?'active':''}" onclick="setF('pic','${u.id}')">${u.name}</button>`).join('')}`:''}
+<button class="btn btn-p btn-sm" style="margin-left:auto" onclick="openTaskForm()">+ Thêm task</button>`;
   const KCL={todo:'',inprogress:'',review:'krev',done:'kdon',done_fail:'kfail'};
   const KTI={todo:'To Do',inprogress:'In Progress',review:'⏳ Chờ duyệt',done:'✅ Hoàn thành',done_fail:'❌ Không thành công'};
   $('board').innerHTML=STATUSES.map(st=>{
     const col=vis.filter(t=>t.status===st);
     return`<div class="kol ${KCL[st]}" id="kol-${st}"
-      ondragover="dov(event,'${st}')" ondragleave="dlv(event,'${st}')" ondrop="drp(event,'${st}')">
-      <div class="kh"><span class="kt">${KTI[st]}</span><span class="kc">${col.length}</span></div>
-      ${col.length?col.map(t=>rCard(t)).join(''):`<div class="ec">Không có task</div>`}
-    </div>`;
+  ondragover="dov(event,'${st}')" ondragleave="dlv(event,'${st}')" ondrop="drp(event,'${st}')">
+<div class="kh"><span class="kt">${KTI[st]}</span><span class="kc">${col.length}</span></div>
+${col.length?col.map(t=>rCard(t)).join(''):`<div class="ec">Không có task</div>`}
+</div>`;
   }).join('');
 }
 
@@ -1002,223 +981,68 @@ function rCard(t){
   }
   const ap=isMgr()&&st==='review'?`<button class="apbtn" onclick="event.stopPropagation();openApprove('${t.id}')">⚡ Duyệt hoàn thành</button>`:'';
   return`<div class="tc" id="card-${t.id}" draggable="true"
-    ondragstart="drs(event,'${t.id}')" onclick="openDetail('${t.id}')">
-    <div class="tt">${t.title}</div>
-    <div class="tb2">
-      <span class="b ${t.channel==='ALL'?'bgr':'b'+t.channel}">${t.channel==='ALL'?'ALL':t.channel}</span>
-      ${c?`<span class="b bgr">${c.name}</span>`:''}
-      ${ov?`<span class="b bov">Quá hạn</span>`:''}
-      ${sn&&!ov?`<span class="b bsoon">Sắp hạn</span>`:''}
-    </div>
-    ${t.step?`<div class="tstep">▶ ${t.step}</div>`:''}
-    ${sp?`<div class="spb"><div class="spf" style="width:${sp.pct}%"></div></div><div class="spt">${sp.done}/${sp.total} subtasks</div>`:''}
-    ${cms.length?`<div style="font-size:10px;color:var(--t3);margin-top:3px">💬 ${cms.filter(x=>!x.isSystem).length} comment(s)</div>`:''}
-    <div class="tf">
-      <span class="tdl ${ov?'ov':sn?'sn':''}">${fmtD(t.deadline)}</span>
-      <div class="pics">${pics.slice(0,3).map(u=>`<div class="av avs" title="${u.name}">${u.initials||u.name[0]}</div>`).join('')}${pics.length>3?`<div class="av avs">+${pics.length-3}</div>`:''}</div>
-    </div>
-    ${mv?`<div class="mvb" onclick="event.stopPropagation()">${mv}</div>`:''}
-    ${ap}
-  </div>`;
+  ondragstart="drs(event,'${t.id}')" onclick="openDetail('${t.id}')">
+<div class="tt">${t.title}</div>
+<div class="tb2">
+  <span class="b b${t.channel||'ALL'}">${t.channel||'ALL'}</span>
+  ${c?`<span class="b bgr">${c.name}</span>`:''}
+  ${ov?`<span class="b bov">Quá hạn</span>`:''}
+  ${sn&&!ov?`<span class="b bsoon">Sắp hạn</span>`:''}
+</div>
+${t.step?`<div class="tstep">▶ ${t.step}</div>`:''}
+${sp?`<div class="spb"><div class="spf" style="width:${sp.pct}%"></div></div><div class="spt">${sp.done}/${sp.total} subtasks</div>`:''}
+${cms.length?`<div style="font-size:10px;color:var(--t3);margin-top:3px">💬 ${cms.filter(x=>!x.isSystem).length} comment(s)</div>`:''}
+<div class="tf">
+  <span class="tdl ${ov?'ov':sn?'sn':''}">${t.deadline?'📅 '+fmtD(t.deadline):''}</span>
+  <div class="pics">${pics.map(u=>`<div class="av avs" title="${u.name}">${u.initials||u.name[0]}</div>`).join('')}</div>
+</div>
+${mv?`<div class="mvb">${mv}</div>`:''}
+${ap}
+</div>`;
 }
-
-function setF(tp,v){if(tp==='ch')state.fCh=v;else state.fPIC=v;renderKanban();}
 
 // ---- DRAG & DROP ----
-let dragId=null;
-function drs(e,id){dragId=id;setTimeout(()=>{const c=document.getElementById('card-'+id);if(c)c.classList.add('drag')},0);}
-function dov(e,st){e.preventDefault();document.getElementById('kol-'+st).classList.add('dov');}
-function dlv(e,st){document.getElementById('kol-'+st).classList.remove('dov');}
+let _drag=null;
+function drs(e,id){_drag=id;e.dataTransfer.effectAllowed='move';document.getElementById('card-'+id)?.classList.add('drag');}
+function dov(e,st){e.preventDefault();e.dataTransfer.dropEffect='move';document.getElementById('kol-'+st)?.classList.add('dov');}
+function dlv(e,st){document.getElementById('kol-'+st)?.classList.remove('dov');}
 async function drp(e,st){
   e.preventDefault();
-  document.getElementById('kol-'+st).classList.remove('dov');
-  if(dragId===null)return;
-  const c=document.getElementById('card-'+dragId);if(c)c.classList.remove('drag');
-  if(!isMgr()&&(st==='done'||st==='done_fail')){toast('Chỉ Manager mới có thể xác nhận hoàn thành','warn');dragId=null;return;}
-  await mvT(dragId,st);dragId=null;
+  document.getElementById('kol-'+st)?.classList.remove('dov');
+  if(!_drag)return;
+  const t=state.tasks.find(x=>String(x.id)===String(_drag));
+  if(!t||t.status===st)return;
+  const old=t.status;t.status=st;
+  addSysCom(t,'Chuyển: '+SL[old]+' → '+SL[st]+' bởi '+(state.currentUser?.name||''));
+  renderKanban();
+  await saveTask(t);
+  _drag=null;
 }
-async function mvT(id,ns){
+
+// ---- TASK ACTIONS ----
+async function mvT(id,st){
   const t=state.tasks.find(x=>String(x.id)===String(id));
   if(!t)return;
-  t.status=ns;
-  const steps=getFlowSteps(t.flow_name||t.channel);
-  if(ns==='done'||ns==='done_fail')t.step=steps[steps.length-1]||t.step;
-  addSysCom(t,'Chuyển sang "'+SL[ns]+'" bởi '+state.currentUser.name);
+  const old=t.status;t.status=st;
+  addSysCom(t,'Chuyển: '+SL[old]+' → '+SL[st]+' bởi '+(state.currentUser?.name||''));
   renderKanban();
   await saveTask(t);
 }
 
-// ---- APPROVE ----
-function openApprove(tid){
+function addSysCom(t,msg){
+  if(!Array.isArray(t.comments))t.comments=[];
+  t.comments.push({id:Date.now(),text:msg,author:'System',time:new Date().toISOString(),isSystem:true});
+}
+function addCom(t,msg){
+  if(!msg.trim())return;
+  if(!Array.isArray(t.comments))t.comments=[];
+  t.comments.push({id:Date.now(),text:msg.trim(),author:state.currentUser?.name||'?',time:new Date().toISOString(),isSystem:false});
+}
+
+async function postCom(tid){
+  const inp=$('ci-'+tid);if(!inp)return;
   const t=state.tasks.find(x=>String(x.id)===String(tid));
   if(!t)return;
-  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" onclick="event.stopPropagation()" style="max-width:380px">
-    <div class="mh"><div class="mti">⚡ Duyệt: ${t.title}</div><button class="mcl" onclick="CM()">×</button></div>
-    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
-      <button class="btn btn-g" style="justify-content:center;padding:12px" onclick="doApprove('${tid}','done')">✅ Hoàn thành thành công</button>
-      <button class="btn btn-d" style="justify-content:center;padding:12px;background:var(--rlt)" onclick="doApprove('${tid}','done_fail')">❌ Không thành công / Cancel</button>
-    </div>
-    <div class="fr"><label class="fl">Ghi chú Manager</label><textarea id="ap-note" class="fi" placeholder="Nhận xét..."></textarea></div>
-  </div></div>`;
-}
-async function doApprove(tid,res){
-  const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
-  const note=$('ap-note')?$('ap-note').value.trim():'';
-  t.status=res;
-  const msg=(res==='done'?'✅ Manager xác nhận HOÀN THÀNH':'❌ Manager đánh dấu KHÔNG THÀNH CÔNG')+(note?' — '+note:'');
-  addSysCom(t,msg);
-  CM();renderKanban();
-  await saveTask(t);
-  toast(res==='done'?'Đã xác nhận hoàn thành ✓':'Đã đánh dấu không thành công');
-}
-
-// ---- COMMENTS ----
-function addSysCom(t,text){
-  if(!Array.isArray(t.comments))t.comments=[];
-  t.comments.push({id:Date.now(),author:'system',authorName:'Hệ thống',text,time:new Date().toISOString(),isSystem:true});
-}
-function addCom(t,text){
-  if(!text||!text.trim())return;
-  if(!Array.isArray(t.comments))t.comments=[];
-  const u=state.currentUser;
-  t.comments.push({id:Date.now(),author:u.id,authorName:u.name,authorInitials:u.initials||u.name[0],text:text.trim(),time:new Date().toISOString(),isSystem:false});
-}
-
-// ---- TASK DETAIL ----
-function openDetail(id){
-  const t=state.tasks.find(x=>String(x.id)===String(id));if(!t)return;
-  const c=getCust(t.customer_id);
-  const pics=getPics(t);
-  const sp=subProg(t);
-  const steps=getFlowSteps(t.flow_name||t.channel);
-  const si=steps.indexOf(t.step);
-  const cms=Array.isArray(t.comments)?t.comments:[];
-  const subs=Array.isArray(t.subtasks)?t.subtasks:[];
-  const atch=Array.isArray(t.attachments)?t.attachments:[];
-  const days=t.deadline?daysFrom(t.deadline):null;
-  const ov=!['done','done_fail'].includes(t.status)&&days!==null&&days<0;
-  const done=['done','done_fail'].includes(t.status);
-
-  const flowH=steps.length?`<div class="ft">
-    ${steps.map((s,i)=>`${i>0?`<span style="font-size:10px;color:var(--t3);padding:0 1px">›</span>`:''}
-    <span class="fn ${i<si?'don':i===si?'cur':''}">${s}</span>`).join('')}
-  </div>`:'';
-
-  const cmH=cms.map(cm=>cm.isSystem?
-    `<div class="sys-cm"><span>${cm.text} · ${fmtDT(cm.time)}</span></div>`:
-    `<div class="ci">
-      <div class="av avs" style="margin-top:2px;flex-shrink:0">${cm.authorInitials||cm.authorName?.[0]||'?'}</div>
-      <div class="cb"><div style="display:flex;align-items:center;gap:6px"><span class="ca">${cm.authorName}</span><span class="ctm">${fmtDT(cm.time)}</span></div>
-      <div class="ctx">${cm.text}</div></div>
-    </div>`).join('');
-
-  const subH=subs.map(s=>{
-    const sa=s.assignee?getUser(s.assignee):null;
-    return`<div class="sui" id="si-${id}-${s.id}">
-      <input type="checkbox" ${s.done?'checked':''} onchange="togSub('${id}',${s.id},this.checked)">
-      <div style="flex:1;min-width:0">
-        <span class="sut ${s.done?'done':''}">${s.text}</span>
-        ${sa?`<span style="font-size:10px;color:var(--t3);margin-left:6px">@${sa.initials||sa.name}</span>`:''}
-      </div>
-      ${!done?`<select class="fi" style="font-size:10px;padding:2px 4px;width:auto;min-width:80px;color:var(--t2)" onchange="assignSub('${id}',${s.id},this.value)" title="Assign cho ai">
-        <option value="">Assign...</option>
-        ${aUsers().map(u=>`<option value="${u.id}" ${s.assignee===u.id?'selected':''}>${u.initials||u.name}</option>`).join('')}
-      </select>`:''}
-      ${!done?`<button class="sud" onclick="delSub('${id}',${s.id})">×</button>`:''}
-    </div>`;
-  }).join('');
-
-  const atchH=atch.map(a=>`<div class="ati">
-    <span>${a.mimeType&&a.mimeType.startsWith('image/')?'🖼️':a.mimeType==='application/pdf'?'📄':'📊'}</span>
-    <span class="ati-n"><a href="${a.viewUrl}" target="_blank">${a.fileName}</a></span>
-    <span class="ati-s">${a.size?Math.round(a.size/1024)+'KB':''}</span>
-  </div>`).join('');
-
-  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo mo-lg" onclick="event.stopPropagation()">
-    <div class="mh">
-      <div>
-        <div style="display:flex;gap:4px;margin-bottom:6px">
-          <span class="b ${t.channel==='ALL'?'bgr':'b'+t.channel}">${t.channel==='ALL'?'ALL':t.channel}</span>
-          <span class="b b${t.status}">${SL[t.status]}</span>
-          ${ov?`<span class="b bov">Quá hạn</span>`:''}
-        </div>
-        <div class="mti">${t.title}</div>
-      </div>
-      <button class="mcl" onclick="CM()">×</button>
-    </div>
-    <div class="dmg">
-      <div class="dmi"><div class="dl">Khách hàng</div><div class="dv">${c?c.name:'—'}</div></div>
-      <div class="dmi"><div class="dl">Deadline</div><div class="dv" style="${ov?'color:var(--red)':''}">${fmtD(t.deadline)}</div></div>
-      <div class="dmi"><div class="dl">Flow</div><div class="dv" style="font-size:12px">${t.flow_name||'—'}</div></div>
-    </div>
-    <div class="ds"><div class="dst">PICs</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        ${pics.map(u=>`<div style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--s2);padding:3px 8px;border-radius:8px">
-          <div class="av avs">${u.initials||u.name[0]}</div>${u.name}
-        </div>`).join('')}
-      </div>
-    </div>
-    ${steps.length?`<div class="ds"><div class="dst">Tiến độ flow</div>${flowH}</div>`:''}
-    ${t.notes?`<div class="ds"><div class="dst">Ghi chú</div><div class="nb2">${t.notes}</div></div>`:''}
-    ${!done?`<div class="ds"><div class="dst">Cập nhật bước</div>
-      <select class="fi" style="font-size:12px" onchange="updStep('${id}',this.value)">
-        ${steps.map(s=>`<option value="${s}" ${s===t.step?'selected':''}>${s}</option>`).join('')}
-      </select>
-    </div>`:''}
-    <div class="ds"><div class="dst">Subtasks (${sp?sp.done+'/'+sp.total:'0/0'})</div>
-      <div id="sub-${id}">${subH}</div>
-      ${!done?`<div class="asr" style="flex-wrap:wrap;gap:4px">
-        <input type="text" id="ns-${id}" placeholder="Thêm subtask..." style="flex:1;min-width:160px" onkeydown="if(event.key==='Enter')addSub('${id}')">
-        <select id="na-${id}" class="fi" style="font-size:11px;padding:5px 6px;width:auto">
-          <option value="">Assign...</option>
-          ${aUsers().map(u=>`<option value="${u.id}">${u.initials||u.name}</option>`).join('')}
-        </select>
-        <button class="btn btn-sm" onclick="addSub('${id}')">+ Thêm</button>
-      </div>`:''}
-    </div>
-    <div class="ds"><div class="dst">📎 Đính kèm</div>
-      <div class="atch" id="atch-${id}">${atchH}</div>
-      <label class="btn btn-sm" style="cursor:pointer;margin-top:6px">
-        📎 Đính kèm file (max 4MB)
-        <input type="file" accept="image/*,.pdf,.xlsx,.xls,.doc,.docx" style="display:none" onchange="hdlUpload(event,'${id}')">
-      </label>
-    </div>
-    <div class="ds"><div class="dst">💬 Comments & Cập nhật</div>
-      <div class="cl" id="cl-${id}">${cmH}</div>
-      <div class="cir">
-        <textarea id="nc-${id}" placeholder="Thêm comment... (Ctrl+Enter để gửi)" onkeydown="if(event.ctrlKey&&event.key==='Enter')subCom('${id}')"></textarea>
-        <button class="btn btn-p btn-sm" onclick="subCom('${id}')">Gửi</button>
-      </div>
-    </div>
-    <div class="fa" style="justify-content:space-between;align-items:center">
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="btn btn-g btn-sm" onclick="saveDetailChanges('${id}')">💾 Lưu</button>
-        ${!done&&isMgr()?`<button class="btn btn-p btn-sm" onclick="CM();openTaskForm('${id}')">✎ Sửa task</button>`:''}
-        ${isMgr()&&t.status==='review'?`<button class="btn btn-w btn-sm" onclick="CM();openApprove('${id}')">⚡ Duyệt</button>`:''}
-      </div>
-      <div style="display:flex;gap:6px">
-        ${!done&&isMgr()?`<button class="btn btn-d btn-sm" onclick="delTask('${id}')">✕ Xóa</button>`:''}
-        <button class="btn btn-sm" onclick="CM()">Đóng</button>
-      </div>
-    </div>
-  </div></div>`;
-}
-
-async function hdlUpload(e,tid){
-  const file=e.target.files[0];if(!file)return;
-  const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
-  const r=await uploadFile(file,tid);
-  if(r){
-    if(!Array.isArray(t.attachments))t.attachments=[];
-    t.attachments.push({fileName:file.name,mimeType:file.type,viewUrl:r.viewUrl||'#',size:file.size,uploadedBy:state.currentUser.name,uploadedAt:new Date().toISOString()});
-    addSysCom(t,'📎 Đính kèm: '+file.name+' (bởi '+state.currentUser.name+')');
-    openDetail(tid);renderKanban();await saveTask(t);
-  }
-  e.target.value='';
-}
-async function subCom(tid){
-  const inp=$('nc-'+tid);if(!inp||!inp.value.trim())return;
-  const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
   addCom(t,inp.value);inp.value='';
   openDetail(tid);renderKanban();await saveTask(t);
 }
@@ -1231,16 +1055,8 @@ async function addSub(tid){
   const inp=$('ns-'+tid);if(!inp||!inp.value.trim())return;
   const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
   if(!Array.isArray(t.subtasks))t.subtasks=[];
-  const assignSel=$('na-'+tid);
-  const assignee=assignSel?assignSel.value:'';
-  t.subtasks.push({id:Date.now(),text:inp.value.trim(),done:false,assignee});
+  t.subtasks.push({id:Date.now(),text:inp.value.trim(),done:false});
   openDetail(tid);renderKanban();await saveTask(t);
-}
-
-async function assignSub(tid,sid,uid){
-  const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
-  const s=(t.subtasks||[]).find(x=>String(x.id)===String(sid));
-  if(s){s.assignee=uid;await saveTask(t);}
 }
 async function delSub(tid,sid){
   const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
@@ -1253,26 +1069,6 @@ async function updStep(tid,step){
   addSysCom(t,'Cập nhật bước: "'+step+'" bởi '+state.currentUser.name);
   openDetail(tid);renderKanban();await saveTask(t);
 }
-async function saveDetailChanges(tid){
-  const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
-  // Lưu bước hiện tại nếu có thay đổi
-  const stepSel=document.querySelector(`#mc select[onchange*="updStep('${tid}"]`);
-  if(stepSel&&stepSel.value&&stepSel.value!==t.step){
-    t.step=stepSel.value;
-    addSysCom(t,'Cập nhật bước: "'+stepSel.value+'" bởi '+state.currentUser.name);
-  }
-  // Lưu comment nếu có nội dung trong ô
-  const cmInp=document.getElementById('nc-'+tid);
-  if(cmInp&&cmInp.value.trim()){
-    addCom(t,cmInp.value.trim());
-    cmInp.value='';
-  }
-  await saveTask(t);
-  toast('Đã lưu ✓');
-  openDetail(tid);
-  renderKanban();
-}
-
 async function delTask(id){
   if(!confirm('Xoá task này?'))return;
   state.tasks=state.tasks.filter(t=>String(t.id)!==String(id));
@@ -1281,615 +1077,677 @@ async function delTask(id){
   toast('Đã xóa task');
 }
 
-// ---- TASK FORM ----
-function openTaskForm(editId){
-  const t=editId?state.tasks.find(x=>String(x.id)===String(editId)):null;
-  const d=t||{title:'',customer_id:'',channel:'MT',pic_ids:[],status:'todo',step:'',flow_name:'',deadline:'',notes:'',subtasks:[],comments:[]};
-  const tPics=Array.isArray(d.pic_ids)?d.pic_ids:String(d.pic_ids||'').split(',').filter(Boolean);
-  const flows=state.config.filter(f=>f.channel===d.channel||f.channel==='ALL');
-  const flow=getFlowSteps(d.flow_name||d.channel);
+// ---- TASK DETAIL ----
+function openDetail(id){
+  const t=state.tasks.find(x=>String(x.id)===String(id));
+  if(!t){CM();return;}
+  const c=getCust(t.customer_id);
+  const pics=getPics(t);
+  const days=t.deadline?daysFrom(t.deadline):null;
+  const ov=days!==null&&!['done','done_fail'].includes(t.status)&&days<0;
+  const steps=getFlowSteps(t.flow_name||t.channel);
+  const subs=Array.isArray(t.subtasks)?t.subtasks:[];
+  const cms=Array.isArray(t.comments)?t.comments:[];
+  const atch=Array.isArray(t.attachments)?t.attachments:[];
+  const sp=subProg(t);
   $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo mo-lg" onclick="event.stopPropagation()">
-    <div class="mh"><div class="mti">${t?'Sửa task':'Thêm task mới'}</div><button class="mcl" onclick="CM()">×</button></div>
-    <div class="fr"><label class="fl">Tiêu đề *</label><input type="text" id="ft" class="fi" value="${d.title||''}" placeholder="Tên task..."></div>
-    <div class="g2">
-      <div class="fr"><label class="fl">Kênh *</label>
-        <select id="fch" class="fi" onchange="onChChange()">
-          ${CHANNELS.map(c=>`<option value="${c}" ${d.channel===c?'selected':''}>${c==='ALL'?'ALL — Tất cả kênh':c}</option>`).join('')}
-        </select>
-      </div>
-      <div class="fr"><label class="fl">Flow / Quy trình</label>
-        <select id="ffn" class="fi" onchange="onFlowChange()">
-          ${flows.map(f=>`<option value="${f.name}" ${f.name===d.flow_name?'selected':''}>${f.name}</option>`).join('')}
-        </select>
-      </div>
+<div class="mh">
+  <div>
+    <div class="mti">${t.title}</div>
+    <div style="margin-top:5px;display:flex;gap:6px;flex-wrap:wrap">
+      <span class="b b${t.channel||'ALL'}">${t.channel||'ALL'}</span>
+      <span class="b b${t.status}">${SL[t.status]}</span>
+      ${c?`<span class="b bgr">🏢 ${c.name}</span>`:''}
+      ${ov?`<span class="b bov">⚠ Quá hạn</span>`:''}
     </div>
-    <div class="fr"><label class="fl" id="cust-label">Khách hàng * (chọn nhiều)</label>
-      <div style="border:.5px solid var(--bd2);border-radius:var(--r);max-height:160px;overflow-y:auto;padding:4px 0" id="cust-list">
-        ${state.customers.filter(c=>c.status==='Active'||!c.status).map(c=>{
-          const sel=Array.isArray(d.customer_ids)?d.customer_ids.map(String).includes(String(c.id)):(String(d.customer_id)===String(c.id));
-          return `<label style="display:flex;align-items:center;gap:8px;padding:5px 10px;cursor:pointer;font-size:12px" class="cust-opt">
-            <input type="checkbox" value="${c.id}" ${sel?'checked':''} style="width:14px;height:14px;accent-color:var(--blue)">
-            <span>${c.name}</span><span class="b b${c.channel}" style="font-size:10px">${c.channel}</span>
-          </label>`;
-        }).join('')}
-      </div>
-      <button type="button" class="btn btn-sm" style="margin-top:6px;width:100%;justify-content:center" onclick="toggleNewCust()">➕ Thêm khách hàng mới...</button>
-    </div>
-    <div id="ncb" style="display:none" class="iab">
-      <div class="iat">➕ THÊM KHÁCH HÀNG MỚI</div>
-      <div class="g2">
-        <div class="fr"><label class="fl">Tên *</label><input type="text" id="nc-n" class="fi" placeholder="Tên KH..."></div>
-        <div class="fr"><label class="fl">Kênh</label><select id="nc-ch" class="fi">${CHANNELS.map(c=>`<option>${c}</option>`).join('')}</select></div>
-      </div>
-      <div class="g3">
-        <div class="fr"><label class="fl">Vùng</label><input type="text" id="nc-r" class="fi" placeholder="HCM..."></div>
-        <div class="fr"><label class="fl">Liên hệ</label><input type="text" id="nc-c" class="fi" placeholder="Tên..."></div>
-        <div class="fr"><label class="fl">SĐT</label><input type="text" id="nc-p" class="fi" placeholder="0901..."></div>
-      </div>
-      <button type="button" class="btn btn-p btn-sm" onclick="saveNewCustInline()">✓ Thêm vào danh sách</button>
-    </div>
-    <div class="fr"><label class="fl">PICs / Người phụ trách (chọn nhiều)</label>
-      <div class="pmc" id="pmc">
-        ${aUsers().map(u=>`<div class="pch ${tPics.includes(u.id)?'sel':''}" id="pc-${u.id}" onclick="togPIC('${u.id}')">
-          <div class="av avs">${u.initials||u.name[0]}</div>${u.name}
-        </div>`).join('')}
-      </div>
-    </div>
-    <div class="g2">
-      <div class="fr"><label class="fl">Trạng thái</label>
-        <select id="fst" class="fi">
-          ${['todo','inprogress','review'].map(s=>`<option value="${s}" ${d.status===s?'selected':''}>${SL[s]}</option>`).join('')}
-        </select>
-      </div>
-      <div class="fr"><label class="fl">Bước hiện tại</label>
-        <select id="fsp" class="fi">
-          ${flow.map(s=>`<option value="${s}" ${d.step===s?'selected':''}>${s}</option>`).join('')}
-        </select>
-      </div>
-    </div>
-    <div class="fr"><label class="fl">Deadline</label><input type="date" id="fdl" class="fi" value="${d.deadline||''}"></div>
-    <div class="fr"><label class="fl">Ghi chú</label><textarea id="fnt" class="fi">${d.notes||''}</textarea></div>
-    <div class="fa">
-      <button class="btn btn-p" onclick="saveTF('${editId||''}')">💾 ${t?'Lưu thay đổi':'Tạo task'}</button>
-      <button class="btn" onclick="CM()">Huỷ</button>
-    </div>
-  </div></div>`;
+  </div>
+  <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+    <button class="btn btn-sm" onclick="openTaskForm('${t.id}')">✏️ Sửa</button>
+    ${isMgr()?`<button class="btn btn-sm btn-d" onclick="delTask('${t.id}')">🗑</button>`:''}
+    <button class="mcl" onclick="CM()">×</button>
+  </div>
+</div>
+<div class="dmg">
+  <div class="dmi"><div class="dl">Deadline</div><div class="dv ${ov?'':''}">📅 ${fmtD(t.deadline)}</div></div>
+  <div class="dmi"><div class="dl">Kênh</div><div class="dv">${t.channel||'—'}</div></div>
+  <div class="dmi"><div class="dl">Loại</div><div class="dv">${t.flow_name||t.task_type||'—'}</div></div>
+  <div class="dmi"><div class="dl">Tạo lúc</div><div class="dv">${fmtDT(t.created_at)}</div></div>
+  <div class="dmi"><div class="dl">Cập nhật</div><div class="dv">${fmtDT(t.updated_at)}</div></div>
+  <div class="dmi"><div class="dl">PIC</div><div class="dv">${pics.map(u=>u.name).join(', ')||'—'}</div></div>
+</div>
+${t.notes?`<div class="ds"><div class="dst">Ghi chú</div><div class="nb2">${t.notes}</div></div>`:''}
+${steps.length?`<div class="ds"><div class="dst">Flow / Quy trình</div>
+<div class="ft">${steps.map(s=>{
+  const cur=t.step===s;
+  const idx=steps.indexOf(s);
+  const curIdx=steps.indexOf(t.step);
+  const don=curIdx>idx;
+  return`<button class="fn ${cur?'cur':don?'don':''}" onclick="updStep('${t.id}','${s.replace(/'/g,"&#39;")}')">${s}</button>`;
+}).join('')}</div></div>`:''}
+${sp?`<div class="ds"><div class="dst">Tiến độ subtasks — ${sp.done}/${sp.total} (${sp.pct}%)</div>
+<div class="spb" style="height:6px"><div class="spf" style="width:${sp.pct}%"></div></div></div>`:''}
+${subs.length?`<div class="ds"><div class="dst">Subtasks</div>
+<div>${subs.map(s=>`<div class="sui">
+  <input type="checkbox" ${s.done?'checked':''} onchange="togSub('${t.id}','${s.id}',this.checked)">
+  <span class="sut ${s.done?'done':''}">${s.text}</span>
+  <button class="sud" onclick="delSub('${t.id}','${s.id}')">×</button>
+</div>`).join('')}</div>
+<div class="asr"><input id="ns-${t.id}" class="fi" style="font-size:12px;padding:5px 8px" placeholder="Thêm subtask...">
+<button class="btn btn-sm" onclick="addSub('${t.id}')">+ Thêm</button></div></div>`:
+`<div class="ds"><div class="dst">Subtasks</div>
+<div class="asr"><input id="ns-${t.id}" class="fi" style="font-size:12px;padding:5px 8px" placeholder="Thêm subtask...">
+<button class="btn btn-sm" onclick="addSub('${t.id}')">+ Thêm</button></div></div>`}
+${atch.length?`<div class="ds"><div class="dst">Đính kèm</div>
+<div class="atch">${atch.map(a=>`<div class="ati">
+  <span>📎</span>
+  <span class="ati-n">${a.fileName||a.name||'file'}</span>
+  <span class="ati-s">${a.size?Math.round(a.size/1024)+'KB':''}</span>
+  ${a.viewUrl&&a.viewUrl!=='#'?`<a href="${a.viewUrl}" target="_blank" class="btn btn-xs">Xem</a>`:''}
+</div>`).join('')}</div></div>`:''}
+<div class="ds"><div class="dst">Comments (${cms.filter(x=>!x.isSystem).length})</div>
+<div class="cl">${cms.map(c=>c.isSystem?
+  `<div class="sys-cm"><span>${c.text}</span></div>`:
+  `<div class="ci"><div class="av avs">${(getUser(c.author)||{initials:c.author?.[0]||'?'}).initials||c.author?.[0]||'?'}</div>
+  <div class="cb"><div style="display:flex;justify-content:space-between"><span class="ca">${c.author}</span><span class="ctm">${fmtDT(c.time)}</span></div>
+  <div class="ctx">${c.text}</div></div></div>`
+).join('')}</div>
+<div class="cir">
+<textarea id="ci-${t.id}" placeholder="Nhập comment..." onkeydown="if(event.ctrlKey&&event.key==='Enter')postCom('${t.id}')"></textarea>
+<button class="btn btn-p btn-sm" onclick="postCom('${t.id}')">Gửi</button>
+</div></div>
+${isMgr()&&t.status==='review'?`<div style="margin-top:12px"><button class="btn btn-g" style="width:100%" onclick="openApprove('${t.id}')">⚡ Duyệt hoàn thành</button></div>`:''}
+</div></div>`;
 }
 
+// ---- APPROVE ----
+function openApprove(id){
+  const t=state.tasks.find(x=>String(x.id)===String(id));if(!t)return;
+  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" onclick="event.stopPropagation()">
+<div class="mh"><div class="mti">Duyệt hoàn thành</div><button class="mcl" onclick="CM()">×</button></div>
+<p style="font-size:13px;margin-bottom:12px">Task: <strong>${t.title}</strong></p>
+<div class="fa">
+  <button class="btn btn-g" onclick="approveTask('${t.id}','done')">✅ Hoàn thành</button>
+  <button class="btn btn-d" onclick="approveTask('${t.id}','done_fail')">❌ Không thành công</button>
+  <button class="btn" onclick="CM()">Huỷ</button>
+</div>
+</div></div>`;
+}
+async function approveTask(id,st){
+  const t=state.tasks.find(x=>String(x.id)===String(id));if(!t)return;
+  const old=t.status;t.status=st;
+  addSysCom(t,(st==='done'?'✅ Đã duyệt hoàn thành':'❌ Đánh dấu không thành công')+' bởi '+state.currentUser.name);
+  CM();renderKanban();await saveTask(t);
+  toast(st==='done'?'Đã duyệt ✓':'Đã đánh dấu không thành công');
+}
+
+// ---- TASK FORM ----
+// ✅ FIX 1: Biến lưu task đang edit để previewStatusMove biết status gốc
+window._editingTask=null;
+
 function onChChange(){
-  const ch=$('fch').value;
-  const ffn=$('ffn');
-  if(ffn){
-    // ALL channel => hiện tất cả flows; kênh cụ thể => filter theo kênh + ALL flows
-    const flows=ch==='ALL'
-      ? state.config
-      : state.config.filter(f=>f.channel===ch||f.channel==='ALL');
-    ffn.innerHTML=flows.map(f=>`<option value="${f.name}">${f.name}</option>`).join('');
-    // Auto-select General Task khi chọn ALL
-    if(ch==='ALL'){
-      const genOpt=Array.from(ffn.options).find(o=>o.value==='General Task');
-      if(genOpt)ffn.value='General Task';
-    }
-  }
-  // Update customer list filter
-  _filterCustomerList(ch);
+  const ch=document.getElementById('fch')?.value||'MT';
+  const ffn=document.getElementById('ffn');
+  if(!ffn)return;
+  const flows=state.config.filter(f=>f.channel===ch||f.channel==='ALL');
+  ffn.innerHTML=flows.map(f=>`<option value="${f.name}">${f.name}</option>`).join('');
   onFlowChange();
 }
 
-function _filterCustomerList(ch){
-  const list=document.getElementById('cust-list');
-  if(!list)return;
-  // Lưu các giá trị đang checked
-  const checked=new Set(Array.from(list.querySelectorAll('input:checked')).map(x=>x.value));
-  // Rebuild list theo kênh
-  const custs=ch==='ALL'
-    ? state.customers.filter(c=>c.status==='Active'||!c.status)
-    : state.customers.filter(c=>(c.status==='Active'||!c.status)&&(!c.channel||c.channel===ch));
-  list.innerHTML=custs.map(c=>{
-    const sel=checked.has(String(c.id));
-    return`<label style="display:flex;align-items:center;gap:8px;padding:5px 10px;cursor:pointer;font-size:12px" class="cust-opt">
-      <input type="checkbox" value="${c.id}" ${sel?'checked':''} style="width:14px;height:14px;accent-color:var(--blue)">
-      <span>${c.name}</span><span class="b b${c.channel||'gr'}" style="font-size:10px">${c.channel||''}</span>
-    </label>`;
-  }).join('');
-}
 function onFlowChange(){
-  const fn=$('ffn')?$('ffn').value:'';
-  const ch=$('fch')?$('fch').value:'';
-  const steps=getFlowSteps(fn);
-  const sp=$('fsp');
-  if(sp)sp.innerHTML=steps.map(s=>`<option value="${s}">${s}</option>`).join('');
-  // ALL channel hoặc General Task => KH tuỳ chọn
-  const isGeneral=!fn||fn==='General Task'||fn.toLowerCase().includes('general')||ch==='ALL';
-  const lbl=document.getElementById('cust-label');
-  if(lbl)lbl.innerHTML=isGeneral
-    ?'Khách hàng <span style="color:var(--t3);font-weight:400">(tuỳ chọn)</span>'
-    :'Khách hàng <span style="color:var(--red)">*</span> (chọn nhiều)';
-  const cl=document.getElementById('cust-list');
-  if(cl)cl.setAttribute('data-optional',isGeneral?'1':'0');
+  const fn=document.getElementById('ffn')?.value;
+  const fst=document.getElementById('fst');
+  if(!fst)return;
+  const steps=fn?getFlowSteps(fn):['To Do','In Progress','Done'];
+  const cur=document.getElementById('tfs')?.value||'';
+  fst.innerHTML=steps.map(s=>`<option value="${s}" ${s===cur?'selected':''}>${s}</option>`).join('');
 }
-function onCuChange(){
-  const v=$('fcu')?$('fcu').value:'';
-  const b=$('ncb');if(b)b.style.display=v==='__new__'?'block':'none';
+
+// ✅ FIX 1: Hiện hint khi đổi status khác với status gốc
+function previewStatusMove(val){
+  const hint=document.getElementById('status-move-hint');
+  const orig=window._editingTask?.status||'todo';
+  if(hint)hint.style.display=(val!==orig)?'block':'none';
 }
-function toggleNewCust(){
-  const b=$('ncb');if(b)b.style.display=b.style.display==='none'?'block':'none';
+
+function openTaskForm(editId){
+  const t=editId?state.tasks.find(x=>String(x.id)===String(editId)):null;
+  window._editingTask=t||null; // ✅ FIX 1: lưu task gốc
+  const d=t||{title:'',customer_id:'',channel:'MT',pic_ids:[],status:'todo',step:'',flow_name:'',deadline:'',notes:'',subtasks:[],comments:[]};
+  const tPics=Array.isArray(d.pic_ids)?d.pic_ids:String(d.pic_ids||'').split(',').filter(Boolean);
+  const flows=state.config.filter(f=>f.channel===d.channel||f.channel==='ALL');
+  const flowSteps=getFlowSteps(d.flow_name||'');
+  const allUsers=aUsers();
+  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo mo-lg" onclick="event.stopPropagation()">
+<div class="mh"><div class="mti">${t?'Sửa task':'Thêm task mới'}</div><button class="mcl" onclick="CM()">×</button></div>
+<div class="fr"><label class="fl">Tiêu đề *</label>
+<input type="text" id="ft" class="fi" value="${(d.title||'').replace(/"/g,'&quot;')}" placeholder="Tên task..."></div>
+<div class="g2">
+  <div class="fr"><label class="fl">Kênh *</label>
+    <select id="fch" class="fi" onchange="onChChange()">
+      ${CHANNELS.map(c=>`<option value="${c}" ${d.channel===c?'selected':''}>${c}</option>`).join('')}
+    </select>
+  </div>
+  <div class="fr"><label class="fl">Flow / Quy trình</label>
+    <select id="ffn" class="fi" onchange="onFlowChange()">
+      ${flows.map(f=>`<option value="${f.name}" ${f.name===d.flow_name?'selected':''}>${f.name}</option>`).join('')}
+    </select>
+  </div>
+</div>
+<div class="g2">
+  <div class="fr"><label class="fl">Trạng thái</label>
+    <select id="tf-status" class="fi" onchange="previewStatusMove(this.value)">
+      ${STATUSES.map(s=>`<option value="${s}" ${(d.status||'todo')===s?'selected':''}>${SL[s]}</option>`).join('')}
+    </select>
+    <div id="status-move-hint" class="status-hint">⬆ Task sẽ chuyển sang cột tương ứng sau khi lưu</div>
+  </div>
+  <div class="fr"><label class="fl">Bước hiện tại (Flow step)</label>
+    <select id="fst" class="fi">
+      ${flowSteps.map(s=>`<option value="${s}" ${s===d.step?'selected':''}>${s}</option>`).join('')}
+    </select>
+  </div>
+</div>
+<div class="g2">
+  <div class="fr"><label class="fl">Khách hàng</label>
+    <select id="fcu" class="fi">
+      <option value="">-- Chọn --</option>
+      ${state.customers.map(c=>`<option value="${c.id}" ${String(c.id)===String(d.customer_id)?'selected':''}>${c.name}</option>`).join('')}
+    </select>
+  </div>
+  <div class="fr"><label class="fl">Deadline</label>
+    <input type="date" id="fdl" class="fi" value="${d.deadline||''}">
+  </div>
+</div>
+<div class="fr"><label class="fl">PIC (chọn nhiều)</label>
+<div class="pmc" id="pic-chips">
+${allUsers.map(u=>{
+  const sel=tPics.includes(u.id)||tPics.includes(u.email);
+  return`<div class="pch ${sel?'sel':''}" onclick="togPic(this,'${u.id}')">
+    <div class="av avs">${u.initials||u.name[0]}</div>${u.name}</div>`;
+}).join('')}
+</div></div>
+<div class="fr"><label class="fl">Ghi chú</label>
+<textarea id="fn" class="fi">${d.notes||''}</textarea></div>
+<div class="fa">
+  <button class="btn btn-p" onclick="saveTaskForm('${editId||''}')">💾 Lưu</button>
+  <button class="btn" onclick="CM()">Huỷ</button>
+</div>
+</div></div>`;
 }
-async function saveNewCustInline(){
-  const nm=($('nc-n')||{}).value?.trim();
-  if(!nm){toast('Nhập tên KH','warn');return;}
-  const nC={id:Date.now(),name:nm,channel:($('nc-ch')||{}).value||'',
-    region:($('nc-r')||{}).value||'',contact_name:($('nc-c')||{}).value||'',
-    phone:($('nc-p')||{}).value||'',status:'Active'};
-  state.customers.push(nC);
-  await saveMaster('Customers',nC);
-  toast('Đã thêm: '+nm);
-  // Thêm checkbox mới vào list
-  const list=$('cust-list');
-  if(list){
-    const lbl=document.createElement('label');
-    lbl.style.cssText='display:flex;align-items:center;gap:8px;padding:5px 10px;cursor:pointer;font-size:12px';
-    lbl.innerHTML=`<input type="checkbox" value="${nC.id}" checked style="width:14px;height:14px;accent-color:var(--blue)">
-      <span>${nC.name}</span><span class="b b${nC.channel||'gr'}" style="font-size:10px">${nC.channel}</span>`;
-    list.appendChild(lbl);
+
+function togPic(el,uid){
+  el.classList.toggle('sel');
+}
+
+async function saveTaskForm(editId){
+  const title=document.getElementById('ft')?.value.trim();
+  if(!title){toast('Vui lòng nhập tiêu đề task','warn');return;}
+  const selPics=[...document.querySelectorAll('#pic-chips .pch.sel')].map(el=>{
+    const onc=el.getAttribute('onclick')||'';
+    const m=onc.match(/'([^']+)'/);
+    return m?m[1]:'';
+  }).filter(Boolean);
+  const newStatus=document.getElementById('tf-status')?.value||'todo';
+  const existingTask=editId?state.tasks.find(x=>String(x.id)===String(editId)):null;
+  const task={
+    id:existingTask?.id||('t'+Date.now()),
+    title,
+    channel:document.getElementById('fch')?.value||'MT',
+    flow_name:document.getElementById('ffn')?.value||'',
+    status:newStatus,
+    step:document.getElementById('fst')?.value||'',
+    customer_id:document.getElementById('fcu')?.value||'',
+    deadline:document.getElementById('fdl')?.value||'',
+    notes:document.getElementById('fn')?.value||'',
+    pic_ids:selPics,
+    subtasks:existingTask?.subtasks||[],
+    comments:existingTask?.comments||[],
+    attachments:existingTask?.attachments||[],
+    created_at:existingTask?.created_at||new Date().toISOString(),
+    updated_at:new Date().toISOString(),
+  };
+  // Log status change nếu có thay đổi
+  if(existingTask&&existingTask.status!==newStatus){
+    addSysCom(task,'Chuyển: '+SL[existingTask.status]+' → '+SL[newStatus]+' bởi '+(state.currentUser?.name||''));
   }
-  // Clear form
-  if($('nc-n'))$('nc-n').value='';
-  if($('nc-r'))$('nc-r').value='';
-  if($('nc-c'))$('nc-c').value='';
-  if($('nc-p'))$('nc-p').value='';
-  const b=$('ncb');if(b)b.style.display='none';
-}
-function togPIC(uid){
-  const ch=document.getElementById('pc-'+uid);
-  if(ch)ch.classList.toggle('sel');
-  // Trigger initial filter after DOM renders
-  setTimeout(()=>{onChChange();onFlowChange();},0);
-}
-async function saveTF(editId){
-  const title=$('ft').value.trim();
-  if(!title){alert('Vui lòng điền tiêu đề.');return;}
-  // Collect all checked customers
-  const checkedCusts=Array.from(document.querySelectorAll('#cust-list input[type=checkbox]:checked')).map(cb=>cb.value);
-  const custList=document.getElementById('cust-list');
-  const custOptional=custList&&custList.getAttribute('data-optional')==='1';
-  if(!checkedCusts.length&&!custOptional){
-    alert('Vui lòng chọn ít nhất 1 khách hàng.');return;
+  if(existingTask){
+    const idx=state.tasks.findIndex(x=>String(x.id)===String(existingTask.id));
+    if(idx>=0)state.tasks[idx]=task;
+  }else{
+    state.tasks.unshift(task);
   }
-  const cid=checkedCusts.length>0?checkedCusts[0]:''; // empty ok for General/ALL
-  const selPics=aUsers().filter(u=>document.getElementById('pc-'+u.id)?.classList.contains('sel')).map(u=>u.id);
-  if(!selPics.length){alert('Chọn ít nhất 1 PIC.');return;}
-  const fn=$('ffn')?$('ffn').value:'';
-  const data={title,customer_id:cid,customer_ids:checkedCusts,
-    channel:$('fch').value,pic_ids:selPics,pic_id:selPics[0]||'',
-    pic_email:(getUser(selPics[0])||{}).email||'',flow_name:fn,
-    status:$('fst').value,step:$('fsp').value,deadline:$('fdl').value,notes:$('fnt').value.trim()};
-  let task;
-  if(editId){task=state.tasks.find(x=>String(x.id)===String(editId));if(task)Object.assign(task,data);}
-  else{task={id:Date.now(),subtasks:[],comments:[],attachments:[],...data};addSysCom(task,'Task tạo bởi '+state.currentUser.name);state.tasks.push(task);}
-  CM();renderKanban();
-  if(task)await saveTask(task);
+  CM();
+  // ✅ FIX 2: Tự động quay về Kanban sau khi lưu
+  showPage('kanban',null);
+  renderKanban();
+  toast('Đã lưu task ✓');
+  await saveTask(task);
 }
 
 // ---- CUSTOMERS ----
 function renderCustomers(){
-  const u=state.currentUser;
-  $('ctb').innerHTML=state.customers
-    .filter(c=>c.status==='Active'||!c.status)
-    .filter(c=>isMgr()||u.channel==='ALL'||!c.channel||c.channel===u.channel)
-    .map(c=>{
-      const cnt=state.tasks.filter(t=>String(t.customer_id)===String(c.id)&&!['done','done_fail'].includes(t.status)).length;
-      const pic=c.pic_id?getUser(c.pic_id):null;
-      return`<tr>
-        <td data-label="Tên"><strong style="cursor:pointer;color:var(--blue)" onclick="openCustDet('${c.id}')">${c.name}</strong></td>
-        <td data-label="Kênh"><span class="b b${c.channel}">${c.channel||'—'}</span></td>
-        <td data-label="Vùng">${c.region||'—'}</td>
-        <td data-label="Hình thức KD" style="font-size:11px">${c.business_type||'—'}</td>
-        <td data-label="PIC">${pic?`<div style="display:flex;align-items:center;gap:5px"><div class="av avs">${pic.initials||'?'}</div>${pic.name}</div>`:'—'}</td>
-        <td data-label="Liên hệ">${c.contact_name||'—'}</td>
-        <td data-label="SĐT">${c.phone||'—'}</td>
-        <td data-label="Số CH" style="text-align:center">${c.num_stores||'—'}</td>
-        <td data-label="Tasks">${cnt>0?`<span style="color:var(--blue);font-weight:500">${cnt}</span>`:'0'}</td>
-        <td><div class="tab">
-          <button class="btn btn-xs" onclick="openCustForm('${c.id}')">✎</button>
-        </div></td>
-      </tr>`;}).join('');
+  const custs=state.customers;
+  $('ctb').innerHTML=custs.map(c=>{
+    const pic=c.pic_id?getUser(c.pic_id):null;
+    const taskCount=state.tasks.filter(t=>String(t.customer_id)===String(c.id)).length;
+    return`<tr>
+<td data-label="Tên"><strong>${c.name}</strong></td>
+<td data-label="Kênh"><span class="b b${c.channel||'MT'}">${c.channel||'—'}</span></td>
+<td data-label="Vùng">${c.region||'—'}</td>
+<td data-label="Hình thức KD">${c.business_type||'—'}</td>
+<td data-label="PIC">${pic?`<div style="display:flex;align-items:center;gap:4px"><div class="av avs">${pic.initials||pic.name[0]}</div>${pic.name}</div>`:'—'}</td>
+<td data-label="Liên hệ">${c.contact_name||'—'}</td>
+<td data-label="SĐT">${c.phone?`<a href="tel:${c.phone}">${c.phone}</a>`:'—'}</td>
+<td data-label="Số CH">${c.num_stores||'—'}</td>
+<td data-label="Tasks"><span class="b bgr">${taskCount} tasks</span></td>
+<td><div class="tab">
+  <button class="btn btn-sm" onclick="openCustDetail('${c.id}')">Xem</button>
+  ${isMgr()?`<button class="btn btn-sm" onclick="openCustForm('${c.id}')">Sửa</button>`:''}
+</div></td>
+</tr>`;
+  }).join('');
 }
 
-function openCustDet(cid){
-  const c=state.customers.find(x=>String(x.id)===String(cid));if(!c)return;
-  const tasks=state.tasks.filter(t=>String(t.customer_id)===String(cid));
+function openCustDetail(id){
+  const c=getCust(id);if(!c)return;
   const pic=c.pic_id?getUser(c.pic_id):null;
+  const tasks=state.tasks.filter(t=>String(t.customer_id)===String(id));
   $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo mo-lg" onclick="event.stopPropagation()">
-    <div class="mh">
-      <div><span class="b b${c.channel}" style="margin-bottom:5px;display:inline-flex">${c.channel}</span>
-        <div class="mti">${c.name}</div></div>
-      <button class="mcl" onclick="CM()">×</button>
-    </div>
-    <div class="cig">
-      <div class="cf"><div class="cfl">Vùng</div><div class="cfv">${c.region||'—'}</div></div>
-      <div class="cf"><div class="cfl">Hình thức KD</div><div class="cfv">${c.business_type||'—'}</div></div>
-      <div class="cf"><div class="cfl">Người liên hệ</div><div class="cfv">${c.contact_name||'—'}</div></div>
-      <div class="cf"><div class="cfl">SĐT</div><div class="cfv">${c.phone||'—'}</div></div>
-      <div class="cf"><div class="cfl">Số cửa hàng</div><div class="cfv">${c.num_stores||'—'}</div></div>
-      <div class="cf"><div class="cfl">Tài chính</div><div class="cfv">${c.financial||'—'}</div></div>
-      <div class="cf"><div class="cfl">PIC phụ trách</div><div class="cfv">${pic?pic.name:'—'}</div></div>
-      <div class="cf"><div class="cfl">Email KH</div><div class="cfv">${c.email||'—'}</div></div>
-    </div>
-    ${c.resources?`<div class="ds"><div class="dst">Nguồn lực</div><div class="nb2">${c.resources}</div></div>`:''}
-    ${c.notes?`<div class="ds"><div class="dst">Ghi chú</div><div class="nb2">${c.notes}</div></div>`:''}
-    <div class="ds"><div class="dst">Tasks (${tasks.length})</div>
-      ${tasks.length?tasks.map(t=>`<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:.5px solid var(--bd)">
-        <span class="b b${t.status}">${SL[t.status]}</span>
-        <span style="font-size:12px;flex:1">${t.title}</span>
-        <span style="font-size:11px;color:var(--t3)">${fmtD(t.deadline)}</span>
-      </div>`).join(''):'<span style="font-size:12px;color:var(--t3)">Chưa có task</span>'}
-    </div>
-    <div class="fa">
-      <button class="btn btn-p btn-sm" onclick="CM();openCustForm('${c.id}')">✎ Sửa</button>
-      <button class="btn btn-sm" onclick="CM()">Đóng</button>
-    </div>
-  </div></div>`;
+<div class="mh">
+  <div><div class="mti">🏢 ${c.name}</div><span class="b b${c.channel||'MT'}" style="margin-top:4px;display:inline-block">${c.channel||'—'}</span></div>
+  <div style="display:flex;gap:6px;align-items:center">
+    ${isMgr()?`<button class="btn btn-sm" onclick="openCustForm('${c.id}')">✏️ Sửa</button>`:''}
+    <button class="mcl" onclick="CM()">×</button>
+  </div>
+</div>
+<div class="cig">
+  <div class="cf"><div class="cfl">Vùng</div><div class="cfv">${c.region||'—'}</div></div>
+  <div class="cf"><div class="cfl">Hình thức KD</div><div class="cfv">${c.business_type||'—'}</div></div>
+  <div class="cf"><div class="cfl">Người liên hệ</div><div class="cfv">${c.contact_name||'—'}</div></div>
+  <div class="cf"><div class="cfl">SĐT</div><div class="cfv">${c.phone?`<a href="tel:${c.phone}">${c.phone}</a>`:'—'}</div></div>
+  <div class="cf"><div class="cfl">Email</div><div class="cfv">${c.email||'—'}</div></div>
+  <div class="cf"><div class="cfl">Số cửa hàng</div><div class="cfv">${c.num_stores||'—'}</div></div>
+  <div class="cf"><div class="cfl">PIC</div><div class="cfv">${pic?pic.name:'—'}</div></div>
+  <div class="cf"><div class="cfl">Nguồn lực</div><div class="cfv">${c.resources||'—'}</div></div>
+  <div class="cf"><div class="cfl">Tài chính</div><div class="cfv">${c.financial||'—'}</div></div>
+</div>
+${c.notes?`<div class="ds"><div class="dst">Ghi chú</div><div class="nb2">${c.notes}</div></div>`:''}
+<div class="ds"><div class="dst">Tasks liên quan (${tasks.length})</div>
+${tasks.length?`<div style="display:flex;flex-direction:column;gap:4px">${tasks.map(t=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--s2);border-radius:var(--r);cursor:pointer" onclick="openDetail('${t.id}')">
+  <span class="b b${t.status}">${SL[t.status]}</span>
+  <span style="font-size:12px;flex:1">${t.title}</span>
+  <span style="font-size:10px;color:var(--t3)">${fmtD(t.deadline)}</span>
+</div>`).join('')}</div>`:`<div class="ec">Chưa có task</div>`}
+<button class="btn btn-p btn-sm" style="margin-top:8px" onclick="CM();openTaskForm()">+ Thêm task</button>
+</div>
+</div></div>`;
 }
 
 function openCustForm(editId){
-  const u=state.currentUser;
-  const c=editId?state.customers.find(x=>String(x.id)===String(editId)):null;
-  if(c&&!isMgr()&&u.channel!=='ALL'&&c.channel&&c.channel!==u.channel){toast('Bạn chỉ sửa KH trong kênh của mình','warn');return;}
-  const d=c||{name:'',channel:u.channel!=='ALL'?u.channel:'MT',region:u.region||'',business_type:'',contact_name:'',phone:'',email:'',num_stores:'',resources:'',financial:'',notes:'',pic_id:''};
-  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo mo-lg" onclick="event.stopPropagation()">
-    <div class="mh"><div class="mti">${c?'Sửa khách hàng':'Thêm khách hàng mới'}</div><button class="mcl" onclick="CM()">×</button></div>
-    <div class="g2">
-      <div class="fr"><label class="fl">Tên *</label><input type="text" id="cn" class="fi" value="${d.name}"></div>
-      <div class="fr"><label class="fl">Kênh</label><select id="cch" class="fi">${CHANNELS.map(x=>`<option ${d.channel===x?'selected':''}>${x}</option>`).join('')}</select></div>
-    </div>
-    <div class="g2">
-      <div class="fr"><label class="fl">Vùng / Khu vực</label><input type="text" id="crg" class="fi" value="${d.region||''}"></div>
-      <div class="fr"><label class="fl">Hình thức KD</label><input type="text" id="cbt" class="fi" value="${d.business_type||''}" placeholder="Siêu thị, Đại lý..."></div>
-    </div>
-    <div class="g2">
-      <div class="fr"><label class="fl">Người liên hệ</label><input type="text" id="cct" class="fi" value="${d.contact_name||''}"></div>
-      <div class="fr"><label class="fl">SĐT</label><input type="text" id="cph" class="fi" value="${d.phone||''}"></div>
-    </div>
-    <div class="g2">
-      <div class="fr"><label class="fl">Email KH</label><input type="text" id="cem" class="fi" value="${d.email||''}"></div>
-      <div class="fr"><label class="fl">Số cửa hàng / điểm bán</label><input type="text" id="cns" class="fi" value="${d.num_stores||''}" placeholder="VD: 12"></div>
-    </div>
-    <div class="fr"><label class="fl">PIC phụ trách</label>
-      <select id="cpic" class="fi">
-        <option value="">-- Chọn PIC --</option>
-        ${aUsers().map(u=>`<option value="${u.id}" ${d.pic_id===u.id?'selected':''}>${u.name} (${u.initials})</option>`).join('')}
-      </select>
-    </div>
-    <div class="fr"><label class="fl">Nguồn lực (nhân sự, kho bãi...)</label><textarea id="crs" class="fi">${d.resources||''}</textarea></div>
-    <div class="fr"><label class="fl">Khả năng tài chính</label><textarea id="cfn" class="fi" style="min-height:48px">${d.financial||''}</textarea></div>
-    <div class="fr"><label class="fl">Ghi chú thêm</label><textarea id="cno" class="fi">${d.notes||''}</textarea></div>
-    <div class="fa">
-      <button class="btn btn-p" onclick="saveCust('${editId||''}')">💾 Lưu vào Sheet</button>
-      <button class="btn" onclick="CM()">Huỷ</button>
-    </div>
-  </div></div>`;
+  const c=editId?getCust(editId):null;
+  const d=c||{name:'',channel:'MT',region:'',business_type:'',contact_name:'',phone:'',email:'',notes:'',num_stores:'',resources:'',financial:'',pic_id:'',status:'Active'};
+  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" onclick="event.stopPropagation()">
+<div class="mh"><div class="mti">${c?'Sửa khách hàng':'Thêm khách hàng'}</div><button class="mcl" onclick="CM()">×</button></div>
+<div class="fr"><label class="fl">Tên khách hàng *</label>
+<input type="text" id="cn" class="fi" value="${(d.name||'').replace(/"/g,'&quot;')}" placeholder="Tên khách hàng..."></div>
+<div class="g2">
+  <div class="fr"><label class="fl">Kênh</label>
+    <select id="cch" class="fi">
+      ${CHANNELS.map(ch=>`<option value="${ch}" ${d.channel===ch?'selected':''}>${ch}</option>`).join('')}
+    </select>
+  </div>
+  <div class="fr"><label class="fl">Vùng</label>
+    <select id="crg" class="fi">
+      ${['Toàn quốc','Miền Nam','Miền Bắc','Miền Trung'].map(r=>`<option value="${r}" ${d.region===r?'selected':''}>${r}</option>`).join('')}
+    </select>
+  </div>
+</div>
+<div class="g2">
+  <div class="fr"><label class="fl">Hình thức KD</label>
+    <input type="text" id="cbt" class="fi" value="${(d.business_type||'').replace(/"/g,'&quot;')}" placeholder="Siêu thị, Đại lý..."></div>
+  <div class="fr"><label class="fl">PIC</label>
+    <select id="cpic" class="fi">
+      <option value="">-- Chọn --</option>
+      ${aUsers().map(u=>`<option value="${u.id}" ${d.pic_id===u.id?'selected':''}>${u.name}</option>`).join('')}
+    </select>
+  </div>
+</div>
+<div class="g3">
+  <div class="fr"><label class="fl">Người liên hệ</label><input type="text" id="cct" class="fi" value="${(d.contact_name||'').replace(/"/g,'&quot;')}"></div>
+  <div class="fr"><label class="fl">SĐT</label><input type="tel" id="cph" class="fi" value="${d.phone||''}"></div>
+  <div class="fr"><label class="fl">Email</label><input type="email" id="cem" class="fi" value="${d.email||''}"></div>
+</div>
+<div class="g3">
+  <div class="fr"><label class="fl">Số cửa hàng</label><input type="number" id="cns" class="fi" value="${d.num_stores||''}"></div>
+  <div class="fr"><label class="fl">Nguồn lực</label><input type="text" id="crs" class="fi" value="${(d.resources||'').replace(/"/g,'&quot;')}"></div>
+  <div class="fr"><label class="fl">Tài chính</label><input type="text" id="cfn" class="fi" value="${(d.financial||'').replace(/"/g,'&quot;')}"></div>
+</div>
+<div class="fr"><label class="fl">Ghi chú</label><textarea id="cno" class="fi">${d.notes||''}</textarea></div>
+<div class="fa">
+  <button class="btn btn-p" onclick="saveCustForm('${editId||''}')">💾 Lưu</button>
+  <button class="btn" onclick="CM()">Huỷ</button>
+</div>
+</div></div>`;
 }
 
-async function saveCust(editId){
-  const name=$('cn').value.trim();if(!name){alert('Nhập tên KH');return;}
-  const data={
+async function saveCustForm(editId){
+  const name=document.getElementById('cn')?.value.trim();
+  if(!name){toast('Vui lòng nhập tên khách hàng','warn');return;}
+  const existing=editId?getCust(editId):null;
+  const cust={
+    id:existing?.id||(Date.now()),
     name,
-    channel:$('cch').value,
-    region:$('crg').value,
-    business_type:$('cbt').value,
-    contact_name:$('cct').value,
-    phone:$('cph').value,
-    email:$('cem').value,
-    num_stores:$('cns').value,
-    pic_id:$('cpic').value,
-    resources:$('crs').value,
-    financial:$('cfn').value,
-    notes:$('cno').value,
+    channel:document.getElementById('cch')?.value||'MT',
+    region:document.getElementById('crg')?.value||'',
+    business_type:document.getElementById('cbt')?.value||'',
+    contact_name:document.getElementById('cct')?.value||'',
+    phone:document.getElementById('cph')?.value||'',
+    email:document.getElementById('cem')?.value||'',
+    notes:document.getElementById('cno')?.value||'',
+    num_stores:document.getElementById('cns')?.value||'',
+    resources:document.getElementById('crs')?.value||'',
+    financial:document.getElementById('cfn')?.value||'',
+    pic_id:document.getElementById('cpic')?.value||'',
     status:'Active',
-    active:true,
   };
-  if(editId){
-    const c=state.customers.find(x=>String(x.id)===String(editId));
-    if(c){data.id=c.id;Object.assign(c,data);await saveMaster('Customers',c);}
+  if(existing){
+    const idx=state.customers.findIndex(x=>String(x.id)===String(existing.id));
+    if(idx>=0)state.customers[idx]=cust;
   }else{
-    const nc={id:Date.now(),...data};
-    state.customers.push(nc);
-    await saveMaster('Customers',nc);
+    state.customers.push(cust);
   }
   CM();renderCustomers();
   toast('Đã lưu khách hàng ✓');
+  await saveMaster('Customers',cust);
 }
 
 // ---- PRODUCTS ----
 function renderProducts(){
-  const canEdit=isMgrOrTM();
-  $('prod-add-btn').innerHTML=canEdit?`<button class="btn btn-p btn-sm" onclick="openProdForm()">+ Thêm</button>`:`<span style="font-size:11px;background:#EDE9FE;color:#5B21B6;padding:2px 8px;border-radius:6px">Manager / Trade Marketing only</span>`;
-  $('ptb').innerHTML=state.products.filter(p=>p.name).map(p=>`
-    <tr>
-      <td data-label="Tên"><strong>${p.name}</strong></td>
-      <td data-label="Brand"><span class="b bgr">${p.brand||'—'}</span></td>
-      <td data-label="Danh mục">${p.category||'—'}</td>
-      <td data-label="SKU" style="font-size:11px;color:var(--t2)">${p.sku||'—'}</td>
-      <td data-label="Đơn vị">${p.unit||'—'}</td>
-      <td data-label="Trạng thái"><span class="b ${p.status==='Active'?'bdone':p.status==='Discontinued'?'bdone_fail':'bgr'}">${p.status||'Active'}</span></td>
-      <td>${canEdit?`<div class="tab"><button class="btn btn-xs" onclick="openProdForm('${p.id}')">✎</button></div>`:''}</td>
-    </tr>`).join('');
+  if(isMgr()){
+    document.getElementById('prod-add-btn').innerHTML=`<button class="btn btn-p btn-sm" onclick="openProdForm()">+ Thêm</button>`;
+  }
+  $('ptb').innerHTML=state.products.map(p=>`<tr>
+<td data-label="Tên">${p.name}</td>
+<td data-label="Brand"><span class="b bgr">${p.brand||'—'}</span></td>
+<td data-label="Danh mục">${p.category||'—'}</td>
+<td data-label="SKU">${p.sku||'—'}</td>
+<td data-label="Đơn vị">${p.unit||'—'}</td>
+<td data-label="Trạng thái"><span class="b ${p.status==='Active'?'bdone':'btodo'}">${p.status||'Active'}</span></td>
+<td>${isMgr()?`<div class="tab"><button class="btn btn-sm" onclick="openProdForm('${p.id}')">Sửa</button></div>`:''}</td>
+</tr>`).join('');
 }
 
-function openProdForm(eid){
-  if(!isMgrOrTM()){toast('Không có quyền','warn');return;}
-  const p=eid?state.products.find(x=>String(x.id)===String(eid)):null;
-  const d=p||{name:'',brand:'Ayam Brand',category:'',sku:'',unit:'',status:'Active'};
+function openProdForm(editId){
+  const p=editId?state.products.find(x=>String(x.id)===String(editId)):null;
+  const d=p||{name:'',brand:'Ayam Brand',category:'',sku:'',unit:'lon',status:'Active'};
   $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" onclick="event.stopPropagation()">
-    <div class="mh"><div class="mti">${p?'Sửa SP':'Thêm SP'}</div><button class="mcl" onclick="CM()">×</button></div>
-    <div class="fr"><label class="fl">Tên *</label><input type="text" id="pn" class="fi" value="${d.name}"></div>
-    <div class="g2">
-      <div class="fr"><label class="fl">Brand</label><select id="pb" class="fi">
-        ${['Ayam Brand','Alce Nero','Duchef','Latino Bella','Kelly Beans'].map(b=>`<option ${d.brand===b?'selected':''}>${b}</option>`).join('')}
-      </select></div>
-      <div class="fr"><label class="fl">Danh mục</label><input type="text" id="pc" class="fi" value="${d.category||''}"></div>
-    </div>
-    <div class="g2">
-      <div class="fr"><label class="fl">SKU</label><input type="text" id="psk" class="fi" value="${d.sku||''}"></div>
-      <div class="fr"><label class="fl">Đơn vị</label><input type="text" id="pu" class="fi" value="${d.unit||''}"></div>
-    </div>
-    <div class="fr"><label class="fl">Trạng thái</label><select id="ps" class="fi">
-      ${['Active','Discontinued','New'].map(s=>`<option ${d.status===s?'selected':''}>${s}</option>`).join('')}
-    </select></div>
-    <div class="fa">
-      <button class="btn btn-p" onclick="saveProd('${eid||''}')">💾 Lưu</button>
-      <button class="btn" onclick="CM()">Huỷ</button>
-    </div>
-  </div></div>`;
+<div class="mh"><div class="mti">${p?'Sửa sản phẩm':'Thêm sản phẩm'}</div><button class="mcl" onclick="CM()">×</button></div>
+<div class="fr"><label class="fl">Tên sản phẩm *</label>
+<input type="text" id="pn" class="fi" value="${(d.name||'').replace(/"/g,'&quot;')}" placeholder="Tên sản phẩm..."></div>
+<div class="g2">
+  <div class="fr"><label class="fl">Brand</label>
+    <select id="pbr" class="fi">
+      ${['Ayam Brand','Alce Nero','Duchef','Latino Bella','Kelly Beans'].map(b=>`<option value="${b}" ${d.brand===b?'selected':''}>${b}</option>`).join('')}
+    </select>
+  </div>
+  <div class="fr"><label class="fl">Danh mục</label>
+    <input type="text" id="pca" class="fi" value="${(d.category||'').replace(/"/g,'&quot;')}" placeholder="Beans & Peas, Tuna...">
+  </div>
+</div>
+<div class="g3">
+  <div class="fr"><label class="fl">SKU</label><input type="text" id="psk" class="fi" value="${d.sku||''}"></div>
+  <div class="fr"><label class="fl">Đơn vị</label><input type="text" id="pun" class="fi" value="${d.unit||''}"></div>
+  <div class="fr"><label class="fl">Trạng thái</label>
+    <select id="pst" class="fi">
+      <option value="Active" ${d.status==='Active'?'selected':''}>Active</option>
+      <option value="Discontinued" ${d.status==='Discontinued'?'selected':''}>Discontinued</option>
+    </select>
+  </div>
+</div>
+<div class="fa">
+  <button class="btn btn-p" onclick="saveProdForm('${editId||''}')">💾 Lưu</button>
+  <button class="btn" onclick="CM()">Huỷ</button>
+</div>
+</div></div>`;
 }
 
-async function saveProd(eid){
-  const name=$('pn').value.trim();if(!name){alert('Nhập tên SP');return;}
-  const data={name,brand:$('pb').value,category:$('pc').value,sku:$('psk').value,unit:$('pu').value,status:$('ps').value};
-  if(eid){const p=state.products.find(x=>String(x.id)===String(eid));if(p){data.id=p.id;Object.assign(p,data);await saveMaster('Products',p);}}
-  else{const np={id:Date.now(),...data};state.products.push(np);await saveMaster('Products',np);}
+async function saveProdForm(editId){
+  const name=document.getElementById('pn')?.value.trim();
+  if(!name){toast('Vui lòng nhập tên sản phẩm','warn');return;}
+  const existing=editId?state.products.find(x=>String(x.id)===String(editId)):null;
+  const prod={
+    id:existing?.id||(Date.now()),
+    name,
+    brand:document.getElementById('pbr')?.value||'Ayam Brand',
+    category:document.getElementById('pca')?.value||'',
+    sku:document.getElementById('psk')?.value||'',
+    unit:document.getElementById('pun')?.value||'',
+    status:document.getElementById('pst')?.value||'Active',
+  };
+  if(existing){
+    const idx=state.products.findIndex(x=>String(x.id)===String(existing.id));
+    if(idx>=0)state.products[idx]=prod;
+  }else{
+    state.products.push(prod);
+  }
   CM();renderProducts();
+  toast('Đã lưu sản phẩm ✓');
+  await saveMaster('Products',prod);
 }
 
 // ---- USERS ----
 function renderUsers(){
-  // Nếu không phải manager: chỉ thấy thông tin của chính mình
-  const me=state.currentUser;
-  if(!isMgr()){
-    // Sales/Trade: redirect về profile của chính mình
-    openMyProfile();
-    return;
-  }
-  // Manager: thấy tất cả
-  $('utb').innerHTML=aUsers().map(u=>`
-    <tr>
-      <td data-label="Tên"><strong>${u.name}</strong></td>
-      <td data-label="Role"><span class="b ${u.role==='manager'?'bmgr':'bgr'}">${u.role}</span></td>
-      <td data-label="Kênh"><span class="b b${u.channel==='MT'?'MT':u.channel==='GT'?'GT':u.channel==='B2B'?'B2B':'gr'}">${u.channel||'—'}</span></td>
-      <td data-label="Vùng" style="font-size:11px">${u.region||'—'}</td>
-      <td data-label="Chức vụ" style="font-size:11px;color:var(--t2)">${u.position||'—'}</td>
-      <td data-label="Email" style="color:var(--t2)">${u.email||'—'}</td>
-      <td data-label="Password"><span style="font-family:monospace;background:var(--s2);padding:2px 6px;border-radius:4px;font-size:11px">${u.role==='manager'?'—':u.password||'chưa đặt'}</span></td>
-      <td data-label="Initials"><div class="av">${u.initials||'?'}</div></td>
-      <td><div class="tab"><button class="btn btn-xs" onclick="openUserForm('${u.id}')">✎</button></div></td>
-    </tr>`).join('');
+  if(!isMgr()){openMyProfile();return;}
+  $('utb').innerHTML=aUsers().map(u=>`<tr>
+<td data-label="Tên"><strong>${u.name}</strong></td>
+<td data-label="Role"><span class="b ${u.role==='manager'?'bmgr':'bgr'}">${u.role}</span></td>
+<td data-label="Kênh">${u.channel||'—'}</td>
+<td data-label="Vùng">${u.region||'—'}</td>
+<td data-label="Chức vụ">${u.position||'—'}</td>
+<td data-label="Email"><a href="mailto:${u.email}">${u.email}</a></td>
+<td data-label="Password">${u.role==='manager'?'—':'****'}</td>
+<td data-label="Initials"><div class="av">${u.initials||u.name[0]}</div></td>
+<td><div class="tab">
+  <button class="btn btn-sm" onclick="openUserForm('${u.id}')">Sửa</button>
+</div></td>
+</tr>`).join('');
 }
 
-// Profile của chính mình (Sales/Trade)
 function openMyProfile(){
-  const u=state.currentUser;
-  if(!u)return;
-  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" style="max-width:420px" onclick="event.stopPropagation()">
-    <div class="mh"><div class="mti">👤 Thông tin tài khoản của tôi</div><button class="mcl" onclick="CM()">×</button></div>
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:1rem;padding:12px;background:var(--s2);border-radius:var(--r)">
-      <div class="av" style="width:44px;height:44px;font-size:15px">${u.initials||u.name[0]}</div>
-      <div><div style="font-size:16px;font-weight:600">${u.name}</div>
-        <div style="font-size:12px;color:var(--t2)">${u.position||u.role}</div>
-      </div>
-    </div>
-    <div class="g2" style="margin-bottom:10px">
-      <div class="cf"><div class="cfl">Email</div><div class="cfv" style="font-size:12px">${u.email}</div></div>
-      <div class="cf"><div class="cfl">Kênh</div><div class="cfv"><span class="b b${u.channel==='MT'?'MT':u.channel==='GT'?'GT':'gr'}">${u.channel||'—'}</span></div></div>
-      <div class="cf"><div class="cfl">Vùng</div><div class="cfv">${u.region||'—'}</div></div>
-      <div class="cf"><div class="cfl">Initials</div><div class="cfv">${u.initials||'—'}</div></div>
-    </div>
-    <div class="cf" style="margin-bottom:12px"><div class="cfl">Mật khẩu hiện tại</div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span id="pw-display" style="font-family:monospace;letter-spacing:3px">••••</span>
-        <button class="btn btn-xs" onclick="togglePWDisplay('${u.id}')">Hiện</button>
-      </div>
-    </div>
-    <div class="fr"><label class="fl">Đổi mật khẩu mới (4 số)</label>
-      <div style="display:flex;gap:8px">
-        <input type="password" id="new-pw" class="fi" maxlength="6" placeholder="Nhập mật khẩu mới..." style="flex:1">
-        <button class="btn btn-p btn-sm" onclick="changeMyPW()">Lưu</button>
-      </div>
-    </div>
-    <div class="fa" style="margin-top:8px">
-      <button class="btn btn-sm" onclick="CM()">Đóng</button>
-    </div>
-  </div></div>`;
-}
-
-function togglePWDisplay(uid){
-  const u=state.users.find(x=>x.id===uid);
-  const el=document.getElementById('pw-display');
-  if(!el||!u)return;
-  el.textContent=el.textContent==='••••'?(u.password||'(chưa đặt)'):'••••';
-}
-
-async function changeMyPW(){
-  const inp=document.getElementById('new-pw');
-  if(!inp||!inp.value.trim()){toast('Nhập mật khẩu mới','warn');return;}
-  const pw=inp.value.trim();
-  if(!/^\d{4,6}$/.test(pw)){toast('Mật khẩu phải là 4-6 chữ số','warn');return;}
-  state.currentUser.password=pw;
-  const u=state.users.find(x=>x.id===state.currentUser.id);
-  if(u){u.password=pw;await saveMaster('Users',u);}
-  toast('Đã đổi mật khẩu ✓');
-  CM();
-}
-
-function openUserForm(eid){
-  const u=eid?state.users.find(x=>x.id===eid):null;
-  const d=u||{name:'',role:'sales',position:'',channel:'MT',region:'',initials:'',email:'',password:''};
+  const u=state.currentUser;if(!u)return;
   $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" onclick="event.stopPropagation()">
-    <div class="mh"><div class="mti">${u?'Sửa thành viên':'Thêm thành viên'}</div><button class="mcl" onclick="CM()">×</button></div>
-    <div class="g2">
-      <div class="fr"><label class="fl">Tên *</label><input type="text" id="un" class="fi" value="${d.name}"></div>
-      <div class="fr"><label class="fl">Initials</label><input type="text" id="ui" class="fi" value="${d.initials}" maxlength="4"></div>
-    </div>
-    <div class="g2">
-      <div class="fr"><label class="fl">Role</label><select id="ur" class="fi">
-        <option value="sales" ${d.role==='sales'?'selected':''}>Sales</option>
-        <option value="manager" ${d.role==='manager'?'selected':''}>Manager</option>
-        <option value="trade" ${d.role==='trade'?'selected':''}>Trade Marketing</option>
-      </select></div>
-      <div class="fr"><label class="fl">Chức vụ</label><input type="text" id="upo" class="fi" value="${d.position||''}"></div>
-    </div>
-    <div class="g2">
-      <div class="fr"><label class="fl">Kênh</label><select id="uch" class="fi">
-        ${['MT','GT','B2B','HoReCa','ALL'].map(c=>`<option ${d.channel===c?'selected':''}>${c}</option>`).join('')}
-      </select></div>
-      <div class="fr"><label class="fl">Vùng</label><input type="text" id="urg" class="fi" value="${d.region||''}"></div>
-    </div>
-    <div class="fr"><label class="fl">Email Gmail (bắt buộc)</label><input type="email" id="uem" class="fi" value="${d.email||''}"></div>
-    <div class="fr"><label class="fl">Mật khẩu (4 số, để trống nếu là Manager)</label><input type="text" id="upw" class="fi" value="${d.password||''}" maxlength="6" placeholder="VD: 1234"></div>
-    <div class="fa">
-      <button class="btn btn-p" onclick="saveUser('${eid||''}')">💾 Lưu</button>
-      <button class="btn" onclick="CM()">Huỷ</button>
-    </div>
-  </div></div>`;
+<div class="mh"><div class="mti">👤 Hồ sơ của tôi</div><button class="mcl" onclick="CM()">×</button></div>
+<div style="text-align:center;margin-bottom:16px">
+  <div class="av" style="width:56px;height:56px;font-size:20px;margin:0 auto 8px">${u.initials||u.name[0]}</div>
+  <div style="font-size:16px;font-weight:600">${u.name}</div>
+  <div style="font-size:12px;color:var(--t3)">${u.position||u.role}</div>
+</div>
+<div class="cig">
+  <div class="cf"><div class="cfl">Email</div><div class="cfv">${u.email}</div></div>
+  <div class="cf"><div class="cfl">Kênh</div><div class="cfv">${u.channel||'—'}</div></div>
+  <div class="cf"><div class="cfl">Vùng</div><div class="cfv">${u.region||'—'}</div></div>
+  <div class="cf"><div class="cfl">Role</div><div class="cfv">${u.role}</div></div>
+</div>
+<div class="fa"><button class="btn" onclick="CM()">Đóng</button></div>
+</div></div>`;
 }
 
-async function saveUser(eid){
-  const name=$('un').value.trim();if(!name){alert('Nhập tên');return;}
-  const data={name,initials:$('ui').value.toUpperCase(),role:$('ur').value,position:$('upo').value,
-    channel:$('uch').value,region:$('urg').value,email:$('uem').value,password:$('upw').value,status:'Active'};
-  if(eid){const u=state.users.find(x=>x.id===eid);if(u){data.id=u.id;Object.assign(u,data);await saveMaster('Users',u);}}
-  else{const nu={id:'u'+Date.now(),...data};state.users.push(nu);await saveMaster('Users',nu);}
-  CM();renderUsers();
+function openUserForm(editId){
+  const u=editId?getUser(editId):null;
+  const d=u||{name:'',email:'',role:'sales',position:'Sales Representative',channel:'MT',region:'Miền Nam',initials:'',password:'',status:'Active'};
+  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" onclick="event.stopPropagation()">
+<div class="mh"><div class="mti">${u?'Sửa thành viên':'Thêm thành viên'}</div><button class="mcl" onclick="CM()">×</button></div>
+<div class="g2">
+  <div class="fr"><label class="fl">Họ và tên *</label><input type="text" id="un" class="fi" value="${(d.name||'').replace(/"/g,'&quot;')}"></div>
+  <div class="fr"><label class="fl">Email *</label><input type="email" id="ue" class="fi" value="${d.email||''}"></div>
+</div>
+<div class="g2">
+  <div class="fr"><label class="fl">Role</label>
+    <select id="ur" class="fi">
+      ${['manager','sales','trade'].map(r=>`<option value="${r}" ${d.role===r?'selected':''}>${r}</option>`).join('')}
+    </select>
+  </div>
+  <div class="fr"><label class="fl">Chức vụ</label><input type="text" id="up2" class="fi" value="${(d.position||'').replace(/"/g,'&quot;')}"></div>
+</div>
+<div class="g3">
+  <div class="fr"><label class="fl">Kênh</label>
+    <select id="uch" class="fi">
+      ${CHANNELS.map(c=>`<option value="${c}" ${d.channel===c?'selected':''}>${c}</option>`).join('')}
+    </select>
+  </div>
+  <div class="fr"><label class="fl">Vùng</label>
+    <select id="urg" class="fi">
+      ${['ALL','Miền Nam','Miền Bắc','Miền Trung'].map(r=>`<option value="${r}" ${d.region===r?'selected':''}>${r}</option>`).join('')}
+    </select>
+  </div>
+  <div class="fr"><label class="fl">Initials</label><input type="text" id="ui" class="fi" maxlength="3" value="${d.initials||''}"></div>
+</div>
+<div class="g2">
+  <div class="fr"><label class="fl">Password (4 số)</label><input type="text" id="upw" class="fi" maxlength="4" value="${d.password||''}" placeholder="Để trống nếu Manager"></div>
+  <div class="fr"><label class="fl">Trạng thái</label>
+    <select id="ust" class="fi">
+      <option value="Active" ${d.status==='Active'?'selected':''}>Active</option>
+      <option value="Inactive" ${d.status==='Inactive'?'selected':''}>Inactive</option>
+    </select>
+  </div>
+</div>
+<div class="fa">
+  <button class="btn btn-p" onclick="saveUserForm('${editId||''}')">💾 Lưu</button>
+  <button class="btn" onclick="CM()">Huỷ</button>
+</div>
+</div></div>`;
+}
+
+async function saveUserForm(editId){
+  const name=document.getElementById('un')?.value.trim();
+  const email=document.getElementById('ue')?.value.trim();
+  if(!name||!email){toast('Vui lòng nhập tên và email','warn');return;}
+  const existing=editId?getUser(editId):null;
+  const user={
+    id:existing?.id||('u'+Date.now()),
+    name,email,
+    role:document.getElementById('ur')?.value||'sales',
+    position:document.getElementById('up2')?.value||'',
+    channel:document.getElementById('uch')?.value||'MT',
+    region:document.getElementById('urg')?.value||'',
+    initials:document.getElementById('ui')?.value||name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,3),
+    password:document.getElementById('upw')?.value||'',
+    status:document.getElementById('ust')?.value||'Active',
+  };
+  if(existing){
+    const idx=state.users.findIndex(x=>x.id===existing.id);
+    if(idx>=0)state.users[idx]=user;
+  }else{
+    state.users.push(user);
+  }
+  CM();renderUsers();initLogin();
+  toast('Đã lưu thành viên ✓');
+  await saveMaster('Users',user);
 }
 
 // ---- CONFIG ----
 function renderConfig(){
+  if(!isMgr()){toast('Chỉ Manager','warn');return;}
   $('cfg-body').innerHTML=state.config.map(f=>{
     const steps=Array.isArray(f.steps)?f.steps:[];
     return`<div class="fer">
-      <div style="min-width:180px">
-        <div style="font-size:12px;font-weight:500">${f.name}</div>
-        <div style="display:flex;gap:4px;margin-top:3px">
-          <span class="b b${f.channel==='MT'?'MT':f.channel==='GT'?'GT':f.channel==='B2B'?'B2B':'gr'}">${f.channel}</span>
-          <span style="font-size:10px;color:var(--t3)">${f.task_type||''}</span>
-        </div>
-      </div>
-      <div class="fsp">${steps.map((s,i)=>`${i>0?'<span style="font-size:10px;color:var(--t3);margin:0 2px">›</span>':''}<span class="fsb">${s}</span>`).join('')}</div>
-      <button class="btn btn-xs" onclick="openFlowForm('${f.id||f.name}')">✎ Sửa</button>
-    </div>`;
+<div style="min-width:160px">
+  <div style="font-size:12px;font-weight:600">${f.name}</div>
+  <div style="font-size:10px;color:var(--t3)">${f.channel} · ${f.task_type||'General'}</div>
+</div>
+<div class="fsp">${steps.map(s=>`<span class="fsb">${s}</span>`).join('<span style="font-size:10px;color:var(--t3);padding:0 2px">→</span>')}</div>
+<button class="btn btn-sm" onclick="openFlowForm('${f.id}')">Sửa</button>
+</div>`;
   }).join('');
 }
 
-function openFlowForm(eid){
-  const f=eid?state.config.find(x=>x.id===eid||x.name===eid):null;
-  const d=f||{name:'',channel:'ALL',task_type:'',steps:[],description:''};
-  const stepsStr=Array.isArray(d.steps)?d.steps.join(' \u2192 '):d.steps||'';
+function openFlowForm(editId){
+  const f=editId?state.config.find(x=>x.id===editId||x.name===editId):null;
+  const d=f||{name:'',channel:'ALL',task_type:'General',steps:[]};
+  const stepsStr=Array.isArray(d.steps)?d.steps.join(' → '):d.steps||'';
   $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" onclick="event.stopPropagation()">
-    <div class="mh"><div class="mti">${f?'Sửa flow':'Thêm flow'}</div><button class="mcl" onclick="CM()">×</button></div>
-    <div class="g2">
-      <div class="fr"><label class="fl">Tên flow *</label><input type="text" id="gn" class="fi" value="${d.name}"></div>
-      <div class="fr"><label class="fl">Kênh</label><select id="gch" class="fi">
-        ${['MT','GT','B2B','HoReCa','ALL'].map(c=>`<option ${d.channel===c?'selected':''}>${c}</option>`).join('')}
-      </select></div>
-    </div>
-    <div class="fr"><label class="fl">Loại công việc</label><input type="text" id="gtp" class="fi" value="${d.task_type||''}"></div>
-    <div class="fr"><label class="fl">Các bước (cách nhau bởi →)</label>
-      <textarea id="gst" class="fi" style="min-height:80px" placeholder="Bước 1 → Bước 2 → Bước 3">${stepsStr}</textarea>
-    </div>
-    <div class="fr"><label class="fl">Mô tả</label><textarea id="gds" class="fi">${d.description||''}</textarea></div>
-    <div class="fa">
-      <button class="btn btn-p" onclick="saveFlow('${eid||''}')">💾 Lưu</button>
-      <button class="btn" onclick="CM()">Huỷ</button>
-    </div>
-  </div></div>`;
+<div class="mh"><div class="mti">${f?'Sửa flow':'Thêm flow'}</div><button class="mcl" onclick="CM()">×</button></div>
+<div class="fr"><label class="fl">Tên flow *</label>
+<input type="text" id="fln" class="fi" value="${(d.name||'').replace(/"/g,'&quot;')}" placeholder="Tên flow..."></div>
+<div class="g2">
+  <div class="fr"><label class="fl">Kênh</label>
+    <select id="flch" class="fi">
+      ${CHANNELS.map(c=>`<option value="${c}" ${d.channel===c?'selected':''}>${c}</option>`).join('')}
+    </select>
+  </div>
+  <div class="fr"><label class="fl">Loại công việc</label>
+    <input type="text" id="fltt" class="fi" value="${(d.task_type||'').replace(/"/g,'&quot;')}" placeholder="Trading Term, Listing...">
+  </div>
+</div>
+<div class="fr"><label class="fl">Các bước (phân cách bởi →)</label>
+<textarea id="flst" class="fi" rows="3" placeholder="Bước 1 → Bước 2 → Bước 3">${stepsStr}</textarea></div>
+<div class="fa">
+  <button class="btn btn-p" onclick="saveFlowForm('${editId||''}')">💾 Lưu</button>
+  <button class="btn" onclick="CM()">Huỷ</button>
+</div>
+</div></div>`;
 }
 
-async function saveFlow(eid){
-  const name=$('gn').value.trim();if(!name){alert('Nhập tên flow');return;}
-  const steps=$('gst').value.split('\u2192').map(s=>s.trim()).filter(Boolean);
-  const data={name,channel:$('gch').value,task_type:$('gtp').value,steps,description:$('gds').value,status:'Active'};
-  if(eid){const f=state.config.find(x=>x.id===eid||x.name===eid);
-    if(f){if(!f.id)f.id='flow_'+Date.now();data.id=f.id;Object.assign(f,data);await saveMaster('Flows',f);}}
-  else{const nf={id:'flow_'+Date.now(),...data};state.config.push(nf);await saveMaster('Flows',nf);}
-  CM();renderConfig();toast('Flow đã lưu ✓');
-}
-
-// ---- MOBILE NAV ----
-function mobileNav(nm, btn){
-  // "more" menu
-  if(nm==='more'){
-    openMobileMore();return;
+async function saveFlowForm(editId){
+  const name=document.getElementById('fln')?.value.trim();
+  if(!name){toast('Vui lòng nhập tên flow','warn');return;}
+  const stepsRaw=document.getElementById('flst')?.value||'';
+  const steps=stepsRaw.split('→').map(s=>s.trim()).filter(Boolean);
+  const existing=editId?state.config.find(x=>x.id===editId||x.name===editId):null;
+  const flow={
+    id:existing?.id||('f'+Date.now()),
+    name,
+    channel:document.getElementById('flch')?.value||'ALL',
+    task_type:document.getElementById('fltt')?.value||'General',
+    steps,
+  };
+  if(existing){
+    const idx=state.config.findIndex(x=>x.id===existing.id);
+    if(idx>=0)state.config[idx]=flow;
+  }else{
+    state.config.push(flow);
   }
-  // Update bottom nav active state
-  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
-  if(btn)btn.classList.add('active');
-  // Find and click top nav button
-  showPage(nm, null);
-}
-
-function openMobileMore(){
-  const isMgr2=isMgr();
-  const mc=document.getElementById('mc');
-  mc.innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" style="max-width:100%" onclick="event.stopPropagation()">
-    <div class="mh"><div class="mti">Menu</div><button class="mcl" onclick="CM()">×</button></div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      ${isMgr2?`<button class="btn" style="justify-content:flex-start;padding:12px" onclick="CM();mobileNav2('users')">👥 Team</button>`:''}
-      ${isMgr2?`<button class="btn" style="justify-content:flex-start;padding:12px" onclick="CM();mobileNav2('config')">⚙️ Cấu hình</button>`:''}
-      <button class="btn" style="justify-content:flex-start;padding:12px" onclick="CM();openMyProfile()">👤 Tài khoản của tôi</button>
-      <button class="btn btn-d" style="justify-content:flex-start;padding:12px" onclick="doLogout()">↩ Đăng xuất</button>
-    </div>
-  </div></div>`;
-}
-function mobileNav2(nm){
-  showPage(nm,null);
+  CM();renderConfig();
+  toast('Đã lưu flow ✓');
+  await saveMaster('Flows',flow);
 }
 
 // ---- INIT ----
-window.addEventListener('load',()=>{
-  // Load tất cả default data ngay lập tức
-  state.users=DEFAULT_USERS;
-  state.config=DEFAULT_FLOWS;
-  state.customers=DEFAULT_CUSTOMERS;
-  state.products=DEFAULT_PRODUCTS;
-  state.tasks=[];
-
-  const sid=localStorage.getItem('dgm_uid');
-  const sem=localStorage.getItem('dgm_em');
-
-  // Gọi initLogin NGAY để dropdown có data (dùng DEFAULT_USERS)
+document.addEventListener('DOMContentLoaded',()=>{
+  // ✅ FIX 3: Kiểm tra cache ngay khi load để tránh trang trắng
+  try{
+    const raw=localStorage.getItem('dgm_cache');
+    if(raw){
+      const cache=JSON.parse(raw);
+      if(cache.users&&cache.users.length)state.users=cache.users;
+      if(cache.customers&&cache.customers.length)state.customers=cache.customers;
+      if(cache.products&&cache.products.length)state.products=cache.products;
+      if(cache.config&&cache.config.length)state.config=cache.config;
+      if(cache.tasks&&cache.tasks.length)state.tasks=cache.tasks;
+    }
+  }catch(e){}
   initLogin();
-
-  // Thử auto-login
-  if(sid&&sem){
-    const u=DEFAULT_USERS.find(x=>x.id===sid&&x.email&&x.email.toLowerCase()===sem.toLowerCase());
-    if(u){
-      state.currentUser=u;
-      $('login').style.display='none';
-      $('app').style.display='flex';
-      $('cav').textContent=u.initials||u.name[0];
-      $('cnm').textContent=u.name;
-      document.querySelectorAll('.mgr-only').forEach(el=>el.style.display=isMgr()?'':'none');
-      const sp2=localStorage.getItem('dgm_page')||'kanban';
-      showPage(sp2,null);
-      syncAll();
-      return;
+  const uid=localStorage.getItem('dgm_uid');
+  const em=localStorage.getItem('dgm_em');
+  if(uid&&em){
+    const users=state.users.length?aUsers():DEFAULT_USERS;
+    const user=users.find(u=>u.id===uid);
+    if(user&&(user.role==='manager'||true)){
+      // Auto-restore session nếu đã login trước đó
+      // (chỉ restore manager; sales cần nhập lại password)
+      if(user.role==='manager'){
+        state.currentUser=user;
+        $('login').style.display='none';
+        $('app').style.display='flex';
+        $('cav').textContent=user.initials||user.name[0];
+        $('cnm').textContent=user.name;
+        document.querySelectorAll('.mgr-only').forEach(el=>el.style.display='');
+        const profileBtn=document.getElementById('my-profile-btn');
+        if(profileBtn)profileBtn.style.display='none';
+        showPage('kanban',null);
+        syncAll();
+      }
     }
   }
-
-  // Sync Sheet để cập nhật thêm users mới nếu có
-  syncAll().then(()=>{
-    if(!state.currentUser)initLogin();
-  });
 });
 </script>
 </body>
