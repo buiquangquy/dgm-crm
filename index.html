@@ -10,7 +10,7 @@
 --bg:#F5F4F1;--s:#fff;--s2:#F0EEE9;--bd:rgba(0,0,0,.09);--bd2:rgba(0,0,0,.14);
 --t:#1A1917;--t2:#6B6860;--t3:#9B9890;
 --blue:#185FA5;--blt:#E6F1FB;--bdk:#0C447C;
---grn:#0F6E56;--glt:#E1F5EE;
+--grn:#0F6E56;--glt:#E1F5EEF;
 --red:#A32D2D;--rlt:#FCEBEB;
 --amb:#854F0B;--alt:#FAEEDA;
 --nvy:#1B3A57;
@@ -211,10 +211,15 @@ tr:hover .tab{opacity:1}
 .cf{background:var(--s2);border-radius:var(--r);padding:8px 10px}
 .cfl{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
 .cfv{font-size:13px;font-weight:500;word-break:break-word}
-/* STATUS HINT (FIX 1) */
+/* STATUS HINT */
 .status-hint{font-size:11px;color:var(--blue);margin-top:4px;display:none;padding:4px 8px;background:var(--blt);border-radius:var(--r)}
 /* OFFLINE BANNER */
 .offline-banner{display:none;position:fixed;top:52px;left:0;right:0;background:var(--amb);color:#fff;font-size:12px;text-align:center;padding:5px;z-index:500}
+/* 🔧 FIX B1: Loading overlay để tránh màn hình trắng */
+#loading-overlay{position:fixed;inset:0;background:var(--nvy);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9000;gap:12px}
+#loading-overlay .lo-logo{width:56px;height:56px;background:var(--blue);border-radius:14px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:700}
+#loading-overlay .lo-text{color:rgba(255,255,255,.7);font-size:13px}
+#loading-overlay .lo-sp{width:24px;height:24px;border:2.5px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
 /* MOBILE RESPONSIVE */
 @media (max-width: 768px) {
 .tb{padding:0 .75rem;height:48px;gap:6px}
@@ -278,11 +283,19 @@ table tbody td::before{content:attr(data-label);font-size:10px;color:var(--t3);f
 </style>
 </head>
 <body>
+
+<!-- 🔧 FIX B1: Loading overlay — hiện khi đang fetch data, ẩn sau khi xong -->
+<div id="loading-overlay">
+  <div class="lo-logo">DGM</div>
+  <div class="lo-sp"></div>
+  <div class="lo-text">Đang tải dữ liệu...</div>
+</div>
+
 <!-- OFFLINE BANNER -->
 <div id="offline-banner" class="offline-banner">📶 Mạng đang yếu — đang dùng dữ liệu cache</div>
 
 <!-- LOGIN -->
-<div id="login" class="lw">
+<div id="login" class="lw" style="display:none">
 <div class="lc">
 <div class="ll">DGM</div>
 <div class="lt">DGM Sales CRM</div>
@@ -290,18 +303,16 @@ table tbody td::before{content:attr(data-label);font-size:10px;color:var(--t3);f
 <label style="font-size:11px;color:var(--t2);font-weight:500;margin-bottom:4px;display:block">Chọn tài khoản</label>
 <select id="lu" class="lf">
 <option value="">-- Chọn tên --</option>
-<option value="u1">Bùi Quang Quý (Manager)</option>
-<option value="u2">Hồ Anh Tài (Sales Representative)</option>
-<option value="u3">Thiên Thanh (Sales Representative)</option>
-<option value="u4">Nguyễn Xuân Đức (Sales Representative)</option>
-<option value="u5">Phương Ngọc Chánh (Sales Representative)</option>
-<option value="u6">Hồ Ngọc Anh (Sales Representative)</option>
-<option value="u7">Phương Thi (Trade Marketing)</option>
 </select>
 <label style="font-size:11px;color:var(--t2);font-weight:500;margin-bottom:4px;display:block">Email Gmail</label>
-<input type="email" id="le" class="lf" placeholder="email@gmail.com">
+<!-- 🔧 FIX B2: autocomplete="off" + autocorrect/autocapitalize off cho mobile -->
+<input type="email" id="le" class="lf" placeholder="email@gmail.com"
+  autocomplete="email" autocorrect="off" autocapitalize="none" spellcheck="false">
 <label style="font-size:11px;color:var(--t2);font-weight:500;margin-bottom:4px;display:block" id="pw-label">Mật khẩu</label>
-<input type="password" id="lpw" class="lf" placeholder="Nhập mật khẩu..." onkeydown="if(event.key==='Enter')doLogin()">
+<!-- 🔧 FIX B2: autocomplete="one-time-code" ngăn mobile tự điền sai; inputmode="numeric" bật numpad -->
+<input type="password" id="lpw" class="lf" placeholder="Nhập mật khẩu..."
+  autocomplete="one-time-code" inputmode="numeric" maxlength="10"
+  onkeydown="if(event.key==='Enter')doLogin()">
 <button class="lb" onclick="doLogin()">Đăng nhập</button>
 <div class="lerr" id="lerr"></div>
 </div>
@@ -377,7 +388,6 @@ table tbody td::before{content:attr(data-label);font-size:10px;color:var(--t3);f
 <div class="pg" id="pg-config">
 <div class="sh">
 <div class="sti">⚙️ Cấu hình Flow <span style="font-size:10px;background:#EDE9FE;color:#5B21B6;padding:2px 7px;border-radius:6px;font-weight:500">Manager only</span></div>
-<button class="btn btn-p btn-sm" onclick="openFlowForm()">+ Thêm flow</button>
 </div>
 <div id="cfg-body"></div>
 </div>
@@ -427,7 +437,12 @@ table tbody td::before{content:attr(data-label);font-size:10px;color:var(--t3);f
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbxVBfHwL58O2hT7iAIpt-ZSk4d0eczLinvZmgwnubwNPigOeMXg79D6an8UWL2SXBih/exec';
 const STATUSES=['todo','inprogress','review','done','done_fail'];
 
-// ✅ FIX 3: Auto-retry khi mạng phục hồi
+// 🔧 FIX B1: Helper ẩn loading overlay
+function hideLoading(){
+  const ol=document.getElementById('loading-overlay');
+  if(ol){ol.style.opacity='0';ol.style.transition='opacity .3s';setTimeout(()=>ol.remove(),350);}
+}
+
 window.addEventListener('online',()=>{
   const banner=document.getElementById('offline-banner');
   if(banner)banner.style.display='none';
@@ -454,15 +469,9 @@ const DEFAULT_USERS=[
 {id:'u7',name:'Phương Thi',email:'phuongthi21@gmail.com',role:'trade',position:'Trade Marketing',channel:'ALL',region:'ALL',initials:'DPT',password:'6538',status:'Active'}
 ];
 
+// Chỉ giữ 1 flow duy nhất — General Task
 const DEFAULT_FLOWS=[
-{id:'f1',name:'General Task',channel:'ALL',task_type:'General',steps:['To Do','In Progress','Done']},
-{id:'f2',name:'MT – Trading Term',channel:'MT',task_type:'Trading Term',steps:['Nhận','Gửi proposal phản hồi','Đàm phán','Đồng ý','Trình ký']},
-{id:'f3',name:'MT – New Product Listing',channel:'MT',task_type:'Listing',steps:['Lấy mẫu','Gửi mẫu','Xác nhận','Lên kệ']},
-{id:'f4',name:'POSM/ Design',channel:'ALL',task_type:'Activation',steps:['Ý tưởng','thiết kế','duyệt thiết kế','làm việc với NCC','ký hợp đồng','giao hàng']},
-{id:'f5',name:'Sampling/ Activation',channel:'ALL',task_type:'Activation',steps:['Lên kế hoạch','Gửi chờ duyệt','Duyệt kế hoạch','Đăng ký với khách hàng','chuẩn bị vật dụng','thực hiện']},
-{id:'f6',name:'GT – Trade Program',channel:'ALL',task_type:'Trade Program',steps:['Lên chương trình','Thông báo','Gửi sales','Gửi khách','Order']},
-{id:'f7',name:'GT – Phát triển điểm bán',channel:'GT',task_type:'Expansion',steps:['Khảo sát','Tiếp cận','Chào hàng','Trưng bày','Review']},
-{id:'f8',name:'MT - khách hàng mới',channel:'MT',task_type:'Expansion',steps:['Tiếp cận','Gửi thông tin sản phẩm, giá','đàm phán trading term/ hợp đồng','ký hợp đồng','bắt đầu bán hàng']}
+{id:'f1',name:'General Task',channel:'ALL',task_type:'General',steps:['To Do','In Progress','Done']}
 ];
 
 const DEFAULT_CUSTOMERS=[
@@ -605,10 +614,13 @@ function initLogin(){
   togglePW();
 }
 
+// 🔧 FIX B2: doLogin với .trim() đầy đủ + normalize để tránh lỗi mobile keyboard
 function doLogin(){
   const uid=$('lu').value;
+  // trim() email — mobile thường thêm space sau khi autocomplete
   const email=$('le').value.trim().toLowerCase();
-  const pw=$('lpw').value;
+  // 🔧 trim() password — bàn phím mobile đôi khi thêm trailing space
+  const pw=$('lpw').value.trim();
   const users=state.users.length?aUsers():DEFAULT_USERS;
   const user=users.find(u=>u.id===uid)||users.find(u=>u.email&&u.email.toLowerCase()===email);
   if(!user){$('lerr').textContent='Vui lòng chọn tài khoản.';return;}
@@ -616,7 +628,8 @@ function doLogin(){
   if(user.email&&user.email.toLowerCase()!==email){$('lerr').textContent='Email không khớp tài khoản.';return;}
   if(user.role!=='manager'){
     if(!pw){$('lerr').textContent='Vui lòng nhập mật khẩu.';return;}
-    if(String(user.password)!==String(pw)){$('lerr').textContent='Mật khẩu không đúng.';return;}
+    // 🔧 So sánh sau khi trim cả 2 phía để tránh whitespace ẩn
+    if(String(user.password).trim()!==String(pw)){$('lerr').textContent='Mật khẩu không đúng.';return;}
   }
   state.currentUser=user;
   localStorage.setItem('dgm_uid',uid);
@@ -710,7 +723,11 @@ function mapTask(row){
   if(typeof atch==='string'){try{atch=JSON.parse(atch);}catch(e){atch=[];}}
   let picIds=row.pic_ids||[];
   if(typeof picIds==='string')picIds=picIds.split(',').filter(Boolean);
-  return{...row,subtasks:subs,comments:comms,attachments:atch,pic_ids:picIds};
+  let doneConf=row.done_confirmations||[];
+  if(typeof doneConf==='string'){try{doneConf=JSON.parse(doneConf);}catch(e){doneConf=[];}}
+  let delConf=row.delete_confirmations||[];
+  if(typeof delConf==='string'){try{delConf=JSON.parse(delConf);}catch(e){delConf=[];}}
+  return{...row,subtasks:subs,comments:comms,attachments:atch,pic_ids:picIds,done_confirmations:doneConf,delete_confirmations:delConf};
 }
 
 async function apiPost(payload){
@@ -771,7 +788,6 @@ async function syncAll(){
       state.config=rawFlows.length?rawFlows:DEFAULT_FLOWS;
       state.tasks=(dt.tasks||dt.Tasks||[]).map(mapTask).filter(t=>t.title||t.id);
       state.lastSync=new Date();setSS('ok');
-      // ✅ FIX 3a: Cache data vào localStorage sau mỗi sync thành công
       try{
         localStorage.setItem('dgm_cache',JSON.stringify({
           users:state.users,
@@ -782,12 +798,17 @@ async function syncAll(){
           cachedAt:new Date().toISOString()
         }));
       }catch(ce){console.warn('Cache save failed',ce);}
-      // Ẩn offline banner nếu đang hiển thị
       const banner=document.getElementById('offline-banner');
       if(banner)banner.style.display='none';
+
+      // 🔧 FIX B3: Sau khi sync có data mới từ Sheet, cập nhật currentUser
+      // để password mới (nếu Manager đổi) được áp dụng ngay
+      if(state.currentUser){
+        const refreshed=state.users.find(u=>u.id===state.currentUser.id);
+        if(refreshed)state.currentUser=refreshed;
+      }
     }
   }catch(e){
-    // ✅ FIX 3b: Load từ localStorage cache khi mạng lỗi
     try{
       const raw=localStorage.getItem('dgm_cache');
       if(raw){
@@ -815,6 +836,8 @@ async function syncAll(){
     }
   }
   state.syncing=false;
+  // 🔧 FIX B1: Sau syncAll luôn ẩn loading overlay
+  hideLoading();
   if(!state.currentUser){initLogin();return;}
   initLogin();
   renderAll();
@@ -827,6 +850,8 @@ async function saveTask(task){
     comments:JSON.stringify(Array.isArray(task.comments)?task.comments:[]),
     attachments:JSON.stringify(Array.isArray(task.attachments)?task.attachments:[]),
     pic_ids:Array.isArray(task.pic_ids)?task.pic_ids.join(','):task.pic_ids||'',
+    done_confirmations:JSON.stringify(Array.isArray(task.done_confirmations)?task.done_confirmations:[]),
+    delete_confirmations:JSON.stringify(Array.isArray(task.delete_confirmations)?task.delete_confirmations:[]),
   }};
   const ok=await apiPost(payload);
   if(ok){state.lastSync=new Date();setSS('ok');}
@@ -877,7 +902,6 @@ function mobileNav(nm,btn){
   document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
   if(nm==='more'){
-    // Show a simple menu for Team/Config
     const menu=document.createElement('div');
     menu.style.cssText='position:fixed;bottom:70px;right:12px;background:var(--s);border:.5px solid var(--bd2);border-radius:var(--rl);padding:8px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:300;min-width:150px';
     menu.innerHTML='<div style="font-size:11px;color:var(--t3);padding:4px 8px;font-weight:600">Thêm</div>'+
@@ -890,7 +914,6 @@ function mobileNav(nm,btn){
     return;
   }
   showPage(nm,null);
-  // Sync bottom nav active state
   document.querySelectorAll('.bnav-btn').forEach(b=>{
     const id=b.id;
     if(id&&id.includes(nm))b.classList.add('active');
@@ -972,14 +995,37 @@ function rCard(t){
   const cms=Array.isArray(t.comments)?t.comments:[];
   const done=['done','done_fail'].includes(t.status);
   const st=t.status;
+  const routing=doneRouting(t);
+  const me=state.currentUser;
+  const picIds=getPicIds(t);
+  const confirmed=Array.isArray(t.done_confirmations)?t.done_confirmations:[];
+  const iMeConfirmed=confirmed.includes(me?.id);
+  const iAmPic=picIds.length===0||picIds.includes(me?.id)||isMgr();
+
   let mv='';
   if(!done){
     if(st==='inprogress')mv+=`<button class="mb" onclick="event.stopPropagation();mvT('${t.id}','todo')">← To Do</button>`;
     if(st==='todo')mv+=`<button class="mb" onclick="event.stopPropagation();mvT('${t.id}','inprogress')">→ In Progress</button>`;
-    if(st==='inprogress')mv+=`<button class="mb" onclick="event.stopPropagation();mvT('${t.id}','review')">→ Chờ duyệt</button>`;
-    if(st==='review')mv+=`<button class="mb" onclick="event.stopPropagation();mvT('${t.id}','inprogress')">← In Progress</button>`;
   }
+
+  // Quick Done button trên card
+  let quickDone='';
+  if(!done&&iAmPic){
+    if(routing==='done'||routing==='review'){
+      quickDone=`<button class="mb" style="background:var(--glt);color:var(--grn);border-color:rgba(15,110,86,.3)"
+        onclick="event.stopPropagation();requestDone('${t.id}')">
+        ${routing==='review'?'⏳ Gửi duyệt':'✅ Done'}
+      </button>`;
+    } else if(!iMeConfirmed){
+      quickDone=`<button class="mb" style="background:var(--glt);color:var(--grn);border-color:rgba(15,110,86,.3)"
+        onclick="event.stopPropagation();requestDone('${t.id}')">✅ Xác nhận</button>`;
+    }
+  }
+
+  // Badge chờ nhóm
+  const pendingGroup=routing==='group'&&!done&&confirmed.length>0&&confirmed.length<picIds.length;
   const ap=isMgr()&&st==='review'?`<button class="apbtn" onclick="event.stopPropagation();openApprove('${t.id}')">⚡ Duyệt hoàn thành</button>`:'';
+
   return`<div class="tc" id="card-${t.id}" draggable="true"
   ondragstart="drs(event,'${t.id}')" onclick="openDetail('${t.id}')">
 <div class="tt">${t.title}</div>
@@ -988,15 +1034,16 @@ function rCard(t){
   ${c?`<span class="b bgr">${c.name}</span>`:''}
   ${ov?`<span class="b bov">Quá hạn</span>`:''}
   ${sn&&!ov?`<span class="b bsoon">Sắp hạn</span>`:''}
+  ${pendingGroup?`<span class="b" style="background:#EDE9FE;color:#5B21B6">⏳ ${confirmed.length}/${picIds.length}</span>`:''}
 </div>
 ${t.step?`<div class="tstep">▶ ${t.step}</div>`:''}
 ${sp?`<div class="spb"><div class="spf" style="width:${sp.pct}%"></div></div><div class="spt">${sp.done}/${sp.total} subtasks</div>`:''}
 ${cms.length?`<div style="font-size:10px;color:var(--t3);margin-top:3px">💬 ${cms.filter(x=>!x.isSystem).length} comment(s)</div>`:''}
 <div class="tf">
   <span class="tdl ${ov?'ov':sn?'sn':''}">${t.deadline?'📅 '+fmtD(t.deadline):''}</span>
-  <div class="pics">${pics.map(u=>`<div class="av avs" title="${u.name}">${u.initials||u.name[0]}</div>`).join('')}</div>
+  <div class="pics">${pics.map(u=>`<div class="av avs" title="${u.name}${confirmed.includes(u.id)&&routing==='group'?' ✓':''}">${u.initials||u.name[0]}</div>`).join('')}</div>
 </div>
-${mv?`<div class="mvb">${mv}</div>`:''}
+${(mv||quickDone)?`<div class="mvb">${mv}${quickDone}</div>`:''}
 ${ap}
 </div>`;
 }
@@ -1020,6 +1067,86 @@ async function drp(e,st){
 }
 
 // ---- TASK ACTIONS ----
+
+// ── Helper: lấy danh sách PIC ids của task
+function getPicIds(t){
+  let ids=Array.isArray(t.pic_ids)?t.pic_ids:String(t.pic_ids||'').split(',').filter(Boolean);
+  return ids;
+}
+
+// ── Helper: task có manager trong PIC không?
+function taskHasMgr(t){
+  const ids=getPicIds(t);
+  return ids.some(id=>{const u=getUser(id);return u&&u.role==='manager';});
+}
+
+// ── Helper: task là "cá nhân" — chỉ 1 người, không assign ai khác, không có khách hàng
+function isPersonalTask(t){
+  const ids=getPicIds(t);
+  return ids.length<=1 && !t.customer_id;
+}
+
+// ── Helper: xác định routing khi bấm Done
+// Returns: 'done' (hoàn thành thẳng) | 'review' (cần manager duyệt) | 'group' (cần đủ nhóm)
+function doneRouting(t){
+  if(isPersonalTask(t)) return 'done';
+  if(taskHasMgr(t)) return 'review';
+  return 'group'; // nhóm không có manager
+}
+
+// ── Bấm Done từ nút trong task detail / card
+async function requestDone(id){
+  const t=state.tasks.find(x=>String(x.id)===String(id));
+  if(!t)return;
+  if(['done','done_fail'].includes(t.status)){toast('Task đã kết thúc','warn');return;}
+  const routing=doneRouting(t);
+  const me=state.currentUser;
+
+  if(routing==='done'){
+    // Cá nhân → done thẳng
+    const old=t.status; t.status='done';
+    addSysCom(t,'✅ Hoàn thành bởi '+me.name);
+    CM();renderKanban();await saveTask(t);
+    toast('Task hoàn thành ✓','ok');
+    return;
+  }
+
+  if(routing==='review'){
+    // Có manager trong PIC → chuyển sang review để manager duyệt
+    const old=t.status; t.status='review';
+    addSysCom(t,'⏳ Gửi duyệt bởi '+me.name+' — chờ Manager xác nhận');
+    CM();renderKanban();await saveTask(t);
+    toast('Đã gửi chờ Manager duyệt','ok');
+    return;
+  }
+
+  // routing==='group' → nhóm không có manager, cần đủ mọi người confirm
+  if(!Array.isArray(t.done_confirmations))t.done_confirmations=[];
+  const already=t.done_confirmations.includes(me.id);
+  if(already){toast('Bạn đã xác nhận Done rồi','warn');return;}
+  t.done_confirmations.push(me.id);
+
+  const ids=getPicIds(t);
+  const confirmed=t.done_confirmations;
+  const remaining=ids.filter(id=>!confirmed.includes(id)).map(id=>getUser(id)?.name||id);
+
+  addSysCom(t,'✅ '+me.name+' xác nhận Done'+(remaining.length?' — Còn chờ: '+remaining.join(', '):''));
+
+  if(remaining.length===0){
+    // Tất cả đã confirm
+    t.status='done';
+    addSysCom(t,'✅ Tất cả thành viên đã xác nhận — Task hoàn thành');
+    CM();renderKanban();await saveTask(t);
+    toast('Tất cả xác nhận — Task hoàn thành ✓','ok');
+  } else {
+    // Còn người chưa confirm → vẫn ở done (nhưng badge "⚠ Chưa đủ")
+    // Giữ status hiện tại ở inprogress, đánh dấu partial
+    t.status='inprogress';
+    CM();openDetail(id);renderKanban();await saveTask(t);
+    toast('Đã xác nhận — Còn chờ: '+remaining.join(', '),'warn');
+  }
+}
+
 async function mvT(id,st){
   const t=state.tasks.find(x=>String(x.id)===String(id));
   if(!t)return;
@@ -1065,16 +1192,123 @@ async function delSub(tid,sid){
 }
 async function updStep(tid,step){
   const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
+  // Khi flow step thay đổi → đồng bộ kanban status
+  const steps=getFlowSteps(t.flow_name);
+  const idx=steps.indexOf(step);
+  const total=steps.length;
+  let newStatus=t.status;
+  if(total>0){
+    if(idx===0) newStatus='todo';
+    else if(idx===total-1){
+      // Bước cuối cùng của flow → trigger done routing
+      t.step=step;
+      addSysCom(t,'Cập nhật bước: "'+step+'" — bước cuối của flow');
+      openDetail(tid);renderKanban();await saveTask(t);
+      // Gọi requestDone để xử lý routing
+      requestDone(tid);
+      return;
+    } else {
+      newStatus='inprogress';
+    }
+    if(newStatus!==t.status){
+      const old=t.status;
+      t.status=newStatus;
+      addSysCom(t,'Chuyển: '+SL[old]+' → '+SL[newStatus]+' (bước: '+step+') bởi '+state.currentUser.name);
+    }
+  }
   t.step=step;
   addSysCom(t,'Cập nhật bước: "'+step+'" bởi '+state.currentUser.name);
   openDetail(tid);renderKanban();await saveTask(t);
 }
-async function delTask(id){
-  if(!confirm('Xoá task này?'))return;
-  state.tasks=state.tasks.filter(t=>String(t.id)!==String(id));
-  CM();renderKanban();
-  await apiPost({action:'delete',sheet:'Tasks',id});
-  toast('Đã xóa task');
+
+// ── Xóa task: cần xác nhận từ các PIC hoặc Manager
+function openDeleteConfirm(id){
+  const t=state.tasks.find(x=>String(x.id)===String(id));if(!t)return;
+  const me=state.currentUser;
+  const ids=getPicIds(t);
+  const hasMgrPic=taskHasMgr(t);
+  const isAloneOrMgr=ids.length===0||isMgr()||(ids.length===1&&ids.includes(me.id));
+
+  // Nếu chỉ mình hoặc manager → xác nhận đơn giản
+  if(isAloneOrMgr||ids.length<=1){
+    $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" onclick="event.stopPropagation()">
+<div class="mh"><div class="mti" style="color:var(--red)">🗑 Xóa task</div><button class="mcl" onclick="CM()">×</button></div>
+<p style="font-size:13px;margin-bottom:6px">Task: <strong>${t.title}</strong></p>
+<p style="font-size:12px;color:var(--t2);margin-bottom:16px">Task sẽ chuyển sang <span style="color:var(--red)">❌ Không thành công</span> thay vì bị xóa vĩnh viễn.</p>
+<div class="fa">
+  <button class="btn btn-d" onclick="confirmDelete('${t.id}','${me.id}')">Xác nhận xóa</button>
+  <button class="btn" onclick="CM()">Huỷ</button>
+</div>
+</div></div>`;
+    return;
+  }
+
+  // Nhiều PIC → hiển thị danh sách, ai xác nhận thì tick
+  if(!Array.isArray(t.delete_confirmations))t.delete_confirmations=[];
+  const already=t.delete_confirmations;
+  const picUsers=ids.map(id=>getUser(id)).filter(Boolean);
+
+  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" onclick="event.stopPropagation()">
+<div class="mh"><div class="mti" style="color:var(--red)">🗑 Xóa task — Cần xác nhận</div><button class="mcl" onclick="CM()">×</button></div>
+<p style="font-size:13px;margin-bottom:4px">Task: <strong>${t.title}</strong></p>
+<p style="font-size:12px;color:var(--t2);margin-bottom:12px">
+  ${hasMgrPic?'Task có Manager trong PIC — chỉ cần Manager xác nhận.':'Cần tất cả thành viên PIC xác nhận để xóa.'}
+  <br>Task sẽ chuyển sang <span style="color:var(--red)">❌ Không thành công</span>.
+</p>
+<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
+${picUsers.map(u=>{
+  const confirmed=already.includes(u.id);
+  return`<div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--s2);border-radius:var(--r)">
+    <div class="av avs">${u.initials||u.name[0]}</div>
+    <span style="flex:1;font-size:12px">${u.name}</span>
+    <span style="font-size:11px;color:${confirmed?'var(--grn)':'var(--t3)'}">
+      ${confirmed?'✓ Đã xác nhận':'Chưa xác nhận'}
+    </span>
+  </div>`;
+}).join('')}
+</div>
+<div class="fa">
+  <button class="btn btn-d" onclick="confirmDelete('${t.id}','${me.id}')">✓ Tôi xác nhận xóa</button>
+  <button class="btn" onclick="CM()">Huỷ</button>
+</div>
+</div></div>`;
+}
+
+async function confirmDelete(tid,uid){
+  const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
+  if(!Array.isArray(t.delete_confirmations))t.delete_confirmations=[];
+  if(!t.delete_confirmations.includes(uid))t.delete_confirmations.push(uid);
+
+  const ids=getPicIds(t);
+  const hasMgrPic=taskHasMgr(t);
+  let canDelete=false;
+
+  if(isMgr()){
+    canDelete=true; // Manager luôn có thể xóa
+  } else if(hasMgrPic){
+    // Có manager trong PIC → chỉ cần manager xác nhận
+    canDelete=t.delete_confirmations.some(id=>{const u=getUser(id);return u&&u.role==='manager';});
+  } else if(ids.length<=1){
+    canDelete=true;
+  } else {
+    // Tất cả PIC phải xác nhận
+    canDelete=ids.every(id=>t.delete_confirmations.includes(id));
+  }
+
+  if(canDelete){
+    const old=t.status; t.status='done_fail';
+    addSysCom(t,'🗑 Task bị xóa bởi '+state.currentUser.name+' — chuyển sang Không thành công');
+    state.tasks=state.tasks.filter(x=>String(x.id)!==String(tid));
+    CM();renderKanban();
+    await apiPost({action:'delete',sheet:'Tasks',id:tid});
+    toast('Task đã xóa','warn');
+  } else {
+    // Lưu xác nhận, chờ người còn lại
+    const remaining=ids.filter(id=>!t.delete_confirmations.includes(id)).map(id=>getUser(id)?.name||id);
+    addSysCom(t,'🗑 '+state.currentUser.name+' xác nhận xóa — Còn chờ: '+remaining.join(', '));
+    CM();openDetail(tid);await saveTask(t);
+    toast('Đã ghi nhận — Còn chờ: '+remaining.join(', '),'warn');
+  }
 }
 
 // ---- TASK DETAIL ----
@@ -1090,6 +1324,42 @@ function openDetail(id){
   const cms=Array.isArray(t.comments)?t.comments:[];
   const atch=Array.isArray(t.attachments)?t.attachments:[];
   const sp=subProg(t);
+  const me=state.currentUser;
+  const isDone=['done','done_fail'].includes(t.status);
+  const routing=doneRouting(t);
+  const picIds=getPicIds(t);
+  const confirmed=Array.isArray(t.done_confirmations)?t.done_confirmations:[];
+  const iMeConfirmed=confirmed.includes(me?.id);
+  const iAmPic=picIds.length===0||picIds.includes(me?.id)||isMgr();
+
+  // Badge chờ xác nhận nhóm
+  let groupBadge='';
+  if(t.status==='inprogress'&&routing==='group'&&confirmed.length>0){
+    const remaining=picIds.filter(id=>!confirmed.includes(id)).map(id=>getUser(id)?.name||id);
+    if(remaining.length>0){
+      groupBadge=`<div style="background:var(--alt);border:.5px solid var(--amb);border-radius:var(--r);padding:8px 12px;font-size:12px;color:var(--amb);margin-bottom:12px">
+        ⏳ <strong>Chờ xác nhận Done:</strong> ${remaining.join(', ')}
+      </div>`;
+    }
+  }
+
+  // Nút Done
+  let doneBtn='';
+  if(!isDone&&iAmPic){
+    if(routing==='done'){
+      doneBtn=`<button class="btn btn-g" onclick="requestDone('${t.id}')">✅ Hoàn thành</button>`;
+    } else if(routing==='review'){
+      doneBtn=`<button class="btn btn-g" onclick="requestDone('${t.id}')">✅ Gửi duyệt</button>`;
+    } else {
+      // group
+      const myDoneText=iMeConfirmed?'✅ Đã xác nhận Done':'✅ Xác nhận Done của tôi';
+      doneBtn=`<button class="btn btn-g" ${iMeConfirmed?'disabled style="opacity:.5"':''} onclick="requestDone('${t.id}')">${myDoneText}</button>`;
+    }
+  }
+
+  // Nút xóa — ai là PIC hoặc manager đều thấy
+  const delBtn=(iAmPic||isMgr())?`<button class="btn btn-d btn-sm" onclick="openDeleteConfirm('${t.id}')">🗑 Xóa task</button>`:'';
+
   $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo mo-lg" onclick="event.stopPropagation()">
 <div class="mh">
   <div>
@@ -1099,24 +1369,30 @@ function openDetail(id){
       <span class="b b${t.status}">${SL[t.status]}</span>
       ${c?`<span class="b bgr">🏢 ${c.name}</span>`:''}
       ${ov?`<span class="b bov">⚠ Quá hạn</span>`:''}
+      ${routing==='review'&&!isDone?`<span class="b breview">Cần Manager duyệt</span>`:''}
+      ${routing==='group'&&!isDone?`<span class="b" style="background:#EDE9FE;color:#5B21B6">Nhóm xác nhận</span>`:''}
     </div>
   </div>
   <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
     <button class="btn btn-sm" onclick="openTaskForm('${t.id}')">✏️ Sửa</button>
-    ${isMgr()?`<button class="btn btn-sm btn-d" onclick="delTask('${t.id}')">🗑</button>`:''}
+    ${delBtn}
     <button class="mcl" onclick="CM()">×</button>
   </div>
 </div>
+${groupBadge}
 <div class="dmg">
-  <div class="dmi"><div class="dl">Deadline</div><div class="dv ${ov?'':''}">📅 ${fmtD(t.deadline)}</div></div>
+  <div class="dmi"><div class="dl">Deadline</div><div class="dv">📅 ${fmtD(t.deadline)}</div></div>
   <div class="dmi"><div class="dl">Kênh</div><div class="dv">${t.channel||'—'}</div></div>
   <div class="dmi"><div class="dl">Loại</div><div class="dv">${t.flow_name||t.task_type||'—'}</div></div>
   <div class="dmi"><div class="dl">Tạo lúc</div><div class="dv">${fmtDT(t.created_at)}</div></div>
   <div class="dmi"><div class="dl">Cập nhật</div><div class="dv">${fmtDT(t.updated_at)}</div></div>
-  <div class="dmi"><div class="dl">PIC</div><div class="dv">${pics.map(u=>u.name).join(', ')||'—'}</div></div>
+  <div class="dmi"><div class="dl">PIC</div><div class="dv">${pics.map(u=>{
+    const conf=confirmed.includes(u.id);
+    return`<span title="${u.name}">${u.name}${conf&&routing==='group'?' ✓':''}</span>`;
+  }).join(', ')||'—'}</div></div>
 </div>
 ${t.notes?`<div class="ds"><div class="dst">Ghi chú</div><div class="nb2">${t.notes}</div></div>`:''}
-${steps.length?`<div class="ds"><div class="dst">Flow / Quy trình</div>
+${steps.length?`<div class="ds"><div class="dst">Flow / Bước hiện tại</div>
 <div class="ft">${steps.map(s=>{
   const cur=t.step===s;
   const idx=steps.indexOf(s);
@@ -1145,17 +1421,20 @@ ${atch.length?`<div class="ds"><div class="dst">Đính kèm</div>
   ${a.viewUrl&&a.viewUrl!=='#'?`<a href="${a.viewUrl}" target="_blank" class="btn btn-xs">Xem</a>`:''}
 </div>`).join('')}</div></div>`:''}
 <div class="ds"><div class="dst">Comments (${cms.filter(x=>!x.isSystem).length})</div>
-<div class="cl">${cms.map(c=>c.isSystem?
-  `<div class="sys-cm"><span>${c.text}</span></div>`:
-  `<div class="ci"><div class="av avs">${(getUser(c.author)||{initials:c.author?.[0]||'?'}).initials||c.author?.[0]||'?'}</div>
-  <div class="cb"><div style="display:flex;justify-content:space-between"><span class="ca">${c.author}</span><span class="ctm">${fmtDT(c.time)}</span></div>
-  <div class="ctx">${c.text}</div></div></div>`
+<div class="cl">${cms.map(cm=>cm.isSystem?
+  `<div class="sys-cm"><span>${cm.text}</span></div>`:
+  `<div class="ci"><div class="av avs">${(getUser(cm.author)||{initials:cm.author?.[0]||'?'}).initials||cm.author?.[0]||'?'}</div>
+  <div class="cb"><div style="display:flex;justify-content:space-between"><span class="ca">${cm.author}</span><span class="ctm">${fmtDT(cm.time)}</span></div>
+  <div class="ctx">${cm.text}</div></div></div>`
 ).join('')}</div>
 <div class="cir">
 <textarea id="ci-${t.id}" placeholder="Nhập comment..." onkeydown="if(event.ctrlKey&&event.key==='Enter')postCom('${t.id}')"></textarea>
 <button class="btn btn-p btn-sm" onclick="postCom('${t.id}')">Gửi</button>
 </div></div>
-${isMgr()&&t.status==='review'?`<div style="margin-top:12px"><button class="btn btn-g" style="width:100%" onclick="openApprove('${t.id}')">⚡ Duyệt hoàn thành</button></div>`:''}
+<div class="fa" style="margin-top:12px">
+  ${doneBtn}
+  ${isMgr()&&t.status==='review'?`<button class="btn btn-g" onclick="openApprove('${t.id}')">⚡ Duyệt hoàn thành</button>`:''}
+</div>
 </div></div>`;
 }
 
@@ -1181,7 +1460,6 @@ async function approveTask(id,st){
 }
 
 // ---- TASK FORM ----
-// ✅ FIX 1: Biến lưu task đang edit để previewStatusMove biết status gốc
 window._editingTask=null;
 
 function onChChange(){
@@ -1202,7 +1480,6 @@ function onFlowChange(){
   fst.innerHTML=steps.map(s=>`<option value="${s}" ${s===cur?'selected':''}>${s}</option>`).join('');
 }
 
-// ✅ FIX 1: Hiện hint khi đổi status khác với status gốc
 function previewStatusMove(val){
   const hint=document.getElementById('status-move-hint');
   const orig=window._editingTask?.status||'todo';
@@ -1211,7 +1488,7 @@ function previewStatusMove(val){
 
 function openTaskForm(editId){
   const t=editId?state.tasks.find(x=>String(x.id)===String(editId)):null;
-  window._editingTask=t||null; // ✅ FIX 1: lưu task gốc
+  window._editingTask=t||null;
   const d=t||{title:'',customer_id:'',channel:'MT',pic_ids:[],status:'todo',step:'',flow_name:'',deadline:'',notes:'',subtasks:[],comments:[]};
   const tPics=Array.isArray(d.pic_ids)?d.pic_ids:String(d.pic_ids||'').split(',').filter(Boolean);
   const flows=state.config.filter(f=>f.channel===d.channel||f.channel==='ALL');
@@ -1302,10 +1579,12 @@ async function saveTaskForm(editId){
     subtasks:existingTask?.subtasks||[],
     comments:existingTask?.comments||[],
     attachments:existingTask?.attachments||[],
+    // Reset confirmations nếu PIC thay đổi
+    done_confirmations:existingTask?.done_confirmations||[],
+    delete_confirmations:existingTask?.delete_confirmations||[],
     created_at:existingTask?.created_at||new Date().toISOString(),
     updated_at:new Date().toISOString(),
   };
-  // Log status change nếu có thay đổi
   if(existingTask&&existingTask.status!==newStatus){
     addSysCom(task,'Chuyển: '+SL[existingTask.status]+' → '+SL[newStatus]+' bởi '+(state.currentUser?.name||''));
   }
@@ -1316,7 +1595,6 @@ async function saveTaskForm(editId){
     state.tasks.unshift(task);
   }
   CM();
-  // ✅ FIX 2: Tự động quay về Kanban sau khi lưu
   showPage('kanban',null);
   renderKanban();
   toast('Đã lưu task ✓');
@@ -1713,7 +1991,7 @@ async function saveFlowForm(editId){
 
 // ---- INIT ----
 document.addEventListener('DOMContentLoaded',()=>{
-  // ✅ FIX 3: Kiểm tra cache ngay khi load để tránh trang trắng
+  // 🔧 FIX B1: Load cache trước để có data ngay lập tức (tránh màn hình trắng)
   try{
     const raw=localStorage.getItem('dgm_cache');
     if(raw){
@@ -1725,29 +2003,41 @@ document.addEventListener('DOMContentLoaded',()=>{
       if(cache.tasks&&cache.tasks.length)state.tasks=cache.tasks;
     }
   }catch(e){}
+
+  // 🔧 FIX B1: Sau khi load cache, render login ngay (không chờ network)
   initLogin();
+
   const uid=localStorage.getItem('dgm_uid');
   const em=localStorage.getItem('dgm_em');
   if(uid&&em){
     const users=state.users.length?aUsers():DEFAULT_USERS;
     const user=users.find(u=>u.id===uid);
-    if(user&&(user.role==='manager'||true)){
-      // Auto-restore session nếu đã login trước đó
-      // (chỉ restore manager; sales cần nhập lại password)
-      if(user.role==='manager'){
-        state.currentUser=user;
-        $('login').style.display='none';
-        $('app').style.display='flex';
-        $('cav').textContent=user.initials||user.name[0];
-        $('cnm').textContent=user.name;
-        document.querySelectorAll('.mgr-only').forEach(el=>el.style.display='');
-        const profileBtn=document.getElementById('my-profile-btn');
-        if(profileBtn)profileBtn.style.display='none';
-        showPage('kanban',null);
-        syncAll();
-      }
+    if(user&&user.role==='manager'){
+      // Auto-restore session cho Manager (không cần password)
+      state.currentUser=user;
+      $('login').style.display='none';
+      $('app').style.display='flex';
+      $('cav').textContent=user.initials||user.name[0];
+      $('cnm').textContent=user.name;
+      document.querySelectorAll('.mgr-only').forEach(el=>el.style.display='');
+      const profileBtn=document.getElementById('my-profile-btn');
+      if(profileBtn)profileBtn.style.display='none';
+      showPage('kanban',null);
+      // syncAll sẽ gọi hideLoading() khi xong
+      syncAll();
+    } else {
+      // 🔧 FIX B1: Sales phải login lại — hiện form login, ẩn loading
+      hideLoading();
+      $('login').style.display='flex';
     }
+  } else {
+    // 🔧 FIX B1: Chưa có session — hiện form login, ẩn loading
+    hideLoading();
+    $('login').style.display='flex';
   }
+
+  // 🔧 FIX B1: Safety net: nếu sau 8 giây vẫn còn loading overlay thì tự ẩn
+  setTimeout(()=>hideLoading(), 8000);
 });
 </script>
 </body>
