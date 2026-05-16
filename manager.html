@@ -412,64 +412,96 @@ hr.div{border:none;border-top:1px solid var(--border);margin:18px 0}
     </div>
   </div>
 
-  <!-- ════ DASHBOARD ════ -->
+  <!-- ════ DASHBOARD — MARKET INTELLIGENCE ════ -->
   <div id="pg-dashboard" class="page active">
     <div class="ph">
       <div>
-        <div class="ph-title">Tổng quan</div>
-        <div class="ph-sub" id="dash-sub">Đang tải...</div>
+        <div class="ph-title">Market Intelligence</div>
+        <div class="ph-sub" id="dash-sub">Đang tải dữ liệu thị trường...</div>
       </div>
       <div class="ph-actions">
-        <button class="btn btn-outline btn-sm">⬇ Export báo cáo</button>
+        <button class="btn btn-outline btn-sm" onclick="syncAll()">🔄 Làm mới</button>
+        <button class="btn btn-primary btn-sm" onclick="openM('add-event')">📢 Nhập mốc tăng giá</button>
       </div>
     </div>
 
-    <!-- KPI -->
-    <div class="kpi-grid">
-      <div class="kpi k-red"><div class="kpi-label">Survey hôm nay</div><div class="kpi-value" id="k-today">—</div><div class="kpi-meta">toàn team</div><div class="kpi-icon">📋</div></div>
-      <div class="kpi k-navy"><div class="kpi-label">Survey tuần này</div><div class="kpi-value" id="k-week">—</div><div class="kpi-meta">7 ngày qua</div><div class="kpi-icon">📅</div></div>
-      <div class="kpi k-teal"><div class="kpi-label">Điểm bán hôm nay</div><div class="kpi-value" id="k-outlets">—</div><div class="kpi-meta">đã survey</div><div class="kpi-icon">🏪</div></div>
-      <div class="kpi k-orange"><div class="kpi-label">Cảnh báo mới</div><div class="kpi-value" id="k-alerts">—</div><div class="kpi-meta">chưa đọc</div><div class="kpi-icon">🚨</div></div>
-      <div class="kpi k-green"><div class="kpi-label">Mốc tăng giá</div><div class="kpi-value" id="k-events">—</div><div class="kpi-meta">đang theo dõi</div><div class="kpi-icon">📢</div></div>
-    </div>
-
-    <div class="g-70-30">
-      <!-- Chart 7 ngày -->
+    <!-- Row 1: Danh mục SP + Tăng giá gần nhất -->
+    <div class="g2" style="margin-bottom:18px">
       <div class="card">
-        <div class="card-header"><div class="card-title">📊 Survey 7 ngày qua</div></div>
+        <div class="card-header">
+          <div class="card-title">📦 Danh mục sản phẩm DGM</div>
+          <button class="btn btn-outline btn-sm" onclick="nav('master');showMasterTab('products')">Xem tất cả</button>
+        </div>
         <div class="card-body">
-          <div class="chart-bars" id="chart-7days">
-            <div style="text-align:center;width:100%;color:var(--text-3);font-size:12px;padding:20px">Đang tải...</div>
+          <div style="display:flex;align-items:flex-start;gap:16px">
+            <div style="text-align:center;flex-shrink:0">
+              <div style="font-size:36px;font-weight:900;font-family:'JetBrains Mono';color:var(--navy)" id="mi-total-sku">—</div>
+              <div style="font-size:11px;color:var(--text-3)">Tổng SKU</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:5px" id="mi-sku-groups">
+              <div style="color:var(--text-3);font-size:12px">Đang tải...</div>
+            </div>
           </div>
         </div>
       </div>
-
-      <!-- MT Tracker Summary -->
       <div class="card">
-        <div class="card-header"><div class="card-title">🎯 MT Tracker</div><button class="btn btn-outline btn-sm" onclick="nav('mt-tracker')">Chi tiết →</button></div>
-        <div class="card-body">
-          <div style="display:flex;flex-direction:column;gap:10px" id="tracker-summary">
-            <div style="color:var(--text-3);font-size:12px;text-align:center;padding:12px">Đang tải...</div>
-          </div>
+        <div class="card-header">
+          <div class="card-title">📢 Tăng giá DGM gần nhất</div>
+          <button class="btn btn-outline btn-sm" onclick="nav('price-events')">Xem tất cả</button>
+        </div>
+        <div class="card-body" id="mi-latest-event">
+          <div style="color:var(--text-3);font-size:12px;text-align:center;padding:12px">Đang tải...</div>
         </div>
       </div>
     </div>
 
-    <!-- Recent surveys -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">📋 Survey gần nhất — toàn team</div>
-        <button class="btn btn-outline btn-sm" onclick="nav('history')">Xem tất cả →</button>
+    <!-- Row 2: Biến động đối thủ + Brands survey -->
+    <div class="g-60-40" style="margin-bottom:18px">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📊 Biến động giá đối thủ cạnh tranh</div>
+          <button class="btn btn-outline btn-sm" onclick="nav('history')">Chi tiết</button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Thương hiệu</th><th>Sản phẩm</th><th>Điểm bán</th><th>Giá hiện tại</th><th>Biến động</th><th>Ngày survey</th></tr></thead>
+            <tbody id="mi-comp-tbody"><tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-3)">Đang tải...</td></tr></tbody>
+          </table>
+        </div>
       </div>
-      <div class="tbl-wrap">
-        <table id="dash-table">
-          <thead><tr><th>Ngày</th><th>Nhân viên</th><th>Kênh</th><th>Điểm bán</th><th>Sản phẩm</th><th>Thương hiệu</th><th>Giá (đ)</th><th>Loại giá</th><th>Nguồn</th></tr></thead>
-          <tbody id="dash-tbody"><tr><td colspan="9" style="text-align:center;color:var(--text-3);padding:20px">Đang tải...</td></tr></tbody>
-        </table>
+      <div class="card">
+        <div class="card-header"><div class="card-title">🎯 Brands đã survey</div></div>
+        <div class="card-body" id="mi-brands-list">
+          <div style="color:var(--text-3);font-size:12px;text-align:center;padding:12px">Đang tải...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 3: Cảnh báo + MT Tracker -->
+    <div class="g2">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🚨 Cảnh báo mới</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="badge b-red" id="mi-alert-cnt" style="display:none">0</span>
+            <button class="btn btn-outline btn-sm" onclick="nav('alerts')">Xem tất cả</button>
+          </div>
+        </div>
+        <div class="card-body" id="mi-alerts-preview">
+          <div class="empty" style="padding:16px"><div class="empty-icon">✅</div><div class="empty-sub">Không có cảnh báo mới</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🎯 MT Price Tracker</div>
+          <button class="btn btn-outline btn-sm" onclick="nav('mt-tracker')">Chi tiết</button>
+        </div>
+        <div class="card-body" id="tracker-summary">
+          <div style="color:var(--text-3);font-size:12px;text-align:center;padding:12px">Đang tải...</div>
+        </div>
       </div>
     </div>
   </div>
-
   <!-- ════ TEAM ACTIVITY ════ -->
   <div id="pg-team" class="page">
     <div class="ph"><div><div class="ph-title">Hoạt động Team</div><div class="ph-sub">Theo dõi survey của từng nhân viên</div></div></div>
@@ -819,15 +851,15 @@ window.addEventListener('load', () => {
 async function syncAll() {
   setSyncState('loading');
   try {
-    const [dash, team, alerts, events, tracker] = await Promise.all([
-      api('getDashboard'), api('getTeamActivity'),
+    const [intel, team, alerts, events, tracker] = await Promise.all([
+      api('getMarketIntel'), api('getTeamActivity'),
       api('getAlerts'), api('getPriceEvents'), api('getMTTracker'),
     ]);
     S.alerts  = alerts.canh_bao || [];
     S.events  = events.su_kien  || [];
     S.tracker = tracker.tracker || [];
 
-    renderDashboard(dash);
+    renderMarketIntel(intel);
     renderTeam(team.hoat_dong || []);
     renderAlerts();
     renderEvents();
@@ -839,7 +871,6 @@ async function syncAll() {
     const badge = document.getElementById('alert-badge');
     if (cnt > 0) { badge.textContent = cnt; badge.style.display = ''; }
     else badge.style.display = 'none';
-    document.getElementById('k-alerts').textContent = cnt;
 
     setSyncState('ok');
     showToast('Đã đồng bộ dữ liệu', 'success');
@@ -872,60 +903,113 @@ function nav(id) {
   window.scrollTo(0,0);
 }
 
-// ── DASHBOARD ──
-function renderDashboard(d) {
-  document.getElementById('k-today').textContent   = d.hom_nay   ?? '—';
-  document.getElementById('k-week').textContent    = d.tuan_nay  ?? '—';
-  document.getElementById('k-outlets').textContent = d.diem_ban_hom_nay ?? '—';
-  document.getElementById('k-events').textContent  = d.su_kien_active ?? '—';
-  document.getElementById('dash-sub').textContent  = 'Hôm nay: ' + fmtDate(new Date());
+// ── MARKET INTELLIGENCE DASHBOARD ──
+function renderMarketIntel(d) {
+  document.getElementById('dash-sub').textContent = `Cập nhật: ${fmtDate(new Date())} · ${d.tong_survey||0} survey · Cuối: ${d.ngay_survey_cuoi||'—'}`;
 
-  // Chart 7 ngày
-  const chart = document.getElementById('chart-7days');
-  const data  = d.chart_7_ngay || [];
-  const max   = Math.max(...data.map(x => x.so_luong), 1);
-  chart.innerHTML = data.map((x, i) => {
-    const pct = Math.round((x.so_luong / max) * 100);
-    const isToday = i === data.length - 1;
-    return `
-    <div class="chart-bar-wrap">
-      <div class="chart-val">${x.so_luong}</div>
-      <div class="chart-bar-bg">
-        <div class="chart-bar-fill ${isToday?'today':''}" style="height:${Math.max(pct,4)}%"></div>
+  // 1. Danh mục SKU
+  document.getElementById('mi-total-sku').textContent = d.tong_sku || 0;
+  const groups = d.nhom_san_pham || {};
+  const colors = ['var(--red)','var(--teal)','var(--green)','var(--orange)','var(--purple)','var(--navy)'];
+  document.getElementById('mi-sku-groups').innerHTML = Object.entries(groups).map(([cat, cnt], i) => `
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="width:8px;height:8px;border-radius:50%;background:${colors[i%colors.length]};flex-shrink:0"></div>
+      <div style="flex:1;font-size:12px;color:var(--text-2)">${cat}</div>
+      <div style="font-size:12px;font-weight:700;font-family:'JetBrains Mono';color:var(--text)">${cnt} SKU</div>
+    </div>`).join('') || '<div style="color:var(--text-3);font-size:12px">Chưa có dữ liệu</div>';
+
+  // 2. Tăng giá gần nhất
+  const ev = d.tang_gia_gan_nhat;
+  document.getElementById('mi-latest-event').innerHTML = ev ? `
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--navy)">${ev.ten_su_kien}</div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:2px">Hiệu lực: ${ev.ngay_hieu_luc} · ${ev.kenh}</div>
       </div>
-      <div class="chart-label">${x.ngay.slice(5)}</div>
-    </div>`;
-  }).join('');
+      <span class="badge b-red" style="font-size:14px;padding:5px 10px">+${ev.phan_tram_tang}%</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px">
+      <div><div style="color:var(--text-3);margin-bottom:2px">Sản phẩm</div><strong>${ev.ten_san_pham}</strong></div>
+      <div><div style="color:var(--text-3);margin-bottom:2px">Giá cũ → Mới</div><span class="mono">${fmtPrice(ev.gia_cu)} → ${fmtPrice(ev.gia_moi)}đ</span></div>
+      <div><div style="color:var(--text-3);margin-bottom:2px">Khách hàng MT</div>${ev.khach_hang_mt||'—'}</div>
+      <div><div style="color:var(--text-3);margin-bottom:2px">Lý do</div>${ev.ly_do||'—'}</div>
+    </div>` :
+    '<div class="empty" style="padding:12px"><div class="empty-icon">📢</div><div class="empty-sub">Chưa có mốc tăng giá</div></div>';
 
-  // Tracker summary
-  const ts = d.tracker_stats || {};
-  const tTotal = ts.tong || 0;
-  const tDone  = ts.da_cap_nhat || 0;
-  document.getElementById('tracker-summary').innerHTML = `
-    <div style="font-size:28px;font-weight:800;font-family:'JetBrains Mono';color:var(--navy);text-align:center">${tTotal > 0 ? Math.round(tDone/tTotal*100) : 0}%</div>
-    <div style="font-size:12px;color:var(--text-3);text-align:center;margin-bottom:10px">Chain MT đã cập nhật</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
-      <div><div style="font-size:18px;font-weight:800;color:var(--green)">${ts.da_cap_nhat||0}</div><div style="font-size:11px;color:var(--text-3)">Đã áp dụng</div></div>
-      <div><div style="font-size:18px;font-weight:800;color:var(--red)">${ts.chua_cap_nhat||0}</div><div style="font-size:11px;color:var(--text-3)">Chưa cập nhật</div></div>
-      <div><div style="font-size:18px;font-weight:800;color:var(--orange)">${ts.dang_cho||0}</div><div style="font-size:11px;color:var(--text-3)">Đang chờ</div></div>
-    </div>`;
+  // 3. Biến động đối thủ
+  const comp = d.bien_dong_doi_thu || [];
+  const compTbody = document.getElementById('mi-comp-tbody');
+  if (!comp.length) {
+    compTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-3)">Chưa có dữ liệu survey đối thủ</td></tr>';
+  } else {
+    compTbody.innerHTML = comp.map(c => {
+      const delta = c.delta_pct;
+      const deltaHtml = delta === null
+        ? '<span class="delta-same">—</span>'
+        : delta > 0
+          ? `<span class="delta-up">↑ +${delta}%</span>`
+          : delta < 0
+            ? `<span class="delta-down">↓ ${delta}%</span>`
+            : '<span class="delta-same">Không đổi</span>';
+      return `<tr>
+        <td><strong>${c.ten_thuong_hieu}</strong></td>
+        <td>${c.ten_san_pham}${c.loai_san_pham?' <span style="color:var(--text-3);font-size:11px">· '+c.loai_san_pham+'</span>':''}</td>
+        <td>${c.ten_diem_ban}</td>
+        <td class="mono">${fmtPrice(c.gia_hien_tai)}đ</td>
+        <td>${deltaHtml}</td>
+        <td style="color:var(--text-3)">${c.ngay_survey}</td>
+      </tr>`;
+    }).join('');
+  }
 
-  // Recent surveys
-  const tbody = document.getElementById('dash-tbody');
-  const rows = d.survey_gan_nhat || [];
-  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text-3)">Chưa có survey hôm nay</td></tr>'; return; }
-  tbody.innerHTML = rows.map(s => `
-    <tr>
-      <td class="mono">${s.ngay_survey}</td>
-      <td>${s.ten_nhan_vien || '—'}</td>
-      <td><span class="badge ${s.kenh==='MT'?'b-navy':'b-teal'}">${s.kenh}</span></td>
-      <td>${s.ten_diem_ban || '—'}</td>
-      <td><strong>${s.ten_san_pham || '—'}</strong>${s.loai_san_pham?' <span style="color:var(--text-3);font-size:11px">· '+s.loai_san_pham+'</span>':''}</td>
-      <td>${s.ten_thuong_hieu || '—'}</td>
-      <td class="mono">${fmtPrice(s.gia)}</td>
-      <td><span class="badge ${s.loai_gia?.includes('NTD')?'b-green':'b-orange'}">${s.loai_gia||'—'}</span></td>
-      <td><span class="badge ${s.phuong_thuc_nhap==='ai_photo'?'b-blue':'b-gray'}">${s.phuong_thuc_nhap==='ai_photo'?'AI':'Thủ công'}</span></td>
-    </tr>`).join('');
+  // 4. Brands trong survey
+  const brands = d.brands_survey || [];
+  const ownIds = ['AB','AN','DU','Ayam Brand','Alce Nero','Duchef'];
+  document.getElementById('mi-brands-list').innerHTML = !brands.length
+    ? '<div class="empty" style="padding:12px"><div class="empty-sub">Chưa có dữ liệu</div></div>'
+    : '<div style="display:flex;flex-direction:column;gap:8px">' +
+      brands.map(b => {
+        const isOwn = b.phan_loai === 'own_brand' || ownIds.some(x => b.ten.includes(x));
+        return `<div style="display:flex;align-items:center;gap:8px">
+          <span class="badge ${isOwn?'b-red':'b-teal'}" style="min-width:36px;text-align:center">${isOwn?'DGM':'Đối thủ'}</span>
+          <div style="flex:1;font-size:13px;font-weight:600">${b.ten}</div>
+          <div style="font-size:11px;color:var(--text-3)">${b.so_lan} lần</div>
+        </div>`;
+      }).join('') + '</div>';
+
+  // 5. Cảnh báo preview
+  const alertCnt = d.so_canh_bao || 0;
+  const alertBadge = document.getElementById('mi-alert-cnt');
+  if (alertCnt > 0) { alertBadge.textContent = alertCnt; alertBadge.style.display = ''; }
+  else alertBadge.style.display = 'none';
+  const alertPrev = d.canh_bao_chua_doc || [];
+  document.getElementById('mi-alerts-preview').innerHTML = !alertPrev.length
+    ? '<div class="empty" style="padding:16px"><div class="empty-icon">✅</div><div class="empty-sub">Không có cảnh báo mới</div></div>'
+    : alertPrev.slice(0,4).map(a => `
+        <div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:flex-start">
+          <span>${a.muc_do==='high'?'🔴':'🟡'}</span>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--text)">${a.mo_ta}</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:2px">${a.ngay_tao}</div>
+          </div>
+        </div>`).join('');
+
+  // 6. MT Tracker summary — dùng S.tracker
+  const ts_total = S.tracker.length;
+  const ts_done  = S.tracker.filter(t => t.trang_thai === 'Đã áp dụng').length;
+  const ts_chua  = S.tracker.filter(t => t.trang_thai === 'Chưa cập nhật').length;
+  const ts_cho   = S.tracker.filter(t => t.trang_thai === 'Chờ').length;
+  document.getElementById('tracker-summary').innerHTML = ts_total === 0
+    ? '<div class="empty" style="padding:12px"><div class="empty-sub">Chưa có dữ liệu tracker</div><button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="openM('add-tracker')">+ Nhập tracker</button></div>'
+    : `<div style="text-align:center;margin-bottom:12px">
+        <div style="font-size:32px;font-weight:900;font-family:'JetBrains Mono';color:var(--navy)">${ts_total>0?Math.round(ts_done/ts_total*100):0}%</div>
+        <div style="font-size:11px;color:var(--text-3)">${ts_done}/${ts_total} chain đã cập nhật</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+        <div><div style="font-size:18px;font-weight:800;color:var(--green)">${ts_done}</div><div style="font-size:10px;color:var(--text-3)">Đã áp dụng</div></div>
+        <div><div style="font-size:18px;font-weight:800;color:var(--red)">${ts_chua}</div><div style="font-size:10px;color:var(--text-3)">Chưa cập nhật</div></div>
+        <div><div style="font-size:18px;font-weight:800;color:var(--orange)">${ts_cho}</div><div style="font-size:10px;color:var(--text-3)">Đang chờ</div></div>
+      </div>`;
 }
 
 // ── TEAM ──

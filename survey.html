@@ -6,7 +6,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>DGM Survey v3</title>
+<title>DGM Survey v5</title>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -820,7 +820,7 @@ textarea.form-control{min-height:76px;resize:none;font-size:14px;line-height:1.5
 // ══════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════
-const API = 'https://script.google.com/macros/s/AKfycbzZDyH8vhEr2hFvyQEOng3KBoK5I3b9hx0eBOVSi6tdoQLjVw1eSMOOXtuodvnHVYE/exec'; // AppScript v5
+const API = 'https://script.google.com/macros/s/AKfycbzZDyH8vhEr2hFvyQEOng3KBoK5I3b9hx0eBOVSi6tdoQLjVw1eSMOOXtuodvnHVYE/exec'; // AppScript v6
 const MANAGER_CREDS = { email: 'quangquy.bui@gmail.com', pass: '111223' };
 
 const TODAY = new Date(); TODAY.setHours(0,0,0,0);
@@ -859,8 +859,15 @@ async function loadMaster() {
   try {
     showLoading('Đang tải dữ liệu...');
     const res = await fetch(API + '?action=getMasterData');
-    const data = await res.json();
-    S.master = data;
+    const raw = await res.json();
+    // Normalize keys: AppScript v7 trả về tiếng Việt, map về internal keys
+    S.master = {
+      staff:        raw.nhan_vien   || raw.staff    || [],
+      products:     raw.san_pham    || raw.products  || [],
+      outlets:      raw.diem_ban    || raw.outlets   || [],
+      brands:       raw.thuong_hieu || raw.brands    || [],
+      own_brand_ids: raw.own_brand_ids || ['AB','AN','DU'],
+    };
     document.getElementById('sync-label').textContent = '✓ Online';
     localStorage.setItem('dgm_last_sync', new Date().toISOString());
     hideLoading();
@@ -891,9 +898,9 @@ function renderStaffList() {
 
   // Group: MT, GT, Manager
   const groups = [
-    { label: 'Modern Trade (MT)', items: staff.filter(s => s.channel === 'MT'), cls: 'mt', tag: 'tag-mt', tagText: 'MT' },
-    { label: 'General Trade (GT)', items: staff.filter(s => s.channel === 'GT'), cls: 'gt', tag: 'tag-gt', tagText: 'GT' },
-    { label: 'Quản lý', items: staff.filter(s => s.channel === 'Manager' || s.role === 'Sales Manager'), cls: 'manager', tag: 'tag-mgr', tagText: 'MGR' },
+    { label: 'Modern Trade (MT)', items: staff.filter(s => (s.kenh||s.channel) === 'MT'), cls: 'mt', tag: 'tag-mt', tagText: 'MT' },
+    { label: 'General Trade (GT)', items: staff.filter(s => (s.kenh||s.channel) === 'GT'), cls: 'gt', tag: 'tag-gt', tagText: 'GT' },
+    { label: 'Quản lý', items: staff.filter(s => (s.kenh||s.channel) === 'Manager' || (s.chuc_danh||s.role) === 'Sales Manager'), cls: 'manager', tag: 'tag-mgr', tagText: 'MGR' },
   ];
 
   let html = '';
@@ -901,9 +908,12 @@ function renderStaffList() {
     if (!g.items.length) return;
     html += `<div style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;margin:14px 0 6px">${g.label}</div>`;
     g.items.forEach(s => {
-      const initials = (s.display_name || s.full_name || '?').split(' ').pop().charAt(0).toUpperCase();
-      const region = s.region && s.region !== 'Nationwide' && s.region !== 'All' ? s.region : '';
-      const roleLabel = { 'Sales Representative': 'Sales Rep', 'Salesman': 'Salesman', 'Sales Manager': 'Manager' }[s.role] || s.role;
+      const displayName = s.ten_hien_thi || s.display_name || s.ho_ten || s.full_name || '?';
+      const initials = displayName.split(' ').pop().charAt(0).toUpperCase();
+      const regionRaw = s.khu_vuc || s.region || '';
+      const region = regionRaw && regionRaw !== 'Nationwide' && regionRaw !== 'All' ? regionRaw : '';
+      const roleRaw = s.chuc_danh || s.role || '';
+      const roleLabel = { 'Sales Representative': 'Sales Rep', 'Salesman': 'Salesman', 'Sales Manager': 'Manager' }[roleRaw] || roleRaw;
       html += `
         <button class="staff-item" onclick="selectStaff('${s.staff_id}')">
           <div class="staff-avatar ${g.cls}">${initials}</div>
@@ -922,7 +932,7 @@ function selectStaff(staffId) {
   const staff = (S.master?.staff || []).find(s => s.staff_id === staffId);
   if (!staff) return;
 
-  const isManager = staff.channel === 'Manager' || staff.role === 'Sales Manager';
+  const isManager = (staff.kenh||staff.channel) === 'Manager' || (staff.chuc_danh||staff.role) === 'Sales Manager';
   if (isManager) {
     S.pendingManagerStaff = staff;
     document.getElementById('auth-email').value = '';
@@ -977,19 +987,21 @@ function activateStaff(staff, mode = 'home') {
   document.getElementById('topbar-sub').textContent = staff.display_name || staff.full_name;
 
   // Update home
-  document.getElementById('home-name').textContent = staff.display_name || staff.full_name;
+  document.getElementById('home-name').textContent = staff.ten_hien_thi || staff.display_name || staff.ho_ten || staff.full_name || '?';
   const roleMap = { 'Sales Representative': 'Sales Rep', 'Salesman': 'Salesman', 'Sales Manager': 'Manager' };
-  const roleLabel = roleMap[staff.role] || staff.role;
-  const channelLabel = staff.channel === 'Manager' ? 'All' : staff.channel;
-  document.getElementById('home-role-chip').textContent = `${roleLabel} · ${channelLabel}${staff.region && staff.region !== 'Nationwide' && staff.region !== 'All' ? ' · ' + staff.region : ''}`;
+  const roleLabel = roleMap[staff.chuc_danh||staff.role] || staff.chuc_danh || staff.role;
+  const channelLabel = (staff.kenh||staff.channel) === 'Manager' ? 'All' : (staff.kenh||staff.channel);
+  const regionVal = staff.khu_vuc || staff.region || '';
+  document.getElementById('home-role-chip').textContent = `${roleLabel} · ${channelLabel}${regionVal && regionVal !== 'Nationwide' && regionVal !== 'All' ? ' · ' + regionVal : ''}`;
 
   // Update profile
-  document.getElementById('profile-avatar').textContent = (staff.display_name || '').split(' ').pop().charAt(0).toUpperCase();
-  document.getElementById('profile-name').textContent = staff.full_name || staff.display_name;
-  document.getElementById('profile-role-text').textContent = `${roleLabel} · ${staff.channel}${staff.region ? ' · ' + staff.region : ''}`;
+  const pName = staff.ho_ten || staff.full_name || staff.ten_hien_thi || staff.display_name || '?';
+  document.getElementById('profile-avatar').textContent = pName.split(' ').pop().charAt(0).toUpperCase();
+  document.getElementById('profile-name').textContent = pName;
+  document.getElementById('profile-role-text').textContent = `${roleLabel} · ${channelLabel}${regionVal ? ' · ' + regionVal : ''}`;
 
   // Manager: show dashboard nav, else alerts
-  const isManager = staff.channel === 'Manager' || staff.role === 'Sales Manager';
+  const isManager = (staff.kenh||staff.channel) === 'Manager' || (staff.chuc_danh||staff.role) === 'Sales Manager';
   const nav4 = document.getElementById('nav-4th');
   if (isManager) {
     nav4.innerHTML = '<div class="nav-icon">📊</div><div class="nav-label">Dashboard</div>';
@@ -1017,13 +1029,13 @@ function backToSelectStaff() {
 // FORM DROPDOWNS
 // ══════════════════════════════════════════
 function populateFormDropdowns(staff) {
-  const isManager = staff.channel === 'Manager' || staff.role === 'Sales Manager';
+  const isManager = (staff.kenh||staff.channel) === 'Manager' || (staff.chuc_danh||staff.role) === 'Sales Manager';
   const ch = isManager ? 'MT' : staff.channel; // default channel
 
   // Set channel from staff, lock if single-channel
   if (!isManager) {
-    S.channel = staff.channel;
-    setChannel(staff.channel, true); // true = auto, hide toggle if single-channel
+    S.channel = staff.kenh || staff.channel;
+    setChannel(staff.kenh || staff.channel, true); // true = auto, hide toggle if single-channel
   } else {
     setChannel('MT', false);
   }
@@ -1031,16 +1043,46 @@ function populateFormDropdowns(staff) {
   // MT outlets — chỉ tên hệ thống (chain_name hoặc outlet_name)
   const mtSel = document.getElementById('f-mt-outlet');
   mtSel.innerHTML = '<option value="">-- Chọn hệ thống --</option>';
-  const mtChains = [...new Set(
-    (S.master?.outlets || [])
-      .filter(o => o.channel === 'MT')
-      .map(o => o.chain_name || o.outlet_name)
-      .filter(Boolean)
-  )].sort();
-  mtChains.forEach(c => { mtSel.innerHTML += `<option value="${c}">${c}</option>`; });
+  // Outlets MT: Active + Approaching đều hiện, Approaching có badge
+  const mtOutlets = (S.master?.outlets || [])
+    .filter(o => (o.channel || o.kenh) === 'MT')
+    .sort((a, b) => {
+      // Active trước, Approaching sau
+      const aApp = (a.dang_tiep_can === true || String(a.is_active||a.trang_thai).toLowerCase() === 'approaching');
+      const bApp = (b.dang_tiep_can === true || String(b.is_active||b.trang_thai).toLowerCase() === 'approaching');
+      if (aApp !== bApp) return aApp ? 1 : -1;
+      return (a.outlet_name || '').localeCompare(b.outlet_name || '');
+    });
+
+  // Group: Active và Approaching
+  const activeOuts    = mtOutlets.filter(o => !o.is_approaching);
+  const approachOuts  = mtOutlets.filter(o => o.is_approaching);
+
+  if (activeOuts.length) {
+    const grp = document.createElement('optgroup');
+    grp.label = 'Khách hàng hiện tại';
+    activeOuts.forEach(o => {
+      const opt = document.createElement('option');
+      opt.value = o.ten_diem_ban || o.outlet_name;
+      opt.textContent = o.ten_diem_ban || o.outlet_name;
+      grp.appendChild(opt);
+    });
+    mtSel.appendChild(grp);
+  }
+  if (approachOuts.length) {
+    const grp2 = document.createElement('optgroup');
+    grp2.label = '🔍 Đang tiếp cận';
+    approachOuts.forEach(o => {
+      const opt = document.createElement('option');
+      opt.value = o.ten_diem_ban || o.outlet_name;
+      opt.textContent = (o.ten_diem_ban || o.outlet_name) + ' (đang tiếp cận)';
+      grp2.appendChild(opt);
+    });
+    mtSel.appendChild(grp2);
+  }
 
   // GT region from staff
-  const region = staff.region || '';
+  const region = staff.khu_vuc || staff.region || '';
   document.getElementById('gt-region-box').textContent = '📍 ' + (region || 'Chưa xác định');
 
   // Own brand products — filter by brand_type (own_brand) hoặc brand_id thuộc AB/AN/DU
@@ -1048,12 +1090,12 @@ function populateFormDropdowns(staff) {
   ownSel.innerHTML = '<option value="">-- Chọn sản phẩm --</option>';
   const ownBrandIds = S.master?.own_brand_ids || ['AB', 'AN', 'DU'];
   const ownProducts = (S.master?.products || [])
-    .filter(p => p.brand_type === 'own_brand' || ownBrandIds.includes(p.brand_id));
+    .filter(p => p.loai_thuong_hieu === 'own_brand' || p.brand_type === 'own_brand' || ownBrandIds.includes(p.thuong_hieu || p.brand_id));
 
   // Group theo category (nhóm SP)
   const catGroups = {};
   ownProducts.forEach(p => {
-    const cat = p.category || 'Khác';
+    const cat = p.nhom_san_pham || p.category || 'Khác';
     if (!catGroups[cat]) catGroups[cat] = [];
     catGroups[cat].push(p);
   });
@@ -1062,13 +1104,13 @@ function populateFormDropdowns(staff) {
     optGroup.label = cat;
     catGroups[cat].forEach(p => {
       const opt = document.createElement('option');
-      opt.value = p.product_id;
-      opt.textContent = p.product_name;
-      opt.dataset.mfr = p.manufacturer || '';
-      opt.dataset.origin = p.origin || '';
-      opt.dataset.unit = p.default_unit || 'g';
-      opt.dataset.packaging = p.default_packaging || '';
-      opt.dataset.packsize = p.default_pack_sizes || '';
+      opt.value = p.ma_san_pham || p.product_id;
+      opt.textContent = p.ten_san_pham || p.product_name;
+      opt.dataset.mfr = p.nsx_nha_phan_phoi || p.manufacturer || '';
+      opt.dataset.origin = p.xuat_xu || p.origin || '';
+      opt.dataset.unit = p.don_vi || p.default_unit || 'g';
+      opt.dataset.packaging = p.bao_bi || p.default_packaging || '';
+      opt.dataset.packsize = p.quy_cach_mac_dinh || p.default_pack_sizes || '';
       optGroup.appendChild(opt);
     });
     ownSel.appendChild(optGroup);
@@ -1302,33 +1344,36 @@ async function submitSurvey() {
   if (!packSize) { showToast('Vui lòng nhập quy cách', 'error'); return; }
   if (!price)    { showToast('Vui lòng nhập giá', 'error'); return; }
 
+  const staffName = S.currentStaff.ten_hien_thi || S.currentStaff.display_name || S.currentStaff.ho_ten || '';
   const payload = {
     action: 'submitSurvey',
     data: {
-      survey_date:    toYMD(S.selDate),
-      staff_id:       S.currentStaff.staff_id,
-      channel:        S.channel,
-      outlet_id:      outletId,
-      outlet_name:    outletName,
-      gt_outlet_type: S.channel === 'GT' ? S.gtType : '',
-      product_id:     productId,
-      product_name:   productName,
-      product_type:   productType,
-      product_category: S.productType === 'own' ? 'own_brand' : 'competitor',
-      pack_size:      packSize,
-      pack_unit:      packUnit,
-      packaging:      packaging,
-      brand_id:       brandId,
-      brand_name:     brandName,
-      price_type:     S.priceType,
-      price_unit:     S.priceUnit,
-      price:          price,
-      manufacturer:   manufacturer,
-      origin:         origin,
-      shelf_position: document.getElementById('f-shelf').value,
-      notes:          document.getElementById('f-notes').value,
-      input_method:   S.photos.length > 0 ? 'ai_photo' : 'manual',
-      photo_url:      '',
+      // VI keys for AppScript v7
+      ngay_survey:       toYMD(S.selDate),
+      ten_nhan_vien:     staffName,
+      kenh:              S.channel,
+      ten_diem_ban:      outletName,
+      loai_diem_ban_gt:  S.channel === 'GT' ? S.gtType : '',
+      ten_san_pham:      productName,
+      phan_loai:         S.productType === 'own' ? 'own_brand' : 'competitor',
+      loai_san_pham:     productType,
+      ten_thuong_hieu:   brandName,
+      quy_cach:          packSize,
+      don_vi:            packUnit,
+      bao_bi:            packaging,
+      loai_gia:          S.priceType === 'retail_consumer' ? 'Giá NTD' : 'Giá đại lý',
+      don_vi_tinh_gia:   S.priceUnit,
+      gia:               price,
+      nsx_nha_phan_phoi: manufacturer,
+      xuat_xu:           origin,
+      vi_tri_ke:         document.getElementById('f-shelf').value,
+      ghi_chu:           document.getElementById('f-notes').value,
+      phuong_thuc_nhap:  S.photos.length > 0 ? 'ai_photo' : 'manual',
+      link_anh:          '',
+      // internal refs
+      _ma_nhan_vien:  S.currentStaff.ma_nhan_vien || S.currentStaff.staff_id || '',
+      _ma_san_pham:   productId || '',
+      _ma_thuong_hieu:brandId   || '',
     }
   };
 
@@ -1341,7 +1386,7 @@ async function submitSurvey() {
       S.surveys.unshift({ ...payload.data, survey_id: result.survey_id });
       localStorage.setItem('dgm_sv', JSON.stringify(S.surveys.slice(0,100)));
       updateStats();
-      document.getElementById('success-sub').textContent = `ID: ${result.survey_id} · Đã lưu vào Google Sheets.`;
+      document.getElementById('success-sub').textContent = `ID: ${result.ma_survey || result.survey_id} · Đã lưu vào Google Sheets.`;
       document.getElementById('success-overlay').classList.add('show');
     } else {
       showToast('Lỗi: ' + (result.error || 'Không xác định'), 'error');
@@ -1420,7 +1465,7 @@ function renderHistory(filter) {
   const todayStr = toYMD(new Date());
   if (filter === 'today') surveys = surveys.filter(s => s.survey_date === todayStr);
   else if (filter === 'MT' || filter === 'GT') surveys = surveys.filter(s => s.channel === filter);
-  else if (filter === 'own') surveys = surveys.filter(s => s.product_category === 'own_brand' || ['AB','AN','DU'].includes(s.brand_id));
+  else if (filter === 'own') surveys = surveys.filter(s => (s.phan_loai||s.product_category) === 'own_brand' || ['AB','AN','DU'].includes(s._ma_thuong_hieu||s.brand_id));
   else if (filter === 'comp') surveys = surveys.filter(s => s.product_category === 'competitor');
 
   const list = document.getElementById('history-list');
@@ -1429,27 +1474,38 @@ function renderHistory(filter) {
     return;
   }
   list.innerHTML = surveys.map(s => {
-    const isOwn = s.product_category === 'own_brand';
-    const ptLabel = s.price_type === 'distributor_agent' ? '🚛 Đại lý' : '🧑‍🛒 NTD';
-    const inputLabel = s.input_method === 'ai_photo' ? 'AI' : 'Thủ công';
+    const isOwn = (s.phan_loai||s.product_category) === 'own_brand';
+    const ptLabel = (s.loai_gia||s.price_type||'').includes('đại lý') || (s.loai_gia||'') === 'Giá đại lý' ? '🚛 Đại lý' : '🧑‍🛒 NTD';
+    const inputLabel = (s.phuong_thuc_nhap||s.input_method) === 'ai_photo' ? 'AI' : 'Thủ công';
+    const spName = s.ten_san_pham || s.product_name || '—';
+    const spType = s.loai_san_pham || s.product_type || '';
+    const brandN = s.ten_thuong_hieu || s.brand_name || '—';
+    const packSz = s.quy_cach || s.pack_size || '';
+    const packUt = s.don_vi || s.pack_unit || '';
+    const packBb = s.bao_bi || s.packaging || '';
+    const giaVal = s.gia || s.price || 0;
+    const ngay   = s.ngay_survey || s.survey_date || '—';
+    const kenh   = s.kenh || s.channel || '—';
+    const ghiChu = s.ghi_chu || s.notes || '';
+    const donViGia = s.don_vi_tinh_gia || s.price_unit || '';
     return `
     <div class="history-card ${isOwn?'own':'comp'}">
       <div class="history-card-top">
         <div>
-          <div class="history-product">${s.product_name}${s.product_type?' — '+s.product_type:''}</div>
-          <div class="history-brand">${s.brand_name} · ${s.pack_size}${s.pack_unit}${s.packaging?' · '+s.packaging:''}</div>
+          <div class="history-product">${spName}${spType?' — '+spType:''}</div>
+          <div class="history-brand">${brandN} · ${packSz}${packUt}${packBb?' · '+packBb:''}</div>
         </div>
         <div>
-          <div class="history-price">${Number(s.price).toLocaleString('vi-VN')}đ</div>
-          <div style="font-size:10px;color:var(--text-3);text-align:right">/${s.price_unit||'đv'}</div>
+          <div class="history-price">${Number(giaVal).toLocaleString('vi-VN')}đ</div>
+          <div style="font-size:10px;color:var(--text-3);text-align:right">/${donViGia||'đv'}</div>
         </div>
       </div>
       <div class="history-card-bottom">
-        <span style="font-size:11px;color:var(--text-3)">📅 ${s.survey_date}</span>
-        <span class="chip chip-gray">${s.channel}</span>
+        <span style="font-size:11px;color:var(--text-3)">📅 ${ngay}</span>
+        <span class="chip chip-gray">${kenh}</span>
         <span class="chip chip-${isOwn?'red':'teal'}">${ptLabel}</span>
         <span class="chip chip-blue">${inputLabel}</span>
-        ${s.notes?'<span class="chip chip-yellow">📝</span>':''}
+        ${ghiChu?'<span class="chip chip-yellow">📝</span>':''}
       </div>
     </div>`;
   }).join('');
@@ -1474,15 +1530,21 @@ function renderRecentSurveys() {
     return;
   }
   list.innerHTML = recent.map(s => {
-    const isOwn = s.product_category === 'own_brand';
+    const isOwn = (s.phan_loai||s.product_category) === 'own_brand';
+    const sp = s.ten_san_pham||s.product_name||'—';
+    const lt = s.loai_san_pham||s.product_type||'';
+    const br = s.ten_thuong_hieu||s.brand_name||'';
+    const qc = (s.quy_cach||s.pack_size||'') + (s.don_vi||s.pack_unit||'');
+    const ng = s.ngay_survey||s.survey_date||'—';
+    const gi = s.gia||s.price||0;
     return `
     <div class="survey-item">
       <div class="survey-dot ${isOwn?'own':'comp'}"></div>
       <div class="survey-info">
-        <div class="survey-name">${s.product_name}${s.product_type?' · '+s.product_type:''}</div>
-        <div class="survey-meta">${s.brand_name||''} · ${s.pack_size||''}${s.pack_unit||''} · ${s.survey_date}</div>
+        <div class="survey-name">${sp}${lt?' · '+lt:''}</div>
+        <div class="survey-meta">${br} · ${qc} · ${ng}</div>
       </div>
-      <div class="survey-price">${Number(s.price).toLocaleString('vi-VN')}đ</div>
+      <div class="survey-price">${Number(gi).toLocaleString('vi-VN')}đ</div>
     </div>`;
   }).join('');
 }
