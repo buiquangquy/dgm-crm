@@ -914,11 +914,12 @@ function renderStaffList() {
       const region = regionRaw && regionRaw !== 'Nationwide' && regionRaw !== 'All' ? regionRaw : '';
       const roleRaw = s.chuc_danh || s.role || '';
       const roleLabel = { 'Sales Representative': 'Sales Rep', 'Salesman': 'Salesman', 'Sales Manager': 'Manager' }[roleRaw] || roleRaw;
+      const staffId = s.ma_nhan_vien || s.staff_id || '';
       html += `
-        <button class="staff-item" onclick="selectStaff('${s.staff_id}')">
+        <button class="staff-item" onclick="selectStaff('${staffId}')">
           <div class="staff-avatar ${g.cls}">${initials}</div>
           <div class="staff-info">
-            <div class="staff-name">${s.display_name || s.full_name}</div>
+            <div class="staff-name">${displayName}</div>
             <div class="staff-meta">${roleLabel}${region ? ' · ' + region : ''}</div>
           </div>
           <span class="staff-channel-tag ${g.tag}">${g.tagText}</span>
@@ -929,7 +930,9 @@ function renderStaffList() {
 }
 
 function selectStaff(staffId) {
-  const staff = (S.master?.staff || []).find(s => s.staff_id === staffId);
+  const staff = (S.master?.staff || []).find(s =>
+    (s.ma_nhan_vien || s.staff_id) === staffId
+  );
   if (!staff) return;
 
   const isManager = (staff.kenh||staff.channel) === 'Manager' || (staff.chuc_danh||staff.role) === 'Sales Manager';
@@ -952,9 +955,10 @@ function verifyManager() {
     document.getElementById('auth-overlay').classList.remove('open');
     const staff = S.pendingManagerStaff;
     // Show manager entry screen
-    const initial = (staff.display_name || '').split(' ').pop().charAt(0).toUpperCase();
+    const mgrName = staff.ten_hien_thi || staff.display_name || staff.ho_ten || '?';
+    const initial = mgrName.split(' ').pop().charAt(0).toUpperCase();
     document.getElementById('mgr-avatar').textContent = initial;
-    document.getElementById('mgr-name').textContent = staff.display_name || staff.full_name;
+    document.getElementById('mgr-name').textContent = mgrName;
     document.getElementById('manager-entry').classList.add('open');
     S.pendingManagerStaff = staff;
   } else {

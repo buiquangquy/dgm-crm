@@ -851,13 +851,28 @@ window.addEventListener('load', () => {
 async function syncAll() {
   setSyncState('loading');
   try {
-    const [intel, team, alerts, events, tracker] = await Promise.all([
-      api('getMarketIntel'), api('getTeamActivity'),
-      api('getAlerts'), api('getPriceEvents'), api('getMTTracker'),
+    // getMarketIntel cần AppScript v7 — fallback về getMasterData nếu chưa deploy
+    const [intelRaw, masterRaw, team, alerts, events, tracker] = await Promise.all([
+      api('getMarketIntel').catch(() => null),
+      api('getMasterData'),
+      api('getTeamActivity').catch(() => ({ hoat_dong: [] })),
+      api('getAlerts').catch(() => ({ canh_bao: [] })),
+      api('getPriceEvents').catch(() => ({ su_kien: [] })),
+      api('getMTTracker').catch(() => ({ tracker: [] })),
     ]);
-    S.alerts  = alerts.canh_bao || [];
-    S.events  = events.su_kien  || [];
-    S.tracker = tracker.tracker || [];
+
+    // Nếu getMarketIntel chưa có (endpoint chưa deploy) → build từ masterData
+    const intel = (intelRaw && !intelRaw.error) ? intelRaw : _buildIntelFromMaster(masterRaw);
+    // Normalize master data keys (VI/EN)
+    S.master = {
+      staff:    masterRaw.nhan_vien   || masterRaw.staff    || [],
+      products: masterRaw.san_pham    || masterRaw.products  || [],
+      outlets:  masterRaw.diem_ban    || masterRaw.outlets   || [],
+      brands:   masterRaw.thuong_hieu || masterRaw.brands    || [],
+    };
+    S.alerts  = alerts.canh_bao  || [];
+    S.events  = events.su_kien   || [];
+    S.tracker = tracker.tracker  || [];
 
     renderMarketIntel(intel);
     renderTeam(team.hoat_dong || []);
@@ -901,6 +916,41 @@ function nav(id) {
   });
   document.getElementById('page-title').textContent = PAGE_TITLES[id] || id;
   window.scrollTo(0,0);
+}
+
+// ── FALLBACK: Build market intel từ master data khi getMarketIntel chưa deploy ──
+function _buildIntelFromMaster(raw) {
+  const products = raw.san_pham || raw.products || [];
+  const events   = S.events || [];
+  const ownIds   = ['AB','AN','DU'];
+
+  const ownProds = products.filter(p =>
+    p.loai_thuong_hieu === 'own_brand' || ownIds.includes(p.thuong_hieu || p.brand_id)
+  );
+  const groups = {};
+  ownProds.forEach(p => {
+    const cat = p.nhom_san_pham || p.category || 'Khác';
+    groups[cat] = (groups[cat] || 0) + 1;
+  });
+
+  // Brands từ master
+  const brands = (raw.thuong_hieu || raw.brands || []).map(b => ({
+    ten: b.ten_thuong_hieu || b.brand_name || '',
+    so_lan: 0,
+    phan_loai: b.phan_loai || b.type || 'competitor',
+  }));
+
+  return {
+    tong_sku:          ownProds.length,
+    nhom_san_pham:     groups,
+    tang_gia_gan_nhat: events[0] || null,
+    bien_dong_doi_thu: [],
+    brands_survey:     brands,
+    canh_bao_chua_doc: S.alerts || [],
+    so_canh_bao:       (S.alerts || []).length,
+    tong_survey:       0,
+    ngay_survey_cuoi:  null,
+  };
 }
 
 // ── MARKET INTELLIGENCE DASHBOARD ──
