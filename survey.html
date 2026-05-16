@@ -1693,7 +1693,6 @@ async function submitSurvey() {
   if (!price)    { showToast('Vui lòng nhập giá', 'error'); return; }
 
   const staffName = S.currentStaff.ten_hien_thi || S.currentStaff.display_name || S.currentStaff.ho_ten || '';
-  const photoCount = Object.keys(S.photos).filter(k => S.photos[k]).length;
   const payload = {
     action: 'submitSurvey',
     data: {
