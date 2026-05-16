@@ -1098,8 +1098,34 @@ window.addEventListener('load', async () => {
   setDefaultDate();
   renderHomeDate();
   await loadMaster();
+
+  // Restore session nếu có
+  const session = _getSession();
+  if (session && session.staff_id && S.master) {
+    const savedStaff = (S.master.staff || []).find(s =>
+      (s.ma_nhan_vien || s.staff_id) === session.staff_id
+    );
+    if (savedStaff) {
+      // Restore — không cần chọn lại
+      activateStaff(savedStaff, 'home');
+      return; // Không render staff list
+    }
+  }
   renderStaffList();
 });
+
+function _getSession() {
+  try {
+    const raw = localStorage.getItem('dgm_session');
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    // Session hết hạn sau 8 tiếng
+    const savedAt = new Date(s.saved_at);
+    const hours = (Date.now() - savedAt.getTime()) / 3600000;
+    if (hours > 8) { localStorage.removeItem('dgm_session'); return null; }
+    return s;
+  } catch(e) { return null; }
+}
 
 // ══════════════════════════════════════════
 // MASTER DATA
@@ -1237,6 +1263,14 @@ function managerDoDashboard() {
 
 function activateStaff(staff, mode = 'home') {
   S.currentStaff = staff;
+  // Lưu session — restore khi refresh
+  const staffId = staff.ma_nhan_vien || staff.staff_id || '';
+  const isManager = (staff.kenh||staff.channel) === 'Manager' || (staff.chuc_danh||staff.role) === 'Sales Manager';
+  localStorage.setItem('dgm_session', JSON.stringify({
+    staff_id: staffId,
+    is_manager: isManager,
+    saved_at: new Date().toISOString(),
+  }));
   document.getElementById('select-staff-screen').style.display = 'none';
   document.getElementById('main-app').style.display = 'block';
 
@@ -1278,6 +1312,7 @@ function activateStaff(staff, mode = 'home') {
 
 function backToSelectStaff() {
   S.currentStaff = null;
+  localStorage.removeItem('dgm_session');
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('select-staff-screen').style.display = 'flex';
   document.getElementById('manager-entry').classList.remove('open');
