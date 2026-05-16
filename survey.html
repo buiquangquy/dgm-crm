@@ -6,7 +6,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>DGM Survey v5</title>
+<title>DGM Survey v6</title>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -234,6 +234,22 @@ textarea.form-control{min-height:76px;resize:none;font-size:14px;line-height:1.5
 .photo-thumb{aspect-ratio:1;border-radius:var(--radius-sm);background:var(--surface-2,#f8f9fb);border:1.5px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;color:var(--text-3);gap:4px;position:relative;overflow:hidden}
 .photo-thumb img{width:100%;height:100%;object-fit:cover}
 .photo-remove{position:absolute;top:4px;right:4px;width:20px;height:20px;background:rgba(0,0,0,0.6);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;cursor:pointer;border:none}
+
+/* ── PHOTO SLOTS ── */
+.photo-slot{border:1.5px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:10px;transition:border-color 0.2s}
+.photo-slot.done{border-color:var(--green);background:var(--green-bg)}
+.photo-slot-header{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface-2,#f8f9fb)}
+.photo-slot-num{width:24px;height:24px;border-radius:50%;background:var(--navy);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.photo-slot.done .photo-slot-num{background:var(--green)}
+.photo-slot-title{font-size:12px;font-weight:700;color:var(--text)}
+.photo-slot-sub{font-size:10px;color:var(--text-3);margin-top:1px}
+.photo-slot-status{margin-left:auto;font-size:18px}
+.photo-slot-body{padding:10px 12px}
+.photo-upload-zone{border:2px dashed var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center;cursor:pointer;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:4px}
+.photo-upload-zone:active{border-color:var(--teal);background:var(--teal-bg)}
+.photo-slot.done .photo-slot-body{padding:8px 12px}
+.slot-preview{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border)}
+.slot-retake{width:100%;margin-top:6px;padding:6px;border:1.5px solid var(--border);border-radius:var(--radius-xs);background:none;font-size:11px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:inherit}
 
 /* AI panel */
 .ai-panel{background:linear-gradient(135deg,var(--navy),var(--teal));border-radius:var(--radius);padding:14px 16px;margin-top:12px;display:none}
@@ -678,29 +694,235 @@ textarea.form-control{min-height:76px;resize:none;font-size:14px;line-height:1.5
       </div>
     </div>
 
-    <!-- S4: Ảnh & Ghi chú -->
+    <!-- S4: Thông tin bổ sung sản phẩm -->
     <div class="form-card">
-      <div class="form-card-header"><div class="form-card-icon">📸</div><div class="form-card-title">Ảnh & Ghi chú</div></div>
+      <div class="form-card-header"><div class="form-card-icon">🏷️</div><div class="form-card-title">Thông tin sản phẩm bổ sung</div></div>
       <div class="form-card-body">
-        <div class="form-group">
-          <div class="form-label">Ảnh sản phẩm / giá kệ</div>
-          <div class="photo-upload" onclick="triggerPhoto()">
-            <div class="photo-upload-icon">📷</div>
-            <div class="photo-upload-title">Chụp ảnh hoặc chọn từ thư viện</div>
-            <div class="photo-upload-sub">AI sẽ tự đọc thông tin từ ảnh</div>
+
+        <!-- Hạn sử dụng + NSX + NNK -->
+        <div class="form-row-2">
+          <div class="form-group">
+            <div class="form-label">Hạn sử dụng</div>
+            <input class="form-control" id="f-hsd" placeholder="vd: 12/2026">
           </div>
-          <input type="file" id="photo-input" accept="image/*" multiple style="display:none" onchange="handlePhotos(event)">
-          <div class="photo-grid" id="photo-grid"></div>
-          <div class="ai-panel" id="ai-panel">
-            <div class="ai-panel-title"><div class="ai-spinner"></div> AI đang phân tích...</div>
-            <div class="ai-fields" id="ai-fields"></div>
+          <div class="form-group">
+            <div class="form-label">Ngày sản xuất</div>
+            <input class="form-control" id="f-nsx-date" placeholder="vd: 06/2026">
           </div>
         </div>
         <div class="form-group">
-          <div class="note-box">
-            <div class="note-box-label">📝 Ghi chú survey</div>
-            <textarea class="form-control" id="f-notes" placeholder="Quan sát: giá biến động, KM, tình trạng hàng, lý do nhập lùi ngày..." style="border:none;background:transparent;padding:0;box-shadow:none;min-height:64px"></textarea>
+          <div class="form-label">Nhà phân phối tại VN</div>
+          <input class="form-control" id="f-nha-pp-vn" placeholder="Tên công ty phân phối tại Việt Nam">
+        </div>
+
+        <!-- NIP — bắt buộc theo luật VN -->
+        <hr style="border:none;border-top:1px solid var(--border);margin:6px 0 12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div class="form-label" style="margin:0">Thông tin dinh dưỡng (NIP)</div>
+          <span style="font-size:10px;background:#e0eaf5;color:var(--navy);padding:2px 7px;border-radius:10px;font-weight:700">Theo quy định VN</span>
+        </div>
+        <div style="background:var(--surface-2,#f8f9fb);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:10px">
+          <div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Bắt buộc — NĐ 43/2017 & TT 05/2019</div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <div class="form-label">Năng lượng (kcal) <span class="req">*</span></div>
+              <input class="form-control" id="f-kcal" type="number" inputmode="numeric" placeholder="85">
+            </div>
+            <div class="form-group">
+              <div class="form-label">Chất đạm / Protein (g) <span class="req">*</span></div>
+              <input class="form-control" id="f-protein" type="number" inputmode="decimal" placeholder="5.0">
+            </div>
           </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <div class="form-label">Chất béo tổng (g) <span class="req">*</span></div>
+              <input class="form-control" id="f-fat" type="number" inputmode="decimal" placeholder="2.0">
+            </div>
+            <div class="form-group">
+              <div class="form-label">Carbohydrate tổng (g) <span class="req">*</span></div>
+              <input class="form-control" id="f-carb" type="number" inputmode="decimal" placeholder="10.0">
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <div class="form-label">Đường / Sugar (g) <span class="req">*</span></div>
+              <input class="form-control" id="f-sugar" type="number" inputmode="decimal" placeholder="2.0">
+            </div>
+            <div class="form-group">
+              <div class="form-label">Natri / Sodium (mg) <span class="req">*</span></div>
+              <input class="form-control" id="f-natri" type="number" inputmode="numeric" placeholder="350">
+            </div>
+          </div>
+        </div>
+
+        <!-- NIP — tuỳ chọn nếu có trên nhãn -->
+        <div style="background:var(--surface-2,#f8f9fb);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px">
+          <div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Tuỳ chọn — nếu có ghi trên nhãn</div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <div class="form-label">Chất béo bão hoà (g)</div>
+              <input class="form-control" id="f-sat-fat" type="number" inputmode="decimal" placeholder="0.5">
+            </div>
+            <div class="form-group">
+              <div class="form-label">Chất xơ (g)</div>
+              <input class="form-control" id="f-fiber" type="number" inputmode="decimal" placeholder="3.0">
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="form-label">Vitamin & Khoáng chất khác</div>
+            <input class="form-control" id="f-vitamins" placeholder="vd: Canxi 120mg, Sắt 2mg, Vitamin C 15mg...">
+          </div>
+        </div>
+
+        <!-- Thành phần — 1 ô, giữ nguyên định dạng nhãn -->
+        <div class="form-group">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+            <div class="form-label" style="margin:0">Thành phần</div>
+            <span style="font-size:10px;color:var(--teal);font-weight:600">AI extract từ ảnh slot 2</span>
+          </div>
+          <textarea class="form-control" id="f-thanh-phan"
+            placeholder="Nhập đúng như ghi trên nhãn sản phẩm&#10;vd: Đậu trắng (45%), nước, bột cà chua (10%), đường, muối, tinh bột biến tính (E1412), gia vị, chất điều chỉnh độ acid (E330)..."
+            style="min-height:80px;font-size:13px;line-height:1.6"></textarea>
+          <div style="font-size:11px;color:var(--text-3);margin-top:4px">📌 Giữ nguyên định dạng & thứ tự như trên nhãn — AI sẽ tự extract khi chụp ảnh slot 2</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- S5: Ảnh bắt buộc (5 loại) -->
+    <div class="form-card">
+      <div class="form-card-header">
+        <div class="form-card-icon">📸</div>
+        <div class="form-card-title">Ảnh chụp <span class="req" style="font-size:10px;font-weight:600;background:var(--red);color:#fff;padding:2px 6px;border-radius:4px;margin-left:4px">BẮT BUỘC TẤT CẢ</span></div>
+      </div>
+      <div class="form-card-body">
+        <div class="form-group">
+          <div style="background:var(--teal-bg);border:1px solid #bae6fd;border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--teal);margin-bottom:14px">
+            📌 Chụp đủ 5 loại ảnh để AI có thể extract thông tin chính xác và đầy đủ nhất
+          </div>
+        </div>
+
+        <!-- Photo slot 1: Mặt trước -->
+        <div class="photo-slot" id="slot-1">
+          <div class="photo-slot-header">
+            <div class="photo-slot-num">1</div>
+            <div>
+              <div class="photo-slot-title">Mặt trước sản phẩm <span class="req">*</span></div>
+              <div class="photo-slot-sub">Tên SP, loại sốt, thương hiệu, logo rõ ràng</div>
+            </div>
+            <div class="photo-slot-status" id="status-1">⬜</div>
+          </div>
+          <div class="photo-slot-body" id="body-1">
+            <div class="photo-upload-zone" onclick="triggerSlotPhoto(1)">
+              <span style="font-size:28px">🏷️</span>
+              <div class="photo-upload-title">Chụp mặt trước</div>
+            </div>
+          </div>
+          <input type="file" id="photo-input-1" accept="image/*" capture="environment" style="display:none" onchange="handleSlotPhoto(event,1)">
+        </div>
+
+        <!-- Photo slot 2: Thành phần & NSX -->
+        <div class="photo-slot" id="slot-2">
+          <div class="photo-slot-header">
+            <div class="photo-slot-num">2</div>
+            <div>
+              <div class="photo-slot-title">Thành phần & Nhà sản xuất <span class="req">*</span></div>
+              <div class="photo-slot-sub">Ingredients, nhà máy SX, nhà phân phối VN</div>
+            </div>
+            <div class="photo-slot-status" id="status-2">⬜</div>
+          </div>
+          <div class="photo-slot-body" id="body-2">
+            <div class="photo-upload-zone" onclick="triggerSlotPhoto(2)">
+              <span style="font-size:28px">🏭</span>
+              <div class="photo-upload-title">Chụp thành phần & NSX</div>
+            </div>
+          </div>
+          <input type="file" id="photo-input-2" accept="image/*" capture="environment" style="display:none" onchange="handleSlotPhoto(event,2)">
+        </div>
+
+        <!-- Photo slot 3: NIP table -->
+        <div class="photo-slot" id="slot-3">
+          <div class="photo-slot-header">
+            <div class="photo-slot-num">3</div>
+            <div>
+              <div class="photo-slot-title">Bảng dinh dưỡng (NIP) <span class="req">*</span></div>
+              <div class="photo-slot-sub">Nutrition Information Panel đầy đủ</div>
+            </div>
+            <div class="photo-slot-status" id="status-3">⬜</div>
+          </div>
+          <div class="photo-slot-body" id="body-3">
+            <div class="photo-upload-zone" onclick="triggerSlotPhoto(3)">
+              <span style="font-size:28px">🔬</span>
+              <div class="photo-upload-title">Chụp bảng NIP</div>
+            </div>
+          </div>
+          <input type="file" id="photo-input-3" accept="image/*" capture="environment" style="display:none" onchange="handleSlotPhoto(event,3)">
+        </div>
+
+        <!-- Photo slot 4: Mã vạch / Coding -->
+        <div class="photo-slot" id="slot-4">
+          <div class="photo-slot-header">
+            <div class="photo-slot-num">4</div>
+            <div>
+              <div class="photo-slot-title">Mã vạch & Coding <span class="req">*</span></div>
+              <div class="photo-slot-sub">NSX, HSD, batch code, barcode rõ ràng</div>
+            </div>
+            <div class="photo-slot-status" id="status-4">⬜</div>
+          </div>
+          <div class="photo-slot-body" id="body-4">
+            <div class="photo-upload-zone" onclick="triggerSlotPhoto(4)">
+              <span style="font-size:28px">🔢</span>
+              <div class="photo-upload-title">Chụp mã vạch / coding</div>
+            </div>
+          </div>
+          <input type="file" id="photo-input-4" accept="image/*" capture="environment" style="display:none" onchange="handleSlotPhoto(event,4)">
+        </div>
+
+        <!-- Photo slot 5: Trọng lượng / Thể tích -->
+        <div class="photo-slot" id="slot-5">
+          <div class="photo-slot-header">
+            <div class="photo-slot-num">5</div>
+            <div>
+              <div class="photo-slot-title">Trọng lượng / Thể tích <span class="req">*</span></div>
+              <div class="photo-slot-sub">Net weight, dung tích, quy cách rõ ràng</div>
+            </div>
+            <div class="photo-slot-status" id="status-5">⬜</div>
+          </div>
+          <div class="photo-slot-body" id="body-5">
+            <div class="photo-upload-zone" onclick="triggerSlotPhoto(5)">
+              <span style="font-size:28px">⚖️</span>
+              <div class="photo-upload-title">Chụp trọng lượng / thể tích</div>
+            </div>
+          </div>
+          <input type="file" id="photo-input-5" accept="image/*" capture="environment" style="display:none" onchange="handleSlotPhoto(event,5)">
+        </div>
+
+        <!-- Progress indicator -->
+        <div id="photo-progress-bar" style="margin-top:14px">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-3);margin-bottom:5px">
+            <span>Tiến độ chụp ảnh</span>
+            <span id="photo-count">0/5 ảnh</span>
+          </div>
+          <div style="height:6px;background:var(--border);border-radius:4px;overflow:hidden">
+            <div id="photo-prog-fill" style="height:100%;width:0%;background:var(--teal);border-radius:4px;transition:width 0.3s"></div>
+          </div>
+        </div>
+
+        <!-- AI extract panel -->
+        <div class="ai-panel" id="ai-panel" style="margin-top:14px">
+          <div class="ai-panel-title"><div class="ai-spinner"></div> AI đang phân tích...</div>
+          <div class="ai-fields" id="ai-fields"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S6: Ghi chú -->
+    <div class="form-card">
+      <div class="form-card-header"><div class="form-card-icon">📝</div><div class="form-card-title">Ghi chú survey</div></div>
+      <div class="form-card-body">
+        <div class="note-box">
+          <div class="note-box-label">📝 Quan sát & ghi chú</div>
+          <textarea class="form-control" id="f-notes" placeholder="Quan sát: giá biến động, KM, tình trạng hàng, vị trí kệ, lý do nhập lùi ngày..." style="border:none;background:transparent;padding:0;box-shadow:none;min-height:72px"></textarea>
         </div>
       </div>
     </div>
@@ -780,6 +1002,33 @@ textarea.form-control{min-height:76px;resize:none;font-size:14px;line-height:1.5
   </div>
 
 </div><!-- /main-app -->
+
+<!-- MANAGER CHANNEL PICKER -->
+<div class="cal-overlay" id="mgr-channel-overlay" onclick="closeMgrChannel(event)">
+  <div class="cal-sheet" style="padding-bottom:20px">
+    <div class="cal-handle"></div>
+    <div style="padding:0 18px 14px;border-bottom:1px solid var(--border)">
+      <div style="font-size:15px;font-weight:800;color:var(--navy)">Chọn kênh survey</div>
+      <div style="font-size:12px;color:var(--text-3);margin-top:3px">Bạn muốn survey kênh nào?</div>
+    </div>
+    <div style="padding:16px 18px;display:flex;flex-direction:column;gap:10px">
+      <button onclick="selectMgrChannel('MT')" style="padding:16px;border:2px solid var(--border);border-radius:var(--radius);background:var(--surface);display:flex;align-items:center;gap:14px;font-family:inherit;cursor:pointer;text-align:left;transition:all 0.15s" onmousedown="this.style.borderColor='var(--navy)'">
+        <span style="font-size:28px">🏬</span>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--navy)">Modern Trade (MT)</div>
+          <div style="font-size:12px;color:var(--text-3);margin-top:2px">Siêu thị, hypermarket, minimart</div>
+        </div>
+      </button>
+      <button onclick="selectMgrChannel('GT')" style="padding:16px;border:2px solid var(--border);border-radius:var(--radius);background:var(--surface);display:flex;align-items:center;gap:14px;font-family:inherit;cursor:pointer;text-align:left;transition:all 0.15s" onmousedown="this.style.borderColor='var(--teal)'">
+        <span style="font-size:28px">🛒</span>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--teal)">General Trade (GT)</div>
+          <div style="font-size:12px;color:var(--text-3);margin-top:2px">Chợ, tạp hoá, cửa hàng tiện lợi</div>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- SUCCESS -->
 <div class="success-overlay" id="success-overlay">
@@ -974,7 +1223,11 @@ function cancelAuth() {
 
 function managerDoSurvey() {
   document.getElementById('manager-entry').classList.remove('open');
-  activateStaff(S.pendingManagerStaff, 'survey');
+  activateStaff(S.pendingManagerStaff, 'home');
+  // Manager cần chọn kênh — hiện channel picker
+  setTimeout(() => {
+    document.getElementById('mgr-channel-overlay').classList.add('open');
+  }, 200);
 }
 
 function managerDoDashboard() {
@@ -1020,6 +1273,7 @@ function activateStaff(staff, mode = 'home') {
   showPage(mode === 'dashboard' ? 'dashboard' : 'home');
 
   if (mode === 'dashboard') loadDashboard();
+  if (mode === 'survey') { resetForm(); showPage('survey'); }
 }
 
 function backToSelectStaff() {
@@ -1128,9 +1382,9 @@ function setChannel(ch, auto = false) {
   S.channel = ch;
   const isManager = S.currentStaff?.channel === 'Manager' || S.currentStaff?.role === 'Sales Manager';
 
-  // Show/hide channel toggle
+  // Show/hide channel toggle — Manager luôn thấy toggle
   const cgGroup = document.getElementById('channel-group');
-  cgGroup.style.display = (!auto && isManager) ? 'block' : (isManager ? 'block' : 'none');
+  cgGroup.style.display = isManager ? 'block' : 'none';
 
   // Style buttons
   document.querySelectorAll('#channel-seg .seg-btn').forEach((b,i) => {
@@ -1265,39 +1519,129 @@ function calPreset(offset) {
 }
 
 // ══════════════════════════════════════════
-// PHOTO & AI
+// PHOTO SLOTS — 5 loại ảnh bắt buộc
 // ══════════════════════════════════════════
-function triggerPhoto() { document.getElementById('photo-input').click(); }
-function handlePhotos(e) {
-  S.photos = [...S.photos, ...Array.from(e.target.files)].slice(0,5);
-  renderPhotos();
-  if (S.photos.length > 0) simulateAI();
+const PHOTO_SLOTS = {
+  1: { label: 'Mặt trước', icon: '🏷️', aiExtract: true },
+  2: { label: 'Thành phần & NSX', icon: '🏭', aiExtract: true },
+  3: { label: 'Bảng NIP', icon: '🔬', aiExtract: true },
+  4: { label: 'Mã vạch / Coding', icon: '🔢', aiExtract: true },
+  5: { label: 'Trọng lượng', icon: '⚖️', aiExtract: false },
+};
+
+function triggerSlotPhoto(slot) {
+  document.getElementById('photo-input-' + slot).click();
 }
-function renderPhotos() {
-  document.getElementById('photo-grid').innerHTML = S.photos.map((f,i) => `
-    <div class="photo-thumb"><img src="${URL.createObjectURL(f)}"><button class="photo-remove" onclick="removePhoto(${i})">×</button></div>`).join('');
+
+function handleSlotPhoto(event, slot) {
+  const file = event.target.files[0];
+  if (!file) return;
+  S.photos[slot] = file;
+  const url = URL.createObjectURL(file);
+
+  // Update slot UI
+  const slotEl = document.getElementById('slot-' + slot);
+  const bodyEl = document.getElementById('body-' + slot);
+  const statusEl = document.getElementById('status-' + slot);
+  slotEl.classList.add('done');
+  statusEl.textContent = '✅';
+  bodyEl.innerHTML = `
+    <img class="slot-preview" src="${url}" alt="${PHOTO_SLOTS[slot].label}">
+    <button class="slot-retake" onclick="triggerSlotPhoto(${slot})">🔄 Chụp lại</button>`;
+
+  updatePhotoProgress();
+
+  // AI extract cho slot 1 (mặt trước) và slot 2 (thành phần)
+  if (PHOTO_SLOTS[slot].aiExtract && (slot === 1 || slot === 2)) {
+    runAIExtract(file, slot);
+  }
+  // Clear file input để có thể chọn lại cùng file
+  event.target.value = '';
 }
-function removePhoto(i) { S.photos.splice(i,1); renderPhotos(); }
-function simulateAI() {
+
+function updatePhotoProgress() {
+  const count = Object.keys(S.photos).filter(k => S.photos[k]).length;
+  document.getElementById('photo-count').textContent = count + '/5 ảnh';
+  document.getElementById('photo-prog-fill').style.width = (count / 5 * 100) + '%';
+  document.getElementById('photo-prog-fill').style.background = count === 5 ? 'var(--green)' : 'var(--teal)';
+}
+
+function runAIExtract(file, slot) {
   const panel = document.getElementById('ai-panel');
+  const fields = document.getElementById('ai-fields');
   panel.classList.add('show');
-  document.querySelector('.ai-panel-title').innerHTML = '<div class="ai-spinner"></div> AI đang phân tích ảnh...';
-  document.getElementById('ai-fields').innerHTML = '';
+  document.querySelector('.ai-panel-title').innerHTML = `<div class="ai-spinner"></div> AI đang phân tích ảnh ${PHOTO_SLOTS[slot].label}...`;
+  fields.innerHTML = '';
+
+  // Simulate AI — trong production sẽ gọi Claude API thật
   setTimeout(() => {
-    document.querySelector('.ai-panel-title').textContent = '✓ Đã extract — kiểm tra & điều chỉnh nếu cần';
-    document.getElementById('ai-fields').innerHTML = `
-      <div class="ai-field"><div class="ai-field-label">Tên SP</div><div class="ai-field-value">Đậu sốt</div></div>
-      <div class="ai-field"><div class="ai-field-label">Thương hiệu</div><div class="ai-field-value">Ayam Brand</div></div>
-      <div class="ai-field"><div class="ai-field-label">Quy cách</div><div class="ai-field-value">425g</div></div>
-      <div class="ai-field"><div class="ai-field-label">Giá</div><div class="ai-field-value">38.500đ</div></div>`;
-    showToast('AI đọc xong — kiểm tra lại thông tin', 'success');
-  }, 2000);
+    document.querySelector('.ai-panel-title').textContent = '✓ AI extract xong — kiểm tra & điều chỉnh';
+    if (slot === 1) {
+      // Extract từ mặt trước
+      fields.innerHTML = `
+        <div class="ai-field"><div class="ai-field-label">Tên sản phẩm</div><div class="ai-field-value" id="ai-product-name">Đậu sốt cà chua</div></div>
+        <div class="ai-field"><div class="ai-field-label">Thương hiệu</div><div class="ai-field-value" id="ai-brand">Ayam Brand</div></div>
+        <div class="ai-field"><div class="ai-field-label">Trọng lượng</div><div class="ai-field-value" id="ai-weight">425g</div></div>
+        <div class="ai-field"><div class="ai-field-label">Xuất xứ</div><div class="ai-field-value" id="ai-origin">Việt Nam</div></div>`;
+    } else if (slot === 2) {
+      // Extract từ thành phần & NSX
+      fields.innerHTML = `
+        <div class="ai-field"><div class="ai-field-label">NSX / Nhà máy</div><div class="ai-field-value" id="ai-nsx">Denis G.M. Co., Ltd.</div></div>
+        <div class="ai-field"><div class="ai-field-label">NNK tại VN</div><div class="ai-field-value" id="ai-nnk">Denis G.M. Company Limited</div></div>`;
+      // Auto-fill ingredients field
+      const ingredEl = document.getElementById('f-thanh-phan');
+      if (ingredEl && !ingredEl.value) {
+        ingredEl.value = 'Đậu trắng (45%), nước, bột cà chua, đường, muối, gia vị...';
+      }
+    }
+    showToast('Slot ' + slot + ' — AI đọc xong', 'success');
+  }, 1800);
+}
+
+function resetPhotoSlots() {
+  S.photos = {};
+  for (let i = 1; i <= 5; i++) {
+    const slotEl = document.getElementById('slot-' + i);
+    const bodyEl = document.getElementById('body-' + i);
+    const statusEl = document.getElementById('status-' + i);
+    if (!slotEl) continue;
+    slotEl.classList.remove('done');
+    statusEl.textContent = '⬜';
+    const icons = ['','🏷️','🏭','🔬','🔢','⚖️'];
+    const labels = ['','Chụp mặt trước','Chụp thành phần & NSX','Chụp bảng NIP','Chụp mã vạch / coding','Chụp trọng lượng / thể tích'];
+    bodyEl.innerHTML = `<div class="photo-upload-zone" onclick="triggerSlotPhoto(${i})"><span style="font-size:28px">${icons[i]}</span><div class="photo-upload-title">${labels[i]}</div></div>`;
+    const inp = document.getElementById('photo-input-' + i);
+    if (inp) inp.value = '';
+  }
+  updatePhotoProgress();
+  document.getElementById('ai-panel').classList.remove('show');
+}
+
+// Manager channel picker
+function closeMgrChannel(e) {
+  if (e.target === document.getElementById('mgr-channel-overlay')) {
+    document.getElementById('mgr-channel-overlay').classList.remove('open');
+  }
+}
+function selectMgrChannel(ch) {
+  document.getElementById('mgr-channel-overlay').classList.remove('open');
+  resetForm();
+  setChannel(ch, false);
+  showPage('survey');
 }
 
 // ══════════════════════════════════════════
 // SUBMIT
 // ══════════════════════════════════════════
 async function submitSurvey() {
+  // Validate ảnh bắt buộc
+  const photoCount = Object.keys(S.photos).filter(k => S.photos[k]).length;
+  if (photoCount < 5) {
+    showToast(`Cần chụp đủ 5 loại ảnh (hiện có ${photoCount}/5)`, 'error');
+    // Scroll to photo section
+    document.getElementById('slot-1')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
   // Build outlet info
   let outletName = '', outletId = '';
   if (S.channel === 'MT') {
@@ -1349,6 +1693,7 @@ async function submitSurvey() {
   if (!price)    { showToast('Vui lòng nhập giá', 'error'); return; }
 
   const staffName = S.currentStaff.ten_hien_thi || S.currentStaff.display_name || S.currentStaff.ho_ten || '';
+  const photoCount = Object.keys(S.photos).filter(k => S.photos[k]).length;
   const payload = {
     action: 'submitSurvey',
     data: {
@@ -1374,6 +1719,24 @@ async function submitSurvey() {
       ghi_chu:           document.getElementById('f-notes').value,
       phuong_thuc_nhap:  S.photos.length > 0 ? 'ai_photo' : 'manual',
       link_anh:          '',
+      // Thông tin bổ sung sản phẩm
+      han_su_dung:       document.getElementById('f-hsd')?.value || '',
+      ngay_sx:           document.getElementById('f-nsx-date')?.value || '',
+      nha_phan_phoi_vn:  document.getElementById('f-nha-pp-vn')?.value || '',
+      // NIP — bắt buộc theo luật VN
+      nang_luong_kcal:   document.getElementById('f-kcal')?.value || '',
+      chat_dam_protein:  document.getElementById('f-protein')?.value || '',
+      chat_beo_tong:     document.getElementById('f-fat')?.value || '',
+      carbohydrate_tong: document.getElementById('f-carb')?.value || '',
+      duong_sugar:       document.getElementById('f-sugar')?.value || '',
+      natri_mg:          document.getElementById('f-natri')?.value || '',
+      // NIP — tuỳ chọn nếu có
+      chat_beo_bao_hoa:  document.getElementById('f-sat-fat')?.value || '',
+      chat_xo:           document.getElementById('f-fiber')?.value || '',
+      vitamin_khoang_chat: document.getElementById('f-vitamins')?.value || '',
+      // Thành phần — giữ nguyên định dạng nhãn
+      thanh_phan:        document.getElementById('f-thanh-phan')?.value || '',
+      so_anh_da_chup:    Object.keys(S.photos).filter(k => S.photos[k]).length,
       // internal refs
       _ma_nhan_vien:  S.currentStaff.ma_nhan_vien || S.currentStaff.staff_id || '',
       _ma_san_pham:   productId || '',
@@ -1423,9 +1786,8 @@ function newSurvey() { document.getElementById('success-overlay').classList.remo
 function resetForm() {
   if (S.currentStaff) document.getElementById('f-date').value = fmtDate(new Date(TODAY));
   S.selDate = new Date(TODAY);
-  S.photos = [];
-  document.getElementById('photo-grid').innerHTML = '';
-  document.getElementById('ai-panel').classList.remove('show');
+  S.photos = {};
+  resetPhotoSlots();
   document.getElementById('backdated-note').classList.remove('show');
   document.getElementById('f-own-product').value = '';
   document.getElementById('f-own-type').value = '';
@@ -1442,6 +1804,13 @@ function resetForm() {
   document.getElementById('f-price').value = '';
   document.getElementById('f-shelf').value = '';
   document.getElementById('f-notes').value = '';
+  // Clear new fields
+  ['f-hsd','f-nsx-date','f-nha-pp-vn',
+   'f-kcal','f-protein','f-fat','f-carb','f-sugar','f-natri',
+   'f-sat-fat','f-fiber','f-vitamins','f-thanh-phan'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
   document.getElementById('f-mt-outlet').value = '';
   document.getElementById('f-mt-custom').value = '';
   hideMTCustom();
