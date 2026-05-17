@@ -668,7 +668,7 @@ textarea.form-control{min-height:76px;resize:none;font-size:14px;line-height:1.5
         <!-- Đơn vị tính -->
         <div class="form-group">
           <div class="form-label">Đơn vị tính giá <span class="req">*</span></div>
-          <div class="seg-group">
+          <div class="seg-group" id="price-unit-seg">
             <button class="seg-btn active-navy" onclick="setPriceUnit('lon')">lon</button>
             <button class="seg-btn" onclick="setPriceUnit('chai')">chai</button>
             <button class="seg-btn" onclick="setPriceUnit('bịch')">bịch</button>
@@ -793,12 +793,12 @@ textarea.form-control{min-height:76px;resize:none;font-size:14px;line-height:1.5
     <div class="form-card">
       <div class="form-card-header">
         <div class="form-card-icon">📸</div>
-        <div class="form-card-title">Ảnh chụp <span class="req" style="font-size:10px;font-weight:600;background:var(--red);color:#fff;padding:2px 6px;border-radius:4px;margin-left:4px">BẮT BUỘC TẤT CẢ</span></div>
+        <div class="form-card-title">Ảnh chụp <span class="req" style="font-size:10px;font-weight:600;background:var(--red);color:#fff;padding:2px 6px;border-radius:4px;margin-left:4px">4 BẮT BUỘC</span></div>
       </div>
       <div class="form-card-body">
         <div class="form-group">
           <div style="background:var(--teal-bg);border:1px solid #bae6fd;border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--teal);margin-bottom:14px">
-            📌 Chụp đủ 5 loại ảnh để AI có thể extract thông tin chính xác và đầy đủ nhất
+            📌 Chụp đủ 4 ảnh bắt buộc để AI extract thông tin — mã vạch & ảnh bổ sung là tuỳ chọn
           </div>
         </div>
 
@@ -859,12 +859,12 @@ textarea.form-control{min-height:76px;resize:none;font-size:14px;line-height:1.5
           <input type="file" id="photo-input-3" accept="image/*" capture="environment" style="display:none" onchange="handleSlotPhoto(event,3)">
         </div>
 
-        <!-- Photo slot 4: Mã vạch / Coding -->
+        <!-- Photo slot 4: Mã vạch / Coding — OPTIONAL -->
         <div class="photo-slot" id="slot-4">
           <div class="photo-slot-header">
-            <div class="photo-slot-num">4</div>
+            <div class="photo-slot-num" style="background:var(--text-3)">4</div>
             <div>
-              <div class="photo-slot-title">Mã vạch & Coding <span class="req">*</span></div>
+              <div class="photo-slot-title">Mã vạch & Coding <span style="font-size:10px;color:var(--text-3);font-weight:500">(Tuỳ chọn)</span></div>
               <div class="photo-slot-sub">NSX, HSD, batch code, barcode rõ ràng</div>
             </div>
             <div class="photo-slot-status" id="status-4">⬜</div>
@@ -900,11 +900,30 @@ textarea.form-control{min-height:76px;resize:none;font-size:14px;line-height:1.5
         <!-- Progress indicator -->
         <div id="photo-progress-bar" style="margin-top:14px">
           <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-3);margin-bottom:5px">
-            <span>Tiến độ chụp ảnh</span>
-            <span id="photo-count">0/5 ảnh</span>
+            <span>Tiến độ ảnh bắt buộc</span>
+            <span id="photo-count">0/4 ảnh</span>
           </div>
           <div style="height:6px;background:var(--border);border-radius:4px;overflow:hidden">
             <div id="photo-prog-fill" style="height:100%;width:0%;background:var(--teal);border-radius:4px;transition:width 0.3s"></div>
+          </div>
+        </div>
+
+        <!-- Photo slot extra: Ảnh bổ sung (tùy chọn, nhiều ảnh) -->
+        <div style="margin-top:16px;border:1.5px dashed var(--border);border-radius:var(--radius-sm);overflow:hidden" id="slot-extra">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface-2)">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--text-3);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">+</div>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--text)">Ảnh bổ sung <span style="font-size:10px;color:var(--text-3);font-weight:500">(Tuỳ chọn)</span></div>
+              <div style="font-size:10px;color:var(--text-3);margin-top:1px">Góc khác, khuyến mãi, tình trạng kệ hàng...</div>
+            </div>
+          </div>
+          <div style="padding:10px 12px">
+            <div id="extra-photos-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px"></div>
+            <div class="photo-upload-zone" onclick="triggerExtraPhoto()" style="border-style:dashed">
+              <span style="font-size:22px">➕</span>
+              <div class="photo-upload-title" style="font-size:12px">Thêm ảnh bổ sung</div>
+            </div>
+            <input type="file" id="photo-input-extra" accept="image/*" capture="environment" style="display:none" onchange="handleExtraPhoto(event)" multiple>
           </div>
         </div>
 
@@ -1088,6 +1107,7 @@ const S = {
   productType: 'own',
   gtType: '',
   photos: [],
+  extraPhotos: [],
 };
 
 // ══════════════════════════════════════════
@@ -1274,8 +1294,10 @@ function activateStaff(staff, mode = 'home') {
   document.getElementById('select-staff-screen').style.display = 'none';
   document.getElementById('main-app').style.display = 'block';
 
-  // Update topbar
-  document.getElementById('topbar-sub').textContent = staff.display_name || staff.full_name;
+  // Update topbar — hiển thị initials (chữ cái đầu mỗi từ)
+  const _topbarName = staff.ten_hien_thi || staff.display_name || staff.ho_ten || staff.full_name || '?';
+  const _initials = _topbarName.split(' ').map(w => w.charAt(0).toUpperCase()).join('').slice(0, 3);
+  document.getElementById('topbar-sub').textContent = _initials + ' · ' + _topbarName.split(' ').pop();
 
   // Update home
   document.getElementById('home-name').textContent = staff.ten_hien_thi || staff.display_name || staff.ho_ten || staff.full_name || '?';
@@ -1493,9 +1515,8 @@ function setPriceType(type) {
 
 function setPriceUnit(unit) {
   S.priceUnit = unit;
-  document.querySelectorAll('#price-type-seg').forEach(() => {});
-  // Style all unit buttons
-  document.querySelectorAll('.seg-group')[2]?.querySelectorAll('.seg-btn').forEach(b => {
+  // Tìm đúng nhóm nút đơn vị tính giá theo id container
+  document.querySelectorAll('#price-unit-seg .seg-btn').forEach(b => {
     b.className = 'seg-btn' + (b.textContent.trim() === unit ? ' active-navy' : '');
   });
 }
@@ -1557,11 +1578,11 @@ function calPreset(offset) {
 // PHOTO SLOTS — 5 loại ảnh bắt buộc
 // ══════════════════════════════════════════
 const PHOTO_SLOTS = {
-  1: { label: 'Mặt trước', icon: '🏷️', aiExtract: true },
-  2: { label: 'Thành phần & NSX', icon: '🏭', aiExtract: true },
-  3: { label: 'Bảng NIP', icon: '🔬', aiExtract: true },
-  4: { label: 'Mã vạch / Coding', icon: '🔢', aiExtract: true },
-  5: { label: 'Trọng lượng', icon: '⚖️', aiExtract: false },
+  1: { label: 'Mặt trước', icon: '🏷️', aiExtract: true, required: true },
+  2: { label: 'Thành phần & NSX', icon: '🏭', aiExtract: true, required: true },
+  3: { label: 'Bảng NIP', icon: '🔬', aiExtract: true, required: true },
+  4: { label: 'Mã vạch / Coding', icon: '🔢', aiExtract: false, required: false },
+  5: { label: 'Trọng lượng', icon: '⚖️', aiExtract: false, required: true },
 };
 
 function triggerSlotPhoto(slot) {
@@ -1595,10 +1616,41 @@ function handleSlotPhoto(event, slot) {
 }
 
 function updatePhotoProgress() {
-  const count = Object.keys(S.photos).filter(k => S.photos[k]).length;
-  document.getElementById('photo-count').textContent = count + '/5 ảnh';
-  document.getElementById('photo-prog-fill').style.width = (count / 5 * 100) + '%';
-  document.getElementById('photo-prog-fill').style.background = count === 5 ? 'var(--green)' : 'var(--teal)';
+  const REQUIRED_SLOTS = [1,2,3,5];
+  const count = REQUIRED_SLOTS.filter(k => S.photos[k]).length;
+  document.getElementById('photo-count').textContent = count + '/4 ảnh';
+  document.getElementById('photo-prog-fill').style.width = (count / 4 * 100) + '%';
+  document.getElementById('photo-prog-fill').style.background = count === 4 ? 'var(--green)' : 'var(--teal)';
+}
+
+function triggerExtraPhoto() {
+  document.getElementById('photo-input-extra').click();
+}
+
+function handleExtraPhoto(event) {
+  const files = Array.from(event.target.files);
+  if (!files.length) return;
+  if (!S.extraPhotos) S.extraPhotos = [];
+  files.forEach(file => {
+    S.extraPhotos.push(file);
+    const url = URL.createObjectURL(file);
+    const idx = S.extraPhotos.length;
+    const grid = document.getElementById('extra-photos-grid');
+    const div = document.createElement('div');
+    div.style.cssText = 'position:relative;aspect-ratio:1;border-radius:var(--radius-sm);overflow:hidden;border:1.5px solid var(--border)';
+    div.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover">
+      <button onclick="removeExtraPhoto(${idx-1})" style="position:absolute;top:4px;right:4px;width:20px;height:20px;background:rgba(0,0,0,0.6);border-radius:50%;border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>`;
+    div.id = 'extra-photo-' + (idx-1);
+    grid.appendChild(div);
+  });
+  event.target.value = '';
+  showToast(`Đã thêm ${files.length} ảnh bổ sung`, 'success');
+}
+
+function removeExtraPhoto(idx) {
+  if (S.extraPhotos) S.extraPhotos[idx] = null;
+  const el = document.getElementById('extra-photo-' + idx);
+  if (el) el.remove();
 }
 
 function runAIExtract(file, slot) {
@@ -1635,6 +1687,7 @@ function runAIExtract(file, slot) {
 
 function resetPhotoSlots() {
   S.photos = {};
+  S.extraPhotos = [];
   for (let i = 1; i <= 5; i++) {
     const slotEl = document.getElementById('slot-' + i);
     const bodyEl = document.getElementById('body-' + i);
@@ -1648,6 +1701,11 @@ function resetPhotoSlots() {
     const inp = document.getElementById('photo-input-' + i);
     if (inp) inp.value = '';
   }
+  // Clear extra photos
+  const extraGrid = document.getElementById('extra-photos-grid');
+  if (extraGrid) extraGrid.innerHTML = '';
+  const extraInput = document.getElementById('photo-input-extra');
+  if (extraInput) extraInput.value = '';
   updatePhotoProgress();
   document.getElementById('ai-panel').classList.remove('show');
 }
@@ -1669,12 +1727,12 @@ function selectMgrChannel(ch) {
 // SUBMIT
 // ══════════════════════════════════════════
 async function submitSurvey() {
-  // Validate ảnh bắt buộc
-  const photoCount = Object.keys(S.photos).filter(k => S.photos[k]).length;
-  if (photoCount < 5) {
-    showToast(`Cần chụp đủ 5 loại ảnh (hiện có ${photoCount}/5)`, 'error');
-    // Scroll to photo section
-    document.getElementById('slot-1')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // Validate ảnh bắt buộc (slot 1,2,3,5 — slot 4 mã vạch là tuỳ chọn)
+  const REQUIRED_SLOTS = [1,2,3,5];
+  const missingSlots = REQUIRED_SLOTS.filter(k => !S.photos[k]);
+  if (missingSlots.length) {
+    showToast(`Cần chụp thêm ${missingSlots.length} ảnh bắt buộc (slot ${missingSlots.join(', ')})`, 'error');
+    document.getElementById('slot-' + missingSlots[0])?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
   // Build outlet info
@@ -1771,6 +1829,7 @@ async function submitSurvey() {
       // Thành phần — giữ nguyên định dạng nhãn
       thanh_phan:        document.getElementById('f-thanh-phan')?.value || '',
       so_anh_da_chup:    Object.keys(S.photos).filter(k => S.photos[k]).length,
+      so_anh_bo_sung:    (S.extraPhotos || []).filter(Boolean).length,
       // internal refs
       _ma_nhan_vien:  S.currentStaff.ma_nhan_vien || S.currentStaff.staff_id || '',
       _ma_san_pham:   productId || '',
@@ -1960,31 +2019,66 @@ function renderRecentSurveys() {
 // DASHBOARD (Manager)
 // ══════════════════════════════════════════
 async function loadDashboard() {
+  const dashList = document.getElementById('dash-recent-list');
+  const dateLabel = document.getElementById('dash-date-label');
+  dateLabel.textContent = 'Đang tải dữ liệu...';
+  dashList.innerHTML = '<div class="empty-state" style="padding:20px"><div class="empty-icon">⏳</div><div class="empty-title">Đang tải...</div></div>';
+
   try {
-    const res = await fetch(API + '?action=getDashboard');
+    // Fetch all surveys từ Google Sheet (không filter theo staff)
+    const res = await fetch(API + '?action=getDashboard&ts=' + Date.now());
     const data = await res.json();
+    console.log('[Dashboard] API response:', data);
+
     const todayStr = toYMD(new Date());
     const weekAgo = new Date(TODAY); weekAgo.setDate(weekAgo.getDate()-7);
-    document.getElementById('ds-today').textContent = S.surveys.filter(s=>s.survey_date===todayStr).length;
-    document.getElementById('ds-week').textContent = S.surveys.filter(s=>new Date(s.survey_date)>=weekAgo).length;
-    document.getElementById('ds-alerts').textContent = data.unread_alerts || 0;
-    document.getElementById('ds-outlets').textContent = data.today_outlet_count || 0;
-    document.getElementById('dash-date-label').textContent = fmtDate(new Date()) + ' · Toàn team';
 
-    const dashList = document.getElementById('dash-recent-list');
-    const recent = S.surveys.slice(0,8);
-    if (!recent.length) { dashList.innerHTML = '<div class="empty-state" style="padding:20px"><div class="empty-icon">📊</div><div class="empty-title">Chưa có dữ liệu</div></div>'; return; }
-    dashList.innerHTML = recent.map(s => `
-      <div class="survey-item">
-        <div class="survey-dot ${s.product_category==='own_brand'?'own':'comp'}"></div>
-        <div class="survey-info">
-          <div class="survey-name">${s.product_name}${s.product_type?' · '+s.product_type:''}</div>
-          <div class="survey-meta">${s.staff_id||''} · ${s.outlet_name||s.channel} · ${s.survey_date}</div>
-        </div>
-        <div class="survey-price">${Number(s.price).toLocaleString('vi-VN')}đ</div>
-      </div>`).join('');
+    // Lấy all_surveys từ API nếu có, fallback về local
+    const allSurveys = data.all_surveys || data.surveys || S.surveys;
+
+    const todayCount = allSurveys.filter(s => (s.ngay_survey||s.survey_date) === todayStr).length;
+    const weekCount  = allSurveys.filter(s => new Date(s.ngay_survey||s.survey_date) >= weekAgo).length;
+
+    document.getElementById('ds-today').textContent    = todayCount;
+    document.getElementById('ds-week').textContent     = weekCount;
+    document.getElementById('ds-alerts').textContent   = data.unread_alerts || 0;
+    document.getElementById('ds-outlets').textContent  = data.today_outlet_count || new Set(allSurveys.filter(s=>(s.ngay_survey||s.survey_date)===todayStr).map(s=>s.ten_diem_ban||s.outlet_name)).size;
+    dateLabel.textContent = fmtDate(new Date()) + ' · Toàn team (' + allSurveys.length + ' survey)';
+
+    const recent = allSurveys.slice(0, 10);
+    if (!recent.length) {
+      dashList.innerHTML = '<div class="empty-state" style="padding:20px"><div class="empty-icon">📊</div><div class="empty-title">Chưa có dữ liệu survey</div><div class="empty-sub">Kiểm tra kết nối Google Sheets</div></div>';
+      return;
+    }
+    dashList.innerHTML = recent.map(s => {
+      const isOwn = (s.phan_loai||s.product_category) === 'own_brand';
+      const sp    = s.ten_san_pham || s.product_name || '—';
+      const lt    = s.loai_san_pham || s.product_type || '';
+      const staff = s.ten_nhan_vien || s.staff_name || s.staff_id || '—';
+      const kenh  = s.kenh || s.channel || '—';
+      const diem  = s.ten_diem_ban || s.outlet_name || kenh;
+      const ngay  = s.ngay_survey || s.survey_date || '—';
+      const gia   = s.gia || s.price || 0;
+      return `
+        <div class="survey-item">
+          <div class="survey-dot ${isOwn?'own':'comp'}"></div>
+          <div class="survey-info">
+            <div class="survey-name">${sp}${lt?' · '+lt:''}</div>
+            <div class="survey-meta">${staff} · ${diem} · ${ngay}</div>
+          </div>
+          <div class="survey-price">${Number(gia).toLocaleString('vi-VN')}đ</div>
+        </div>`;
+    }).join('');
+
   } catch(e) {
-    document.getElementById('dash-date-label').textContent = 'Không thể tải dữ liệu';
+    console.error('[Dashboard] Error:', e);
+    dateLabel.textContent = '⚠️ Không thể tải dữ liệu';
+    dashList.innerHTML = `<div class="empty-state" style="padding:20px">
+      <div class="empty-icon">❌</div>
+      <div class="empty-title">Lỗi kết nối API</div>
+      <div class="empty-sub" style="font-size:10px;font-family:monospace;word-break:break-all;margin-top:6px">${e.message}</div>
+      <button onclick="loadDashboard()" style="margin-top:12px;padding:8px 16px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer">🔄 Thử lại</button>
+    </div>`;
   }
 }
 
