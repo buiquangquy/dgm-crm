@@ -1072,7 +1072,7 @@ function renderTracker(list) {
       <td>${r.ten_san_pham||'—'}</td>
       <td>${r.gia_dgm_thong_bao ? Number(r.gia_dgm_thong_bao).toLocaleString('vi')+'đ' : '—'}</td>
       <td style="font-size:12px;">${r.ngay_dgm_ap_dung||'—'}</td>
-      <td style="font-size:12px;">${r.ngay_chain_ap_dung||<span style="color:#9ca3af;">Chưa nhập</span>}</td>
+      <td style="font-size:12px;">${r.ngay_chain_ap_dung||'<span style="color:#9ca3af;">Chưa nhập</span>'}</td>
       <td style="font-size:12px;">${lagTB}</td>
       <td style="font-weight:700;color:var(--green);">${r.gia_ntd_thuc_te ? Number(r.gia_ntd_thuc_te).toLocaleString('vi')+'đ' : '—'}</td>
       <td style="font-size:12px;">${r.ngay_survey_xac_nhan||'—'}</td>
