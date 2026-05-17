@@ -605,8 +605,22 @@ input[type=file] { display: none; }
 <script>
 // ════════════════════════════════════════════
 // CONFIG — CẬP NHẬT URL API TẠI ĐÂY
+// Lấy URL từ: Apps Script → Deploy → Manage Deployments → URL Web App
 // ════════════════════════════════════════════
-const API = 'https://script.google.com/macros/s/AKfycbzPJXO0mmQr2Z-zRWzBkG_0cNk4q8fMsRWlVJ8L3R5EizfCc9_wqgMTlALCjPxGNfXb/exec';
+const API = 'https://script.google.com/macros/s/AKfycbzZDyH8vhEr2hFvyQEOng3KBoK5I3b9hx0eBOVSi6tdoQLjVw1eSMOOXtuodvnHVYE/exec';
+
+// Kiểm tra URL hợp lệ
+if (!API || API === 'PASTE_YOUR_APPS_SCRIPT_URL_HERE' || !API.includes('script.google.com')) {
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('staff-container').innerHTML = `
+      <div class="error-box">
+        ⚠️ <strong>Chưa cấu hình URL AppScript</strong><br>
+        <small>Mở file survey.html → tìm dòng <code>const API = ...</code> → thay bằng URL Web App từ Google Apps Script</small>
+        <br><br>
+        <small>Vào Apps Script → Deploy → Manage Deployments → copy URL</small>
+      </div>`;
+  });
+}
 
 // ════════════════════════════════════════════
 // STATE
@@ -648,31 +662,28 @@ async function apiFetch(params, retries = 2) {
   for (let i = 0; i <= retries; i++) {
     try {
       const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 15000);
-      const res = await fetch(url, {
-        method: 'GET',
-        signal: ctrl.signal,
-        redirect: 'follow',
-      });
+      const timer = setTimeout(() => ctrl.abort(), 20000);
+      // Google Apps Script: KHÔNG dùng redirect:'follow' hay custom headers
+      // Chỉ simple GET, browser tự follow redirect — CORS mới hoạt động
+      const res = await fetch(url, { signal: ctrl.signal });
       clearTimeout(timer);
       const text = await res.text();
-      // Guard: if response is HTML (redirect page), throw
       if (text.trim().startsWith('<')) {
-        throw new Error('API returned HTML — URL có thể đã hết hạn. Cần redeploy AppScript.');
+        throw new Error('API trả về HTML — URL Apps Script có thể đã hết hạn. Cần redeploy và cập nhật URL mới.');
       }
       return JSON.parse(text);
     } catch(e) {
       if (i === retries) throw e;
-      await new Promise(r => setTimeout(r, 1500));
+      await new Promise(r => setTimeout(r, 2000));
     }
   }
 }
 
 async function apiPost(body) {
+  // Google Apps Script POST: KHÔNG set Content-Type header (sẽ trigger preflight CORS)
   const res = await fetch(API, {
     method: 'POST',
     body: JSON.stringify(body),
-    redirect: 'follow',
   });
   const text = await res.text();
   if (text.trim().startsWith('<')) throw new Error('API returned HTML — cần redeploy AppScript');

@@ -511,8 +511,9 @@ input:focus, select:focus { border-color: var(--navy); }
 <script>
 // ════════════════════════════════════════════
 // CONFIG
+// Lấy URL từ: Apps Script → Deploy → Manage Deployments → URL Web App
 // ════════════════════════════════════════════
-const API = 'https://script.google.com/macros/s/AKfycbzPJXO0mmQr2Z-zRWzBkG_0cNk4q8fMsRWlVJ8L3R5EizfCc9_wqgMTlALCjPxGNfXb/exec';
+const API = 'https://script.google.com/macros/s/AKfycbzZDyH8vhEr2hFvyQEOng3KBoK5I3b9hx0eBOVSi6tdoQLjVw1eSMOOXtuodvnHVYE/exec';
 const OWN_BRANDS = ['AB','AN','DU'];
 
 // ════════════════════════════════════════════
@@ -548,10 +549,11 @@ async function apiFetch(params) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 20000);
   try {
-    const res  = await fetch(url, { redirect:'follow', signal: ctrl.signal });
+    // Google Apps Script: KHÔNG dùng redirect:'follow' — CORS sẽ bị block
+    const res  = await fetch(url, { signal: ctrl.signal });
     const text = await res.text();
     clearTimeout(timer);
-    if (text.trim().startsWith('<')) throw new Error('API returned HTML — cần redeploy AppScript');
+    if (text.trim().startsWith('<')) throw new Error('API returned HTML — cần redeploy AppScript và cập nhật URL mới');
     return JSON.parse(text);
   } catch(e) {
     clearTimeout(timer);
@@ -560,7 +562,8 @@ async function apiFetch(params) {
 }
 
 async function apiPost(body) {
-  const res = await fetch(API, { method:'POST', body:JSON.stringify(body), redirect:'follow' });
+  // KHÔNG set Content-Type header — sẽ trigger CORS preflight bị block
+  const res = await fetch(API, { method:'POST', body:JSON.stringify(body) });
   const text = await res.text();
   if (text.trim().startsWith('<')) throw new Error('API error');
   return JSON.parse(text);
