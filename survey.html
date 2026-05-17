@@ -6,7 +6,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>DGM Survey v9</title>
+<title>DGM Survey v10</title>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -691,10 +691,16 @@ textarea.form-control{min-height:76px;resize:none;font-size:14px;line-height:1.5
           </div>
         </div>
 
-        <!-- Vị trí kệ -->
-        <div class="form-group">
-          <div class="form-label">Vị trí kệ</div>
-          <input class="form-control" id="f-shelf" placeholder="Kệ số 3, tầm mắt, đầu dãy...">
+        <!-- Vị trí kệ + Facing -->
+        <div class="form-row-2">
+          <div class="form-group">
+            <div class="form-label">Vị trí kệ</div>
+            <input class="form-control" id="f-shelf" placeholder="Kệ số 3, tầm mắt...">
+          </div>
+          <div class="form-group">
+            <div class="form-label">Facing <span class="hint">— số lon/gói</span></div>
+            <input class="form-control" id="f-facing" type="number" inputmode="numeric" placeholder="vd: 6">
+          </div>
         </div>
 
       </div>
@@ -865,42 +871,23 @@ textarea.form-control{min-height:76px;resize:none;font-size:14px;line-height:1.5
           <input type="file" id="photo-input-3" accept="image/*" capture="environment" style="display:none" onchange="handleSlotPhoto(event,3)">
         </div>
 
-        <!-- Photo slot 4: Mã vạch / Coding — OPTIONAL -->
+        <!-- Photo slot 4: Trọng lượng / Thể tích -->
         <div class="photo-slot" id="slot-4">
           <div class="photo-slot-header">
-            <div class="photo-slot-num" style="background:var(--text-3)">4</div>
+            <div class="photo-slot-num">4</div>
             <div>
-              <div class="photo-slot-title">Mã vạch & Coding <span style="font-size:10px;color:var(--text-3);font-weight:500">(Tuỳ chọn)</span></div>
-              <div class="photo-slot-sub">NSX, HSD, batch code, barcode rõ ràng</div>
+              <div class="photo-slot-title">Trọng lượng / Thể tích <span class="req">*</span></div>
+              <div class="photo-slot-sub">Net weight, dung tích, quy cách rõ ràng</div>
             </div>
             <div class="photo-slot-status" id="status-4">⬜</div>
           </div>
           <div class="photo-slot-body" id="body-4">
             <div class="photo-upload-zone" onclick="triggerSlotPhoto(4)">
-              <span style="font-size:28px">🔢</span>
-              <div class="photo-upload-title">Chụp mã vạch / coding</div>
-            </div>
-          </div>
-          <input type="file" id="photo-input-4" accept="image/*" capture="environment" style="display:none" onchange="handleSlotPhoto(event,4)">
-        </div>
-
-        <!-- Photo slot 5: Trọng lượng / Thể tích -->
-        <div class="photo-slot" id="slot-5">
-          <div class="photo-slot-header">
-            <div class="photo-slot-num">5</div>
-            <div>
-              <div class="photo-slot-title">Trọng lượng / Thể tích <span class="req">*</span></div>
-              <div class="photo-slot-sub">Net weight, dung tích, quy cách rõ ràng</div>
-            </div>
-            <div class="photo-slot-status" id="status-5">⬜</div>
-          </div>
-          <div class="photo-slot-body" id="body-5">
-            <div class="photo-upload-zone" onclick="triggerSlotPhoto(5)">
               <span style="font-size:28px">⚖️</span>
               <div class="photo-upload-title">Chụp trọng lượng / thể tích</div>
             </div>
           </div>
-          <input type="file" id="photo-input-5" accept="image/*" capture="environment" style="display:none" onchange="handleSlotPhoto(event,5)">
+          <input type="file" id="photo-input-4" accept="image/*" capture="environment" style="display:none" onchange="handleSlotPhoto(event,4)">
         </div>
 
         <!-- Progress indicator -->
@@ -967,6 +954,7 @@ textarea.form-control{min-height:76px;resize:none;font-size:14px;line-height:1.5
       <button class="filter-chip" onclick="filterHistory('GT',this)">GT</button>
       <button class="filter-chip" onclick="filterHistory('own',this)">Ayam</button>
       <button class="filter-chip" onclick="filterHistory('comp',this)">Đối thủ</button>
+      <button class="filter-chip" onclick="filterHistory('changed',this)">⚡ Biến động</button>
     </div>
     <div class="history-list" id="history-list">
       <div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">Chưa có dữ liệu</div><div class="empty-sub">Submit survey sẽ hiện ở đây</div></div>
@@ -976,15 +964,92 @@ textarea.form-control{min-height:76px;resize:none;font-size:14px;line-height:1.5
   <!-- ════ DASHBOARD (Manager only) ════ -->
   <div id="pg-dashboard" class="page">
     <div class="dash-header">
-      <div class="dash-title">📊 Dashboard</div>
+      <div class="dash-title">📊 Market Intelligence</div>
       <div class="dash-sub" id="dash-date-label">Đang tải...</div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button onclick="loadDashboard()" style="padding:6px 14px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:20px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🔄 Làm mới</button>
+        <button onclick="showMilestonePriceModal()" style="padding:6px 14px;background:var(--red);border:none;border-radius:20px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">✕ Nhập mốc tăng giá</button>
+      </div>
     </div>
+
+    <!-- KPI strip -->
     <div class="dash-stats">
       <div class="dash-stat"><div class="dash-stat-bar" style="background:var(--red)"></div><div class="dash-stat-num red" id="ds-today">0</div><div class="dash-stat-lbl">Survey hôm nay</div></div>
       <div class="dash-stat"><div class="dash-stat-bar" style="background:var(--navy)"></div><div class="dash-stat-num" id="ds-week">0</div><div class="dash-stat-lbl">Tuần này</div></div>
-      <div class="dash-stat"><div class="dash-stat-bar" style="background:var(--orange)"></div><div class="dash-stat-num" id="ds-alerts">0</div><div class="dash-stat-lbl">Cảnh báo mới</div></div>
       <div class="dash-stat"><div class="dash-stat-bar" style="background:var(--teal)"></div><div class="dash-stat-num" id="ds-outlets">0</div><div class="dash-stat-lbl">Điểm bán survey</div></div>
+      <div class="dash-stat"><div class="dash-stat-bar" style="background:var(--orange)"></div><div class="dash-stat-num" id="ds-alerts">0</div><div class="dash-stat-lbl">Cảnh báo</div></div>
     </div>
+
+    <!-- SKU Overview -->
+    <div class="section">
+      <div class="section-title">Danh mục sản phẩm trong survey</div>
+      <div style="background:var(--surface);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div style="background:var(--red-bg);border-radius:var(--radius-sm);padding:12px;text-align:center">
+            <div style="font-size:26px;font-weight:800;color:var(--red);font-family:'JetBrains Mono',monospace" id="ds-own-sku">—</div>
+            <div style="font-size:11px;color:var(--text-2);font-weight:600;margin-top:2px">🔴 Ayam Brand SKU</div>
+          </div>
+          <div style="background:var(--teal-bg);border-radius:var(--radius-sm);padding:12px;text-align:center">
+            <div style="font-size:26px;font-weight:800;color:var(--teal);font-family:'JetBrains Mono',monospace" id="ds-comp-sku">—</div>
+            <div style="font-size:11px;color:var(--text-2);font-weight:600;margin-top:2px">🔵 Đối thủ SKU</div>
+          </div>
+        </div>
+        <div id="ds-brand-list" style="font-size:11px;color:var(--text-3)">Đang tải...</div>
+      </div>
+    </div>
+
+    <!-- Price Positioning -->
+    <div class="section">
+      <div class="section-title">Positioning giá — phân khúc thị trường</div>
+      <div style="background:var(--surface);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)" id="ds-positioning">
+        <div style="text-align:center;padding:20px;color:var(--text-3);font-size:13px">⏳ Đang tải...</div>
+      </div>
+    </div>
+
+    <!-- Top contributors -->
+    <div class="section">
+      <div class="section-title">Đóng góp survey — toàn team</div>
+      <div id="ds-contributors" style="background:var(--surface);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)">
+        <div style="text-align:center;padding:16px;color:var(--text-3);font-size:13px">⏳ Đang tải...</div>
+      </div>
+    </div>
+
+    <!-- Outlets có sản phẩm DGM -->
+    <div class="section">
+      <div class="section-title">Khách hàng đang có sản phẩm DGM</div>
+      <div id="ds-outlets-list" style="background:var(--surface);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)">
+        <div style="text-align:center;padding:16px;color:var(--text-3);font-size:13px">⏳ Đang tải...</div>
+      </div>
+    </div>
+
+    <!-- Biến động giá gần nhất -->
+    <div class="section">
+      <div class="section-title">Biến động giá & packsize gần nhất</div>
+      <div id="ds-price-changes" style="background:var(--surface);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)">
+        <div style="text-align:center;padding:20px;color:var(--text-3);font-size:13px">⏳ Đang tải...</div>
+      </div>
+    </div>
+
+    <!-- Bảng so sánh giá -->
+    <div class="section">
+      <div class="section-title">Phân tích chênh lệch giá</div>
+      <!-- MT -->
+      <div style="margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:var(--navy);padding:8px 12px;background:#e0eaf5;border-radius:var(--radius-sm) var(--radius-sm) 0 0">🏬 Giá DGM → Giá MT → Chênh lệch</div>
+        <div id="ds-mt-gap" style="background:var(--surface);border-radius:0 0 var(--radius-sm) var(--radius-sm);overflow:hidden;box-shadow:var(--shadow)">
+          <div style="text-align:center;padding:16px;color:var(--text-3);font-size:13px">⏳ Đang tải...</div>
+        </div>
+      </div>
+      <!-- GT -->
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--teal);padding:8px 12px;background:var(--teal-bg);border-radius:var(--radius-sm) var(--radius-sm) 0 0">🛒 Giá DGM → Giá GT khu vực → Chênh lệch</div>
+        <div id="ds-gt-gap" style="background:var(--surface);border-radius:0 0 var(--radius-sm) var(--radius-sm);overflow:hidden;box-shadow:var(--shadow)">
+          <div style="text-align:center;padding:16px;color:var(--text-3);font-size:13px">⏳ Đang tải...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Survey gần nhất toàn team -->
     <div class="section">
       <div class="section-title">Survey gần nhất — toàn team</div>
       <div id="dash-recent-list"><div class="empty-state" style="padding:20px"><div class="empty-icon">📊</div><div class="empty-title">Đang tải...</div></div></div>
@@ -1643,11 +1708,10 @@ function calPreset(offset) {
 // PHOTO SLOTS — 5 loại ảnh bắt buộc
 // ══════════════════════════════════════════
 const PHOTO_SLOTS = {
-  1: { label: 'Mặt trước', icon: '🏷️', aiExtract: true, required: true },
-  2: { label: 'Thành phần & NSX', icon: '🏭', aiExtract: true, required: true },
-  3: { label: 'Bảng NIP', icon: '🔬', aiExtract: true, required: true },
-  4: { label: 'Mã vạch / Coding', icon: '🔢', aiExtract: false, required: false },
-  5: { label: 'Trọng lượng', icon: '⚖️', aiExtract: false, required: true },
+  1: { label: 'Mặt trước',          icon: '🏷️', aiExtract: true,  required: true },
+  2: { label: 'Thành phần & NSX',   icon: '🏭', aiExtract: true,  required: true },
+  3: { label: 'Bảng NIP',           icon: '🔬', aiExtract: true,  required: true },
+  4: { label: 'Trọng lượng',        icon: '⚖️', aiExtract: false, required: true },
 };
 
 function triggerSlotPhoto(slot) {
@@ -1681,7 +1745,7 @@ function handleSlotPhoto(event, slot) {
 }
 
 function updatePhotoProgress() {
-  const REQUIRED_SLOTS = [1,2,3,5];
+  const REQUIRED_SLOTS = [1,2,3,4];
   const count = REQUIRED_SLOTS.filter(k => S.photos[k]).length;
   document.getElementById('photo-count').textContent = count + '/4 ảnh';
   document.getElementById('photo-prog-fill').style.width = (count / 4 * 100) + '%';
@@ -1753,20 +1817,19 @@ function runAIExtract(file, slot) {
 function resetPhotoSlots() {
   S.photos = {};
   S.extraPhotos = [];
-  for (let i = 1; i <= 5; i++) {
-    const slotEl = document.getElementById('slot-' + i);
-    const bodyEl = document.getElementById('body-' + i);
-    const statusEl = document.getElementById('status-' + i);
+  for (let i = 1; i <= 4; i++) {
+    const slotEl  = document.getElementById('slot-' + i);
+    const bodyEl  = document.getElementById('body-' + i);
+    const statusEl= document.getElementById('status-' + i);
     if (!slotEl) continue;
     slotEl.classList.remove('done');
     statusEl.textContent = '⬜';
-    const icons = ['','🏷️','🏭','🔬','🔢','⚖️'];
-    const labels = ['','Chụp mặt trước','Chụp thành phần & NSX','Chụp bảng NIP','Chụp mã vạch / coding','Chụp trọng lượng / thể tích'];
+    const icons  = ['','🏷️','🏭','🔬','⚖️'];
+    const labels = ['','Chụp mặt trước','Chụp thành phần & NSX','Chụp bảng NIP','Chụp trọng lượng / thể tích'];
     bodyEl.innerHTML = `<div class="photo-upload-zone" onclick="triggerSlotPhoto(${i})"><span style="font-size:28px">${icons[i]}</span><div class="photo-upload-title">${labels[i]}</div></div>`;
     const inp = document.getElementById('photo-input-' + i);
     if (inp) inp.value = '';
   }
-  // Clear extra photos
   const extraGrid = document.getElementById('extra-photos-grid');
   if (extraGrid) extraGrid.innerHTML = '';
   const extraInput = document.getElementById('photo-input-extra');
@@ -1792,8 +1855,8 @@ function selectMgrChannel(ch) {
 // SUBMIT
 // ══════════════════════════════════════════
 async function submitSurvey() {
-  // Validate ảnh bắt buộc (slot 1,2,3,5 — slot 4 mã vạch là tuỳ chọn)
-  const REQUIRED_SLOTS = [1,2,3,5];
+  // Validate ảnh bắt buộc (slot 1,2,3,4 — 4 ảnh, bỏ mã vạch)
+  const REQUIRED_SLOTS = [1,2,3,4];
   const missingSlots = REQUIRED_SLOTS.filter(k => !S.photos[k]);
   if (missingSlots.length) {
     showToast(`Cần chụp thêm ${missingSlots.length} ảnh bắt buộc (slot ${missingSlots.join(', ')})`, 'error');
@@ -1873,6 +1936,7 @@ async function submitSurvey() {
       nsx_nha_phan_phoi: manufacturer,
       xuat_xu:           origin,
       vi_tri_ke:         document.getElementById('f-shelf').value,
+      facing:            document.getElementById('f-facing')?.value || '',
       ghi_chu:           document.getElementById('f-notes').value,
       phuong_thuc_nhap:  S.photos.length > 0 ? 'ai_photo' : 'manual',
       link_anh:          '',
@@ -1938,8 +2002,17 @@ function showPage(id) {
 }
 
 function goToSurvey() { resetForm(); showPage('survey'); }
-function goHome() { document.getElementById('success-overlay').classList.remove('show'); showPage('home'); renderRecentSurveys(); updateStats(); }
-function newSurvey() { document.getElementById('success-overlay').classList.remove('show'); resetForm(); }
+function goHome() {
+  document.getElementById('success-overlay').classList.remove('show');
+  showPage('home');
+  renderRecentSurveys();
+  updateStats();
+}
+function newSurvey() {
+  document.getElementById('success-overlay').classList.remove('show');
+  resetForm();
+  showPage('survey'); // giữ nguyên user, mở survey mới
+}
 
 function resetForm() {
   if (S.currentStaff) document.getElementById('f-date').value = fmtDate(new Date(TODAY));
@@ -1961,6 +2034,7 @@ function resetForm() {
   document.getElementById('f-comp-origin').value = '';
   document.getElementById('f-price').value = '';
   document.getElementById('f-shelf').value = '';
+  document.getElementById('f-facing').value = '';
   document.getElementById('f-notes').value = '';
   // Clear new fields
   ['f-hsd','f-nsx-date','f-nha-pp-vn',
@@ -1995,10 +2069,16 @@ function filterHistory(type, btn) {
 function renderHistory(filter) {
   let surveys = [...S.surveys];
   const todayStr = toYMD(new Date());
-  if (filter === 'today') surveys = surveys.filter(s => s.survey_date === todayStr);
-  else if (filter === 'MT' || filter === 'GT') surveys = surveys.filter(s => s.channel === filter);
+  if (filter === 'today')   surveys = surveys.filter(s => (s.ngay_survey||s.survey_date) === todayStr);
+  else if (filter === 'MT' || filter === 'GT') surveys = surveys.filter(s => (s.kenh||s.channel) === filter);
   else if (filter === 'own') surveys = surveys.filter(s => (s.phan_loai||s.product_category) === 'own_brand' || ['AB','AN','DU'].includes(s._ma_thuong_hieu||s.brand_id));
-  else if (filter === 'comp') surveys = surveys.filter(s => s.product_category === 'competitor');
+  else if (filter === 'comp') surveys = surveys.filter(s => (s.phan_loai||s.product_category) === 'competitor');
+  else if (filter === 'changed') {
+    // Tính biến động từ toàn bộ surveys
+    const changes = _calcPriceChanges(surveys);
+    const changedKeys = new Set(changes.map(c => c.product + '|' + c.brand + '|' + c.outlet));
+    surveys = surveys.filter(s => changedKeys.has((s.ten_san_pham||'')+'|'+(s.ten_thuong_hieu||'')+'|'+(s.ten_diem_ban||'')));
+  }
 
   const list = document.getElementById('history-list');
   if (!surveys.length) {
@@ -2006,20 +2086,21 @@ function renderHistory(filter) {
     return;
   }
   list.innerHTML = surveys.map(s => {
-    const isOwn = (s.phan_loai||s.product_category) === 'own_brand';
-    const ptLabel = (s.loai_gia||s.price_type||'').includes('đại lý') || (s.loai_gia||'') === 'Giá đại lý' ? '🚛 Đại lý' : '🧑‍🛒 NTD';
-    const inputLabel = (s.phuong_thuc_nhap||s.input_method) === 'ai_photo' ? 'AI' : 'Thủ công';
-    const spName = s.ten_san_pham || s.product_name || '—';
-    const spType = s.loai_san_pham || s.product_type || '';
-    const brandN = s.ten_thuong_hieu || s.brand_name || '—';
-    const packSz = s.quy_cach || s.pack_size || '';
-    const packUt = s.don_vi || s.pack_unit || '';
-    const packBb = s.bao_bi || s.packaging || '';
-    const giaVal = s.gia || s.price || 0;
-    const ngay   = s.ngay_survey || s.survey_date || '—';
-    const kenh   = s.kenh || s.channel || '—';
-    const ghiChu = s.ghi_chu || s.notes || '';
-    const donViGia = s.don_vi_tinh_gia || s.price_unit || '';
+    const isOwn    = (s.phan_loai||s.product_category) === 'own_brand';
+    const ptLabel  = (s.loai_gia||'').includes('đại lý') ? '🚛 Đại lý' : '🧑‍🛒 NTD';
+    const spName   = s.ten_san_pham   || s.product_name  || '—';
+    const spType   = s.loai_san_pham  || s.product_type  || '';
+    const brandN   = s.ten_thuong_hieu|| s.brand_name    || '—';
+    const packSz   = s.quy_cach       || s.pack_size     || '';
+    const packUt   = s.don_vi         || s.pack_unit     || '';
+    const packBb   = s.bao_bi         || s.packaging     || '';
+    const giaVal   = s.gia            || s.price         || 0;
+    const ngay     = s.ngay_survey    || s.survey_date   || '—';
+    const kenh     = s.kenh           || s.channel       || '—';
+    const diem     = s.ten_diem_ban   || s.outlet_name   || '';
+    const ghiChu   = s.ghi_chu        || s.notes         || '';
+    const donViGia = s.don_vi_tinh_gia|| s.price_unit    || '';
+    const facing   = s.facing ? `· Facing: ${s.facing}` : '';
     return `
     <div class="history-card ${isOwn?'own':'comp'}">
       <div class="history-card-top">
@@ -2034,10 +2115,10 @@ function renderHistory(filter) {
       </div>
       <div class="history-card-bottom">
         <span style="font-size:11px;color:var(--text-3)">📅 ${ngay}</span>
-        <span class="chip chip-gray">${kenh}</span>
+        <span class="chip chip-gray">${kenh}${diem?' · '+diem:''}</span>
         <span class="chip chip-${isOwn?'red':'teal'}">${ptLabel}</span>
-        <span class="chip chip-blue">${inputLabel}</span>
-        ${ghiChu?'<span class="chip chip-yellow">📝</span>':''}
+        ${facing ? '<span class="chip chip-blue">\uD83D\uDC41 ' + s.facing + '</span>' : ''}
+        ${ghiChu ? '<span class="chip chip-yellow">📝</span>' : ''}
       </div>
     </div>`;
   }).join('');
@@ -2082,10 +2163,275 @@ function renderRecentSurveys() {
 }
 
 // ══════════════════════════════════════════
-// DASHBOARD (Manager) — v8
-// Đọc đúng keys từ AppScript v8: all_surveys, hom_nay, tuan_nay, diem_ban_hom_nay
+// DASHBOARD (Manager) — v10
 // ══════════════════════════════════════════
 async function loadDashboard() {
+  const dateLabel = document.getElementById('dash-date-label');
+  dateLabel.textContent = 'Đang tải dữ liệu...';
+
+  try {
+    const res  = await fetch(API + '?action=getDashboard&ts=' + Date.now());
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    // ── KPI strip ──
+    document.getElementById('ds-today').textContent   = data.hom_nay           ?? 0;
+    document.getElementById('ds-week').textContent    = data.tuan_nay          ?? 0;
+    document.getElementById('ds-alerts').textContent  = data.canh_bao_chua_doc ?? 0;
+    document.getElementById('ds-outlets').textContent = data.diem_ban_hom_nay  ?? 0;
+    const total = data.tong_survey || 0;
+    dateLabel.textContent = _fmtDateVN(new Date()) + ` · ${total} survey tổng`;
+
+    const allSurveys = data.all_surveys || data.survey_gan_nhat || [];
+
+    // ── SKU counts ──
+    const ownSet  = new Set(allSurveys.filter(s => s.phan_loai === 'own_brand').map(s => s.ten_san_pham).filter(Boolean));
+    const compSet = new Set(allSurveys.filter(s => s.phan_loai === 'competitor').map(s => s.ten_san_pham + '|' + s.ten_thuong_hieu).filter(Boolean));
+    document.getElementById('ds-own-sku').textContent  = ownSet.size  || '—';
+    document.getElementById('ds-comp-sku').textContent = compSet.size || '—';
+
+    // Brand list summary
+    var brandMap2 = {};
+    allSurveys.forEach(function(s) {
+      var b = s.ten_thuong_hieu || "";
+      if (!b) return;
+      if (!brandMap2[b]) brandMap2[b] = { count: 0, isOwn: s.phan_loai === "own_brand" };
+      brandMap2[b].count++;
+    });
+    var brandArr2 = Object.keys(brandMap2).map(function(k){ return [k, brandMap2[k]]; }).sort(function(a,b){ return b[1].count-a[1].count; });
+    var brandHtml2 = "";
+    brandArr2.forEach(function(entry) {
+      var nm = entry[0], inf = entry[1];
+      var bg  = inf.isOwn ? "var(--red-bg)"  : "var(--teal-bg)";
+      var col = inf.isOwn ? "var(--red)"      : "var(--teal)";
+      var dot = inf.isOwn ? "🔴" : "🔵";
+      brandHtml2 += '<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 4px 2px 0;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;background:' + bg + ';color:' + col + '">' + dot + " " + nm + ' <span style="font-family:monospace">' + inf.count + "</span></span>";
+    });
+    document.getElementById("ds-brand-list").innerHTML = brandHtml2 || '<span style="color:var(--text-3)">Chưa có dữ liệu</span>';
+
+    // Positioning
+    var pgMap = [["<20k",0,20000],["20-30k",20000,30000],["30-50k",30000,50000],["50-80k",50000,80000],[">80k",80000,999999999]];
+    var pgData = {};
+    pgMap.forEach(function(g){ pgData[g[0]] = []; });
+    allSurveys.forEach(function(s) {
+      var gv = parseFloat(s.gia || 0);
+      if (!gv) return;
+      for (var pi=0; pi<pgMap.length; pi++) {
+        if (gv >= pgMap[pi][1] && gv < pgMap[pi][2]) { pgData[pgMap[pi][0]].push({brand: s.ten_thuong_hieu||"?", isOwn: s.phan_loai==="own_brand"}); break; }
+      }
+    });
+    var posHtml2 = "";
+    pgMap.forEach(function(g) {
+      var items = pgData[g[0]];
+      if (!items.length) return;
+      var brands2 = [];
+      items.forEach(function(i){ if(brands2.indexOf(i.brand)<0) brands2.push(i.brand); });
+      var hasOwn2 = items.some(function(i){ return i.isOwn; });
+      var op = (0.3 + items.length/Math.max(allSurveys.length,1)*0.7).toFixed(2);
+      posHtml2 += '<div style="margin-bottom:10px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">'
+        + '<div style="font-size:12px;font-weight:700;color:var(--navy);min-width:60px">' + g[0] + "</div>"
+        + '<div style="flex:1;height:8px;border-radius:4px;background:' + (hasOwn2?"var(--red)":"var(--teal)") + ";opacity:" + op + '"></div>'
+        + '<div style="font-size:11px;color:var(--text-3)">' + items.length + " survey</div></div>"
+        + '<div style="padding-left:68px;font-size:11px;color:var(--text-2)">' + brands2.slice(0,5).join(", ") + (brands2.length>5?"...":"") + "</div></div>";
+    });
+    document.getElementById("ds-positioning").innerHTML = posHtml2 || '<div style="color:var(--text-3);font-size:12px;padding:8px 0">Chưa đủ dữ liệu</div>';
+
+    // Top contributors
+    var staffCount2 = {};
+    allSurveys.forEach(function(s) { var nv = s.ten_nhan_vien || "?"; staffCount2[nv] = (staffCount2[nv]||0)+1; });
+    var contribArr2 = Object.keys(staffCount2).map(function(k){ return [k,staffCount2[k]]; }).sort(function(a,b){ return b[1]-a[1]; });
+    var maxCount2 = contribArr2.length ? contribArr2[0][1] : 1;
+    var medals2 = ["🥇","🥈","🥉"];
+    var contribHtml2 = "";
+    contribArr2.forEach(function(entry, i) {
+      var nv2 = entry[0], cnt2 = entry[1], pct2 = Math.round(cnt2/maxCount2*100);
+      contribHtml2 += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
+        + '<div style="font-size:16px;width:20px;text-align:center">' + (medals2[i]||"&middot;") + "</div>"
+        + '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + nv2 + "</div>"
+        + '<div style="height:5px;background:var(--border);border-radius:3px;margin-top:4px;overflow:hidden"><div style="height:100%;width:' + pct2 + '%;background:var(--navy);border-radius:3px"></div></div></div>'
+        + '<div style="font-family:monospace;font-size:13px;font-weight:700;color:var(--navy)">' + cnt2 + "</div></div>";
+    });
+    document.getElementById("ds-contributors").innerHTML = contribHtml2 || '<div style="color:var(--text-3);font-size:12px;padding:8px 0">Chưa có dữ liệu</div>';
+
+    // Outlets co DGM
+    var ownOutletSet2 = {};
+    allSurveys.filter(function(s){ return s.phan_loai==="own_brand"; }).forEach(function(s) {
+      var outlet2 = s.ten_diem_ban || "";
+      if (!outlet2) return;
+      if (!ownOutletSet2[outlet2]) ownOutletSet2[outlet2] = { kenh: s.kenh||"", count: 0, products: [] };
+      ownOutletSet2[outlet2].count++;
+      if (ownOutletSet2[outlet2].products.indexOf(s.ten_san_pham||"")<0) ownOutletSet2[outlet2].products.push(s.ten_san_pham||"");
+    });
+    var ownOutlets2 = Object.keys(ownOutletSet2).map(function(k){ return [k,ownOutletSet2[k]]; }).sort(function(a,b){ return b[1].count-a[1].count; });
+    var outHtml2 = "";
+    ownOutlets2.slice(0,10).forEach(function(entry) {
+      var nm2 = entry[0], inf2 = entry[1], isMT2 = inf2.kenh==="MT";
+      outHtml2 += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">'
+        + '<div style="width:28px;height:28px;border-radius:8px;background:' + (isMT2?"#e0eaf5":"var(--teal-bg)") + ';display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">' + (isMT2?"🏬":"🛒") + "</div>"
+        + '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + nm2 + "</div>"
+        + '<div style="font-size:11px;color:var(--text-3)">' + inf2.kenh + " &middot; " + inf2.products.filter(Boolean).slice(0,3).join(", ") + "</div></div>"
+        + '<div style="font-size:11px;font-weight:700;color:var(--navy);font-family:monospace">' + inf2.count + " sv</div></div>";
+    });
+    document.getElementById("ds-outlets-list").innerHTML = outHtml2 || '<div style="color:var(--text-3);font-size:12px;padding:8px 0">Chưa có dữ liệu</div>';
+
+    // Bien dong gia
+    var priceChanges2 = _calcPriceChanges(allSurveys);
+    var changeHtml2 = "";
+    priceChanges2.slice(0,8).forEach(function(c) {
+      var up2=c.delta>0, same2=c.delta===0;
+      var pct3 = c.deltaPct!==null ? ((c.deltaPct>0?"+":"")+c.deltaPct.toFixed(1)+"%") : "&mdash;";
+      var arrow2 = same2?"&rarr;":(up2?"&uarr;":"&darr;");
+      var color2 = same2?"var(--text-3)":(up2?"var(--red)":"var(--green)");
+      changeHtml2 += '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border)">'
+        + '<div style="width:8px;height:8px;border-radius:50%;background:' + (c.isOwn?"var(--red)":"var(--teal)") + ';flex-shrink:0"></div>'
+        + '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + c.product + " &middot; " + c.brand + "</div>"
+        + '<div style="font-size:10px;color:var(--text-3)">' + c.outlet + " &middot; " + c.date + "</div></div>"
+        + '<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:700;color:' + color2 + ';font-family:monospace">' + arrow2 + " " + pct3 + "</div>"
+        + '<div style="font-size:10px;color:var(--text-3)">' + Number(c.price).toLocaleString("vi-VN") + "d</div></div></div>";
+    });
+    document.getElementById("ds-price-changes").innerHTML = changeHtml2 || '<div style="padding:16px;text-align:center;color:var(--text-3);font-size:12px">Cần ít nhất 2 survey cùng sản phẩm để tính biến động</div>';
+
+    _renderMTGap(allSurveys, data);
+    _renderGTGap(allSurveys);
+
+    // Survey gan nhat
+    var recentHtml2 = "";
+    allSurveys.slice(0,10).forEach(function(s) {
+      var isOwn2 = s.phan_loai==="own_brand";
+      recentHtml2 += '<div class="survey-item">'
+        + '<div class="survey-dot ' + (isOwn2?"own":"comp") + '"></div>'
+        + '<div class="survey-info"><div class="survey-name">' + (s.ten_san_pham||"&mdash;") + "</div>"
+        + '<div class="survey-meta">' + (s.ten_nhan_vien||"&mdash;") + " &middot; " + (s.ten_diem_ban||"&mdash;") + " &middot; " + (s.kenh||"") + " &middot; " + (s.ngay_survey||"&mdash;") + "</div></div>"
+        + '<div class="survey-price">' + Number(s.gia||0).toLocaleString("vi-VN") + "d</div></div>";
+    });
+    document.getElementById("dash-recent-list").innerHTML = recentHtml2 || '<div class="empty-state" style="padding:20px"><div class="empty-icon">📊</div><div class="empty-title">Chưa có survey</div></div>';
+
+  } catch(e) {
+    console.error('[Dashboard v10]', e);
+    document.getElementById('dash-date-label').textContent = '⚠️ Lỗi tải dữ liệu';
+    document.getElementById('dash-recent-list').innerHTML =
+      `<div class="empty-state" style="padding:20px">
+        <div class="empty-icon">❌</div>
+        <div class="empty-title">Không kết nối được API</div>
+        <div class="empty-sub" style="font-size:10px;font-family:monospace;word-break:break-all;margin-top:6px">${e.message}</div>
+        <button onclick="loadDashboard()" style="margin-top:12px;padding:8px 20px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">🔄 Thử lại</button>
+      </div>`;
+  }
+}
+
+// ── Tính biến động giá ──
+function _calcPriceChanges(surveys) {
+  const byKey = {};
+  surveys.forEach(s => {
+    const key = (s.ten_san_pham || '') + '|' + (s.ten_thuong_hieu || '') + '|' + (s.ten_diem_ban || '');
+    if (!byKey[key]) byKey[key] = [];
+    byKey[key].push(s);
+  });
+  const results = [];
+  Object.values(byKey).forEach(arr => {
+    if (arr.length < 2) return;
+    const sorted = arr.sort((a,b) => b.ngay_survey.localeCompare(a.ngay_survey));
+    const curr = sorted[0], prev = sorted[1];
+    const g1 = parseFloat(curr.gia || 0), g2 = parseFloat(prev.gia || 0);
+    if (!g1 || !g2) return;
+    results.push({
+      product:  curr.ten_san_pham    || '?',
+      brand:    curr.ten_thuong_hieu || '?',
+      outlet:   curr.ten_diem_ban    || '?',
+      date:     curr.ngay_survey,
+      price:    g1,
+      prevPrice:g2,
+      delta:    g1 - g2,
+      deltaPct: g2 > 0 ? (g1-g2)/g2*100 : null,
+      isOwn:    curr.phan_loai === 'own_brand',
+    });
+  });
+  return results.filter(r => r.delta !== 0).sort((a,b) => Math.abs(b.deltaPct||0) - Math.abs(a.deltaPct||0));
+}
+
+// ── MT gap table ──
+function _renderMTGap(surveys, apiData) {
+  var el = document.getElementById('ds-mt-gap');
+  var mtOwn = surveys.filter(function(s){ return s.kenh === 'MT' && s.phan_loai === 'own_brand'; });
+  if (!mtOwn.length) { el.innerHTML = '<div style="padding:14px;color:var(--text-3);font-size:12px;text-align:center">Chưa có survey MT cho sản phẩm DGM</div>'; return; }
+
+  var byProduct = {};
+  mtOwn.forEach(function(s) {
+    var sp = s.ten_san_pham || '?';
+    if (!byProduct[sp]) byProduct[sp] = { outlets: {}, dgmPrice: null };
+    byProduct[sp].outlets[s.ten_diem_ban] = parseFloat(s.gia || 0);
+    if (apiData.dgm_prices && apiData.dgm_prices[sp]) byProduct[sp].dgmPrice = parseFloat(apiData.dgm_prices[sp]);
+  });
+
+  var rows = '';
+  Object.keys(byProduct).forEach(function(sp) {
+    var info   = byProduct[sp];
+    var prices = Object.values(info.outlets).filter(function(p){ return p > 0; });
+    var avgMT  = prices.length ? prices.reduce(function(a,b){return a+b;},0)/prices.length : 0;
+    var dgm    = info.dgmPrice;
+    var diff   = (dgm && avgMT) ? ((avgMT-dgm)/dgm*100) : null;
+    var color  = diff === null ? 'var(--text-3)' : (diff > 0 ? 'var(--green)' : 'var(--red)');
+    var diffStr = diff !== null ? ((diff>0?'+':'')+diff.toFixed(1)+'%') : '—';
+    var avgStr  = avgMT ? (Number(Math.round(avgMT)).toLocaleString('vi-VN')+'đ') : '—';
+    rows += '<tr style="border-top:1px solid var(--border)">'
+          + '<td style="padding:8px 10px;font-weight:600;color:var(--text)">' + sp + '</td>'
+          + '<td style="padding:8px 6px;text-align:right;font-family:monospace">' + avgStr + '</td>'
+          + '<td style="padding:8px 6px;text-align:right;font-weight:700;color:' + color + '">' + diffStr + '</td>'
+          + '</tr>';
+  });
+
+  el.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:11px">'
+    + '<thead><tr style="background:var(--surface-2)">'
+    + '<th style="padding:8px 10px;text-align:left;font-weight:700;color:var(--text-2)">Sản phẩm</th>'
+    + '<th style="padding:8px 6px;text-align:right;font-weight:700;color:var(--text-2)">Giá TB MT</th>'
+    + '<th style="padding:8px 6px;text-align:right;font-weight:700;color:var(--text-2)">±%</th>'
+    + '</tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+// ── GT gap table ──
+function _renderGTGap(surveys) {
+  var el = document.getElementById('ds-gt-gap');
+  var gtOwn = surveys.filter(function(s){ return s.kenh === 'GT' && s.phan_loai === 'own_brand'; });
+  if (!gtOwn.length) { el.innerHTML = '<div style="padding:14px;color:var(--text-3);font-size:12px;text-align:center">Chưa có survey GT cho sản phẩm DGM</div>'; return; }
+
+  var byRegion = {};
+  gtOwn.forEach(function(s) {
+    var dbParts = (s.ten_diem_ban || '').split('·');
+    var region  = dbParts.length > 1 ? dbParts[1].trim() : (s.khu_vuc || 'Khác');
+    var sp      = s.ten_san_pham || '?';
+    var key     = region + '|' + sp;
+    if (!byRegion[key]) byRegion[key] = { region: region, sp: sp, prices: [] };
+    var g = parseFloat(s.gia || 0);
+    if (g) byRegion[key].prices.push(g);
+  });
+
+  var rows = '';
+  Object.values(byRegion).forEach(function(row) {
+    var avg    = row.prices.length ? row.prices.reduce(function(a,b){return a+b;},0)/row.prices.length : 0;
+    var minP   = row.prices.length ? Math.min.apply(null, row.prices) : 0;
+    var maxP   = row.prices.length ? Math.max.apply(null, row.prices) : 0;
+    var avgStr = avg ? (Number(Math.round(avg)).toLocaleString('vi-VN')+'đ') : '—';
+    var rngStr = (minP && maxP && minP !== maxP) ? (Number(minP).toLocaleString('vi-VN')+' – '+Number(maxP).toLocaleString('vi-VN')) : '—';
+    rows += '<tr style="border-top:1px solid var(--border)">'
+          + '<td style="padding:8px 10px">'
+          + '<div style="font-weight:600;color:var(--text)">' + row.sp + '</div>'
+          + '<div style="font-size:10px;color:var(--text-3)">' + row.region + '</div></td>'
+          + '<td style="padding:8px 6px;text-align:right;font-family:monospace">' + avgStr + '</td>'
+          + '<td style="padding:8px 6px;text-align:right;font-size:10px;color:var(--text-3);font-family:monospace">' + rngStr + '</td>'
+          + '</tr>';
+  });
+
+  el.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:11px">'
+    + '<thead><tr style="background:var(--surface-2)">'
+    + '<th style="padding:8px 10px;text-align:left;font-weight:700;color:var(--text-2)">SP / Khu vực</th>'
+    + '<th style="padding:8px 6px;text-align:right;font-weight:700;color:var(--text-2)">Giá TB GT</th>'
+    + '<th style="padding:8px 6px;text-align:right;font-weight:700;color:var(--text-2)">Range</th>'
+    + '</tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+function _fmtDateVN(d) {
+  return d.toLocaleDateString('vi-VN', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' });
+}
   const dashList  = document.getElementById('dash-recent-list');
   const dateLabel = document.getElementById('dash-date-label');
   dateLabel.textContent = 'Đang tải dữ liệu...';
