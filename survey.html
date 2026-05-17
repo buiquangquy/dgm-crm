@@ -1292,7 +1292,7 @@ function activateStaff(staff, mode = 'home') {
   document.getElementById('profile-role-text').textContent = `${roleLabel} · ${channelLabel}${regionVal ? ' · ' + regionVal : ''}`;
 
   // Manager: show dashboard nav, else alerts
-  const isManager = (staff.kenh||staff.channel) === 'Manager' || (staff.chuc_danh||staff.role) === 'Sales Manager';
+  // Manager: show dashboard nav
   const nav4 = document.getElementById('nav-4th');
   if (isManager) {
     nav4.innerHTML = '<div class="nav-icon">📊</div><div class="nav-label">Dashboard</div>';
