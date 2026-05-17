@@ -6,7 +6,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>DGM Survey v6</title>
+<title>DGM Survey v9</title>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -378,6 +378,12 @@ textarea.form-control{min-height:76px;resize:none;font-size:14px;line-height:1.5
     <div class="select-staff-sub">Price Intelligence · Denis G.M. Co., Ltd.</div>
   </div>
   <div class="select-staff-body">
+    <!-- Nút Back — chỉ hiện khi có session trước đó -->
+    <div id="back-to-app-wrap" style="display:none;margin-bottom:14px">
+      <button onclick="restoreSession()" style="width:100%;padding:12px 16px;border:1.5px solid var(--navy);border-radius:var(--radius-sm);background:#eef4fa;color:var(--navy);font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:8px;justify-content:center">
+        ← Quay lại app
+      </button>
+    </div>
     <div class="select-staff-label">Bạn là ai?</div>
     <div class="staff-list" id="staff-list">
       <div style="text-align:center;padding:20px;color:var(--text-3);font-size:13px">⟳ Đang tải danh sách...</div>
@@ -440,8 +446,8 @@ textarea.form-control{min-height:76px;resize:none;font-size:14px;line-height:1.5
 
   <!-- TOPBAR -->
   <div class="topbar">
-    <div class="topbar-brand">
-      <div class="topbar-logo">D</div>
+    <div class="topbar-brand" onclick="backToSelectStaff()" style="cursor:pointer;-webkit-tap-highlight-color:rgba(255,255,255,0.1)" title="Đổi người dùng">
+      <div class="topbar-logo" style="transition:transform 0.15s" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.9)'" ontouchend="this.style.transform=''">D</div>
       <div>
         <div class="topbar-title">DGM Survey</div>
         <div class="topbar-sub" id="topbar-sub">Price Intelligence</div>
@@ -1088,7 +1094,7 @@ textarea.form-control{min-height:76px;resize:none;font-size:14px;line-height:1.5
 // ══════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════
-const API = 'https://script.google.com/macros/s/AKfycbzZDyH8vhEr2hFvyQEOng3KBoK5I3b9hx0eBOVSi6tdoQLjVw1eSMOOXtuodvnHVYE/exec'; // AppScript v6
+const API = 'https://script.google.com/macros/s/AKfycbzZDyH8vhEr2hFvyQEOng3KBoK5I3b9hx0eBOVSi6tdoQLjVw1eSMOOXtuodvnHVYE/exec'; // AppScript v8 — CẬP NHẬT URL SAU KHI REDEPLOY
 const MANAGER_CREDS = { email: 'quangquy.bui@gmail.com', pass: '111223' };
 
 const TODAY = new Date(); TODAY.setHours(0,0,0,0);
@@ -1126,20 +1132,46 @@ window.addEventListener('load', async () => {
       (s.ma_nhan_vien || s.staff_id) === session.staff_id
     );
     if (savedStaff) {
-      // Restore — không cần chọn lại
       activateStaff(savedStaff, 'home');
-      return; // Không render staff list
+      return;
     }
+  }
+
+  // Nếu có session cũ (dù hết hạn) thì hiện nút Back
+  if (localStorage.getItem('dgm_session')) {
+    document.getElementById('back-to-app-wrap').style.display = 'block';
   }
   renderStaffList();
 });
+
+/**
+ * Restore session khi bấm nút "Quay lại app" từ màn hình chọn user
+ * Dùng session cũ kể cả đã hết 8 tiếng (chỉ load lại staff từ master)
+ */
+function restoreSession() {
+  try {
+    const raw = localStorage.getItem('dgm_session');
+    if (!raw) { showToast('Không có session, vui lòng chọn lại', 'error'); return; }
+    const s = JSON.parse(raw);
+    if (!s.staff_id || !S.master) return;
+    const savedStaff = (S.master.staff || []).find(st =>
+      (st.ma_nhan_vien || st.staff_id) === s.staff_id
+    );
+    if (savedStaff) {
+      activateStaff(savedStaff, 'home');
+    } else {
+      showToast('Không tìm thấy nhân viên, chọn lại', 'error');
+    }
+  } catch(e) {
+    showToast('Lỗi session', 'error');
+  }
+}
 
 function _getSession() {
   try {
     const raw = localStorage.getItem('dgm_session');
     if (!raw) return null;
     const s = JSON.parse(raw);
-    // Session hết hạn sau 8 tiếng
     const savedAt = new Date(s.saved_at);
     const hours = (Date.now() - savedAt.getTime()) / 3600000;
     if (hours > 8) { localStorage.removeItem('dgm_session'); return null; }
@@ -1334,10 +1366,14 @@ function activateStaff(staff, mode = 'home') {
 
 function backToSelectStaff() {
   S.currentStaff = null;
-  localStorage.removeItem('dgm_session');
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('select-staff-screen').style.display = 'flex';
   document.getElementById('manager-entry').classList.remove('open');
+  // Hiện nút "Quay lại app" vì đã có session
+  if (localStorage.getItem('dgm_session')) {
+    document.getElementById('back-to-app-wrap').style.display = 'block';
+  }
+  renderStaffList();
 }
 
 // ══════════════════════════════════════════
@@ -1400,14 +1436,42 @@ function populateFormDropdowns(staff) {
   const region = staff.khu_vuc || staff.region || '';
   document.getElementById('gt-region-box').textContent = '📍 ' + (region || 'Chưa xác định');
 
-  // Own brand products — filter by brand_type (own_brand) hoặc brand_id thuộc AB/AN/DU
+  // Own brand products
+  // AppScript v8 trả về key 'thuong_hieu' = brand_id (AB/AN/DU)
+  // và 'loai_thuong_hieu' = 'own_brand'
   const ownSel = document.getElementById('f-own-product');
   ownSel.innerHTML = '<option value="">-- Chọn sản phẩm --</option>';
   const ownBrandIds = S.master?.own_brand_ids || ['AB', 'AN', 'DU'];
-  const ownProducts = (S.master?.products || [])
-    .filter(p => p.loai_thuong_hieu === 'own_brand' || p.brand_type === 'own_brand' || ownBrandIds.includes(p.thuong_hieu || p.brand_id));
+  const allProducts = S.master?.products || [];
 
-  // Group theo category (nhóm SP)
+  console.log('[Products] Total from API:', allProducts.length, '| Sample:', JSON.stringify(allProducts[0] || {}));
+
+  const ownProducts = allProducts.filter(p => {
+    const loai   = p.loai_thuong_hieu || p.brand_type || '';
+    const brand  = p.thuong_hieu      || p.brand_id   || '';
+    return loai === 'own_brand' || ownBrandIds.includes(brand);
+  });
+
+  console.log('[Products] Own brand filtered:', ownProducts.length);
+
+  if (!ownProducts.length) {
+    // Fallback: hiện tất cả nếu filter ra rỗng (có thể data chưa có loai_thuong_hieu)
+    console.warn('[Products] own_brand filter = 0, showing ALL products as fallback');
+    allProducts.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value       = p.ma_san_pham || p.product_id || p.ten_san_pham || '';
+      opt.textContent = (p.ten_san_pham || p.product_name || '?');
+      opt.dataset.mfr      = p.nsx_nha_phan_phoi || '';
+      opt.dataset.origin   = p.xuat_xu            || '';
+      opt.dataset.unit     = p.don_vi              || 'g';
+      opt.dataset.packaging= p.bao_bi              || '';
+      opt.dataset.packsize = p.quy_cach_mac_dinh   || '';
+      ownSel.appendChild(opt);
+    });
+    return;
+  }
+
+  // Group theo nhóm sản phẩm
   const catGroups = {};
   ownProducts.forEach(p => {
     const cat = p.nhom_san_pham || p.category || 'Khác';
@@ -1419,18 +1483,18 @@ function populateFormDropdowns(staff) {
     optGroup.label = cat;
     catGroups[cat].forEach(p => {
       const opt = document.createElement('option');
-      opt.value = p.ma_san_pham || p.product_id;
-      opt.textContent = p.ten_san_pham || p.product_name;
-      opt.dataset.mfr = p.nsx_nha_phan_phoi || p.manufacturer || '';
-      opt.dataset.origin = p.xuat_xu || p.origin || '';
-      opt.dataset.unit = p.don_vi || p.default_unit || 'g';
-      opt.dataset.packaging = p.bao_bi || p.default_packaging || '';
-      opt.dataset.packsize = p.quy_cach_mac_dinh || p.default_pack_sizes || '';
+      opt.value        = p.ma_san_pham        || p.product_id  || '';
+      opt.textContent  = p.ten_san_pham        || p.product_name || '?';
+      opt.dataset.mfr      = p.nsx_nha_phan_phoi || p.manufacturer    || '';
+      opt.dataset.origin   = p.xuat_xu            || p.origin          || '';
+      opt.dataset.unit     = p.don_vi              || p.default_unit    || 'g';
+      opt.dataset.packaging= p.bao_bi              || p.default_packaging || '';
+      opt.dataset.packsize = p.quy_cach_mac_dinh   || p.default_pack_sizes || '';
       optGroup.appendChild(opt);
     });
     ownSel.appendChild(optGroup);
   });
-}
+} // end populateFormDropdowns
 
 // ══════════════════════════════════════════
 // FORM LOGIC
@@ -1459,7 +1523,8 @@ function setChannel(ch, auto = false) {
 
   // Surveyor info
   if (S.currentStaff) {
-    document.getElementById('surveyor-box').textContent = `👤 ${S.currentStaff.display_name || S.currentStaff.full_name}`;
+    const svName = S.currentStaff.ten_hien_thi || S.currentStaff.display_name || S.currentStaff.ho_ten || '?';
+    document.getElementById('surveyor-box').textContent = `👤 ${svName}`;
   }
 }
 
@@ -1913,7 +1978,8 @@ function resetForm() {
   setPriceType('retail_consumer');
   if (S.currentStaff) setChannel(S.currentStaff.channel === 'Manager' ? 'MT' : S.currentStaff.channel, S.currentStaff.channel !== 'Manager');
   // Update surveyor box
-  document.getElementById('surveyor-box').textContent = '👤 ' + (S.currentStaff?.display_name || '');
+  const _svName = S.currentStaff?.ten_hien_thi || S.currentStaff?.display_name || S.currentStaff?.ho_ten || '';
+  document.getElementById('surveyor-box').textContent = '👤 ' + _svName;
   // Step indicators
   document.querySelectorAll('.step-dot').forEach((d,i) => { d.className = 'step-dot' + (i===0?' active':''); });
 }
@@ -2016,68 +2082,67 @@ function renderRecentSurveys() {
 }
 
 // ══════════════════════════════════════════
-// DASHBOARD (Manager)
+// DASHBOARD (Manager) — v8
+// Đọc đúng keys từ AppScript v8: all_surveys, hom_nay, tuan_nay, diem_ban_hom_nay
 // ══════════════════════════════════════════
 async function loadDashboard() {
-  const dashList = document.getElementById('dash-recent-list');
+  const dashList  = document.getElementById('dash-recent-list');
   const dateLabel = document.getElementById('dash-date-label');
   dateLabel.textContent = 'Đang tải dữ liệu...';
   dashList.innerHTML = '<div class="empty-state" style="padding:20px"><div class="empty-icon">⏳</div><div class="empty-title">Đang tải...</div></div>';
 
   try {
-    // Fetch all surveys từ Google Sheet (không filter theo staff)
-    const res = await fetch(API + '?action=getDashboard&ts=' + Date.now());
+    const res  = await fetch(API + '?action=getDashboard&ts=' + Date.now());
     const data = await res.json();
-    console.log('[Dashboard] API response:', data);
+    console.log('[Dashboard v8] response:', JSON.stringify(data).slice(0, 300));
 
-    const todayStr = toYMD(new Date());
-    const weekAgo = new Date(TODAY); weekAgo.setDate(weekAgo.getDate()-7);
+    if (data.error) throw new Error(data.error);
 
-    // Lấy all_surveys từ API nếu có, fallback về local
-    const allSurveys = data.all_surveys || data.surveys || S.surveys;
+    // Stats từ AppScript v8 — keys tiếng Việt
+    document.getElementById('ds-today').textContent   = data.hom_nay            ?? 0;
+    document.getElementById('ds-week').textContent    = data.tuan_nay           ?? 0;
+    document.getElementById('ds-alerts').textContent  = data.canh_bao_chua_doc  ?? data.unread_alerts ?? 0;
+    document.getElementById('ds-outlets').textContent = data.diem_ban_hom_nay   ?? data.today_outlet_count ?? 0;
+    const totalLabel = data.tong_survey ? ` · ${data.tong_survey} survey tổng` : '';
+    dateLabel.textContent = fmtDate(new Date()) + ' · Toàn team' + totalLabel;
 
-    const todayCount = allSurveys.filter(s => (s.ngay_survey||s.survey_date) === todayStr).length;
-    const weekCount  = allSurveys.filter(s => new Date(s.ngay_survey||s.survey_date) >= weekAgo).length;
+    // Danh sách survey — v8 trả về all_surveys (50 gần nhất)
+    // fallback: survey_gan_nhat (hôm nay), hoặc local S.surveys
+    const allSurveys = data.all_surveys || data.survey_gan_nhat || S.surveys;
 
-    document.getElementById('ds-today').textContent    = todayCount;
-    document.getElementById('ds-week').textContent     = weekCount;
-    document.getElementById('ds-alerts').textContent   = data.unread_alerts || 0;
-    document.getElementById('ds-outlets').textContent  = data.today_outlet_count || new Set(allSurveys.filter(s=>(s.ngay_survey||s.survey_date)===todayStr).map(s=>s.ten_diem_ban||s.outlet_name)).size;
-    dateLabel.textContent = fmtDate(new Date()) + ' · Toàn team (' + allSurveys.length + ' survey)';
-
-    const recent = allSurveys.slice(0, 10);
-    if (!recent.length) {
-      dashList.innerHTML = '<div class="empty-state" style="padding:20px"><div class="empty-icon">📊</div><div class="empty-title">Chưa có dữ liệu survey</div><div class="empty-sub">Kiểm tra kết nối Google Sheets</div></div>';
+    if (!allSurveys.length) {
+      dashList.innerHTML = '<div class="empty-state" style="padding:20px"><div class="empty-icon">📊</div><div class="empty-title">Chưa có dữ liệu survey</div><div class="empty-sub">Bắt đầu nhập survey để xem tại đây</div></div>';
       return;
     }
-    dashList.innerHTML = recent.map(s => {
-      const isOwn = (s.phan_loai||s.product_category) === 'own_brand';
-      const sp    = s.ten_san_pham || s.product_name || '—';
-      const lt    = s.loai_san_pham || s.product_type || '';
-      const staff = s.ten_nhan_vien || s.staff_name || s.staff_id || '—';
-      const kenh  = s.kenh || s.channel || '—';
-      const diem  = s.ten_diem_ban || s.outlet_name || kenh;
-      const ngay  = s.ngay_survey || s.survey_date || '—';
-      const gia   = s.gia || s.price || 0;
+
+    dashList.innerHTML = allSurveys.slice(0, 10).map(s => {
+      const isOwn  = (s.phan_loai || s.product_category) === 'own_brand';
+      const sp     = s.ten_san_pham   || s.product_name  || '—';
+      const lt     = s.loai_san_pham  || s.product_type  || '';
+      const nv     = s.ten_nhan_vien  || s.staff_name    || s._ma_nhan_vien || '—';
+      const diem   = s.ten_diem_ban   || s.outlet_name   || s.kenh || '—';
+      const ngay   = s.ngay_survey    || s.survey_date   || '—';
+      const gia    = s.gia            || s.price         || 0;
+      const kenh   = s.kenh           || s.channel       || '';
       return `
         <div class="survey-item">
-          <div class="survey-dot ${isOwn?'own':'comp'}"></div>
+          <div class="survey-dot ${isOwn ? 'own' : 'comp'}"></div>
           <div class="survey-info">
-            <div class="survey-name">${sp}${lt?' · '+lt:''}</div>
-            <div class="survey-meta">${staff} · ${diem} · ${ngay}</div>
+            <div class="survey-name">${sp}${lt ? ' · ' + lt : ''}</div>
+            <div class="survey-meta">${nv} · ${diem}${kenh ? ' · ' + kenh : ''} · ${ngay}</div>
           </div>
           <div class="survey-price">${Number(gia).toLocaleString('vi-VN')}đ</div>
         </div>`;
     }).join('');
 
   } catch(e) {
-    console.error('[Dashboard] Error:', e);
-    dateLabel.textContent = '⚠️ Không thể tải dữ liệu';
+    console.error('[Dashboard v8] Error:', e);
+    dateLabel.textContent = '⚠️ Lỗi tải dữ liệu';
     dashList.innerHTML = `<div class="empty-state" style="padding:20px">
       <div class="empty-icon">❌</div>
-      <div class="empty-title">Lỗi kết nối API</div>
-      <div class="empty-sub" style="font-size:10px;font-family:monospace;word-break:break-all;margin-top:6px">${e.message}</div>
-      <button onclick="loadDashboard()" style="margin-top:12px;padding:8px 16px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer">🔄 Thử lại</button>
+      <div class="empty-title">Không kết nối được API</div>
+      <div class="empty-sub" style="font-size:10px;font-family:monospace;word-break:break-all;margin-top:6px;max-width:300px">${e.message}</div>
+      <button onclick="loadDashboard()" style="margin-top:12px;padding:8px 20px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">🔄 Thử lại</button>
     </div>`;
   }
 }
