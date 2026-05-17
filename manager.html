@@ -697,138 +697,167 @@ async function apiPost(body) {
 }
 
 // ════════════════════════════════════════════
-// LOAD ALL DATA — tuần tự, không song song
-// Apps Script chỉ xử lý 1 request tại 1 thời điểm hiệu quả nhất
+// LOAD ALL DATA
+// Strategy: getMasterData trước (bắt buộc), sau đó load song song
+// KHÔNG dùng getDashboard (quá chậm) — tính stats từ getSurveyList nhỏ
 // ════════════════════════════════════════════
 async function loadAll() {
-  document.getElementById('sync-info').textContent = 'Đang đồng bộ...';
+  document.getElementById('sync-info').textContent = '⏳ Đang tải...';
 
-  // Load master data trước (quan trọng nhất)
+  // ── Bước 1: getMasterData (bắt buộc, nhanh ~2-3s)
   try {
     const masterRes = await apiFetch({ action: 'getMasterData' });
     data.master = masterRes;
     renderMasterData();
     populateEventSelects();
-    document.getElementById('sync-info').textContent = '⏳ Đang tải dashboard...';
   } catch(e) {
-    document.getElementById('sync-info').textContent = '❌ Lỗi master: ' + e.message;
-    showToast('Lỗi tải master data: ' + e.message, 'error');
-    return; // Dừng nếu master fail
+    document.getElementById('sync-info').textContent = '❌ ' + e.message;
+    showToast('Lỗi kết nối: ' + e.message, 'error');
+    return;
   }
 
-  // Load dashboard (có thể chậm hơn vì tính toán surveys)
-  try {
-    const dashRes = await apiFetch({ action: 'getDashboard' });
-    data.dashboard = dashRes;
-    data.surveys   = dashRes.all_surveys || dashRes.survey_gan_nhat || [];
-    renderDashboard();
-    document.getElementById('sync-info').textContent = '⏳ Đang tải events...';
-  } catch(e) {
-    document.getElementById('sync-info').textContent = '⚠️ Dashboard timeout — thử lại';
-    showToast('Dashboard chậm, thử bấm Làm mới lại', 'error');
-    // Không return — vẫn load events/tracker
-  }
+  document.getElementById('sync-info').textContent = '⏳ Đang tải dữ liệu...';
 
-  // Load phần còn lại — mỗi cái độc lập, không block nhau
-  loadEvents();
-  loadTeamActivity();
-  loadAlerts();
-  // Tracker load cuối — thường chậm nhất do _recalcTrackerLag
-  setTimeout(() => loadTracker(), 500);
+  // ── Bước 2: Load song song, mỗi cái fail độc lập
+  const loadSurveys = apiFetch({ action: 'getSurveyList', limit: '50' })
+    .then(res => {
+      data.surveys = res.danh_sach || [];
+      renderDashboardFromSurveys(data.surveys, res.tong_so || 0);
+    })
+    .catch(e => console.warn('Surveys:', e.message));
 
+  const loadEvts = apiFetch({ action: 'getPriceEvents' })
+    .then(res => {
+      data.events = res.su_kien || [];
+      renderEvents();
+      populateEventSelects();
+      // Hiện event gần nhất trên dashboard
+      if (data.events.length) {
+        const latest = data.events.sort((a,b) => b.ngay_hieu_luc?.localeCompare(a.ngay_hieu_luc))[0];
+        const el = document.getElementById('latest-event-dash');
+        if (el) el.innerHTML = `<div style="padding:12px;background:#fef9f0;border:1px solid #fde68a;border-radius:8px;">
+          <div style="font-weight:700;color:var(--navy);">${latest.ten_su_kien}</div>
+          <div style="font-size:13px;color:var(--gray);margin-top:4px;">Hiệu lực: ${latest.ngay_hieu_luc} · Kênh: ${latest.kenh||'—'}</div>
+          <div style="font-size:12px;color:var(--gray);margin-top:2px;">${latest.ghi_chu_sp||latest.ly_do||''}</div>
+        </div>`;
+      }
+    })
+    .catch(e => console.warn('Events:', e.message));
+
+  const loadAlts = apiFetch({ action: 'getAlerts' })
+    .then(res => {
+      data.alerts = res.canh_bao || [];
+      renderAlerts();
+      document.getElementById('alert-badge').textContent = data.alerts.length;
+      document.getElementById('ds-alerts').textContent  = data.alerts.length;
+    })
+    .catch(e => console.warn('Alerts:', e.message));
+
+  const loadTeam = apiFetch({ action: 'getTeamActivity' })
+    .then(res => {
+      const team = res.hoat_dong || [];
+      const tbody = document.getElementById('team-table');
+      if (!tbody) return;
+      if (!team.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9ca3af;">Chưa có dữ liệu</td></tr>'; return; }
+      tbody.innerHTML = team.map(s => `<tr>
+        <td><strong>${s.ten}</strong></td>
+        <td>${s.chuc_danh||'—'}</td>
+        <td><span class="badge ${s.kenh==='MT'?'badge-mt':'badge-gt'}">${s.kenh||'—'}</span></td>
+        <td>${s.khu_vuc||'—'}</td>
+        <td><strong style="color:${s.hom_nay>0?'var(--green)':'var(--gray)'}">${s.hom_nay}</strong></td>
+        <td>${s.tuan_nay}</td><td>${s.diem_ban}</td>
+        <td style="font-size:12px;color:var(--gray);">${s.survey_cuoi||'—'}</td>
+      </tr>`).join('');
+    })
+    .catch(e => console.warn('Team:', e.message));
+
+  // Tracker load sau cùng (có thể chậm)
+  const loadTrk = new Promise(resolve => setTimeout(resolve, 300))
+    .then(() => apiFetch({ action: 'getMTTracker' }))
+    .then(res => {
+      data.tracker = res.tracker || [];
+      renderTracker(data.tracker);
+    })
+    .catch(e => console.warn('Tracker:', e.message));
+
+  // Chờ tất cả xong (không block nếu 1 cái fail)
+  await Promise.allSettled([loadSurveys, loadEvts, loadAlts, loadTeam, loadTrk]);
   document.getElementById('sync-info').textContent = '✅ ' + new Date().toLocaleTimeString('vi');
 }
 
-// ════════════════════════════════════════════
-// RENDER DASHBOARD
-// ════════════════════════════════════════════
-function renderDashboard() {
-  const dash = data.dashboard;
-  if (!dash) return;
+// Tính stats dashboard từ survey list (thay vì getDashboard)
+function renderDashboardFromSurveys(surveys, total) {
+  const today   = new Date().toISOString().slice(0,10);
+  const weekAgo = new Date(Date.now()-7*86400000).toISOString().slice(0,10);
+  const todaySv = surveys.filter(s => s.ngay_survey === today);
+  const weekSv  = surveys.filter(s => s.ngay_survey >= weekAgo);
+  const outlets = new Set(todaySv.map(s => s.ten_diem_ban).filter(Boolean));
 
-  document.getElementById('ds-today').textContent   = dash.hom_nay || 0;
-  document.getElementById('ds-week').textContent    = dash.tuan_nay || 0;
-  document.getElementById('ds-outlets').textContent = dash.diem_ban_hom_nay || 0;
-  document.getElementById('ds-alerts').textContent  = dash.canh_bao_chua_doc || 0;
-  document.getElementById('alert-badge').textContent = dash.canh_bao_chua_doc || 0;
-  document.getElementById('alert-count-dash').textContent = (dash.canh_bao_chua_doc || 0) + ' chưa đọc';
+  document.getElementById('ds-today').textContent   = todaySv.length;
+  document.getElementById('ds-week').textContent    = weekSv.length;
+  document.getElementById('ds-outlets').textContent = outlets.size;
 
-  // Product catalog from getMasterData (KEY FIX)
-  renderProductsDash();
-
-  // Latest price event
-  const evEl = document.getElementById('latest-event-dash');
-  if (dash.tang_gia_gan_nhat) {
-    const e = dash.tang_gia_gan_nhat;
-    evEl.innerHTML = `<div style="padding:12px;background:#fef9f0;border:1px solid #fde68a;border-radius:8px;">
-      <div style="font-weight:700;color:var(--navy);">${e.ten_su_kien}</div>
-      <div style="font-size:13px;color:var(--gray);margin-top:4px;">${e.ten_san_pham} · Giá mới: <strong>${Number(e.gia_moi||0).toLocaleString('vi')}đ</strong> · Hiệu lực: ${e.ngay_hieu_luc}</div>
-    </div>`;
-  } else {
-    evEl.innerHTML = `<div class="empty-state" style="padding:16px;"><div style="font-size:13px;color:var(--gray);">Chưa có mốc tăng giá</div></div>`;
+  // Render recent surveys
+  const el = document.getElementById('recent-surveys-list');
+  if (!el) return;
+  if (!surveys.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div>Chưa có survey</div>';
+    return;
   }
+  el.innerHTML = surveys.slice(0,20).map(s => {
+    const typeClass = s.phan_loai === 'own_brand' ? 'badge-ab' : 'badge-comp';
+    const chClass   = s.kenh === 'MT' ? 'badge-mt' : 'badge-gt';
+    return `<div class="survey-item">
+      <div class="si-left">
+        <div class="si-name">${s.ten_san_pham||'—'}</div>
+        <div class="si-meta">
+          <span class="badge ${chClass}">${s.kenh||'—'}</span>
+          <span class="badge ${typeClass}">${s.ten_thuong_hieu||'—'}</span>
+          <span>${s.ten_nhan_vien||'—'}</span> · <span>${s.ten_diem_ban||'—'}</span>
+        </div>
+      </div>
+      <div class="si-right">
+        <div class="si-price">${s.gia ? Number(s.gia).toLocaleString('vi')+'đ' : '—'}</div>
+        <div class="si-date">${s.ngay_survey||'—'}</div>
+      </div>
+    </div>`;
+  }).join('');
 
   // Competitor changes
-  const compData = dash.bien_dong_doi_thu || [];
+  const compData = surveys.filter(s => s.phan_loai === 'competitor');
   const tbody = document.getElementById('comp-changes-table');
-  if (!compData.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#9ca3af;">Chưa có dữ liệu biến động</td></tr>';
-  } else {
-    tbody.innerHTML = compData.map(c => {
-      const delta = c.delta_pct;
-      const deltaStr = delta !== null ? (delta > 0 ? `<span class="delta-up">↑${delta}%</span>` : delta < 0 ? `<span class="delta-down">↓${Math.abs(delta)}%</span>` : `<span class="delta-flat">—</span>`) : '—';
-      return `<tr>
+  if (tbody) {
+    if (!compData.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#9ca3af;">Chưa có dữ liệu biến động</td></tr>';
+    } else {
+      tbody.innerHTML = compData.slice(0,10).map(c => `<tr>
         <td><span class="badge badge-comp">${c.ten_thuong_hieu||'—'}</span></td>
         <td>${c.ten_san_pham||'—'}</td>
         <td>${c.ten_diem_ban||'—'}</td>
-        <td>${Number(c.gia_hien_tai||0).toLocaleString('vi')}đ</td>
-        <td>${c.gia_truoc ? Number(c.gia_truoc).toLocaleString('vi')+'đ' : '—'}</td>
-        <td>${deltaStr}</td>
+        <td>${c.gia?Number(c.gia).toLocaleString('vi')+'đ':'—'}</td>
+        <td>—</td><td>—</td>
         <td>${c.ngay_survey||'—'}</td>
-      </tr>`;
-    }).join('');
+      </tr>`).join('');
+    }
   }
 
-  // Brands bars
-  const brands = dash.brands_survey || [];
+  // Brands
+  const brandMap = {};
+  surveys.forEach(s => {
+    if (!s.ten_thuong_hieu) return;
+    if (!brandMap[s.ten_thuong_hieu]) brandMap[s.ten_thuong_hieu] = { ten: s.ten_thuong_hieu, so_lan: 0, phan_loai: s.phan_loai };
+    brandMap[s.ten_thuong_hieu].so_lan++;
+  });
+  const brands = Object.values(brandMap).sort((a,b) => b.so_lan - a.so_lan);
   const barsEl = document.getElementById('brands-bars');
-  if (!brands.length) {
-    barsEl.innerHTML = '<div style="color:#9ca3af;font-size:13px;">Chưa có dữ liệu</div>';
-  } else {
-    const max = brands[0].so_lan || 1;
-    barsEl.innerHTML = brands.slice(0,15).map(b => `
+  if (barsEl) {
+    const max = brands[0]?.so_lan || 1;
+    barsEl.innerHTML = brands.slice(0,10).map(b => `
       <div class="bar-row">
         <div class="bar-label">${b.ten}</div>
         <div class="bar-track"><div class="bar-fill" style="width:${Math.round(b.so_lan/max*100)}%;background:${b.phan_loai==='own_brand'?'var(--red)':'var(--navy2)'}"></div></div>
         <div class="bar-val">${b.so_lan}</div>
-      </div>`).join('');
-  }
-
-  // Recent surveys
-  const survEl = document.getElementById('recent-surveys-list');
-  const surveys = data.surveys;
-  if (!surveys.length) {
-    survEl.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div>Chưa có survey</div>';
-  } else {
-    survEl.innerHTML = surveys.slice(0,20).map(s => {
-      const typeClass = s.phan_loai === 'own_brand' ? 'badge-ab' : 'badge-comp';
-      const chClass   = s.kenh === 'MT' ? 'badge-mt' : 'badge-gt';
-      return `<div class="survey-item">
-        <div class="si-left">
-          <div class="si-name">${s.ten_san_pham||'—'}</div>
-          <div class="si-meta">
-            <span class="badge ${chClass}">${s.kenh||'—'}</span>
-            <span class="badge ${typeClass}">${s.ten_thuong_hieu||'—'}</span>
-            <span>${s.ten_nhan_vien||'—'}</span> ·
-            <span>${s.ten_diem_ban||'—'}</span>
-          </div>
-        </div>
-        <div class="si-right">
-          <div class="si-price">${s.gia ? Number(s.gia).toLocaleString('vi')+'đ' : '—'}</div>
-          <div class="si-date">${s.ngay_survey||'—'}</div>
-        </div>
-      </div>`;
-    }).join('');
+      </div>`).join('') || '<div style="color:#9ca3af;font-size:13px;">Chưa có dữ liệu</div>';
   }
 }
 
