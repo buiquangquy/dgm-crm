@@ -544,10 +544,10 @@ function showPage(id, navEl) {
 // ════════════════════════════════════════════
 // FETCH
 // ════════════════════════════════════════════
-async function apiFetch(params) {
+async function apiFetch(params, timeoutMs = 45000) {
   const url = API + '?' + new URLSearchParams(params).toString();
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 20000);
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     // Google Apps Script: KHÔNG dùng redirect:'follow' — CORS sẽ bị block
     const res  = await fetch(url, { signal: ctrl.signal });
@@ -557,53 +557,69 @@ async function apiFetch(params) {
     return JSON.parse(text);
   } catch(e) {
     clearTimeout(timer);
+    // Nếu timeout: message rõ hơn
+    if (e.name === 'AbortError') throw new Error('Timeout — Apps Script mất quá ' + Math.round(timeoutMs/1000) + 's. Thử lại sau.');
     throw e;
   }
 }
 
 async function apiPost(body) {
   // KHÔNG set Content-Type header — sẽ trigger CORS preflight bị block
-  const res = await fetch(API, { method:'POST', body:JSON.stringify(body) });
-  const text = await res.text();
-  if (text.trim().startsWith('<')) throw new Error('API error');
-  return JSON.parse(text);
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 45000);
+  try {
+    const res = await fetch(API, { method:'POST', body:JSON.stringify(body), signal: ctrl.signal });
+    clearTimeout(timer);
+    const text = await res.text();
+    if (text.trim().startsWith('<')) throw new Error('API error');
+    return JSON.parse(text);
+  } catch(e) {
+    clearTimeout(timer);
+    throw e;
+  }
 }
 
 // ════════════════════════════════════════════
-// LOAD ALL DATA — called on init & refresh
-// KEY FIX: load getMasterData AND getDashboard in parallel
+// LOAD ALL DATA — tuần tự, không song song
+// Apps Script chỉ xử lý 1 request tại 1 thời điểm hiệu quả nhất
 // ════════════════════════════════════════════
 async function loadAll() {
   document.getElementById('sync-info').textContent = 'Đang đồng bộ...';
+
+  // Load master data trước (quan trọng nhất)
   try {
-    // Load master data AND dashboard in parallel
-    const [masterRes, dashRes] = await Promise.all([
-      apiFetch({ action: 'getMasterData' }),
-      apiFetch({ action: 'getDashboard' }),
-    ]);
-
-    // ── KEY: AppScript getMasterData returns { nhan_vien, san_pham, diem_ban, thuong_hieu, own_brand_ids }
-    data.master    = masterRes;
-    data.dashboard = dashRes;
-
-    // surveys from dashboard
-    data.surveys = dashRes.all_surveys || dashRes.survey_gan_nhat || [];
-
-    // Update sync time
-    document.getElementById('sync-info').textContent = '✅ ' + new Date().toLocaleTimeString('vi');
-
-    // Render everything
-    renderDashboard();
+    const masterRes = await apiFetch({ action: 'getMasterData' });
+    data.master = masterRes;
     renderMasterData();
     populateEventSelects();
-    loadEvents();
-    loadTracker();
-    loadAlerts();
-    loadTeamActivity();
+    document.getElementById('sync-info').textContent = '⏳ Đang tải dashboard...';
   } catch(e) {
-    document.getElementById('sync-info').textContent = '❌ Lỗi: ' + e.message;
-    showToast('Lỗi tải dữ liệu: ' + e.message, 'error');
+    document.getElementById('sync-info').textContent = '❌ Lỗi master: ' + e.message;
+    showToast('Lỗi tải master data: ' + e.message, 'error');
+    return; // Dừng nếu master fail
   }
+
+  // Load dashboard (có thể chậm hơn vì tính toán surveys)
+  try {
+    const dashRes = await apiFetch({ action: 'getDashboard' });
+    data.dashboard = dashRes;
+    data.surveys   = dashRes.all_surveys || dashRes.survey_gan_nhat || [];
+    renderDashboard();
+    document.getElementById('sync-info').textContent = '⏳ Đang tải events...';
+  } catch(e) {
+    document.getElementById('sync-info').textContent = '⚠️ Dashboard timeout — thử lại';
+    showToast('Dashboard chậm, thử bấm Làm mới lại', 'error');
+    // Không return — vẫn load events/tracker
+  }
+
+  // Load phần còn lại — mỗi cái độc lập, không block nhau
+  loadEvents();
+  loadTeamActivity();
+  loadAlerts();
+  // Tracker load cuối — thường chậm nhất do _recalcTrackerLag
+  setTimeout(() => loadTracker(), 500);
+
+  document.getElementById('sync-info').textContent = '✅ ' + new Date().toLocaleTimeString('vi');
 }
 
 // ════════════════════════════════════════════
@@ -705,8 +721,19 @@ function renderProductsDash() {
   const products = data.master?.san_pham || [];
   const ownBrandIds = data.master?.own_brand_ids || OWN_BRANDS;
 
-  const ownProds  = products.filter(p => p.loai_thuong_hieu === 'own_brand' || ownBrandIds.includes(p.thuong_hieu));
-  const compProds = products.filter(p => p.loai_thuong_hieu === 'competitor' && !ownBrandIds.includes(p.thuong_hieu));
+  // Robust filter: loai_thuong_hieu → brand code → brand name
+  function isOwn(p) {
+    const loai  = (p.loai_thuong_hieu || '').toLowerCase().trim();
+    const brand = (p.thuong_hieu || '').trim();
+    if (loai === 'own_brand') return true;
+    if (loai === 'competitor') return false;
+    if (ownBrandIds.includes(brand)) return true;
+    const bl = brand.toLowerCase();
+    return bl.includes('ayam') || bl.includes('alce') || bl.includes('duchef');
+  }
+
+  const ownProds  = products.filter(p => isOwn(p));
+  const compProds = products.filter(p => !isOwn(p));
 
   document.getElementById('sku-own').textContent   = ownProds.length;
   document.getElementById('sku-comp').textContent  = compProds.length;
@@ -718,7 +745,7 @@ function renderProductsDash() {
     return;
   }
 
-  // Group by brand
+  // Group own brand by thuong_hieu
   const byBrand = {};
   ownProds.forEach(p => {
     const b = p.thuong_hieu || 'Khác';
