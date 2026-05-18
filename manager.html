@@ -472,66 +472,29 @@ input:focus, select:focus { border-color: var(--navy); }
   </div>
 </div>
 
-<!-- Modal 2: Bulk-create tracker -->
-<div class="modal-overlay hidden" id="bulk-tracker-modal" style="align-items:flex-start;padding:20px;overflow-y:auto;">
-  <div class="modal" style="width:760px;max-width:98vw;margin:auto;">
+<!-- Modal 2: Bulk-create tracker - đơn giản, chỉ chọn ma_tang_gia -->
+<div class="modal-overlay hidden" id="bulk-tracker-modal">
+  <div class="modal" style="width:480px;max-width:95vw;">
     <div class="modal-header">
-      <h3>🎯 Tạo tracker hàng loạt</h3>
+      <h3>🚀 Tạo tracker hàng loạt từ Price_Events</h3>
       <button class="modal-close" onclick="closeModal('bulk-tracker-modal')">✕</button>
     </div>
     <div class="modal-body">
-      <!-- Bước 1: Chọn event -->
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;font-size:13px;color:#1e40af;margin-bottom:4px;">
+        📋 Hệ thống sẽ đọc <strong>tất cả dòng</strong> trong tab Price_Events có cùng mã đợt tăng giá,<br>
+        tự động expand <strong>"all"</strong> thành toàn bộ chain của kênh đó,<br>
+        và tạo 1 dòng tracker cho mỗi <strong>chain × sản phẩm</strong>.
+      </div>
       <div>
-        <div class="field-label">Chọn mốc tăng giá *</div>
-        <select id="bulk-event" onchange="onBulkEventChange()" style="font-size:14px;">
-          <option value="">-- Chọn event --</option>
+        <div class="field-label">Chọn mã đợt tăng giá *</div>
+        <select id="bulk-event" style="font-size:14px;" onchange="onBulkEventChange()">
+          <option value="">-- Chọn --</option>
         </select>
-        <div id="bulk-event-info" style="margin-top:6px;font-size:12px;color:var(--gray);display:none;"></div>
+        <div id="bulk-event-info" style="margin-top:8px;font-size:12px;color:var(--gray);padding:8px;background:#f8f9fa;border-radius:6px;display:none;"></div>
       </div>
-
-      <!-- Bước 2: Chọn chain -->
-      <div>
-        <div class="field-label" style="margin-bottom:8px;">Chọn chain/khu vực áp dụng *
-          <span style="float:right;font-weight:400;">
-            <button onclick="selectAllChains(true)" style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:11px;">Chọn tất cả MT</button> |
-            <button onclick="selectAllChains(false)" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:11px;">Bỏ chọn</button>
-          </span>
-        </div>
-        <div style="background:#f8f9fa;border-radius:8px;padding:12px;">
-          <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:8px;">MT Chain</div>
-          <div id="bulk-mt-chains" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;">
-            <!-- injected by JS -->
-          </div>
-          <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:8px;">GT Khu vực</div>
-          <div id="bulk-gt-chains" style="display:flex;gap:8px;flex-wrap:wrap;">
-            <!-- injected by JS -->
-          </div>
-        </div>
-      </div>
-
-      <!-- Bước 3: Chọn sản phẩm + giá -->
-      <div>
-        <div class="field-label" style="margin-bottom:8px;">Sản phẩm & giá DGM *
-          <span style="float:right;font-weight:400;">
-            <button onclick="selectAllProducts(true)" style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:11px;">Chọn tất cả</button> |
-            <button onclick="selectAllProducts(false)" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:11px;">Bỏ chọn</button>
-          </span>
-        </div>
-        <div style="max-height:280px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;">
-          <table style="font-size:12px;">
-            <thead><tr>
-              <th style="width:36px;"><input type="checkbox" id="select-all-sp" onchange="selectAllProducts(this.checked)"></th>
-              <th>Sản phẩm</th><th>Nhóm</th><th>Quy cách</th>
-              <th>Giá DGM (đ) *</th><th>Đơn vị</th>
-            </tr></thead>
-            <tbody id="bulk-products-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="bulk-preview" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px;font-size:13px;display:none;">
-        ✅ Sẽ tạo <strong id="bulk-count">0</strong> dòng tracker
-        <span style="color:var(--gray);font-size:11px;">(bỏ qua dòng đã tồn tại)</span>
+      <div id="bulk-preview" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;font-size:13px;display:none;">
+        ✅ Sẽ tạo tracker cho <strong id="bulk-count">...</strong> dòng trong Price_Events<br>
+        <span style="font-size:11px;color:var(--gray);">Bỏ qua dòng đã tồn tại trong tracker</span>
       </div>
     </div>
     <div class="modal-footer">
@@ -630,7 +593,7 @@ input:focus, select:focus { border-color: var(--navy); }
 // CONFIG
 // Lấy URL từ: Apps Script → Deploy → Manage Deployments → URL Web App
 // ════════════════════════════════════════════
-const API = 'https://script.google.com/macros/s/AKfycbzZDyH8vhEr2hFvyQEOng3KBoK5I3b9hx0eBOVSi6tdoQLjVw1eSMOOXtuodvnHVYE/exec';
+const API = 'https://script.google.com/macros/s/AKfycbwFc7e64aHEk56tXJG1PVVmvYS6YSgVQ84E0gb27SjcmFVjQhs-s0tXRul9UKJzA07PUw/exec';
 const OWN_BRANDS = ['AB','AN','DU'];
 
 // ════════════════════════════════════════════
@@ -1034,7 +997,7 @@ function filterTracker() {
   const st   = document.getElementById('tracker-status').value;
   const kenh = document.getElementById('tracker-kenh').value;
   let list   = data.tracker;
-  if (ev)   list = list.filter(r => r.ten_su_kien === ev || r.ma_su_kien === ev);
+  if (ev)   list = list.filter(r => r.ten_su_kien === ev || r.ma_tang_gia === ev);
   if (st)   list = list.filter(r => r.trang_thai === st);
   if (kenh) list = list.filter(r => (r.kenh_khach_hang||'MT') === kenh);
   renderTracker(list);
@@ -1179,17 +1142,23 @@ function exportHistory() { showToast('Export Excel: kéo data từ Google Sheet 
 // PROPAGATION
 // ════════════════════════════════════════════
 function populateEventSelects() {
-  // Populate event dropdowns (propagation page + tracker filter)
   const evSel = document.getElementById('event-select');
   const trSel = document.getElementById('tracker-event');
+
+  // Lấy unique ma_tang_gia
+  const uniqueMap = {};
+  data.events.forEach(e => {
+    if (e.ma_tang_gia && !uniqueMap[e.ma_tang_gia]) uniqueMap[e.ma_tang_gia] = e;
+  });
+
   [evSel, trSel].forEach(sel => {
     if (!sel) return;
     const cur = sel.value;
     while (sel.options.length > 1) sel.remove(1);
-    data.events.forEach(e => {
+    Object.values(uniqueMap).forEach(e => {
       const opt = document.createElement('option');
-      opt.value = e.ma_su_kien || e.ten_su_kien;
-      opt.textContent = e.ten_su_kien + ' (' + e.ngay_hieu_luc + ')';
+      opt.value = e.ma_tang_gia;
+      opt.textContent = e.ma_tang_gia + ' — ' + (e.ten_su_kien||'') + ' (' + (e.ngay_dgm_ap_dung||'') + ')';
       sel.appendChild(opt);
     });
     sel.value = cur;
@@ -1259,9 +1228,9 @@ async function saveEvent() {
       openBulkTrackerModal();
       // Pre-select event vừa tạo
       const sel = document.getElementById('bulk-event');
-      if (sel && res.ma_su_kien) {
+      if (sel && res.ma_tang_gia) {
         for (let opt of sel.options) {
-          if (opt.value === res.ma_su_kien || opt.text.includes(payload.ten_su_kien)) {
+          if (opt.value === res.ma_tang_gia || opt.text.includes(payload.ten_su_kien)) {
             sel.value = opt.value; onBulkEventChange(); break;
           }
         }
@@ -1270,148 +1239,71 @@ async function saveEvent() {
   } catch(e) { showToast('Lỗi: ' + e.message, 'error'); }
 }
 
-// ── BULK TRACKER ──
+// ── BULK TRACKER — ĐƠN GIẢN ──
 function openBulkTrackerModal() {
-  // Populate event select
   const sel = document.getElementById('bulk-event');
-  sel.innerHTML = '<option value="">-- Chọn event --</option>';
+  sel.innerHTML = '<option value="">-- Chọn mã đợt tăng giá --</option>';
+
+  // Lấy unique ma_tang_gia từ events
+  const uniqueEvents = {};
   data.events.forEach(e => {
+    if (e.ma_tang_gia && !uniqueEvents[e.ma_tang_gia]) {
+      uniqueEvents[e.ma_tang_gia] = e;
+    }
+  });
+
+  Object.values(uniqueEvents).forEach(e => {
     const opt = document.createElement('option');
-    opt.value = e.ma_su_kien;
-    opt.textContent = e.ten_su_kien + ' (' + e.ngay_hieu_luc + ')';
-    opt.dataset.event = JSON.stringify(e);
+    opt.value = e.ma_tang_gia;
+    const count = data.events.filter(ev => ev.ma_tang_gia === e.ma_tang_gia).length;
+    opt.textContent = e.ma_tang_gia + ' — ' + (e.ten_su_kien||'') + ' (' + count + ' SP)';
     sel.appendChild(opt);
   });
 
-  // Populate MT chains
-  const mtContainer = document.getElementById('bulk-mt-chains');
-  const mtChains = data.master?.mt_chains || [];
-  mtContainer.innerHTML = mtChains.map(c => `
-    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:4px 8px;background:white;border:1px solid var(--border);border-radius:6px;">
-      <input type="checkbox" class="chain-cb" value="${c.ten}" data-kenh="MT" checked>
-      <span>${c.ten}</span>
-    </label>`).join('');
-
-  // GT groups
-  const gtContainer = document.getElementById('bulk-gt-chains');
-  const gtGroups = data.master?.gt_groups || ['GT North','GT South','GT Central'];
-  gtContainer.innerHTML = gtGroups.map(g => `
-    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:4px 10px;background:white;border:1px solid var(--border);border-radius:6px;">
-      <input type="checkbox" class="chain-cb" value="${g}" data-kenh="GT">
-      <span>${g}</span>
-    </label>`).join('');
-
-  // Populate products
-  const tbody = document.getElementById('bulk-products-tbody');
-  const ownProds = (data.master?.san_pham || []).filter(p => {
-    const loai = (p.loai_thuong_hieu||'').toLowerCase();
-    const brand = p.thuong_hieu||'';
-    return loai==='own_brand' || ['AB','AN','DU'].includes(brand) ||
-           brand.toLowerCase().includes('ayam');
-  });
-  tbody.innerHTML = ownProds.map(p => `
-    <tr>
-      <td style="text-align:center;"><input type="checkbox" class="sp-cb" value="${p.ma_san_pham}" data-name="${p.ten_san_pham}" checked></td>
-      <td><strong>${p.ten_san_pham}</strong></td>
-      <td style="color:var(--gray);">${p.nhom_san_pham||'—'}</td>
-      <td style="color:var(--gray);">${p.quy_cach_mac_dinh||''}${p.don_vi||''}</td>
-      <td><input type="number" class="gia-dgm-input" data-ma="${p.ma_san_pham}"
-          placeholder="Nhập giá DGM"
-          style="width:130px;padding:4px 8px;font-size:12px;border:1px solid var(--border);border-radius:4px;"></td>
-      <td>
-        <select class="unit-select" data-ma="${p.ma_san_pham}" style="font-size:12px;padding:4px;border:1px solid var(--border);border-radius:4px;">
-          <option value="lon">lon</option><option value="chai">chai</option>
-          <option value="bịch">bịch</option><option value="thùng">thùng</option>
-        </select>
-      </td>
-    </tr>`).join('');
-
-  // Update count on checkbox change
-  document.querySelectorAll('.chain-cb,.sp-cb').forEach(cb => {
-    cb.addEventListener('change', updateBulkCount);
-  });
-  updateBulkCount();
+  document.getElementById('bulk-event-info').style.display = 'none';
+  document.getElementById('bulk-preview').style.display = 'none';
   openModal('bulk-tracker-modal');
 }
 
 function onBulkEventChange() {
-  const sel = document.getElementById('bulk-event');
-  const opt = sel.options[sel.selectedIndex];
+  const maTangGia = document.getElementById('bulk-event').value;
   const info = document.getElementById('bulk-event-info');
-  if (opt && opt.dataset.event) {
-    try {
-      const e = JSON.parse(opt.dataset.event);
-      info.textContent = `Hiệu lực: ${e.ngay_hieu_luc} · Kênh: ${e.kenh} · ${e.ghi_chu_sp||''}`;
-      info.style.display = 'block';
-      // Prefill ngay_dgm for products
-      document.querySelectorAll('.gia-dgm-input').forEach(inp => {
-        inp.placeholder = `Giá DGM (hiệu lực ${e.ngay_hieu_luc})`;
-      });
-    } catch(err) {}
-  } else {
-    info.style.display = 'none';
-  }
-  updateBulkCount();
-}
-
-function updateBulkCount() {
-  const chains = document.querySelectorAll('.chain-cb:checked').length;
-  const sps    = document.querySelectorAll('.sp-cb:checked').length;
-  const total  = chains * sps;
   const preview = document.getElementById('bulk-preview');
-  document.getElementById('bulk-count').textContent = total;
-  preview.style.display = total > 0 ? 'block' : 'none';
-}
 
-function selectAllChains(checked) {
-  document.querySelectorAll('.chain-cb').forEach(cb => cb.checked = checked);
-  updateBulkCount();
-}
-function selectAllProducts(checked) {
-  document.querySelectorAll('.sp-cb').forEach(cb => cb.checked = checked);
-  document.getElementById('select-all-sp').checked = checked;
-  updateBulkCount();
+  if (!maTangGia) { info.style.display='none'; preview.style.display='none'; return; }
+
+  const rows = data.events.filter(e => e.ma_tang_gia === maTangGia);
+  const kenh = [...new Set(rows.map(r => r.kenh))].join(' + ');
+  const spList = rows.map(r => r.ten_san_pham).join(', ');
+  const ngay = rows[0]?.ngay_dgm_ap_dung || '—';
+  const khachHang = rows[0]?.khach_hang || 'all';
+
+  info.innerHTML = `
+    <strong>${rows[0]?.ten_su_kien || maTangGia}</strong><br>
+    Kênh: <strong>${kenh}</strong> · Ngày DGM áp dụng: <strong>${ngay}</strong><br>
+    Khách hàng: <strong>${khachHang}</strong><br>
+    Sản phẩm (${rows.length}): ${spList}`;
+  info.style.display = 'block';
+
+  document.getElementById('bulk-count').textContent = rows.length + ' dòng Price_Events → tự expand theo chain';
+  preview.style.display = 'block';
 }
 
 async function saveBulkTracker() {
-  const maSuKien = document.getElementById('bulk-event').value;
-  if (!maSuKien) { showToast('Chọn sự kiện trước', 'error'); return; }
-
-  const selEvent = data.events.find(e => e.ma_su_kien === maSuKien);
-  if (!selEvent) { showToast('Không tìm thấy event', 'error'); return; }
-
-  // Collect chains
-  const danh_sach_chain = [];
-  document.querySelectorAll('.chain-cb:checked').forEach(cb => {
-    danh_sach_chain.push({ ten: cb.value, kenh: cb.dataset.kenh || 'MT' });
-  });
-  if (!danh_sach_chain.length) { showToast('Chọn ít nhất 1 chain/khu vực', 'error'); return; }
-
-  // Collect products + giá
-  const danh_sach_san_pham = [];
-  document.querySelectorAll('.sp-cb:checked').forEach(cb => {
-    const ma  = cb.value;
-    const ten = cb.dataset.name;
-    const gia = document.querySelector(`.gia-dgm-input[data-ma="${ma}"]`)?.value || '';
-    const unit = document.querySelector(`.unit-select[data-ma="${ma}"]`)?.value || 'lon';
-    danh_sach_san_pham.push({ ma_san_pham: ma, ten_san_pham: ten, gia_dgm: gia, don_vi_tinh_gia: unit });
-  });
-  if (!danh_sach_san_pham.length) { showToast('Chọn ít nhất 1 sản phẩm', 'error'); return; }
+  const maTangGia = document.getElementById('bulk-event').value;
+  if (!maTangGia) { showToast('Chọn mã đợt tăng giá', 'error'); return; }
 
   const btn = document.getElementById('bulk-save-btn');
   btn.disabled = true; btn.textContent = '⏳ Đang tạo...';
 
   try {
     const res = await apiPost({ action:'bulkCreateTracker', data: {
-      ma_su_kien:         maSuKien,
-      ten_su_kien:        selEvent.ten_su_kien,
-      ngay_dgm_ap_dung:   selEvent.ngay_hieu_luc,
-      danh_sach_chain,
-      danh_sach_san_pham,
-      nguoi_tao:          'Bùi Quang Quý',
+      ma_tang_gia: maTangGia,
+      nguoi_tao:   'Bùi Quang Quý',
     }});
     closeModal('bulk-tracker-modal');
-    showToast(`✅ Đã tạo ${res.created} dòng tracker (bỏ qua ${res.skipped} trùng)`, 'success');
+    if (res.error) { showToast('Lỗi: ' + res.error, 'error'); return; }
+    showToast(`✅ Tạo ${res.created} dòng tracker (bỏ qua ${res.skipped} trùng)`, 'success');
     loadTracker();
   } catch(e) {
     showToast('Lỗi: ' + e.message, 'error');
@@ -1420,11 +1312,16 @@ async function saveBulkTracker() {
   }
 }
 
+// Stubs không còn dùng (giữ để không crash nếu còn ref)
+function selectAllChains() {}
+function selectAllProducts() {}
+function updateBulkCount() {}
+
 // ── UPDATE 1 DÒNG TRACKER ──
 function openTrackerRow(r) {
-  document.getElementById('tr-ma-tracker').value  = r.ma_tracker || '';
-  document.getElementById('tr-ma-su-kien').value  = r.ma_su_kien || '';
-  document.getElementById('tr-ma-sp').value       = r.ma_san_pham || '';
+  document.getElementById('tr-ma-tracker').value  = r.ma_tracker   || '';
+  document.getElementById('tr-ma-su-kien').value  = r.ma_tang_gia  || '';
+  document.getElementById('tr-ma-sp').value       = r.ma_san_pham  || '';
   document.getElementById('tr-ten-chain').value   = r.ten_khach_hang || '';
   document.getElementById('tr-info-header').textContent = r.ten_khach_hang + ' × ' + r.ten_san_pham;
   document.getElementById('tr-info-sub').textContent    =
@@ -1439,7 +1336,7 @@ function openTrackerRow(r) {
 async function saveTracker() {
   const payload = {
     ma_tracker:          document.getElementById('tr-ma-tracker').value,
-    ma_su_kien:          document.getElementById('tr-ma-su-kien').value,
+    ma_tang_gia:         document.getElementById('tr-ma-su-kien').value,
     ma_san_pham:         document.getElementById('tr-ma-sp').value,
     ten_khach_hang:      document.getElementById('tr-ten-chain').value,
     ngay_chain_ap_dung:  document.getElementById('tr-chain-date').value,

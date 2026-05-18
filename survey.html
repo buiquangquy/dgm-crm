@@ -607,7 +607,7 @@ input[type=file] { display: none; }
 // CONFIG — CẬP NHẬT URL API TẠI ĐÂY
 // Lấy URL từ: Apps Script → Deploy → Manage Deployments → URL Web App
 // ════════════════════════════════════════════
-const API = 'https://script.google.com/macros/s/AKfycbzZDyH8vhEr2hFvyQEOng3KBoK5I3b9hx0eBOVSi6tdoQLjVw1eSMOOXtuodvnHVYE/exec';
+const API = 'https://script.google.com/macros/s/AKfycbwFc7e64aHEk56tXJG1PVVmvYS6YSgVQ84E0gb27SjcmFVjQhs-s0tXRul9UKJzA07PUw/exec';
 
 // Kiểm tra URL hợp lệ
 if (!API || API === 'PASTE_YOUR_APPS_SCRIPT_URL_HERE' || !API.includes('script.google.com')) {
@@ -713,6 +713,15 @@ async function loadStaff() {
 
     // Store master data
     state.masterData = data;
+
+    // DEBUG: log san_pham count để kiểm tra
+    console.log('[DGM] getMasterData response:', {
+      nhan_vien_count: (data.nhan_vien||[]).length,
+      san_pham_count:  (data.san_pham||[]).length,
+      diem_ban_count:  (data.diem_ban||[]).length,
+      own_brand_ids:   data.own_brand_ids,
+      san_pham_sample: (data.san_pham||[]).slice(0,2),
+    });
 
     // Render staff grid
     const grid = document.createElement('div');
@@ -835,18 +844,38 @@ function startSurvey(channel) {
 function populateProducts() {
   const sel = document.getElementById('f-product');
   sel.innerHTML = '<option value="">-- Chọn sản phẩm --</option>';
-  const products = (state.masterData?.san_pham || []).filter(p => {
-    const ownBrandIds = state.masterData?.own_brand_ids || ['AB','AN','DU'];
-    return p.loai_thuong_hieu === 'own_brand' || ownBrandIds.includes(p.thuong_hieu);
+
+  const allProducts = state.masterData?.san_pham || [];
+  const ownBrandIds = state.masterData?.own_brand_ids || ['AB','AN','DU'];
+
+  // Lọc own brand: ưu tiên loai_thuong_hieu, fallback kiểm tra thuong_hieu code
+  const products = allProducts.filter(p => {
+    const loai = (p.loai_thuong_hieu || '').toLowerCase().trim();
+    const brand = (p.thuong_hieu || '').trim();
+    // Nếu có loai_thuong_hieu rõ ràng → dùng nó
+    if (loai === 'own_brand') return true;
+    if (loai === 'competitor') return false;
+    // Nếu loai_thuong_hieu trống → fallback check brand code (AB, AN, DU)
+    if (ownBrandIds.includes(brand)) return true;
+    // Nếu brand name chứa "Ayam" hoặc "Alce" hoặc "Duchef" → own brand
+    const brandLower = brand.toLowerCase();
+    if (brandLower.includes('ayam') || brandLower.includes('alce') || brandLower.includes('duchef')) return true;
+    return false;
   });
+
   if (products.length === 0) {
     const opt = document.createElement('option');
     opt.disabled = true;
-    opt.textContent = '— Chưa có sản phẩm (nhập vào tab Products) —';
+    // Thông báo rõ hơn: có bao nhiêu sp total vs own brand
+    const totalCount = allProducts.length;
+    opt.textContent = totalCount > 0
+      ? `— Có ${totalCount} SP nhưng không nhận diện được own brand (kiểm tra cột thuong_hieu = AB/AN/DU) —`
+      : '— Chưa có sản phẩm trong tab Products —';
     sel.appendChild(opt);
     return;
   }
-  // Group by brand
+
+  // Group by thuong_hieu
   const brands = {};
   products.forEach(p => {
     const b = p.thuong_hieu || 'Khác';
