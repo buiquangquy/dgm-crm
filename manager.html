@@ -1098,7 +1098,7 @@ function applyLang() {
   };
   Object.entries(navMap).forEach(([id, key]) => {
     const el2 = document.getElementById(id);
-    if (el2) el2.textContent = t(key);
+    if (el2) el2.textContent = tr(key);
   });
 
   // ── Page title (top bar) ──
@@ -1131,7 +1131,7 @@ function applyLang() {
   };
   Object.entries(btnMap).forEach(([id, key]) => {
     const el2 = document.getElementById(id);
-    if (el2 && !el2.disabled) el2.textContent = t(key);
+    if (el2 && !el2.disabled) el2.textContent = tr(key);
   });
 
   // ── KPI labels (dashboard) ──
@@ -1145,7 +1145,7 @@ function applyLang() {
   };
   Object.entries(kpiMap).forEach(([id, key]) => {
     const el2 = document.getElementById(id);
-    if (el2) el2.textContent = t(key);
+    if (el2) el2.textContent = tr(key);
   });
 
   // ── Card titles ──
@@ -1166,7 +1166,7 @@ function applyLang() {
   };
   Object.entries(cardMap).forEach(([id, key]) => {
     const el2 = document.getElementById(id);
-    if (el2) el2.textContent = t(key);
+    if (el2) el2.textContent = tr(key);
   });
 
   // ── Table headers — re-render với ngôn ngữ mới ──
@@ -1182,7 +1182,7 @@ function applyLang() {
   ];
   tabMap.forEach(([id, key]) => {
     const el2 = document.getElementById(id);
-    if (el2) el2.textContent = t(key);
+    if (el2) el2.textContent = tr(key);
   });
 
   // ── Filter first options ──
@@ -1204,7 +1204,7 @@ function applyLang() {
         'hist-ch':          'filter_all_channel',
         'hist-type':        'filter_all_type',
       };
-      if (map[id]) sel.options[0].textContent = t(map[id]);
+      if (map[id]) sel.options[0].textContent = tr(map[id]);
     }
   });
 
@@ -1224,35 +1224,35 @@ function applyTableHeaders() {
   const mtTh = document.querySelectorAll('#page-mt thead th');
   const mtKeys = ['th_chain','th_product','th_dgm_price','th_ntd_commit',
                   'th_passthrough','th_survey','th_drift','th_status','th_update'];
-  mtTh.forEach((th, i) => { if (mtKeys[i]) th.textContent = t(mtKeys[i]); });
+  mtTh.forEach((th, i) => { if (mtKeys[i]) th.textContent = tr(mtKeys[i]); });
 
   // GT table
   const gtTh = document.querySelectorAll('#page-gt thead th');
   const gtKeys = ['th_region_agent','th_product','th_dgm_agent','th_agent_outlet',
                   'th_outlet_ntd','th_pt_total','th_survey_ntd','th_drift','th_status'];
-  gtTh.forEach((th, i) => { if (gtKeys[i]) th.textContent = t(gtKeys[i]); });
+  gtTh.forEach((th, i) => { if (gtKeys[i]) th.textContent = tr(gtKeys[i]); });
 
   // Events table
   const evTh = document.querySelectorAll('#events-list thead th');
   const evKeys = ['th_event_id','th_event_name','th_channel','th_product',
                   'th_pct','th_price_range','th_apply_date','th_trang_thai'];
-  evTh.forEach((th, i) => { if (evKeys[i]) th.textContent = t(evKeys[i]); });
+  evTh.forEach((th, i) => { if (evKeys[i]) th.textContent = tr(evKeys[i]); });
 
   // History table
   const hTh = document.querySelectorAll('#page-history thead th');
   const hKeys = ['th_date','th_staff','th_channel','th_outlet','th_product',
                  'th_brand','th_price_type','th_price','th_note'];
-  hTh.forEach((th, i) => { if (hKeys[i]) th.textContent = t(hKeys[i]); });
+  hTh.forEach((th, i) => { if (hKeys[i]) th.textContent = tr(hKeys[i]); });
 
   // MD Products table
   const pTh = document.querySelectorAll('#md-products thead th');
   const pKeys = ['th_code','th_name','th_group','th_brand_col','th_spec','th_mfg','th_origin','th_trang_thai'];
-  pTh.forEach((th, i) => { if (pKeys[i]) th.textContent = t(pKeys[i]); });
+  pTh.forEach((th, i) => { if (pKeys[i]) th.textContent = tr(pKeys[i]); });
 
   // MD Outlets table
   const oTh = document.querySelectorAll('#md-outlets thead th');
   const oKeys = ['th_code','th_outlet_name','th_channel','th_format','th_gt_region','th_agent','th_trang_thai'];
-  oTh.forEach((th, i) => { if (oKeys[i]) th.textContent = t(oKeys[i]); });
+  oTh.forEach((th, i) => { if (oKeys[i]) th.textContent = tr(oKeys[i]); });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -2081,7 +2081,7 @@ function el(id)   { return document.getElementById(id); }
 function val(id)  { const e=el(id); return e?e.value:''; }
 function fmt(n)   { return Number(n).toLocaleString('vi'); }
 function isTrue(v){ return String(v||'').toLowerCase().trim()==='true'||v==='1'; }
-function setSyncInfo(msg){ el('sync-info').textContent=t; }
+function setSyncInfo(msg){ el('sync-info').textContent=msg; }
 function ptBar(pct) {
   const capped = Math.min(pct,150);
   const color  = pct>=95?'var(--green)':pct>=80?'var(--orange)':'var(--red)';
