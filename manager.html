@@ -2269,8 +2269,7 @@ async function saveGTBulk() {
   const missingPrice = skus.filter(s => !s.gia_cu && !s.gia_moi);
   if (missingPrice.length) {
     const names = missingPrice.map(s=>s.ten_san_pham).slice(0,3).join(', ');
-    if (!confirm(missingPrice.length + ' SKU chưa nhập giá (' + names + '...).
-Vẫn tiếp tục? Có thể điền giá trong tracker sau.')) return;
+    if (!confirm(missingPrice.length + ' SKU chưa nhập giá (' + names + '...).\nVẫn tiếp tục? Có thể điền giá trong tracker sau.')) return;
   }
 
   const btn = el('gt-bulk-btn');
