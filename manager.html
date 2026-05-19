@@ -1111,7 +1111,7 @@ function applyLang() {
   const activePage = document.querySelector('.page.active');
   if (activePage) {
     const pageId = activePage.id.replace('page-', '');
-    if (titleMap[pageId]) el('page-title').textContent = tr(titleMap[id] || 'title_dashboard');
+    if (titleMap[pageId]) el('page-title').textContent = tr(titleMap[pageId] || 'title_dashboard');
   }
 
   // ── Buttons ──
@@ -1269,36 +1269,30 @@ document.addEventListener('DOMContentLoaded', () => {
 // FETCH HELPERS
 // ════════════════════════════════════════
 async function apiFetch(params, ms=45000) {
-  // Cache-busting: thêm timestamp vào mỗi request
-  // → Google Apps Script và browser sẽ không dùng cached response cũ
+  // Cache-busting: _t timestamp đảm bảo không dùng cached response
   const p = { ...params, _t: Date.now() };
-  const url  = API + '?' + new URLSearchParams(p);
-  const ctrl = new AbortController();
-  const _timer = setTimeout(() => ctrl.abort(), ms);
-  try {
-    const res  = await fetch(url, {
-      signal: ctrl.signal,
-      // Yêu cầu browser không dùng cache
-      cache: 'no-store',
-      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
-    });
-    const text = await res.text();
-    clearTimeout(_timer);
-    if (text.trim().startsWith('<')) throw new Error('API returned HTML — redeploy AppScript');
-    return JSON.parse(text);
-  } catch(e) { clearTimeout(_timer); if(e.name==='AbortError') throw new Error('Timeout'); throw e; }
+  const url = API + '?' + new URLSearchParams(p);
+  // Dùng Promise.race thay AbortController để tránh lỗi clone trong một số môi trường
+  const fetchPromise = fetch(url).then(res => res.text());
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('Timeout sau ' + Math.round(ms/1000) + 's')), ms)
+  );
+  const text = await Promise.race([fetchPromise, timeoutPromise]);
+  if (text.trim().startsWith('<')) throw new Error('API trả về HTML — cần redeploy AppScript');
+  return JSON.parse(text);
 }
 
 async function apiPost(body) {
-  const ctrl = new AbortController();
-  const _timer2 = setTimeout(() => ctrl.abort(), 45000);
-  try {
-    const res  = await fetch(API, { method:'POST', body:JSON.stringify(body), signal:ctrl.signal });
-    clearTimeout(_timer2);
-    const text = await res.text();
-    if (text.trim().startsWith('<')) throw new Error('API HTML error');
-    return JSON.parse(text);
-  } catch(e) { clearTimeout(_timer2); throw e; }
+  const fetchPromise = fetch(API, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  }).then(res => res.text());
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('POST Timeout')), 45000)
+  );
+  const text = await Promise.race([fetchPromise, timeoutPromise]);
+  if (text.trim().startsWith('<')) throw new Error('API HTML error');
+  return JSON.parse(text);
 }
 
 // ════════════════════════════════════════
