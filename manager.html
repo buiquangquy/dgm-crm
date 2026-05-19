@@ -197,6 +197,7 @@ input:focus, select:focus { border-color: var(--navy); }
     <div class="nav-section-title">Quản lý</div>
     <div class="nav-item" onclick="showPage('events',this)"><span class="nav-icon">📢</span><span>Mốc tăng giá</span></div>
     <div class="nav-item" onclick="showPage('tracker',this)"><span class="nav-icon">🎯</span><span>MT Price Tracker</span></div>
+    <div class="nav-item" onclick="showPage('gt-tracker',this)"><span class="nav-icon">🛒</span><span>GT Price Tracker</span></div>
     <div class="nav-item" onclick="showPage('masterdata',this)"><span class="nav-icon">⚙️</span><span>Master Data</span></div>
   </div>
   <div class="sidebar-user">
@@ -211,7 +212,6 @@ input:focus, select:focus { border-color: var(--navy); }
     <h2 id="page-title">Dashboard</h2>
     <span class="sync-info" id="sync-info">Đang tải...</span>
     <button class="refresh-btn" onclick="loadAll()">🔄 Làm mới</button>
-    <button class="refresh-btn" style="background:#0ea5e9;margin-left:8px;" onclick="forceSync()" id="force-sync-btn" title="Reload toàn bộ master data từ Google Sheet + sync giá tracker">⚡ Force Sync</button>
     <button class="refresh-btn" style="background:var(--red);margin-left:8px;" onclick="openModal('event-modal')">📢 Nhập mốc tăng giá</button>
   </div>
 
@@ -222,6 +222,13 @@ input:focus, select:focus { border-color: var(--navy); }
       <div class="stat-box"><div class="sb-icon">📅</div><div class="sb-num" id="ds-week">—</div><div class="sb-label">Survey tuần này</div></div>
       <div class="stat-box"><div class="sb-icon">🏪</div><div class="sb-num" id="ds-outlets">—</div><div class="sb-label">Điểm bán hôm nay</div></div>
       <div class="stat-box"><div class="sb-icon">🚨</div><div class="sb-num" id="ds-alerts">—</div><div class="sb-label">Cảnh báo chưa đọc</div></div>
+    </div>
+    <!-- v11 Tracker todos summary -->
+    <div class="stats-grid" style="margin-bottom:16px;" id="tracker-todos-grid" style="display:none;">
+      <div class="stat-box"><div class="sb-icon">🔘</div><div class="sb-num" id="mt-chua-cap-nhat">—</div><div class="sb-label">MT Chưa cập nhật</div></div>
+      <div class="stat-box"><div class="sb-icon">🟡</div><div class="sb-num" id="mt-chua-survey">—</div><div class="sb-label">MT Chưa có Survey</div></div>
+      <div class="stat-box"><div class="sb-icon">🔴</div><div class="sb-num" id="mt-co-drift">—</div><div class="sb-label">MT Có drift giá</div></div>
+      <div class="stat-box"><div class="sb-icon">🟢</div><div class="sb-num" id="mt-da-xac-nhan">—</div><div class="sb-label">MT Đã xác nhận</div></div>
     </div>
 
     <div class="grid-2">
@@ -380,10 +387,11 @@ input:focus, select:focus { border-color: var(--navy); }
         <select id="tracker-event" style="width:auto;padding:6px 12px;" onchange="filterTracker()"><option value="">Sự kiện: Tất cả</option></select>
         <select id="tracker-status" style="width:auto;padding:6px 12px;" onchange="filterTracker()">
           <option value="">Trạng thái: Tất cả</option>
-          <option value="Đã gửi thông báo">📤 Đã gửi thông báo</option>
-          <option value="Chưa đồng ý">❌ Chưa đồng ý</option>
+          <option value="Đã thông báo">📤 Đã thông báo</option>
+          <option value="Đang đàm phán">🤝 Đang đàm phán</option>
           <option value="Đã đồng ý">✅ Đã đồng ý</option>
           <option value="Đã áp dụng">🟢 Đã áp dụng</option>
+          <option value="Bị từ chối">❌ Bị từ chối</option>
         </select>
         <select id="tracker-kenh" style="width:auto;padding:6px 12px;" onchange="filterTracker()">
           <option value="">Kênh: Tất cả</option>
@@ -394,14 +402,55 @@ input:focus, select:focus { border-color: var(--navy); }
       <div style="overflow-x:auto;">
         <table>
           <thead><tr>
-            <th>Sự kiện</th><th>Kênh</th><th>Khách hàng</th><th>Sản phẩm</th>
-            <th>Giá DGM (đ)</th><th>Ngày DGM</th><th>Ngày chain</th>
-            <th>Lag TB (ngày)</th><th>Giá NTD thực tế (đ)</th>
-            <th>Ngày survey XN</th><th>Lag TT (ngày)</th><th>Trạng thái</th>
+            <th>Sự kiện</th><th>Chain/Format</th><th>Sản phẩm</th>
+            <th>Giá DGM trước→sau</th><th>NTD cam kết</th><th>Ngày NTD mới</th>
+            <th>Pass-through %</th><th>Survey mới nhất</th><th>Drift %</th>
+            <th>Trạng thái cập nhật</th><th>Trạng thái tracker</th>
           </tr></thead>
           <tbody id="tracker-table"><tr><td colspan="12" style="text-align:center;">Đang tải...</td></tr></tbody>
         </table>
       </div>
+    </div>
+  </div>
+
+  <!-- ── GT PRICE TRACKER v11 ── -->
+  <div class="page" id="page-gt-tracker">
+    <div class="card">
+      <div class="card-title">🛒 GT Price Tracker — theo Region & Agent
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" onclick="openBulkGTTrackerModal()" style="font-size:13px;">🚀 Tạo GT tracker hàng loạt</button>
+        </div>
+      </div>
+      <div class="filter-row">
+        <select id="gt-tracker-event" style="width:auto;padding:6px 12px;" onchange="filterGTTracker()"><option value="">Sự kiện: Tất cả</option></select>
+        <select id="gt-tracker-region" style="width:auto;padding:6px 12px;" onchange="filterGTTracker()">
+          <option value="">Region: Tất cả</option>
+          <option value="GT North">GT North</option>
+          <option value="GT South">GT South</option>
+          <option value="GT Central">GT Central</option>
+        </select>
+        <select id="gt-tracker-status" style="width:auto;padding:6px 12px;" onchange="filterGTTracker()">
+          <option value="">Trạng thái: Tất cả</option>
+          <option value="Chưa áp dụng">Chưa áp dụng</option>
+          <option value="Đã áp dụng">Đã áp dụng</option>
+        </select>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>Sự kiện</th><th>Region / Agent</th><th>Sản phẩm</th>
+            <th>Giá DGM→Agent</th><th>Giá Agent→Outlet</th><th>NTD cam kết</th>
+            <th>Pass-through tổng %</th><th>Survey mới nhất</th>
+            <th>Drift %</th><th>Trạng thái cập nhật</th><th>Trạng thái</th>
+          </tr></thead>
+          <tbody id="gt-tracker-table"><tr><td colspan="11" style="text-align:center;">Đang tải...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <!-- GT Region Summary -->
+    <div class="card">
+      <div class="card-title">📊 Tóm tắt theo Region</div>
+      <div id="gt-region-summary"></div>
     </div>
   </div>
 
@@ -527,10 +576,11 @@ input:focus, select:focus { border-color: var(--navy); }
         <div>
           <div class="field-label">Trạng thái *</div>
           <select id="tr-status">
-            <option value="Đã gửi thông báo">📤 Đã gửi thông báo</option>
-            <option value="Chưa đồng ý">❌ Chưa đồng ý</option>
+            <option value="Đã thông báo">📤 Đã thông báo</option>
+            <option value="Đang đàm phán">🤝 Đang đàm phán</option>
             <option value="Đã đồng ý">✅ Đã đồng ý</option>
             <option value="Đã áp dụng">🟢 Đã áp dụng</option>
+            <option value="Bị từ chối">❌ Bị từ chối</option>
           </select>
         </div>
       </div>
@@ -587,50 +637,6 @@ input:focus, select:focus { border-color: var(--navy); }
   </div>
 </div>
 
-<!-- Force Sync Modal -->
-<div class="modal-overlay hidden" id="force-sync-modal">
-  <div class="modal" style="width:480px;max-width:95vw;">
-    <div class="modal-header">
-      <h3>⚡ Force Sync từ Google Sheet</h3>
-      <button class="modal-close" onclick="closeModal('force-sync-modal')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div style="font-size:13px;color:var(--gray);margin-bottom:12px;">
-        Reload toàn bộ data từ Google Sheet và cập nhật những thay đổi vào app.<br>
-        <strong>Không xóa</strong> data đã nhập tay (ngày chain, trạng thái, ghi chú).
-      </div>
-      <div id="sync-checklist" style="display:flex;flex-direction:column;gap:8px;">
-        <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;">
-          <input type="checkbox" id="sync-master" checked>
-          <div><strong>Master Data</strong> — Products, Outlets, Brands, Staff</div>
-        </label>
-        <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;">
-          <input type="checkbox" id="sync-events" checked>
-          <div><strong>Price Events</strong> — Giá mới, ngày hiệu lực</div>
-        </label>
-        <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;">
-          <input type="checkbox" id="sync-tracker-prices" checked>
-          <div><strong>Sync giá vào Tracker</strong> — Cập nhật <code>gia_dgm_thong_bao</code> từ Price_Events mới nhất<br>
-          <span style="font-size:11px;color:var(--gray);">Giữ nguyên: ngày chain, giá NTD thực tế, trạng thái, ghi chú</span></div>
-        </label>
-        <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;">
-          <input type="checkbox" id="sync-surveys" checked>
-          <div><strong>Surveys & Alerts</strong> — Data khảo sát, cảnh báo mới nhất</div>
-        </label>
-      </div>
-      <div id="sync-progress" style="display:none;margin-top:16px;">
-        <div style="background:#f8f9fa;border-radius:8px;padding:12px;font-size:13px;font-family:monospace;">
-          <div id="sync-log" style="max-height:160px;overflow-y:auto;"></div>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('force-sync-modal')" id="sync-cancel-btn">Huỷ</button>
-      <button class="btn btn-primary" onclick="runForceSync()" id="sync-run-btn">⚡ Bắt đầu Sync</button>
-    </div>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <script>
@@ -638,7 +644,7 @@ input:focus, select:focus { border-color: var(--navy); }
 // CONFIG
 // Lấy URL từ: Apps Script → Deploy → Manage Deployments → URL Web App
 // ════════════════════════════════════════════
-const API = 'https://script.google.com/macros/s/AKfycbwFc7e64aHEk56tXJG1PVVmvYS6YSgVQ84E0gb27SjcmFVjQhs-s0tXRul9UKJzA07PUw/exec';
+const API = 'https://script.google.com/macros/s/AKfycbw1PJk1C0G_5bxjjJoV2WFURm-HsUCWyNpDAs4NOa_V76mHc40KIfJzK6L8eKxk71_jtw/exec';
 const OWN_BRANDS = ['AB','AN','DU'];
 
 // ════════════════════════════════════════════
@@ -662,7 +668,7 @@ function showPage(id, navEl) {
   document.getElementById('page-' + id).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   if (navEl) navEl.classList.add('active');
-  const titles = { dashboard:'Dashboard', team:'Hoạt động Team', alerts:'Cảnh báo', propagation:'Lan truyền Giá', compare:'So sánh Giá', history:'Lịch sử Survey', events:'Mốc Tăng Giá DGM', tracker:'MT Price Tracker', masterdata:'Master Data' };
+  const titles = { dashboard:'Dashboard', team:'Hoạt động Team', alerts:'Cảnh báo', propagation:'Lan truyền Giá', compare:'So sánh Giá', history:'Lịch sử Survey', events:'Mốc Tăng Giá DGM', tracker:'MT Price Tracker', 'gt-tracker':'GT Price Tracker', masterdata:'Master Data' };
   document.getElementById('page-title').textContent = titles[id] || id;
 }
 
@@ -733,6 +739,32 @@ async function loadAll() {
       renderDashboardFromSurveys(data.surveys, res.tong_so || 0);
     })
     .catch(e => console.warn('Surveys:', e.message));
+
+  // v11: load dashboard cho mt_todos/gt_todos summary
+  const loadDash = apiFetch({ action: 'getDashboard' })
+    .then(res => {
+      const mt = res.mt_todos || {};
+      const gt = res.gt_todos || {};
+      const grid = document.getElementById('tracker-todos-grid');
+      if (grid) grid.style.display = 'grid';
+      const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val ?? '—'; };
+      set('mt-chua-cap-nhat', mt.chua_cap_nhat);
+      set('mt-chua-survey',   mt.chua_co_survey);
+      set('mt-co-drift',      mt.co_drift);
+      set('mt-da-xac-nhan',   mt.da_xac_nhan);
+      // Drift alerts
+      const driftAlerts = res.drift_alerts || [];
+      if (driftAlerts.length) {
+        const el2 = document.getElementById('alerts-dash');
+        if (el2) {
+          const driftHtml = driftAlerts.slice(0,3).map(a =>
+            `<div class="alert-item high"><div class="alert-icon">🔴</div><div><div class="alert-text" style="font-size:13px;">${a.mo_ta}</div></div></div>`
+          ).join('');
+          el2.innerHTML = (el2.innerHTML === '' ? '' : el2.innerHTML) + driftHtml;
+        }
+      }
+    })
+    .catch(e => console.warn('Dashboard v11:', e.message));
 
   const loadEvts = apiFetch({ action: 'getPriceEvents' })
     .then(res => {
@@ -1066,7 +1098,7 @@ function renderTracker(list) {
   };
 
   tbody.innerHTML = list.map((r, i) => {
-    const st   = r.trang_thai || 'Đã gửi thông báo';
+    const st   = r.trang_thai_tracker || 'Đã thông báo';
     const stCl = statusClass[st] || 'badge-warn';
     const stIc = statusIcon[st] || '📤';
     const lagTB = r.lag_thong_bao ? r.lag_thong_bao + ' ngày' : '—';
@@ -1078,12 +1110,12 @@ function renderTracker(list) {
       <td><span class="badge ${kenhCl}">${r.kenh_khach_hang||'MT'}</span></td>
       <td><strong>${r.ten_khach_hang||'—'}</strong></td>
       <td>${r.ten_san_pham||'—'}</td>
-      <td>${r.gia_dgm_thong_bao ? Number(r.gia_dgm_thong_bao).toLocaleString('vi')+'đ' : '—'}</td>
+      <td>${r.gia_dgm_truoc ? Number(r.gia_dgm_truoc).toLocaleString('vi')+'đ' : '—'}</td>
       <td style="font-size:12px;">${r.ngay_dgm_ap_dung||'—'}</td>
-      <td style="font-size:12px;">${r.ngay_chain_ap_dung||'<span style="color:#9ca3af;">Chưa nhập</span>'}</td>
+      <td style="font-size:12px;">${r.ngay_bat_dau_gia_ntd_moi||'<span style="color:#9ca3af;">Chưa nhập</span>'}</td>
       <td style="font-size:12px;">${lagTB}</td>
-      <td style="font-weight:700;color:var(--green);">${r.gia_ntd_thuc_te ? Number(r.gia_ntd_thuc_te).toLocaleString('vi')+'đ' : '—'}</td>
-      <td style="font-size:12px;">${r.ngay_survey_xac_nhan||'—'}</td>
+      <td style="font-weight:700;color:var(--green);">${r.gia_ntd_moi_nhat ? Number(r.gia_ntd_moi_nhat).toLocaleString('vi')+'đ' : '—'}</td>
+      <td style="font-size:12px;">${r.ngay_survey_moi_nhat||'—'}</td>
       <td style="font-size:12px;${lagTTColor}">${lagTT}</td>
       <td><span class="badge ${stCl}">${stIc} ${st}</span></td>
     </tr>`;
@@ -1216,7 +1248,7 @@ async function loadPropagation() {
   if (!ev) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">📡</div>Chọn mốc tăng giá để xem</div>'; return; }
   el.innerHTML = '<div style="color:#9ca3af;padding:20px;text-align:center;">Đang tải...</div>';
   try {
-    const res = await apiFetch({ action:'getPropagation', ten_su_kien: ev });
+    const res = await apiFetch({ action:'getPropagation', ma_tang_gia: ev });
     const mt  = res.mt_tracker || [];
     const lag = res.lag_trung_binh_ngay;
     el.innerHTML = `
@@ -1230,8 +1262,8 @@ async function loadPropagation() {
           const cl = st==='Đã áp dụng'?'badge-ok':st==='Chưa cập nhật'?'badge-err':'badge-warn';
           return `<tr>
             <td><strong>${r.ten_khach_hang}</strong></td>
-            <td>${r.gia_dgm_thong_bao?Number(r.gia_dgm_thong_bao).toLocaleString('vi')+'đ':'—'}</td>
-            <td>${r.gia_ntd_thuc_te?Number(r.gia_ntd_thuc_te).toLocaleString('vi')+'đ':'—'}</td>
+            <td>${r.gia_dgm_truoc?Number(r.gia_dgm_truoc).toLocaleString('vi')+'đ':'—'}</td>
+            <td>${r.gia_ntd_moi_nhat?Number(r.gia_ntd_moi_nhat).toLocaleString('vi')+'đ':'—'}</td>
             <td>${r.ngay_dgm_ap_dung||'—'}</td>
             <td>${r.ngay_khach_hang_ap_dung||'—'}</td>
             <td>${r.so_ngay_tre_thong_bao?r.so_ngay_tre_thong_bao+' ngày':'—'}</td>
@@ -1248,17 +1280,21 @@ async function loadPropagation() {
 // SAVE ACTIONS
 // ════════════════════════════════════════════
 async function saveEvent() {
+  // v11: addPriceEvent tạo 1 event header (ma_san_pham='all', khach_hang='all')
+  // Sau đó dùng bulkCreateMTTracker/bulkCreateGTTracker để expand
   const payload = {
-    ten_su_kien:    document.getElementById('ev-name').value.trim(),
-    ngay_hieu_luc:  document.getElementById('ev-date').value,
-    phan_tram_tang: document.getElementById('ev-pct').value,
-    kenh:           document.getElementById('ev-channel').value,
-    kenh_thong_bao: document.getElementById('ev-notify').value,
-    ghi_chu_sp:     document.getElementById('ev-sp-note').value,
-    ly_do:          document.getElementById('ev-reason').value,
-    muc_tieu_lag_mt: document.getElementById('ev-lag-mt').value || 14,
-    muc_tieu_lag_gt: document.getElementById('ev-lag-gt').value || 21,
-    nguoi_tao:      'Bùi Quang Quý',
+    ten_su_kien:     document.getElementById('ev-name').value.trim(),
+    ngay_dgm_ap_dung: document.getElementById('ev-date').value,
+    phan_tram_tang:  document.getElementById('ev-pct').value,
+    kenh:            document.getElementById('ev-channel').value === 'MT+GT' ? 'MT' : document.getElementById('ev-channel').value,
+    khach_hang:      'all',
+    ma_san_pham:     'all',
+    ten_san_pham:    document.getElementById('ev-sp-note').value || '(Xem tracker)',
+    gia_cu:          '',
+    gia_moi:         '',
+    ly_do:           document.getElementById('ev-reason').value,
+    nguoi_tao:       'Bùi Quang Quý',
+    ma_tang_gia:     'TG-' + Date.now(),
   };
   if (!payload.ten_su_kien || !payload.ngay_hieu_luc) {
     showToast('Vui lòng điền tên sự kiện và ngày hiệu lực', 'error'); return;
@@ -1342,7 +1378,7 @@ async function saveBulkTracker() {
   btn.disabled = true; btn.textContent = '⏳ Đang tạo...';
 
   try {
-    const res = await apiPost({ action:'bulkCreateTracker', data: {
+    const res = await apiPost({ action:'bulkCreateMTTracker', data: {
       ma_tang_gia: maTangGia,
       nguoi_tao:   'Bùi Quang Quý',
     }});
@@ -1370,10 +1406,10 @@ function openTrackerRow(r) {
   document.getElementById('tr-ten-chain').value   = r.ten_khach_hang || '';
   document.getElementById('tr-info-header').textContent = r.ten_khach_hang + ' × ' + r.ten_san_pham;
   document.getElementById('tr-info-sub').textContent    =
-    (r.ten_su_kien||'') + ' · Giá DGM: ' + (r.gia_dgm_thong_bao ? Number(r.gia_dgm_thong_bao).toLocaleString('vi')+'đ' : '—') +
-    ' · Giá NTD thực tế: ' + (r.gia_ntd_thuc_te ? Number(r.gia_ntd_thuc_te).toLocaleString('vi')+'đ (từ survey)' : 'Chưa có');
-  document.getElementById('tr-chain-date').value  = r.ngay_chain_ap_dung || '';
-  document.getElementById('tr-status').value      = r.trang_thai || 'Đã gửi thông báo';
+    (r.ten_su_kien||'') + ' · Giá DGM: ' + (r.gia_dgm_truoc ? Number(r.gia_dgm_truoc).toLocaleString('vi')+'đ' : '—') +
+    ' · Giá NTD thực tế: ' + (r.gia_ntd_moi_nhat ? Number(r.gia_ntd_moi_nhat).toLocaleString('vi')+'đ (từ survey)' : 'Chưa có');
+  document.getElementById('tr-chain-date').value  = r.ngay_bat_dau_gia_ntd_moi || '';
+  document.getElementById('tr-status').value      = r.trang_thai_tracker || 'Đã thông báo';
   document.getElementById('tr-note').value        = r.ghi_chu || '';
   openModal('tracker-modal');
 }
@@ -1384,8 +1420,8 @@ async function saveTracker() {
     ma_tang_gia:         document.getElementById('tr-ma-su-kien').value,
     ma_san_pham:         document.getElementById('tr-ma-sp').value,
     ten_khach_hang:      document.getElementById('tr-ten-chain').value,
-    ngay_chain_ap_dung:  document.getElementById('tr-chain-date').value,
-    trang_thai:          document.getElementById('tr-status').value,
+    ngay_bat_dau_gia_ntd_moi:  document.getElementById('tr-chain-date').value,
+    trang_thai_tracker:  document.getElementById('tr-status').value,
     ghi_chu:             document.getElementById('tr-note').value,
     nguoi_cap_nhat:      'Bùi Quang Quý',
   };
@@ -1453,148 +1489,151 @@ function showToast(msg, type='') {
 // ════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════
-// ════════════════════════════════════════════
-// FORCE SYNC
-// ════════════════════════════════════════════
-function forceSync() {
-  // Reset progress log
-  document.getElementById('sync-progress').style.display = 'none';
-  document.getElementById('sync-log').innerHTML = '';
-  document.getElementById('sync-run-btn').disabled = false;
-  document.getElementById('sync-run-btn').textContent = '⚡ Bắt đầu Sync';
-  document.getElementById('sync-cancel-btn').textContent = 'Huỷ';
-  openModal('force-sync-modal');
-}
-
-function syncLog(msg, type='') {
-  const el = document.getElementById('sync-log');
-  const color = type==='ok' ? 'var(--green)' : type==='err' ? 'var(--red)' : type==='warn' ? '#f59e0b' : 'inherit';
-  el.innerHTML += `<div style="color:${color};margin-bottom:3px;">${msg}</div>`;
-  el.scrollTop = el.scrollHeight;
-}
-
-async function runForceSync() {
-  const doMaster  = document.getElementById('sync-master').checked;
-  const doEvents  = document.getElementById('sync-events').checked;
-  const doTracker = document.getElementById('sync-tracker-prices').checked;
-  const doSurveys = document.getElementById('sync-surveys').checked;
-
-  const btn    = document.getElementById('sync-run-btn');
-  const cancel = document.getElementById('sync-cancel-btn');
-  btn.disabled = true;
-  btn.textContent = '⏳ Đang sync...';
-  document.getElementById('sync-progress').style.display = 'block';
-  document.getElementById('sync-log').innerHTML = '';
-
-  let hasError = false;
-
-  // ── 1. Master Data ──
-  if (doMaster) {
-    syncLog('📦 Đang tải Master Data (Products, Outlets, Brands, Staff)...');
-    try {
-      const res = await apiFetch({ action: 'getMasterData' });
-      data.master = res;
-      renderMasterData();
-      populateEventSelects();
-      const sp    = res.san_pham?.length  || 0;
-      const outlet = res.diem_ban?.length  || 0;
-      const staff  = res.nhan_vien?.length || 0;
-      const brand  = res.thuong_hieu?.length || 0;
-      syncLog(`✅ Master Data: ${sp} sản phẩm · ${outlet} điểm bán · ${staff} nhân viên · ${brand} thương hiệu`, 'ok');
-    } catch(e) {
-      syncLog('❌ Master Data lỗi: ' + e.message, 'err');
-      hasError = true;
-    }
-  }
-
-  // ── 2. Price Events ──
-  if (doEvents) {
-    syncLog('📢 Đang tải Price Events...');
-    try {
-      const res = await apiFetch({ action: 'getPriceEvents' });
-      data.events = res.su_kien || [];
-      renderEvents();
-      populateEventSelects();
-
-      // Hiện event mới nhất trên dashboard
-      if (data.events.length) {
-        const latest = [...data.events].sort((a,b) => (b.ngay_dgm_ap_dung||'').localeCompare(a.ngay_dgm_ap_dung||''))[0];
-        const el = document.getElementById('latest-event-dash');
-        if (el) el.innerHTML = `<div style="padding:12px;background:#fef9f0;border:1px solid #fde68a;border-radius:8px;">
-          <div style="font-weight:700;color:var(--navy);">${latest.ten_su_kien}</div>
-          <div style="font-size:13px;color:var(--gray);margin-top:4px;">Hiệu lực: ${latest.ngay_dgm_ap_dung} · Kênh: ${latest.kenh||'—'}</div>
-        </div>`;
-      }
-
-      // Group unique events
-      const uniqueEv = {};
-      data.events.forEach(e => { if (e.ma_tang_gia) uniqueEv[e.ma_tang_gia] = (uniqueEv[e.ma_tang_gia]||0)+1; });
-      const evSummary = Object.entries(uniqueEv).map(([k,v]) => `${k}(${v}SP)`).join(' · ');
-      syncLog(`✅ Price Events: ${data.events.length} dòng — ${evSummary}`, 'ok');
-    } catch(e) {
-      syncLog('❌ Price Events lỗi: ' + e.message, 'err');
-      hasError = true;
-    }
-  }
-
-  // ── 3. Sync giá vào Tracker ──
-  if (doTracker && data.events.length) {
-    syncLog('🎯 Đang sync giá từ Price_Events vào Tracker...');
-    try {
-      const res = await apiPost({ action: 'syncTrackerPrices', data: { nguoi_cap_nhat: 'Bùi Quang Quý' } });
-      if (res.error) throw new Error(res.error);
-      syncLog(`✅ Tracker sync: cập nhật ${res.updated} dòng · bỏ qua ${res.skipped} dòng (đã đúng)`, 'ok');
-      if (res.updated > 0) syncLog(`   ↳ Giá được cập nhật theo Price_Events mới nhất`, 'ok');
-      // Reload tracker display
-      await loadTracker();
-    } catch(e) {
-      syncLog('❌ Tracker sync lỗi: ' + e.message, 'err');
-      hasError = true;
-    }
-  } else if (doTracker && !data.events.length) {
-    syncLog('⚠️ Bỏ qua sync tracker — chưa có Price Events', 'warn');
-  }
-
-  // ── 4. Surveys & Alerts ──
-  if (doSurveys) {
-    syncLog('📋 Đang tải Surveys và Alerts...');
-    try {
-      const [svRes, alRes] = await Promise.allSettled([
-        apiFetch({ action: 'getSurveyList', limit: '50' }),
-        apiFetch({ action: 'getAlerts' }),
-      ]);
-      if (svRes.status === 'fulfilled') {
-        data.surveys = svRes.value.danh_sach || [];
-        renderDashboardFromSurveys(data.surveys, svRes.value.tong_so || 0);
-        syncLog(`✅ Surveys: ${data.surveys.length} gần nhất (tổng: ${svRes.value.tong_so || '?'})`, 'ok');
-      }
-      if (alRes.status === 'fulfilled') {
-        data.alerts = alRes.value.canh_bao || [];
-        renderAlerts();
-        document.getElementById('alert-badge').textContent = data.alerts.length;
-        document.getElementById('ds-alerts').textContent   = data.alerts.length;
-        syncLog(`✅ Alerts: ${data.alerts.length} chưa đọc`, 'ok');
-      }
-    } catch(e) {
-      syncLog('❌ Surveys/Alerts lỗi: ' + e.message, 'err');
-      hasError = true;
-    }
-  }
-
-  // ── Done ──
-  const time = new Date().toLocaleTimeString('vi');
-  if (hasError) {
-    syncLog(`\n⚠️ Sync hoàn tất lúc ${time} — có lỗi, kiểm tra ở trên`, 'warn');
-  } else {
-    syncLog(`\n✅ Force Sync hoàn tất lúc ${time}`, 'ok');
-  }
-  document.getElementById('sync-info').textContent = '✅ ' + time;
-  btn.disabled = false;
-  btn.textContent = '✅ Sync xong';
-  cancel.textContent = 'Đóng';
-}
-
 document.addEventListener('DOMContentLoaded', loadAll);
+
+// ════════════════════════════════════════════
+// GT TRACKER (v11)
+// ════════════════════════════════════════════
+async function loadGTTracker() {
+  try {
+    const ev     = document.getElementById('gt-tracker-event')?.value || '';
+    const region = document.getElementById('gt-tracker-region')?.value || '';
+    const params = { action: 'getGTTracker' };
+    if (ev)     params.ma_tang_gia = ev;
+    if (region) params.gt_region   = region;
+    const res = await apiFetch(params);
+    data.gtTracker = res.tracker || [];
+    renderGTTracker(data.gtTracker);
+    renderGTRegionSummary(res.region_summary || []);
+  } catch(e) { console.warn('GT Tracker:', e.message); }
+}
+
+function filterGTTracker() {
+  const ev     = document.getElementById('gt-tracker-event')?.value  || '';
+  const region = document.getElementById('gt-tracker-region')?.value || '';
+  const st     = document.getElementById('gt-tracker-status')?.value || '';
+  let list = data.gtTracker || [];
+  if (ev)     list = list.filter(r => r.ma_tang_gia === ev);
+  if (region) list = list.filter(r => r.gt_region   === region);
+  if (st)     list = list.filter(r => r.trang_thai_tracker === st);
+  renderGTTracker(list);
+}
+
+function renderGTTracker(list) {
+  const tbody = document.getElementById('gt-tracker-table');
+  if (!tbody) return;
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#9ca3af;">Chưa có dữ liệu GT tracker</td></tr>';
+    return;
+  }
+  const driftColor = { None:'', Low:'color:#92400e;', Medium:'color:var(--orange);font-weight:700;', High:'color:var(--red);font-weight:700;' };
+  tbody.innerHTML = list.map(r => {
+    const dgmStr  = r.gia_dgm_agent_truoc ? Number(r.gia_dgm_agent_truoc).toLocaleString('vi')+' → '+Number(r.gia_dgm_agent_sau||0).toLocaleString('vi')+'đ' : '—';
+    const olStr   = r.gia_agent_outlet_sau ? Number(r.gia_agent_outlet_sau).toLocaleString('vi')+'đ' : '—';
+    const ntdCam  = r.gia_ntd_cam_ket_sau  ? Number(r.gia_ntd_cam_ket_sau).toLocaleString('vi')+'đ' : '—';
+    const survey  = r.gia_ntd_moi_nhat     ? Number(r.gia_ntd_moi_nhat).toLocaleString('vi')+'đ' : '—';
+    const pt      = r.pass_through_tong_pct ? r.pass_through_tong_pct+'%' : '—';
+    const drift   = r.drift_pct ? (parseFloat(r.drift_pct)>0?'+':'')+r.drift_pct+'%' : '—';
+    const dCol    = driftColor[r.co_drift] || '';
+    const stCap   = r.trang_thai_cap_nhat || '🔘 Chưa cập nhật';
+    const st      = r.trang_thai_tracker  || 'Chưa áp dụng';
+    const stCl    = st === 'Đã áp dụng' ? 'badge-ok' : 'badge-warn';
+    return `<tr>
+      <td style="font-size:12px;">${r.ten_su_kien||'—'}</td>
+      <td><strong>${r.gt_region||'—'}</strong><br><span style="font-size:11px;color:#9ca3af;">${r.ten_agent||'—'}</span></td>
+      <td>${r.ten_san_pham||'—'}</td>
+      <td style="font-size:12px;">${dgmStr}</td>
+      <td style="font-size:12px;">${olStr}</td>
+      <td style="font-weight:700;color:var(--navy);">${ntdCam}</td>
+      <td style="font-size:12px;">${pt}</td>
+      <td style="font-weight:700;color:var(--green);">${survey}<br><span style="font-size:11px;color:#9ca3af;">${r.ngay_survey_moi_nhat||''} (${r.so_outlet_survey_xac_nhan||0} outlets)</span></td>
+      <td style="font-size:12px;${dCol}">${drift} <span style="font-size:10px;">${r.co_drift&&r.co_drift!=='None'?r.co_drift:''}</span></td>
+      <td><span style="font-size:13px;">${stCap}</span></td>
+      <td><span class="badge ${stCl}">${st}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderGTRegionSummary(summary) {
+  const el = document.getElementById('gt-region-summary');
+  if (!el || !summary.length) return;
+  el.innerHTML = `<table>
+    <thead><tr><th>Region</th><th>Tổng tracker</th><th>Đã áp dụng</th><th>Chưa cập nhật</th><th>Có drift</th><th>Pass-through TB %</th></tr></thead>
+    <tbody>${summary.map(r => `<tr>
+      <td><strong>${r.region}</strong></td>
+      <td>${r.tong}</td>
+      <td><span class="badge badge-ok">${r.da_ap_dung}</span></td>
+      <td><span class="badge badge-warn">${r.chua_cap_nhat}</span></td>
+      <td><span class="badge badge-err">${r.co_drift}</span></td>
+      <td>${r.pass_through_tb}%</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function openBulkGTTrackerModal() {
+  // Reuse bulk modal, gọi bulkCreateGTTracker action
+  const sel = document.getElementById('bulk-event');
+  sel.innerHTML = '<option value="">-- Chọn mã đợt tăng giá --</option>';
+  const uniqueEvents = {};
+  data.events.forEach(e => {
+    if (e.ma_tang_gia && !uniqueEvents[e.ma_tang_gia]) uniqueEvents[e.ma_tang_gia] = e;
+  });
+  Object.values(uniqueEvents).forEach(e => {
+    const opt = document.createElement('option');
+    opt.value = e.ma_tang_gia;
+    opt.textContent = e.ma_tang_gia + ' — ' + (e.ten_su_kien||'') + ' (GT)';
+    opt.dataset.channel = 'GT';
+    sel.appendChild(opt);
+  });
+  document.getElementById('bulk-event-info').style.display = 'none';
+  document.getElementById('bulk-preview').style.display = 'none';
+  // Override saveBulkTracker to use GT action
+  window._bulkChannel = 'GT';
+  openModal('bulk-tracker-modal');
+}
+
+// Override saveBulkTracker để handle cả MT và GT
+const _origSaveBulk = saveBulkTracker;
+async function saveBulkTracker() {
+  const maTangGia = document.getElementById('bulk-event').value;
+  if (!maTangGia) { showToast('Chọn mã đợt tăng giá', 'error'); return; }
+  const btn = document.getElementById('bulk-save-btn');
+  btn.disabled = true; btn.textContent = '⏳ Đang tạo...';
+  const action = window._bulkChannel === 'GT' ? 'bulkCreateGTTracker' : 'bulkCreateMTTracker';
+  try {
+    const res = await apiPost({ action, data: { ma_tang_gia: maTangGia, nguoi_tao: 'Bùi Quang Quý' }});
+    closeModal('bulk-tracker-modal');
+    window._bulkChannel = 'MT';
+    if (res.error) { showToast('Lỗi: ' + res.error, 'error'); return; }
+    showToast(`✅ Tạo ${res.created} dòng tracker (bỏ qua ${res.skipped} trùng)`, 'success');
+    if (action === 'bulkCreateGTTracker') loadGTTracker(); else loadTracker();
+  } catch(e) {
+    showToast('Lỗi: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '🚀 Tạo tracker';
+  }
+}
+
+// Khi navigate sang GT tracker, tự load data
+const _origShowPage = showPage;
+function showPage(id, navEl) {
+  _origShowPage(id, navEl);
+  if (id === 'gt-tracker' && !data.gtTracker) loadGTTracker();
+  if (id === 'gt-tracker') populateGTEventSelect();
+}
+function populateGTEventSelect() {
+  const sel = document.getElementById('gt-tracker-event');
+  if (!sel) return;
+  while (sel.options.length > 1) sel.remove(1);
+  const uniqueMap = {};
+  (data.events||[]).forEach(e => { if(e.ma_tang_gia && !uniqueMap[e.ma_tang_gia]) uniqueMap[e.ma_tang_gia] = e; });
+  Object.values(uniqueMap).forEach(e => {
+    const opt = document.createElement('option');
+    opt.value = e.ma_tang_gia;
+    opt.textContent = e.ma_tang_gia + ' — ' + (e.ten_su_kien||'');
+    sel.appendChild(opt);
+  });
+}
 </script>
 </body>
 </html>

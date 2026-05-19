@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
-<title>DGM Survey v10</title>
+<title>DGM Survey v11</title>
 <style>
 :root {
   --red: #C8102E;
@@ -366,8 +366,9 @@ input[type=file] { display: none; }
           <select id="f-gt-type">
             <option value="">-- Chọn loại --</option>
             <option value="Chợ">🏪 Chợ</option>
-            <option value="STTL">🏬 Siêu thị / minimart</option>
             <option value="Tạp hoá">🛍️ Tạp hoá</option>
+            <option value="Mini-mart">🏬 Mini-mart</option>
+            <option value="GT outlet">📦 GT outlet (tổng hợp)</option>
           </select>
         </div>
       </div>
@@ -607,7 +608,7 @@ input[type=file] { display: none; }
 // CONFIG — CẬP NHẬT URL API TẠI ĐÂY
 // Lấy URL từ: Apps Script → Deploy → Manage Deployments → URL Web App
 // ════════════════════════════════════════════
-const API = 'https://script.google.com/macros/s/AKfycbwFc7e64aHEk56tXJG1PVVmvYS6YSgVQ84E0gb27SjcmFVjQhs-s0tXRul9UKJzA07PUw/exec';
+const API = 'https://script.google.com/macros/s/AKfycbw1PJk1C0G_5bxjjJoV2WFURm-HsUCWyNpDAs4NOa_V76mHc40KIfJzK6L8eKxk71_jtw/exec';
 
 // Kiểm tra URL hợp lệ
 if (!API || API === 'PASTE_YOUR_APPS_SCRIPT_URL_HERE' || !API.includes('script.google.com')) {
