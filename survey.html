@@ -352,6 +352,17 @@ input[type=file] { display: none; }
           <input type="date" id="f-date" onchange="checkBackdate()">
           <div class="backdate-warn" id="backdate-warn">⏰ Đang nhập lùi ngày — ghi rõ lý do trong phần ghi chú</div>
         </div>
+        <!-- GT: Chọn khu vực TRƯỚC khi chọn điểm bán -->
+        <div id="gt-region-field" style="display:none;">
+          <div class="field-label">Khu vực GT <span class="req">*</span></div>
+          <select id="f-gt-region" onchange="onGTRegionChange()">
+            <option value="">-- Chọn khu vực --</option>
+            <option value="GT North">🔵 GT North (Hà Nội & miền Bắc)</option>
+            <option value="GT South">🔴 GT South (TP.HCM & miền Nam)</option>
+            <option value="GT Central">🟡 GT Central (Đà Nẵng, Huế & miền Trung)</option>
+          </select>
+        </div>
+
         <div id="outlet-field">
           <div class="field-label">Điểm bán <span class="req">*</span></div>
           <select id="f-outlet" onchange="onOutletChange()">
@@ -361,6 +372,8 @@ input[type=file] { display: none; }
             <input type="text" id="f-outlet-custom" placeholder="Tên hệ thống / địa điểm (tự nhập)">
           </div>
         </div>
+
+        <!-- GT: Loại điểm bán — tự điền theo khu vực, chỉ hiện khi GT -->
         <div id="gt-type-field" style="display:none;">
           <div class="field-label">Loại điểm bán GT</div>
           <select id="f-gt-type">
@@ -818,23 +831,35 @@ function startSurvey(channel) {
   document.getElementById('form-user-chip').textContent = state.user?.ten_hien_thi || '—';
   document.getElementById('form-date-chip').textContent = channel + ' · ' + today;
 
-  // Populate outlet dropdown
+  // Populate outlet dropdown (reset trước)
   const outletSel = document.getElementById('f-outlet');
   outletSel.innerHTML = '<option value="">-- Chọn điểm bán --</option>';
-  const outlets = (state.masterData?.diem_ban || []).filter(o => o.kenh === channel);
-  outlets.forEach(o => {
-    const opt = document.createElement('option');
-    opt.value = o.ten_diem_ban;
-    opt.textContent = o.ten_diem_ban + (o.is_approaching === 'TRUE' ? ' 🎯' : '');
-    outletSel.appendChild(opt);
-  });
-  const addOpt = document.createElement('option');
-  addOpt.value = '__custom__';
-  addOpt.textContent = '➕ Thêm mới (không có trong danh sách)';
-  outletSel.appendChild(addOpt);
 
-  // GT type field
-  document.getElementById('gt-type-field').style.display = channel === 'GT' ? 'block' : 'none';
+  // GT: Hiện khu vực field, ẩn outlet cho đến khi chọn region
+  const isGT = channel === 'GT';
+  const regionField = document.getElementById('gt-region-field');
+  regionField.style.display = isGT ? 'block' : 'none';
+
+  if (isGT) {
+    // GT: reset outlet về trạng thái chờ chọn region
+    document.getElementById('f-gt-region').value = '';
+    document.getElementById('f-outlet').innerHTML = '<option value="">-- Chọn khu vực trước --</option>';
+    document.getElementById('gt-type-field').style.display = 'none';
+  } else {
+    // MT: populate outlets bình thường
+    const outlets = (state.masterData?.diem_ban || []).filter(o => o.kenh === 'MT');
+    outlets.forEach(o => {
+      const opt = document.createElement('option');
+      opt.value = o.ten_diem_ban;
+      opt.textContent = o.ten_diem_ban + (o.is_approaching === 'TRUE' ? ' 🎯' : '');
+      outletSel.appendChild(opt);
+    });
+    const addOpt = document.createElement('option');
+    addOpt.value = '__custom__';
+    addOpt.textContent = '➕ Thêm mới (không có trong danh sách)';
+    outletSel.appendChild(addOpt);
+    document.getElementById('gt-type-field').style.display = 'none';
+  }
 
   // Populate product dropdown
   populateProducts();
@@ -907,6 +932,9 @@ function resetForm() {
   });
   document.getElementById('custom-outlet-wrap').style.display = 'none';
   document.getElementById('backdate-warn').classList.remove('show');
+  document.getElementById('gt-region-field').style.display = 'none';
+  const gtRegEl = document.getElementById('f-gt-region');
+  if (gtRegEl) gtRegEl.value = '';
   setProductType('own');
 }
 
@@ -967,9 +995,82 @@ function addExtraPhotos(input) {
 // ════════════════════════════════════════════
 // FORM EVENTS
 // ════════════════════════════════════════════
+function onGTRegionChange() {
+  const region = document.getElementById('f-gt-region').value;
+  if (!region) return;
+
+  // ── Lọc outlets theo region từ masterData ──
+  const allOutlets = state.masterData?.diem_ban || [];
+  const regionOutlets = allOutlets.filter(o =>
+    o.kenh === 'GT' && o.gt_region === region
+  );
+
+  // ── Lọc loại điểm bán theo quy tắc từng khu vực ──
+  // GT South:   chỉ Chợ
+  // GT Central: chỉ Chợ (Huế & Đà Nẵng)
+  // GT North:   Mini-mart + Chợ
+  const allowedTypes = {
+    'GT North':   ['Chợ', 'Mini-mart', 'GT outlet'],
+    'GT South':   ['Chợ', 'GT outlet'],
+    'GT Central': ['Chợ', 'GT outlet'],
+  };
+  const allowed = allowedTypes[region] || [];
+  const filteredOutlets = regionOutlets.filter(o =>
+    !o.loai_diem_ban || allowed.includes(o.loai_diem_ban)
+  );
+
+  // ── Populate outlet dropdown ──
+  const outletSel = document.getElementById('f-outlet');
+  outletSel.innerHTML = '<option value="">-- Chọn điểm bán --</option>';
+  filteredOutlets.forEach(o => {
+    const opt = document.createElement('option');
+    opt.value = o.ten_diem_ban;
+    const typeIcon = o.loai_diem_ban === 'Mini-mart' ? '🏬' : o.loai_diem_ban === 'Chợ' ? '🏪' : '📦';
+    opt.textContent = typeIcon + ' ' + o.ten_diem_ban;
+    opt.dataset.loai = o.loai_diem_ban || '';
+    outletSel.appendChild(opt);
+  });
+  // Không thêm "Thêm mới" cho GT vì điểm bán đã được kiểm soát trong master data
+
+  // ── Auto-fill loại điểm bán theo region nếu chỉ có 1 loại ──
+  const typeField = document.getElementById('gt-type-field');
+  const typeSel   = document.getElementById('f-gt-type');
+  typeField.style.display = 'block';
+
+  if (region === 'GT South' || region === 'GT Central') {
+    // Chỉ có Chợ → tự điền, không cần user chọn
+    typeSel.value = 'Chợ';
+    typeField.style.display = 'none'; // ẩn vì đã fix
+  } else {
+    // GT North: có cả Mini-mart và Chợ → để user chọn
+    typeSel.value = '';
+    typeField.style.display = 'block';
+  }
+
+  // Reset outlet custom field
+  document.getElementById('custom-outlet-wrap').style.display = 'none';
+  document.getElementById('f-outlet-custom').value = '';
+
+  // Auto-update form date chip
+  const date = document.getElementById('f-date').value;
+  document.getElementById('form-date-chip').textContent = 'GT · ' + region.replace('GT ','') + ' · ' + date;
+}
+
 function onOutletChange() {
-  const val = document.getElementById('f-outlet').value;
+  const val  = document.getElementById('f-outlet').value;
+  const isGT = state.channel === 'GT';
+
   document.getElementById('custom-outlet-wrap').style.display = val === '__custom__' ? 'block' : 'none';
+
+  // GT North: khi chọn outlet, auto-fill loại nếu outlet có data loai_diem_ban
+  if (isGT && val && val !== '__custom__') {
+    const outlets = state.masterData?.diem_ban || [];
+    const found   = outlets.find(o => o.ten_diem_ban === val && o.kenh === 'GT');
+    if (found?.loai_diem_ban) {
+      const typeSel = document.getElementById('f-gt-type');
+      typeSel.value = found.loai_diem_ban;
+    }
+  }
 }
 
 function onProductChange() {
@@ -1040,11 +1141,20 @@ function validateForm() {
     { id:'f-price-type', label:'Loại giá' },
   ];
 
+  // GT: Validate region trước
+  if (state.channel === 'GT') {
+    const regionVal = document.getElementById('f-gt-region')?.value || '';
+    if (!regionVal) {
+      showToast('⚠️ Vui lòng chọn khu vực GT', 'error');
+      return false;
+    }
+  }
+
   // Outlet
   const outletVal = document.getElementById('f-outlet').value;
   const customVal = document.getElementById('f-outlet-custom').value.trim();
   if (!outletVal || (outletVal === '__custom__' && !customVal)) {
-    showToast('⚠️ Vui lòng chọn hoặc nhập điểm bán', 'error');
+    showToast('⚠️ Vui lòng chọn điểm bán', 'error');
     return false;
   }
 
@@ -1122,6 +1232,7 @@ function buildPayload() {
     kenh:               state.channel,
     ten_diem_ban:       outletName,
     loai_diem_ban_gt:   document.getElementById('f-gt-type')?.value || '',
+    gt_region:          state.channel === 'GT' ? (document.getElementById('f-gt-region')?.value || '') : '',
     ten_san_pham:       productName,
     phan_loai:          state.productType === 'own' ? 'own_brand' : 'competitor',
     loai_san_pham:      productType,
