@@ -380,7 +380,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
     <div class="card">
       <div class="card-title">Chi tiết GT Pass-through — 3 tầng
         <div class="ct-right">
-          <button class="btn btn-sm btn-primary" onclick="openBulkModal('GT')">🚀 Tạo GT tracker</button>
+          <button class="btn btn-sm btn-primary" onclick="openGTBulkModal()">🚀 Tạo GT mốc tăng giá + Tracker</button>
         </div>
       </div>
       <div class="tbl-wrap">
@@ -549,13 +549,12 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
   </div>
 </div>
 
-<!-- Modal: Bulk create tracker -->
+<!-- Modal: Bulk MT tracker (chọn event đã có) -->
 <div class="modal-overlay hidden" id="modal-bulk">
   <div class="modal" style="width:480px;">
-    <div class="modal-hdr"><h3 id="bulk-modal-title">🚀 Tạo tracker hàng loạt</h3><button class="modal-close" onclick="closeModal('modal-bulk')">✕</button></div>
+    <div class="modal-hdr"><h3>🚀 Tạo MT Tracker hàng loạt</h3><button class="modal-close" onclick="closeModal('modal-bulk')">✕</button></div>
     <div class="modal-body">
-      <input type="hidden" id="bulk-channel" value="MT">
-      <div class="hint">Hệ thống đọc tất cả dòng Price_Events cùng mã đợt → tự expand theo chain/region.</div>
+      <div class="hint">Chọn mã đợt → hệ thống tự expand tất cả chains MT đang active.</div>
       <div><div class="field-label">Chọn mã đợt tăng giá *</div>
         <select id="bulk-event-sel" onchange="onBulkEventChange()" style="font-size:13px;">
           <option value="">-- Chọn --</option>
@@ -565,7 +564,99 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
     </div>
     <div class="modal-foot">
       <button class="btn btn-secondary" onclick="closeModal('modal-bulk')">Huỷ</button>
-      <button class="btn btn-primary" id="bulk-save-btn" onclick="saveBulkTracker()">🚀 Tạo tracker</button>
+      <button class="btn btn-primary" id="bulk-save-btn" onclick="saveBulkMTTracker()">🚀 Tạo MT tracker</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: GT — Nhập 1 lần cho nhiều SKU → tự tạo events + tracker ──────── -->
+<div class="modal-overlay hidden" id="modal-gt-bulk">
+  <div class="modal" style="width:640px;">
+    <div class="modal-hdr">
+      <h3>🛒 GT — Tạo mốc tăng giá + Tracker (1 lần nhập)</h3>
+      <button class="modal-close" onclick="closeModal('modal-gt-bulk')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="hint green">
+        ✅ Nhập 1 lần → hệ thống tự tạo <strong>Price_Events</strong> (1 dòng/SKU) +
+        <strong>GT Tracker</strong> (SKU × 3 regions). Manager chỉ cần điền giá
+        Agent→Outlet và NTD cam kết sau đó.
+      </div>
+
+      <!-- Header: tên sự kiện, mã, ngày -->
+      <div class="form-row">
+        <div>
+          <div class="field-label">Tên sự kiện *</div>
+          <input type="text" id="gt-ev-name" placeholder="VD: Tăng giá GT 2026 - Đợt 1">
+        </div>
+        <div>
+          <div class="field-label">Mã đợt *</div>
+          <input type="text" id="gt-ev-ma" placeholder="VD: TG-GT-2026-01">
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <div class="field-label">Ngày DGM áp dụng *</div>
+          <input type="date" id="gt-ev-date">
+        </div>
+        <div>
+          <div class="field-label">% tăng giá (chung tất cả SKU)</div>
+          <input type="number" id="gt-ev-pct" placeholder="VD: 8" step="0.1"
+                 oninput="onGTPctChange()">
+        </div>
+      </div>
+      <div>
+        <div class="field-label">Lý do tăng giá</div>
+        <input type="text" id="gt-ev-reason" placeholder="Giá nguyên liệu, tỷ giá...">
+      </div>
+
+      <!-- SKU table -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div class="field-label" style="margin:0;">Chọn SKU & nhập giá DGM → Agent *</div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-sm btn-secondary" onclick="selectAllGTSKUs()">Chọn tất cả</button>
+            <button class="btn btn-sm btn-secondary" onclick="clearAllGTSKUs()">Bỏ chọn</button>
+          </div>
+        </div>
+        <div class="hint yellow" style="margin-bottom:8px;font-size:11px;">
+          💡 Giá DGM→Agent giống nhau cho tất cả 3 regions (GT North/South/Central).
+          Sau khi tạo, vào GT Tracker để điền giá Agent→Outlet và NTD cam kết theo từng region.
+        </div>
+
+        <!-- SKU search -->
+        <input type="text" id="gt-sku-search" placeholder="🔍 Tìm nhanh theo tên SP..."
+               oninput="filterGTSKUs()" style="margin-bottom:8px;">
+
+        <div style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;">
+          <table style="font-size:12px;">
+            <thead style="position:sticky;top:0;background:var(--navy);color:white;">
+              <tr>
+                <th style="padding:8px;width:36px;"><input type="checkbox" id="gt-check-all" onchange="toggleAllGTSKUs(this)"></th>
+                <th style="padding:8px;text-align:left;">Sản phẩm</th>
+                <th style="padding:8px;text-align:left;">Nhóm</th>
+                <th style="padding:8px;width:130px;">Giá cũ DGM→Agent (đ)</th>
+                <th style="padding:8px;width:130px;">Giá mới DGM→Agent (đ)</th>
+              </tr>
+            </thead>
+            <tbody id="gt-sku-table">
+              <tr><td colspan="5" style="text-align:center;padding:20px;color:#9ca3af;">Đang tải danh sách SP...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="font-size:12px;color:var(--gray);margin-top:6px;" id="gt-sku-count">0 SKU đã chọn</div>
+      </div>
+
+      <!-- Preview -->
+      <div id="gt-bulk-preview" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;font-size:13px;color:#166534;"></div>
+
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeModal('modal-gt-bulk')">Huỷ</button>
+      <button class="btn btn-primary" id="gt-bulk-btn" onclick="saveGTBulk()">
+        🚀 Tạo Price Events + GT Tracker
+      </button>
     </div>
   </div>
 </div>
@@ -1495,6 +1586,252 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   loadAll();
 });
+
+// ════════════════════════════════════════
+// GT BULK MODAL — nhập 1 lần nhiều SKU
+// ════════════════════════════════════════
+function openGTBulkModal() {
+  // Reset form
+  el('gt-ev-name').value   = '';
+  el('gt-ev-ma').value     = 'TG-GT-' + new Date().getFullYear() + '-' + String(Date.now()).slice(-4);
+  el('gt-ev-date').value   = new Date().toISOString().slice(0,10);
+  el('gt-ev-pct').value    = '';
+  el('gt-ev-reason').value = '';
+  el('gt-sku-search').value= '';
+  el('gt-bulk-preview').style.display = 'none';
+  el('gt-bulk-btn').disabled = false;
+  el('gt-bulk-btn').textContent = '🚀 Tạo Price Events + GT Tracker';
+
+  // Render SKU table từ master data
+  renderGTSKUTable('');
+  openModal('modal-gt-bulk');
+}
+
+function renderGTSKUTable(filter) {
+  const prods = (D.master?.san_pham || [])
+    .filter(p => {
+      const isOwn = OWN_IDS.includes(p.thuong_hieu) ||
+                    (p.loai_thuong_hieu||'').toLowerCase() === 'own_brand';
+      const isActive = p.trang_thai === 'Active';
+      const matchFilter = !filter || (p.ten_san_pham||'').toLowerCase().includes(filter.toLowerCase());
+      return isOwn && isActive && matchFilter;
+    });
+
+  const tbody = el('gt-sku-table');
+  if (!prods.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#9ca3af;">Không có sản phẩm own brand active</td></tr>';
+    return;
+  }
+
+  // Lấy giá trị đã nhập trước đó (nếu user filter rồi re-render)
+  const prevValues = {};
+  tbody.querySelectorAll('tr[data-sp]').forEach(tr => {
+    const id = tr.dataset.sp;
+    const checked = tr.querySelector('.gt-sku-chk')?.checked;
+    const giaCu   = tr.querySelector('.gt-gia-cu')?.value;
+    const giaMoi  = tr.querySelector('.gt-gia-moi')?.value;
+    if (checked || giaCu || giaMoi) prevValues[id] = { checked, giaCu, giaMoi };
+  });
+
+  tbody.innerHTML = prods.map(p => {
+    const prev = prevValues[p.ma_san_pham] || {};
+    return `<tr data-sp="${p.ma_san_pham}" data-name="${p.ten_san_pham}">
+      <td style="padding:6px 8px;text-align:center;">
+        <input type="checkbox" class="gt-sku-chk" data-sp="${p.ma_san_pham}"
+               ${prev.checked?'checked':''} onchange="updateGTSKUCount()">
+      </td>
+      <td style="padding:6px 8px;">
+        <div style="font-weight:600;color:var(--navy);">${p.ten_san_pham}</div>
+        <div style="font-size:10px;color:#9ca3af;">${p.ma_san_pham} · ${p.thuong_hieu}</div>
+      </td>
+      <td style="padding:6px 8px;color:var(--gray);">${p.nhom_san_pham||'—'}</td>
+      <td style="padding:4px 8px;">
+        <input type="number" class="gt-gia-cu" data-sp="${p.ma_san_pham}"
+               placeholder="0" value="${prev.giaCu||''}"
+               style="padding:5px 8px;font-size:12px;text-align:right;"
+               oninput="onGTGiaChange('${p.ma_san_pham}')">
+      </td>
+      <td style="padding:4px 8px;">
+        <input type="number" class="gt-gia-moi" data-sp="${p.ma_san_pham}"
+               placeholder="0" value="${prev.giaMoi||''}"
+               style="padding:5px 8px;font-size:12px;text-align:right;"
+               oninput="onGTGiaChange('${p.ma_san_pham}')">
+      </td>
+    </tr>`;
+  }).join('');
+
+  updateGTSKUCount();
+}
+
+function filterGTSKUs() {
+  renderGTSKUTable(el('gt-sku-search').value);
+}
+
+function onGTPctChange() {
+  // Khi nhập % tăng: tự tính giá mới nếu đã có giá cũ
+  const pct = parseFloat(el('gt-ev-pct').value);
+  if (isNaN(pct)) return;
+  document.querySelectorAll('#gt-sku-table tr[data-sp]').forEach(tr => {
+    const cuInput  = tr.querySelector('.gt-gia-cu');
+    const moiInput = tr.querySelector('.gt-gia-moi');
+    if (!cuInput || !moiInput) return;
+    const giaCu = parseFloat(cuInput.value);
+    if (!isNaN(giaCu) && giaCu > 0 && !moiInput.value) {
+      moiInput.value = Math.round(giaCu * (1 + pct/100));
+    }
+  });
+  updateGTSKUCount();
+}
+
+function onGTGiaChange(maSP) {
+  // Auto-check SKU khi nhập giá
+  const row = document.querySelector('#gt-sku-table tr[data-sp="' + maSP + '"]');
+  if (!row) return;
+  const cu  = parseFloat(row.querySelector('.gt-gia-cu')?.value  || 0);
+  const moi = parseFloat(row.querySelector('.gt-gia-moi')?.value || 0);
+  const chk = row.querySelector('.gt-sku-chk');
+  if ((cu > 0 || moi > 0) && chk) chk.checked = true;
+  // Auto-tính giá mới nếu có % tăng và chỉ có giá cũ
+  const pct = parseFloat(el('gt-ev-pct').value);
+  if (!isNaN(pct) && cu > 0 && !row.querySelector('.gt-gia-moi').value) {
+    row.querySelector('.gt-gia-moi').value = Math.round(cu * (1 + pct/100));
+  }
+  updateGTSKUCount();
+}
+
+function selectAllGTSKUs() {
+  document.querySelectorAll('#gt-sku-table .gt-sku-chk').forEach(chk => chk.checked = true);
+  updateGTSKUCount();
+}
+
+function clearAllGTSKUs() {
+  document.querySelectorAll('#gt-sku-table .gt-sku-chk').forEach(chk => chk.checked = false);
+  updateGTSKUCount();
+}
+
+function toggleAllGTSKUs(masterChk) {
+  document.querySelectorAll('#gt-sku-table .gt-sku-chk').forEach(chk => chk.checked = masterChk.checked);
+  updateGTSKUCount();
+}
+
+function updateGTSKUCount() {
+  const checked = document.querySelectorAll('#gt-sku-table .gt-sku-chk:checked').length;
+  const total   = document.querySelectorAll('#gt-sku-table .gt-sku-chk').length;
+  el('gt-sku-count').textContent = checked + ' SKU đã chọn (tổng ' + total + ')';
+
+  // Update preview
+  const prev = el('gt-bulk-preview');
+  if (checked > 0) {
+    const agents  = D.master?.agents?.filter(a => a.trang_thai === 'active') || [];
+    const regions = ['GT North','GT South','GT Central'];
+    const trackersCount = checked * regions.length;  // 1 agent/region
+    prev.style.display = 'block';
+    prev.innerHTML = `✅ Sẽ tạo: <strong>${checked} SKU × ${regions.length} regions = ${trackersCount} GT tracker rows</strong><br>
+      <span style="font-size:11px;">Price_Events: ${checked} dòng · GT_Price_Tracker: ${trackersCount} skeleton rows</span><br>
+      <span style="font-size:11px;color:#166534;">Sau khi tạo → vào GT Tracker để điền giá Agent→Outlet & NTD cam kết từng region.</span>`;
+  } else {
+    prev.style.display = 'none';
+  }
+}
+
+function getSelectedGTSKUs() {
+  const skus = [];
+  document.querySelectorAll('#gt-sku-table tr[data-sp]').forEach(tr => {
+    const chk = tr.querySelector('.gt-sku-chk');
+    if (!chk?.checked) return;
+    const maSP  = tr.dataset.sp;
+    const tenSP = tr.dataset.name;
+    const giaCu = parseFloat(tr.querySelector('.gt-gia-cu')?.value  || 0) || '';
+    const giaMoi= parseFloat(tr.querySelector('.gt-gia-moi')?.value || 0) || '';
+    skus.push({ ma_san_pham: maSP, ten_san_pham: tenSP, gia_cu: giaCu, gia_moi: giaMoi });
+  });
+  return skus;
+}
+
+async function saveGTBulk() {
+  const name   = el('gt-ev-name').value.trim();
+  const ma     = el('gt-ev-ma').value.trim();
+  const date   = el('gt-ev-date').value;
+  const pct    = el('gt-ev-pct').value;
+  const reason = el('gt-ev-reason').value;
+  const skus   = getSelectedGTSKUs();
+
+  // Validate
+  if (!name) { showToast('Nhập tên sự kiện', 'error'); return; }
+  if (!ma)   { showToast('Nhập mã đợt', 'error'); return; }
+  if (!date) { showToast('Chọn ngày DGM áp dụng', 'error'); return; }
+  if (!skus.length) { showToast('Chọn ít nhất 1 SKU', 'error'); return; }
+
+  // Warn nếu có SKU chưa nhập giá
+  const missingPrice = skus.filter(s => !s.gia_cu && !s.gia_moi);
+  if (missingPrice.length) {
+    const names = missingPrice.map(s=>s.ten_san_pham).slice(0,3).join(', ');
+    if (!confirm(missingPrice.length + ' SKU chưa nhập giá (' + names + '...).
+Vẫn tiếp tục? Có thể điền giá trong tracker sau.')) return;
+  }
+
+  const btn = el('gt-bulk-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Đang tạo...';
+
+  try {
+    const payload = {
+      ma_tang_gia:       ma,
+      ten_su_kien:       name,
+      ngay_dgm_ap_dung:  date,
+      phan_tram_tang:    pct,
+      ly_do:             reason,
+      nguoi_tao:         'Bùi Quang Quý',
+      skus:              skus,
+    };
+    const res = await apiPost({ action: 'bulkCreateGTEventAndTracker', data: payload });
+
+    if (res.error) { showToast('Lỗi: ' + res.error, 'error'); return; }
+
+    closeModal('modal-gt-bulk');
+    showToast('✅ ' + res.summary, 'success');
+
+    // Reload events + GT tracker
+    const [evRes, gtRes] = await Promise.all([
+      apiFetch({ action: 'getPriceEvents' }),
+      apiFetch({ action: 'getGTTracker' }),
+    ]);
+    D.events    = evRes.su_kien  || [];
+    D.gtTracker = gtRes.tracker  || [];
+    renderEvents();
+    populateEventSelects();
+    renderGTPage();
+    renderDashboard();
+
+    // Navigate sang GT tracker để điền giá còn thiếu
+    nav('gt', document.querySelector('.nav-item:nth-child(3)'));
+
+  } catch(e) {
+    showToast('Lỗi: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🚀 Tạo Price Events + GT Tracker';
+  }
+}
+
+// ── Rename saveBulkTracker → saveBulkMTTracker để tránh conflict ──
+async function saveBulkMTTracker() {
+  const maTG = val('bulk-event-sel');
+  if (!maTG) { showToast('Chọn mã đợt', 'error'); return; }
+  const btn = el('bulk-save-btn');
+  btn.disabled = true; btn.textContent = '⏳ Đang tạo...';
+  try {
+    const res = await apiPost({ action: 'bulkCreateMTTracker', data: { ma_tang_gia: maTG, nguoi_tao: 'Bùi Quang Quý' }});
+    closeModal('modal-bulk');
+    if (res.error) { showToast('Lỗi: ' + res.error, 'error'); return; }
+    showToast('✅ Tạo ' + res.created + ' MT tracker (bỏ qua ' + res.skipped + ' trùng)', 'success');
+    const r = await apiFetch({ action: 'getMTTracker' });
+    D.mtTracker = r.tracker || [];
+    renderMTPage();
+    renderDashboard();
+  } catch(e) { showToast('Lỗi: ' + e.message, 'error'); }
+  finally { btn.disabled = false; btn.textContent = '🚀 Tạo MT tracker'; }
+}
 
 let _toastTimer;
 function showToast(msg, type='') {
