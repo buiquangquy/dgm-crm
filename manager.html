@@ -178,21 +178,33 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
     <h1>DGM Price Intel</h1>
     <p>Manager Dashboard v11</p>
   </div>
+  <!-- Language toggle -->
+  <div style="padding:8px 16px;border-bottom:1px solid rgba(255,255,255,0.1);">
+    <button id="lang-toggle" onclick="toggleLang()"
+      title="Switch to English"
+      style="width:100%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);
+             color:white;border-radius:6px;padding:5px 0;font-size:12px;font-weight:700;
+             cursor:pointer;letter-spacing:1px;transition:background 0.15s;"
+      onmouseover="this.style.background='rgba(255,255,255,0.18)'"
+      onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+      EN
+    </button>
+  </div>
 
   <div class="nav-section">
     <div class="nav-label">Phân tích giá</div>
-    <div class="nav-item active" onclick="nav('dashboard',this)"><span class="nav-icon">📊</span><span>Tổng quan</span></div>
-    <div class="nav-item" onclick="nav('mt',this)"><span class="nav-icon">🏬</span><span>MT — Pass-through</span></div>
-    <div class="nav-item" onclick="nav('gt',this)"><span class="nav-icon">🛒</span><span>GT — Pass-through</span></div>
-    <div class="nav-item" onclick="nav('drift',this)"><span class="nav-icon">📡</span><span>Drift & Biến động</span><span class="nav-badge" id="drift-badge">0</span></div>
+    <div class="nav-item active" onclick="nav('dashboard',this)"><span class="nav-icon">📊</span><span id="nav-dashboard">Tổng quan</span></div>
+    <div class="nav-item" onclick="nav('mt',this)"><span class="nav-icon">🏬</span><span id="nav-mt">MT — Pass-through</span></div>
+    <div class="nav-item" onclick="nav('gt',this)"><span class="nav-icon">🛒</span><span id="nav-gt">GT — Pass-through</span></div>
+    <div class="nav-item" onclick="nav('drift',this)"><span class="nav-icon">📡</span><span id="nav-drift">Drift & Biến động</span><span class="nav-badge" id="drift-badge">0</span></div>
   </div>
 
   <div class="nav-section">
     <div class="nav-label">Quản lý</div>
-    <div class="nav-item" onclick="nav('events',this)"><span class="nav-icon">📢</span><span>Mốc tăng giá</span></div>
-    <div class="nav-item" onclick="nav('alerts',this)"><span class="nav-icon">🚨</span><span>Cảnh báo</span><span class="nav-badge" id="alert-badge">0</span></div>
-    <div class="nav-item" onclick="nav('history',this)"><span class="nav-icon">📋</span><span>Lịch sử Survey</span></div>
-    <div class="nav-item" onclick="nav('masterdata',this)"><span class="nav-icon">⚙️</span><span>Master Data</span></div>
+    <div class="nav-item" onclick="nav('events',this)"><span class="nav-icon">📢</span><span id="nav-events">Mốc tăng giá</span></div>
+    <div class="nav-item" onclick="nav('alerts',this)"><span class="nav-icon">🚨</span><span id="nav-alerts">Cảnh báo</span><span class="nav-badge" id="alert-badge">0</span></div>
+    <div class="nav-item" onclick="nav('history',this)"><span class="nav-icon">📋</span><span id="nav-history">Lịch sử Survey</span></div>
+    <div class="nav-item" onclick="nav('masterdata',this)"><span class="nav-icon">⚙️</span><span id="nav-masterdata">Master Data</span></div>
   </div>
 
   <div class="sidebar-foot">
@@ -209,8 +221,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
       <option value="">📢 Tất cả mốc tăng giá</option>
     </select>
     <span class="sync-info" id="sync-info">Đang tải...</span>
-    <button class="btn btn-navy" onclick="loadAll()">🔄 Làm mới</button>
-    <button class="btn btn-primary" onclick="openModal('modal-event')">+ Mốc tăng giá mới</button>
+    <button class="btn btn-navy" id="btn-refresh" onclick="loadAll()">🔄 Làm mới</button>
+    <button class="btn btn-primary" id="btn-new-event" onclick="openModal('modal-event')">+ Mốc tăng giá mới</button>
   </div>
 
   <!-- ══════════════════════════════════════════════════════════
@@ -233,16 +245,16 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
 
     <!-- KPI top: tác động tổng -->
     <div class="kpi-row cols-4" id="dash-kpi-row">
-      <div class="kpi"><div class="kpi-val" id="kpi-mt-applied">—</div><div class="kpi-label">MT chains đã áp dụng</div><div class="kpi-sub" id="kpi-mt-total"></div></div>
-      <div class="kpi green"><div class="kpi-val" id="kpi-mt-pt">—</div><div class="kpi-label">Pass-through MT TB</div><div class="kpi-sub">% tăng giá chuyển tới NTD</div></div>
-      <div class="kpi"><div class="kpi-val" id="kpi-gt-applied">—</div><div class="kpi-label">GT regions đã áp dụng</div><div class="kpi-sub" id="kpi-gt-total"></div></div>
-      <div class="kpi orange"><div class="kpi-val" id="kpi-drift-count">—</div><div class="kpi-label">Có drift giá</div><div class="kpi-sub">Chain tự điều chỉnh</div></div>
+      <div class="kpi"><div class="kpi-val" id="kpi-mt-applied">—</div><div class="kpi-label" id="kpi-mt-applied-label">MT chains đã áp dụng</div><div class="kpi-sub" id="kpi-mt-total"></div></div>
+      <div class="kpi green"><div class="kpi-val" id="kpi-mt-pt">—</div><div class="kpi-label" id="kpi-mt-pt-label">Pass-through MT TB</div><div class="kpi-sub" id="kpi-mt-pt-sub">% tăng giá chuyển tới NTD</div></div>
+      <div class="kpi"><div class="kpi-val" id="kpi-gt-applied">—</div><div class="kpi-label" id="kpi-gt-applied-label">GT regions đã áp dụng</div><div class="kpi-sub" id="kpi-gt-total"></div></div>
+      <div class="kpi orange"><div class="kpi-val" id="kpi-drift-count">—</div><div class="kpi-label" id="kpi-drift-label">Có drift giá</div><div class="kpi-sub" id="kpi-drift-sub">Chain tự điều chỉnh</div></div>
     </div>
 
     <div class="grid2">
       <!-- MT Chain summary -->
       <div class="card">
-        <div class="card-title">🏬 MT — Tiến độ áp dụng tăng giá
+        <div class="card-title"><span id="card-mt-progress">🏬 MT — Tiến độ áp dụng tăng giá</span>
           <div class="ct-right"><button class="btn btn-sm btn-secondary" onclick="nav('mt',null)">Chi tiết →</button></div>
         </div>
         <div id="dash-mt-chains">
@@ -252,7 +264,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
 
       <!-- GT region summary -->
       <div class="card">
-        <div class="card-title">🛒 GT — Pass-through theo Region
+        <div class="card-title"><span id="card-gt-region">🛒 GT — Pass-through theo Region</span>
           <div class="ct-right"><button class="btn btn-sm btn-secondary" onclick="nav('gt',null)">Chi tiết →</button></div>
         </div>
         <div id="dash-gt-regions">
@@ -264,7 +276,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
     <!-- Drift alerts + Competitor -->
     <div class="grid2">
       <div class="card">
-        <div class="card-title">🔴 Drift giá đang xảy ra
+        <div class="card-title"><span id="card-drift-live">🔴 Drift giá đang xảy ra</span>
           <div class="ct-right"><button class="btn btn-sm btn-secondary" onclick="nav('drift',null)">Xem tất cả →</button></div>
         </div>
         <div id="dash-drift-alerts">
@@ -272,7 +284,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
         </div>
       </div>
       <div class="card">
-        <div class="card-title">📊 Biến động giá đối thủ cạnh tranh</div>
+        <div class="card-title"><span id="card-comp">📊 Biến động giá đối thủ cạnh tranh</span></div>
         <div id="dash-comp-changes">
           <div class="shimmer"></div><div class="shimmer" style="width:70%"></div>
         </div>
@@ -281,7 +293,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
 
     <!-- Cost of price increase -->
     <div class="card">
-      <div class="card-title">💰 Chi phí hỗ trợ tăng giá (KM / Trade)</div>
+      <div class="card-title"><span id="card-cost">💰 Chi phí hỗ trợ tăng giá (KM / Trade)</span></div>
       <div class="kpi-row cols-4" style="margin-bottom:0;">
         <div class="kpi"><div class="kpi-val" id="cost-dotKM">—</div><div class="kpi-label">Tổng đợt KM</div></div>
         <div class="kpi red"><div class="kpi-val" id="cost-budget">—</div><div class="kpi-label">Tổng ngân sách</div><div class="kpi-sub">triệu VND</div></div>
@@ -325,7 +337,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
 
     <!-- MT detail table -->
     <div class="card">
-      <div class="card-title">Chi tiết từng SKU × Chain
+      <div class="card-title"><span id="card-mt-detail">Chi tiết từng SKU × Chain</span>
         <div class="ct-right">
           <button class="btn btn-sm btn-primary" onclick="openBulkModal('MT')">🚀 Tạo tracker hàng loạt</button>
         </div>
@@ -378,7 +390,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
     </div>
 
     <div class="card">
-      <div class="card-title">Chi tiết GT Pass-through — 3 tầng
+      <div class="card-title"><span id="card-gt-detail">Chi tiết GT Pass-through — 3 tầng</span>
         <div class="ct-right">
           <button class="btn btn-sm btn-primary" onclick="openGTBulkModal()">🚀 Tạo GT mốc tăng giá + Tracker</button>
         </div>
@@ -411,20 +423,20 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
     <div class="grid2">
       <!-- Drift alerts -->
       <div class="card">
-        <div class="card-title">🔴 Drift giá — chain tự điều chỉnh
+        <div class="card-title"><span id="card-drift-alert">🔴 Drift giá — chain tự điều chỉnh</span>
           <div class="ct-right"><button class="btn btn-sm btn-secondary" onclick="markAllResolved()">✓ Xử lý tất cả</button></div>
         </div>
         <div id="drift-alert-list"><div class="shimmer"></div><div class="shimmer"></div></div>
       </div>
       <!-- Competitor changes -->
       <div class="card">
-        <div class="card-title">📊 Biến động giá đối thủ</div>
+        <div class="card-title"><span id="card-comp-full">📊 Biến động giá đối thủ</span></div>
         <div id="comp-full-list"><div class="shimmer"></div></div>
       </div>
     </div>
     <!-- All alerts -->
     <div class="card">
-      <div class="card-title">🚨 Tất cả cảnh báo chưa xử lý
+      <div class="card-title"><span id="card-all-alerts">🚨 Tất cả cảnh báo chưa xử lý</span>
         <div class="ct-right"><button class="btn btn-sm btn-secondary" onclick="loadAlerts()">🔄 Làm mới</button></div>
       </div>
       <div id="all-alert-list"><div class="shimmer"></div></div>
@@ -436,7 +448,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
   ══════════════════════════════════════════════════════════ -->
   <div class="page" id="page-events">
     <div class="card">
-      <div class="card-title">📢 Mốc tăng giá DGM
+      <div class="card-title"><span id="card-events">📢 Mốc tăng giá DGM</span>
         <div class="ct-right"><button class="btn btn-primary" onclick="openModal('modal-event')">+ Tạo mốc mới</button></div>
       </div>
       <div id="events-list"><div class="shimmer"></div></div>
@@ -460,7 +472,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
   ══════════════════════════════════════════════════════════ -->
   <div class="page" id="page-history">
     <div class="card">
-      <div class="card-title">📋 Lịch sử Survey</div>
+      <div class="card-title"><span id="card-history">📋 Lịch sử Survey</span></div>
       <div class="filter-row">
         <select id="hist-ch" style="width:auto;"><option value="">Tất cả kênh</option><option value="MT">MT</option><option value="GT">GT</option></select>
         <select id="hist-type" style="width:auto;"><option value="">Tất cả loại</option><option value="own_brand">Ayam Brand</option><option value="competitor">Đối thủ</option></select>
@@ -480,11 +492,11 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
   ══════════════════════════════════════════════════════════ -->
   <div class="page" id="page-masterdata">
     <div class="filter-row" style="margin-bottom:16px;">
-      <button class="ftab active" onclick="showMDTab('products',this)">🏷️ Sản phẩm</button>
-      <button class="ftab" onclick="showMDTab('outlets',this)">🏪 Điểm bán</button>
-      <button class="ftab" onclick="showMDTab('brands',this)">🎯 Thương hiệu</button>
-      <button class="ftab" onclick="showMDTab('staff',this)">👥 Nhân viên</button>
-      <button class="ftab" onclick="showMDTab('agents',this)">🚛 Agents GT</button>
+      <button id="tab-products" class="ftab active" onclick="showMDTab('products',this)">🏷️ Sản phẩm</button>
+      <button id="tab-outlets" class="ftab" onclick="showMDTab('outlets',this)">🏪 Điểm bán</button>
+      <button id="tab-brands" class="ftab" onclick="showMDTab('brands',this)">🎯 Thương hiệu</button>
+      <button id="tab-staff" class="ftab" onclick="showMDTab('staff',this)">👥 Nhân viên</button>
+      <button id="tab-agents" class="ftab" onclick="showMDTab('agents',this)">🚛 Agents GT</button>
     </div>
 
     <div class="card" id="md-products">
@@ -785,6 +797,474 @@ const D = {
   curEvent:  '',   // currently selected global event filter
 };
 
+
+// ════════════════════════════════════════
+// i18n — EN / VI toggle
+// ════════════════════════════════════════
+const LANG = {
+  vi: {
+    // Sidebar nav
+    nav_dashboard:   'Tổng quan',
+    nav_mt:          'MT — Pass-through',
+    nav_gt:          'GT — Pass-through',
+    nav_drift:       'Drift & Biến động',
+    nav_events:      'Mốc tăng giá',
+    nav_alerts:      'Cảnh báo',
+    nav_history:     'Lịch sử Survey',
+    nav_masterdata:  'Master Data',
+    // Page titles
+    title_dashboard: 'Tổng quan — Tác động tăng giá',
+    title_mt:        'MT — Pass-through & Lan truyền giá',
+    title_gt:        'GT — Pass-through 3 tầng',
+    title_drift:     'Drift & Biến động giá',
+    title_events:    'Mốc tăng giá DGM',
+    title_alerts:    'Cảnh báo thị trường',
+    title_history:   'Lịch sử Survey',
+    title_masterdata:'Master Data',
+    // Top bar buttons
+    btn_refresh:     '🔄 Làm mới',
+    btn_new_event:   '+ Mốc tăng giá mới',
+    btn_detail:      'Chi tiết →',
+    btn_create_bulk: '🚀 Tạo tracker hàng loạt',
+    btn_create_gt:   '🚀 Tạo GT mốc tăng giá + Tracker',
+    btn_new:         '+ Tạo mốc mới',
+    btn_filter:      'Lọc',
+    btn_save:        '💾 Lưu',
+    btn_cancel:      'Huỷ',
+    btn_mark_read:   '✓ Đánh dấu đã đọc',
+    btn_resolve_all: '✓ Xử lý tất cả',
+    btn_add:         '+ Thêm',
+    btn_create_event:'💾 Lưu & Kích hoạt',
+    btn_create_tracker: '🚀 Tạo tracker',
+    btn_create_gt_bulk: '🚀 Tạo Price Events + GT Tracker',
+    btn_select_all:  'Chọn tất cả',
+    btn_clear_all:   'Bỏ chọn',
+    // Table headers — MT
+    th_chain:        'Chain / Format',
+    th_product:      'Sản phẩm',
+    th_dgm_price:    'Giá DGM (trước→sau)',
+    th_ntd_commit:   'NTD cam kết',
+    th_passthrough:  'Pass-through %',
+    th_survey:       'Survey thực tế',
+    th_drift:        'Drift %',
+    th_status:       'Trạng thái',
+    th_update:       'Cập nhật',
+    // Table headers — GT
+    th_region_agent: 'Region / Agent',
+    th_dgm_agent:    'DGM → Agent',
+    th_agent_outlet: 'Agent → Outlet',
+    th_outlet_ntd:   'Outlet → NTD (cam kết)',
+    th_pt_total:     'Pass-through tổng %',
+    th_survey_ntd:   'Survey NTD thực tế',
+    // Table headers — Events
+    th_event_id:     'Mã đợt',
+    th_event_name:   'Tên sự kiện',
+    th_channel:      'Kênh',
+    th_pct:          '% tăng',
+    th_price_range:  'Giá DGM cũ → mới',
+    th_apply_date:   'Ngày áp dụng',
+    th_trang_thai:   'Trạng thái',
+    // Table headers — History
+    th_date:         'Ngày',
+    th_staff:        'NV',
+    th_outlet:       'Điểm bán',
+    th_brand:        'Thương hiệu',
+    th_price_type:   'Loại giá',
+    th_price:        'Giá (đ)',
+    th_note:         'Ghi chú',
+    // Table headers — Master Data
+    th_code:         'Mã',
+    th_name:         'Tên SP',
+    th_group:        'Nhóm',
+    th_brand_col:    'Thương hiệu',
+    th_spec:         'Quy cách',
+    th_mfg:          'NSX',
+    th_origin:       'Xuất xứ',
+    th_outlet_name:  'Tên',
+    th_format:       'Format/Loại',
+    th_gt_region:    'GT Region',
+    th_agent:        'Agent',
+    // KPI labels
+    kpi_mt_applied:  'MT chains đã áp dụng',
+    kpi_mt_pt:       'Pass-through MT TB',
+    kpi_mt_pt_sub:   '% tăng giá chuyển tới NTD',
+    kpi_gt_applied:  'GT regions đã áp dụng',
+    kpi_drift:       'Có drift giá',
+    kpi_drift_sub:   'Chain tự điều chỉnh',
+    // Card titles
+    card_mt_progress:'MT — Tiến độ áp dụng tăng giá',
+    card_gt_region:  'GT — Pass-through theo Region',
+    card_drift_live: 'Drift giá đang xảy ra',
+    card_comp:       'Biến động giá đối thủ cạnh tranh',
+    card_cost:       'Chi phí hỗ trợ tăng giá (KM / Trade)',
+    card_mt_detail:  'Chi tiết từng SKU × Chain',
+    card_gt_detail:  'Chi tiết GT Pass-through — 3 tầng',
+    card_gt_region_kpi: 'Tóm tắt theo Region',
+    card_drift_alert:'Drift giá — chain tự điều chỉnh',
+    card_comp_full:  'Biến động giá đối thủ',
+    card_all_alerts: 'Tất cả cảnh báo chưa xử lý',
+    card_events:     'Mốc tăng giá DGM',
+    card_history:    'Lịch sử Survey',
+    // Filter labels
+    filter_all_events:  'Tất cả sự kiện',
+    filter_all_chains:  'Tất cả chain',
+    filter_all_status:  'Tất cả trạng thái',
+    filter_all_drift:   'Tất cả drift',
+    filter_all_region:  'Tất cả Region',
+    filter_all_channel: 'Tất cả kênh',
+    filter_all_type:    'Tất cả loại',
+    // MD tabs
+    tab_products:    '🏷️ Sản phẩm',
+    tab_outlets:     '🏪 Điểm bán',
+    tab_brands:      '🎯 Thương hiệu',
+    tab_staff:       '👥 Nhân viên',
+    tab_agents:      '🚛 Agents GT',
+    // Empty states
+    empty_mt:        'Chưa có tracker MT — nhập Price Events trước, sau đó tạo tracker hàng loạt',
+    empty_gt:        'Chưa có GT tracker — nhập Price Events (kênh GT) trước',
+    empty_events:    'Chưa có mốc tăng giá',
+    empty_alerts:    'Không có cảnh báo',
+    empty_drift:     '✅ Không có drift giá nào đang xảy ra',
+    empty_comp:      'Chưa có dữ liệu đối thủ từ survey',
+    empty_history:   'Bấm "Lọc" để tải',
+    // Sync status
+    sync_loading:    '⏳ Đang tải...',
+    sync_syncing:    '⏳ Đang đồng bộ data...',
+    sync_done:       '✅ Đồng bộ lúc ',
+    sync_error:      '❌ ',
+  },
+  en: {
+    // Sidebar nav
+    nav_dashboard:   'Overview',
+    nav_mt:          'MT — Pass-through',
+    nav_gt:          'GT — Pass-through',
+    nav_drift:       'Drift & Changes',
+    nav_events:      'Price Increase Events',
+    nav_alerts:      'Alerts',
+    nav_history:     'Survey History',
+    nav_masterdata:  'Master Data',
+    // Page titles
+    title_dashboard: 'Overview — Price Increase Impact',
+    title_mt:        'MT — Pass-through & Price Propagation',
+    title_gt:        'GT — 3-tier Pass-through',
+    title_drift:     'Drift & Price Changes',
+    title_events:    'DGM Price Increase Events',
+    title_alerts:    'Market Alerts',
+    title_history:   'Survey History',
+    title_masterdata:'Master Data',
+    // Top bar buttons
+    btn_refresh:     '🔄 Refresh',
+    btn_new_event:   '+ New Price Event',
+    btn_detail:      'Details →',
+    btn_create_bulk: '🚀 Bulk Create Tracker',
+    btn_create_gt:   '🚀 Create GT Event + Tracker',
+    btn_new:         '+ New',
+    btn_filter:      'Filter',
+    btn_save:        '💾 Save',
+    btn_cancel:      'Cancel',
+    btn_mark_read:   '✓ Mark all read',
+    btn_resolve_all: '✓ Resolve all',
+    btn_add:         '+ Add',
+    btn_create_event:'💾 Save & Activate',
+    btn_create_tracker: '🚀 Create tracker',
+    btn_create_gt_bulk: '🚀 Create Price Events + GT Tracker',
+    btn_select_all:  'Select all',
+    btn_clear_all:   'Clear all',
+    // Table headers — MT
+    th_chain:        'Chain / Format',
+    th_product:      'Product',
+    th_dgm_price:    'DGM Price (before→after)',
+    th_ntd_commit:   'Committed Consumer Price',
+    th_passthrough:  'Pass-through %',
+    th_survey:       'Actual Survey Price',
+    th_drift:        'Drift %',
+    th_status:       'Status',
+    th_update:       'Update Status',
+    // Table headers — GT
+    th_region_agent: 'Region / Agent',
+    th_dgm_agent:    'DGM → Agent',
+    th_agent_outlet: 'Agent → Outlet',
+    th_outlet_ntd:   'Outlet → Consumer (committed)',
+    th_pt_total:     'Total Pass-through %',
+    th_survey_ntd:   'Actual Consumer Survey',
+    // Table headers — Events
+    th_event_id:     'Event ID',
+    th_event_name:   'Event Name',
+    th_channel:      'Channel',
+    th_pct:          '% Increase',
+    th_price_range:  'DGM Price old → new',
+    th_apply_date:   'Effective Date',
+    th_trang_thai:   'Status',
+    // Table headers — History
+    th_date:         'Date',
+    th_staff:        'Staff',
+    th_outlet:       'Outlet',
+    th_brand:        'Brand',
+    th_price_type:   'Price Type',
+    th_price:        'Price (VND)',
+    th_note:         'Note',
+    // Table headers — Master Data
+    th_code:         'Code',
+    th_name:         'Product Name',
+    th_group:        'Group',
+    th_brand_col:    'Brand',
+    th_spec:         'Spec',
+    th_mfg:          'Manufacturer',
+    th_origin:       'Origin',
+    th_outlet_name:  'Name',
+    th_format:       'Format / Type',
+    th_gt_region:    'GT Region',
+    th_agent:        'Agent',
+    // KPI labels
+    kpi_mt_applied:  'MT chains applied',
+    kpi_mt_pt:       'MT Avg Pass-through',
+    kpi_mt_pt_sub:   '% price increase passed to consumer',
+    kpi_gt_applied:  'GT regions applied',
+    kpi_drift:       'Price drift detected',
+    kpi_drift_sub:   'Chains self-adjusting',
+    // Card titles
+    card_mt_progress:'MT — Price Increase Adoption',
+    card_gt_region:  'GT — Pass-through by Region',
+    card_drift_live: 'Active Price Drift',
+    card_comp:       'Competitor Price Changes',
+    card_cost:       'Price Increase Support Cost (Trade / KM)',
+    card_mt_detail:  'SKU × Chain Detail',
+    card_gt_detail:  'GT 3-tier Pass-through Detail',
+    card_gt_region_kpi: 'Region Summary',
+    card_drift_alert:'Price Drift — chain self-adjustments',
+    card_comp_full:  'Competitor Price Changes',
+    card_all_alerts: 'All Unresolved Alerts',
+    card_events:     'DGM Price Increase Events',
+    card_history:    'Survey History',
+    // Filter labels
+    filter_all_events:  'All events',
+    filter_all_chains:  'All chains',
+    filter_all_status:  'All statuses',
+    filter_all_drift:   'All drift levels',
+    filter_all_region:  'All regions',
+    filter_all_channel: 'All channels',
+    filter_all_type:    'All types',
+    // MD tabs
+    tab_products:    '🏷️ Products',
+    tab_outlets:     '🏪 Outlets',
+    tab_brands:      '🎯 Brands',
+    tab_staff:       '👥 Staff',
+    tab_agents:      '🚛 GT Agents',
+    // Empty states
+    empty_mt:        'No MT tracker yet — add Price Events first, then bulk create tracker',
+    empty_gt:        'No GT tracker yet — add Price Events (GT channel) first',
+    empty_events:    'No price increase events yet',
+    empty_alerts:    'No alerts',
+    empty_drift:     '✅ No active price drift',
+    empty_comp:      'No competitor data from surveys yet',
+    empty_history:   'Click "Filter" to load',
+    // Sync status
+    sync_loading:    '⏳ Loading...',
+    sync_syncing:    '⏳ Syncing data...',
+    sync_done:       '✅ Synced at ',
+    sync_error:      '❌ ',
+  }
+};
+
+// Active language — default VI (không dùng localStorage theo yêu cầu)
+let _lang = 'vi';
+
+function tr(key) {
+  return (LANG[_lang] && LANG[_lang][key]) || (LANG['vi'] && LANG['vi'][key]) || key;
+}
+
+function toggleLang() {
+  _lang = _lang === 'vi' ? 'en' : 'vi';
+  // Update toggle button
+  const btn = document.getElementById('lang-toggle');
+  if (btn) {
+    btn.textContent = _lang === 'vi' ? 'EN' : 'VI';
+    btn.title = _lang === 'vi' ? 'Switch to English' : 'Chuyển sang Tiếng Việt';
+  }
+  applyLang();
+}
+
+function applyLang() {
+  // ── Sidebar nav items ──
+  const navMap = {
+    'nav-dashboard':  'nav_dashboard',
+    'nav-mt':         'nav_mt',
+    'nav-gt':         'nav_gt',
+    'nav-drift':      'nav_drift',
+    'nav-events':     'nav_events',
+    'nav-alerts':     'nav_alerts',
+    'nav-history':    'nav_history',
+    'nav-masterdata': 'nav_masterdata',
+  };
+  Object.entries(navMap).forEach(([id, key]) => {
+    const el2 = document.getElementById(id);
+    if (el2) el2.textContent = t(key);
+  });
+
+  // ── Page title (top bar) ──
+  const titleMap = {
+    dashboard: 'title_dashboard', mt: 'title_mt', gt: 'title_gt',
+    drift: 'title_drift', events: 'title_events', alerts: 'title_alerts',
+    history: 'title_history', masterdata: 'title_masterdata',
+  };
+  // Find active page
+  const activePage = document.querySelector('.page.active');
+  if (activePage) {
+    const pageId = activePage.id.replace('page-', '');
+    if (titleMap[pageId]) el('page-title').textContent = tr(titleMap[id] || 'title_dashboard');
+  }
+
+  // ── Buttons ──
+  const btnMap = {
+    'btn-refresh':      'btn_refresh',
+    'btn-new-event':    'btn_new_event',
+    'btn-mark-read':    'btn_mark_read',
+    'btn-resolve-all':  'btn_resolve_all',
+    'btn-filter-hist':  'btn_filter',
+    'btn-create-event': 'btn_create_event',
+    'btn-create-tracker':'btn_create_tracker',
+    'btn-create-gt-bulk':'btn_create_gt_bulk',
+    'btn-select-all-sku':'btn_select_all',
+    'btn-clear-all-sku': 'btn_clear_all',
+    'bulk-save-btn':    'btn_create_tracker',
+    'gt-bulk-btn':      'btn_create_gt_bulk',
+  };
+  Object.entries(btnMap).forEach(([id, key]) => {
+    const el2 = document.getElementById(id);
+    if (el2 && !el2.disabled) el2.textContent = t(key);
+  });
+
+  // ── KPI labels (dashboard) ──
+  const kpiMap = {
+    'kpi-mt-applied-label': 'kpi_mt_applied',
+    'kpi-mt-pt-label':      'kpi_mt_pt',
+    'kpi-mt-pt-sub':        'kpi_mt_pt_sub',
+    'kpi-gt-applied-label': 'kpi_gt_applied',
+    'kpi-drift-label':      'kpi_drift',
+    'kpi-drift-sub':        'kpi_drift_sub',
+  };
+  Object.entries(kpiMap).forEach(([id, key]) => {
+    const el2 = document.getElementById(id);
+    if (el2) el2.textContent = t(key);
+  });
+
+  // ── Card titles ──
+  const cardMap = {
+    'card-mt-progress': 'card_mt_progress',
+    'card-gt-region':   'card_gt_region',
+    'card-drift-live':  'card_drift_live',
+    'card-comp':        'card_comp',
+    'card-cost':        'card_cost',
+    'card-mt-detail':   'card_mt_detail',
+    'card-gt-detail':   'card_gt_detail',
+    'card-gt-region-kpi':'card_gt_region_kpi',
+    'card-drift-alert': 'card_drift_alert',
+    'card-comp-full':   'card_comp_full',
+    'card-all-alerts':  'card_all_alerts',
+    'card-events':      'card_events',
+    'card-history':     'card_history',
+  };
+  Object.entries(cardMap).forEach(([id, key]) => {
+    const el2 = document.getElementById(id);
+    if (el2) el2.textContent = t(key);
+  });
+
+  // ── Table headers — re-render với ngôn ngữ mới ──
+  applyTableHeaders();
+
+  // ── MD tabs ──
+  const tabMap = [
+    ['tab-products', 'tab_products'],
+    ['tab-outlets',  'tab_outlets'],
+    ['tab-brands',   'tab_brands'],
+    ['tab-staff',    'tab_staff'],
+    ['tab-agents',   'tab_agents'],
+  ];
+  tabMap.forEach(([id, key]) => {
+    const el2 = document.getElementById(id);
+    if (el2) el2.textContent = t(key);
+  });
+
+  // ── Filter first options ──
+  ['mt-filter-event','mt-filter-chain','mt-filter-status','mt-filter-drift',
+   'gt-filter-event','gt-filter-region','gt-filter-status',
+   'hist-ch','hist-type'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (sel && sel.options[0]) {
+      const key = 'filter_all_' + id.split('-')[2];
+      // Use generic fallback
+      const map = {
+        'mt-filter-event':  'filter_all_events',
+        'mt-filter-chain':  'filter_all_chains',
+        'mt-filter-status': 'filter_all_status',
+        'mt-filter-drift':  'filter_all_drift',
+        'gt-filter-event':  'filter_all_events',
+        'gt-filter-region': 'filter_all_region',
+        'gt-filter-status': 'filter_all_status',
+        'hist-ch':          'filter_all_channel',
+        'hist-type':        'filter_all_type',
+      };
+      if (map[id]) sel.options[0].textContent = t(map[id]);
+    }
+  });
+
+  // Re-render tables với empty state mới (nếu đang empty)
+  if (D.mtTracker && !D.mtTracker.length) {
+    const tb = el('mt-detail-table');
+    if (tb) tb.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#9ca3af;padding:30px;">${tr('empty_mt')}</td></tr>`;
+  }
+  if (D.gtTracker && !D.gtTracker.length) {
+    const tb = el('gt-detail-table');
+    if (tb) tb.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#9ca3af;padding:30px;">${tr('empty_gt')}</td></tr>`;
+  }
+}
+
+function applyTableHeaders() {
+  // MT table
+  const mtTh = document.querySelectorAll('#page-mt thead th');
+  const mtKeys = ['th_chain','th_product','th_dgm_price','th_ntd_commit',
+                  'th_passthrough','th_survey','th_drift','th_status','th_update'];
+  mtTh.forEach((th, i) => { if (mtKeys[i]) th.textContent = t(mtKeys[i]); });
+
+  // GT table
+  const gtTh = document.querySelectorAll('#page-gt thead th');
+  const gtKeys = ['th_region_agent','th_product','th_dgm_agent','th_agent_outlet',
+                  'th_outlet_ntd','th_pt_total','th_survey_ntd','th_drift','th_status'];
+  gtTh.forEach((th, i) => { if (gtKeys[i]) th.textContent = t(gtKeys[i]); });
+
+  // Events table
+  const evTh = document.querySelectorAll('#events-list thead th');
+  const evKeys = ['th_event_id','th_event_name','th_channel','th_product',
+                  'th_pct','th_price_range','th_apply_date','th_trang_thai'];
+  evTh.forEach((th, i) => { if (evKeys[i]) th.textContent = t(evKeys[i]); });
+
+  // History table
+  const hTh = document.querySelectorAll('#page-history thead th');
+  const hKeys = ['th_date','th_staff','th_channel','th_outlet','th_product',
+                 'th_brand','th_price_type','th_price','th_note'];
+  hTh.forEach((th, i) => { if (hKeys[i]) th.textContent = t(hKeys[i]); });
+
+  // MD Products table
+  const pTh = document.querySelectorAll('#md-products thead th');
+  const pKeys = ['th_code','th_name','th_group','th_brand_col','th_spec','th_mfg','th_origin','th_trang_thai'];
+  pTh.forEach((th, i) => { if (pKeys[i]) th.textContent = t(pKeys[i]); });
+
+  // MD Outlets table
+  const oTh = document.querySelectorAll('#md-outlets thead th');
+  const oKeys = ['th_code','th_outlet_name','th_channel','th_format','th_gt_region','th_agent','th_trang_thai'];
+  oTh.forEach((th, i) => { if (oKeys[i]) th.textContent = t(oKeys[i]); });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  el('om-ch').addEventListener('change', function() {
+    el('om-mt-fields').style.display = this.value==='MT'?'block':'none';
+    el('om-gt-fields').style.display = this.value==='GT'?'block':'none';
+  });
+  loadAll();
+  // Apply default language (VI) after page loads
+  setTimeout(applyLang, 500);
+});
+
 // ════════════════════════════════════════
 // FETCH HELPERS
 // ════════════════════════════════════════
@@ -794,7 +1274,7 @@ async function apiFetch(params, ms=45000) {
   const p = { ...params, _t: Date.now() };
   const url  = API + '?' + new URLSearchParams(p);
   const ctrl = new AbortController();
-  const t    = setTimeout(() => ctrl.abort(), ms);
+  const _timer = setTimeout(() => ctrl.abort(), ms);
   try {
     const res  = await fetch(url, {
       signal: ctrl.signal,
@@ -803,29 +1283,29 @@ async function apiFetch(params, ms=45000) {
       headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
     });
     const text = await res.text();
-    clearTimeout(t);
+    clearTimeout(_timer);
     if (text.trim().startsWith('<')) throw new Error('API returned HTML — redeploy AppScript');
     return JSON.parse(text);
-  } catch(e) { clearTimeout(t); if(e.name==='AbortError') throw new Error('Timeout'); throw e; }
+  } catch(e) { clearTimeout(_timer); if(e.name==='AbortError') throw new Error('Timeout'); throw e; }
 }
 
 async function apiPost(body) {
   const ctrl = new AbortController();
-  const t    = setTimeout(() => ctrl.abort(), 45000);
+  const _timer2 = setTimeout(() => ctrl.abort(), 45000);
   try {
     const res  = await fetch(API, { method:'POST', body:JSON.stringify(body), signal:ctrl.signal });
-    clearTimeout(t);
+    clearTimeout(_timer2);
     const text = await res.text();
     if (text.trim().startsWith('<')) throw new Error('API HTML error');
     return JSON.parse(text);
-  } catch(e) { clearTimeout(t); throw e; }
+  } catch(e) { clearTimeout(_timer2); throw e; }
 }
 
 // ════════════════════════════════════════
 // LOAD ALL
 // ════════════════════════════════════════
 async function loadAll() {
-  setSyncInfo('⏳ Đang tải...');
+  setSyncInfo(tr('sync_loading'));
   // Reset visual indicators
   el('sync-info').style.color = '';
 
@@ -841,7 +1321,7 @@ async function loadAll() {
     return;
   }
 
-  setSyncInfo('⏳ Đang đồng bộ data...');
+  setSyncInfo(tr('sync_syncing'));
 
   // 2. Load song song
   await Promise.allSettled([
@@ -881,8 +1361,8 @@ async function loadAll() {
   ]);
 
   renderDashboard();
-  const t = new Date().toLocaleTimeString('vi');
-  setSyncInfo('✅ Đồng bộ lúc ' + t);
+  const _t = new Date().toLocaleTimeString('vi');
+  setSyncInfo(tr('sync_done') + _t);
   el('sync-info').style.color = 'var(--green)';
   setTimeout(() => { el('sync-info').style.color = ''; }, 3000);
 }
@@ -1061,6 +1541,15 @@ function renderMTPage() {
   const stCls = { 'Đã áp dụng':'b-ok','Đã đồng ý':'b-info','Đang đàm phán':'b-purple','Đã thông báo':'b-warn','Bị từ chối':'b-err' };
 
   tbody.innerHTML = list.map(r => {
+    // Effective status: nếu đã có thông báo tăng giá (record tồn tại)
+    // nhưng CHƯA có giá NTD cam kết VÀ chưa có ngày áp dụng
+    // → mặc định là "Đã thông báo, chưa đồng ý" dù trang_thai_tracker là gì
+    const hasCommitPrice = r.gia_ntd_cam_ket_sau && r.gia_ntd_cam_ket_sau !== '0' && r.gia_ntd_cam_ket_sau !== '';
+    const hasApplyDate   = r.ngay_bat_dau_gia_ntd_moi && r.ngay_bat_dau_gia_ntd_moi !== '';
+    const rawSt = r.trang_thai_tracker || 'Đã thông báo';
+    const effectiveSt = (!hasCommitPrice && !hasApplyDate && rawSt === 'Đã thông báo')
+      ? 'Đã thông báo, chưa đồng ý'
+      : rawSt;
     const dgm   = r.gia_dgm_truoc&&r.gia_dgm_sau ? fmt(r.gia_dgm_truoc)+' → '+fmt(r.gia_dgm_sau) : '—';
     const ntdCam = r.gia_ntd_cam_ket_sau ? fmt(r.gia_ntd_cam_ket_sau) : '<span style="color:#9ca3af;">Chưa nhập</span>';
     const ptNum  = parseFloat(r.pass_through_pct);
@@ -1071,7 +1560,7 @@ function renderMTPage() {
       ? `<span class="badge ${driftCls[r.co_drift]||''}">${driftNum>0?'+':''}${driftNum.toFixed(1)}% (${r.co_drift})</span>`
       : '<span style="color:var(--green);font-size:12px;">✅</span>';
     const capDisp = r.trang_thai_cap_nhat || '🔘';
-    const st = r.trang_thai_tracker || '—';
+    const st = effectiveSt;
     return `<tr class="clickable" onclick='openMTTrackerModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>
       <td><strong>${r.ten_khach_hang||'—'}</strong><br><span style="font-size:11px;color:var(--gray);">${r.format_mt||''}</span></td>
       <td>${r.ten_san_pham||'—'}</td>
@@ -1080,7 +1569,7 @@ function renderMTPage() {
       <td>${ptDisp}</td>
       <td style="font-size:12px;">${survey}</td>
       <td>${driftDisp}</td>
-      <td><span class="badge ${stCls[st]||'b-warn'}">${st}</span></td>
+      <td><span class="badge ${stCls[effectiveSt]||'b-warn'}">${effectiveSt}</span></td>
       <td style="font-size:11px;">${capDisp}</td>
     </tr>`;
   }).join('');
@@ -1571,9 +2060,16 @@ function nav(id, navEl) {
   el('page-'+id).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if(navEl) navEl.classList.add('active');
-  const titles={dashboard:'Tổng quan — Tác động tăng giá',mt:'MT — Pass-through & Lan truyền giá',gt:'GT — Pass-through 3 tầng',drift:'Drift & Biến động giá',events:'Mốc tăng giá DGM',alerts:'Cảnh báo thị trường',history:'Lịch sử Survey',masterdata:'Master Data'};
-  el('page-title').textContent = titles[id]||id;
+  // Page title dùng i18n
+  const titleMap = {
+    dashboard:'title_dashboard', mt:'title_mt', gt:'title_gt',
+    drift:'title_drift', events:'title_events', alerts:'title_alerts',
+    history:'title_history', masterdata:'title_masterdata'
+  };
+  el('page-title').textContent = tr(titleMap[id]||'title_dashboard');
   if(id==='masterdata') showMDTab('products', document.querySelector('#page-masterdata .ftab'));
+  // Apply lang để update table headers, card titles khi switch page
+  applyLang();
 }
 
 // ════════════════════════════════════════
@@ -1585,7 +2081,7 @@ function el(id)   { return document.getElementById(id); }
 function val(id)  { const e=el(id); return e?e.value:''; }
 function fmt(n)   { return Number(n).toLocaleString('vi'); }
 function isTrue(v){ return String(v||'').toLowerCase().trim()==='true'||v==='1'; }
-function setSyncInfo(t){ el('sync-info').textContent=t; }
+function setSyncInfo(msg){ el('sync-info').textContent=t; }
 function ptBar(pct) {
   const capped = Math.min(pct,150);
   const color  = pct>=95?'var(--green)':pct>=80?'var(--orange)':'var(--red)';
@@ -1593,13 +2089,6 @@ function ptBar(pct) {
 }
 
 // Outlet modal: toggle MT/GT fields
-document.addEventListener('DOMContentLoaded', () => {
-  el('om-ch').addEventListener('change', function() {
-    el('om-mt-fields').style.display = this.value==='MT'?'block':'none';
-    el('om-gt-fields').style.display = this.value==='GT'?'block':'none';
-  });
-  loadAll();
-});
 
 // ════════════════════════════════════════
 // GT BULK MODAL — nhập 1 lần nhiều SKU
@@ -1849,10 +2338,10 @@ async function saveBulkMTTracker() {
 
 let _toastTimer;
 function showToast(msg, type='') {
-  const t=el('toast'); t.textContent=msg;
-  t.className='toast show'+(type?' '+type:'');
+  const te=el('toast'); te.textContent=msg;
+  te.className='toast show'+(type?' '+type:'');
   clearTimeout(_toastTimer);
-  _toastTimer=setTimeout(()=>t.className='toast',3500);
+  _toastTimer=setTimeout(()=>te.className='toast',3500);
 }
 </script>
 </body>
