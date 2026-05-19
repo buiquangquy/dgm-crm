@@ -789,11 +789,19 @@ const D = {
 // FETCH HELPERS
 // ════════════════════════════════════════
 async function apiFetch(params, ms=45000) {
-  const url  = API + '?' + new URLSearchParams(params);
+  // Cache-busting: thêm timestamp vào mỗi request
+  // → Google Apps Script và browser sẽ không dùng cached response cũ
+  const p = { ...params, _t: Date.now() };
+  const url  = API + '?' + new URLSearchParams(p);
   const ctrl = new AbortController();
   const t    = setTimeout(() => ctrl.abort(), ms);
   try {
-    const res  = await fetch(url, { signal: ctrl.signal });
+    const res  = await fetch(url, {
+      signal: ctrl.signal,
+      // Yêu cầu browser không dùng cache
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
+    });
     const text = await res.text();
     clearTimeout(t);
     if (text.trim().startsWith('<')) throw new Error('API returned HTML — redeploy AppScript');
@@ -818,6 +826,8 @@ async function apiPost(body) {
 // ════════════════════════════════════════
 async function loadAll() {
   setSyncInfo('⏳ Đang tải...');
+  // Reset visual indicators
+  el('sync-info').style.color = '';
 
   // 1. Master data — bắt buộc
   try {
@@ -826,11 +836,12 @@ async function loadAll() {
     populateEventProductSelect();
   } catch(e) {
     setSyncInfo('❌ ' + e.message);
+    el('sync-info').style.color = 'var(--red)';
     showToast('Lỗi kết nối: ' + e.message, 'error');
     return;
   }
 
-  setSyncInfo('⏳ Đang tải data...');
+  setSyncInfo('⏳ Đang đồng bộ data...');
 
   // 2. Load song song
   await Promise.allSettled([
@@ -870,7 +881,10 @@ async function loadAll() {
   ]);
 
   renderDashboard();
-  setSyncInfo('✅ ' + new Date().toLocaleTimeString('vi'));
+  const t = new Date().toLocaleTimeString('vi');
+  setSyncInfo('✅ Đồng bộ lúc ' + t);
+  el('sync-info').style.color = 'var(--green)';
+  setTimeout(() => { el('sync-info').style.color = ''; }, 3000);
 }
 
 // ════════════════════════════════════════
