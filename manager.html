@@ -3,172 +3,169 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DGM · Manager Dashboard</title>
+<title>DGM · Price Intelligence Manager</title>
 <style>
 :root {
-  --red: #C8102E;
-  --yellow: #FFE140;
-  --navy: #1B3A57;
-  --navy2: #2a4f72;
-  --gray: #6b7280;
-  --light: #f3f4f6;
-  --border: #e5e7eb;
-  --white: #ffffff;
-  --green: #10b981;
-  --orange: #f59e0b;
-  --blue: #3b82f6;
-  --radius: 10px;
-  --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --red: #C8102E; --yellow: #FFE140; --navy: #1B3A57; --navy2: #2a4f72;
+  --gray: #6b7280; --light: #f3f4f6; --border: #e5e7eb; --white: #ffffff;
+  --green: #10b981; --orange: #f59e0b; --blue: #3b82f6; --purple: #8b5cf6;
+  --radius: 10px; --shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 * { box-sizing: border-box; margin:0; padding:0; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: #1f2937; display: flex; min-height: 100vh; }
 
 /* ── SIDEBAR ── */
 .sidebar { width: 220px; background: var(--navy); min-height: 100vh; display: flex; flex-direction: column; position: fixed; top:0; left:0; bottom:0; z-index:100; }
-.sidebar-logo { padding: 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.sidebar-logo { padding: 18px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); }
 .sidebar-logo .mark { width: 36px; height: 36px; background: var(--red); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; font-size: 16px; margin-bottom: 8px; }
-.sidebar-logo h1 { color: white; font-size: 14px; font-weight: 700; }
-.sidebar-logo p  { color: rgba(255,255,255,0.5); font-size: 11px; margin-top: 2px; }
-
-.nav-section { padding: 12px 0; }
-.nav-section-title { color: rgba(255,255,255,0.35); font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 6px 16px; }
-.nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; cursor: pointer; border-left: 3px solid transparent; transition: all 0.2s; color: rgba(255,255,255,0.65); font-size: 13px; }
+.sidebar-logo h1 { color: white; font-size: 13px; font-weight: 700; }
+.sidebar-logo p  { color: rgba(255,255,255,0.45); font-size: 11px; margin-top: 2px; }
+.nav-section { padding: 10px 0; }
+.nav-label { color: rgba(255,255,255,0.3); font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 5px 16px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 16px; cursor: pointer; border-left: 3px solid transparent; color: rgba(255,255,255,0.6); font-size: 13px; transition: all 0.15s; }
 .nav-item:hover { background: rgba(255,255,255,0.07); color: white; }
 .nav-item.active { background: rgba(255,255,255,0.12); border-left-color: var(--red); color: white; font-weight: 600; }
-.nav-icon { font-size: 16px; width: 20px; text-align: center; }
-.nav-badge { background: var(--red); color: white; border-radius: 10px; padding: 1px 7px; font-size: 10px; font-weight: 700; margin-left: auto; }
-
-.sidebar-user { margin-top: auto; padding: 14px 16px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; }
-.sidebar-user .av { width: 32px; height: 32px; background: var(--red); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; flex-shrink: 0; }
-.sidebar-user .un { color: white; font-size: 13px; font-weight: 600; }
-.sidebar-user .ur { color: rgba(255,255,255,0.5); font-size: 11px; }
+.nav-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink:0; }
+.nav-badge { background: var(--red); color: white; border-radius: 10px; padding: 1px 6px; font-size: 10px; font-weight: 700; margin-left: auto; }
+.sidebar-foot { margin-top: auto; padding: 14px 16px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; }
+.sidebar-foot .av { width: 30px; height: 30px; background: var(--red); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 13px; flex-shrink:0; }
+.sidebar-foot .un { color: white; font-size: 12px; font-weight: 600; }
+.sidebar-foot .ur { color: rgba(255,255,255,0.45); font-size: 10px; }
 
 /* ── MAIN ── */
 .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
-.top-bar { background: white; border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 12px; }
-.top-bar h2 { font-size: 18px; font-weight: 700; color: var(--navy); }
+.top-bar { background: white; border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; gap: 12px; position: sticky; top:0; z-index:50; }
+.top-bar h2 { font-size: 17px; font-weight: 700; color: var(--navy); }
 .top-bar .sync-info { margin-left: auto; font-size: 12px; color: var(--gray); }
-.top-bar .refresh-btn { background: var(--navy); color: white; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; cursor: pointer; }
+.btn { border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: opacity 0.15s; }
+.btn:active { opacity: 0.8; }
+.btn-primary { background: var(--red); color: white; }
+.btn-secondary { background: var(--light); color: var(--navy); }
+.btn-navy { background: var(--navy); color: white; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
 
-.page { display: none; padding: 24px; }
+.page { display: none; padding: 20px 24px; }
 .page.active { display: block; }
 
 /* ── CARDS ── */
-.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-.stat-box { background: white; border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); }
-.stat-box .sb-num { font-size: 32px; font-weight: 700; color: var(--navy); }
-.stat-box .sb-label { font-size: 13px; color: var(--gray); margin-top: 4px; }
-.stat-box .sb-icon { font-size: 28px; float: right; opacity: 0.6; }
+.card { background: white; border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 18px; }
+.card-title { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.card-title .ct-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.card-sub { font-size: 12px; color: var(--gray); font-weight: 400; }
 
-.card { background: white; border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 20px; }
-.card-title { font-size: 15px; font-weight: 700; color: var(--navy); margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.card-title span { font-size: 12px; color: var(--gray); font-weight: 400; }
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+/* KPI bar */
+.kpi-row { display: grid; gap: 12px; margin-bottom: 18px; }
+.kpi-row.cols-4 { grid-template-columns: repeat(4,1fr); }
+.kpi-row.cols-3 { grid-template-columns: repeat(3,1fr); }
+.kpi-row.cols-2 { grid-template-columns: repeat(2,1fr); }
+.kpi { background: white; border-radius: var(--radius); padding: 16px 18px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+.kpi-val { font-size: 28px; font-weight: 700; color: var(--navy); line-height: 1; }
+.kpi-label { font-size: 12px; color: var(--gray); margin-top: 5px; }
+.kpi-sub { font-size: 11px; color: var(--gray); margin-top: 3px; opacity:0.7; }
+.kpi.red .kpi-val   { color: var(--red); }
+.kpi.green .kpi-val { color: var(--green); }
+.kpi.orange .kpi-val{ color: var(--orange); }
+.kpi.blue .kpi-val  { color: var(--blue); }
+
+/* Price event banner */
+.event-banner { background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%); border-radius: var(--radius); padding: 16px 20px; color: white; margin-bottom: 18px; display: flex; align-items: center; gap: 16px; }
+.event-banner .eb-icon { font-size: 32px; }
+.event-banner .eb-name { font-size: 16px; font-weight: 700; }
+.event-banner .eb-meta { font-size: 12px; opacity: 0.7; margin-top: 3px; }
+.event-banner .eb-pct { font-size: 28px; font-weight: 700; color: var(--yellow); margin-left: auto; }
+.event-banner .eb-pct-label { font-size: 11px; opacity: 0.7; text-align: right; }
 
 /* Tables */
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th { background: #f8f9fa; color: var(--gray); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
-td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; }
+th { background: #f8f9fa; color: var(--gray); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; padding: 8px 10px; text-align: left; border-bottom: 2px solid var(--border); white-space: nowrap; }
+td { padding: 9px 10px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
 tr:last-child td { border-bottom: none; }
-tr:hover td { background: #fafafa; }
+tr.clickable { cursor: pointer; }
+tr.clickable:hover td { background: #fafbff; }
+.tbl-wrap { overflow-x: auto; }
+
+/* Pass-through visual */
+.pt-bar { display: flex; align-items: center; gap: 4px; }
+.pt-fill { height: 6px; border-radius: 3px; background: var(--green); min-width: 2px; }
+.pt-pct { font-size: 12px; font-weight: 700; color: var(--navy); min-width: 36px; }
+
+/* Chain flow diagram */
+.flow-row { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.flow-box { background: #f0f4ff; border: 1px solid #c7d2fe; border-radius: 6px; padding: 3px 8px; font-weight: 600; color: var(--navy); white-space: nowrap; }
+.flow-arrow { color: var(--gray); font-size: 14px; }
+.flow-pct { background: rgba(16,185,129,0.1); color: var(--green); border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 700; }
+.flow-pct.drift { background: rgba(200,16,46,0.1); color: var(--red); }
 
 /* Badges */
-.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-.badge-mt { background: rgba(59,130,246,0.1); color: #2563eb; }
-.badge-gt { background: rgba(16,185,129,0.1); color: #059669; }
-.badge-ab { background: rgba(200,16,46,0.1); color: var(--red); }
-.badge-comp { background: rgba(107,114,128,0.1); color: var(--gray); }
-.badge-ok   { background: rgba(16,185,129,0.1); color: #059669; }
-.badge-warn { background: rgba(245,158,11,0.1); color: #92400e; }
-.badge-err  { background: rgba(239,68,68,0.1); color: #dc2626; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.b-mt     { background: rgba(59,130,246,0.1); color: #2563eb; }
+.b-gt     { background: rgba(16,185,129,0.1); color: #059669; }
+.b-own    { background: rgba(200,16,46,0.1); color: var(--red); }
+.b-comp   { background: rgba(107,114,128,0.1); color: var(--gray); }
+.b-ok     { background: rgba(16,185,129,0.12); color: #059669; }
+.b-warn   { background: rgba(245,158,11,0.12); color: #92400e; }
+.b-err    { background: rgba(239,68,68,0.1); color: #dc2626; }
+.b-info   { background: rgba(59,130,246,0.1); color: #2563eb; }
+.b-purple { background: rgba(139,92,246,0.1); color: #7c3aed; }
 
 /* Delta */
-.delta-up   { color: #dc2626; font-weight: 700; }
-.delta-down { color: #059669; font-weight: 700; }
-.delta-flat { color: var(--gray); }
-
-/* Chart bars */
-.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.bar-label { width: 120px; font-size: 13px; color: var(--navy); flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bar-track { flex: 1; height: 8px; background: var(--light); border-radius: 4px; overflow: hidden; }
-.bar-fill { height: 100%; border-radius: 4px; background: var(--red); transition: width 0.6s; }
-.bar-val { width: 50px; text-align: right; font-size: 12px; font-weight: 700; color: var(--navy); }
-
-/* Loading shimmer */
-.shimmer { background: linear-gradient(90deg, #f0f2f5 25%, #e8eaed 50%, #f0f2f5 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; height: 14px; margin-bottom: 8px; }
-@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-/* Product list */
-.product-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--light); }
-.product-item:last-child { border-bottom: none; }
-.product-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.dot-ab   { background: var(--red); }
-.dot-comp { background: var(--gray); }
-.product-name { font-size: 13px; font-weight: 600; color: var(--navy); }
-.product-meta { font-size: 11px; color: var(--gray); margin-top: 2px; }
-.product-price { margin-left: auto; font-size: 14px; font-weight: 700; color: var(--red); }
+.up   { color: #dc2626; font-weight: 700; }
+.down { color: #059669; font-weight: 700; }
+.flat { color: var(--gray); }
 
 /* Alert items */
-.alert-item { display: flex; align-items: flex-start; gap: 10px; padding: 12px; background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.2); border-radius: 8px; margin-bottom: 8px; }
-.alert-item.high { background: rgba(239,68,68,0.06); border-color: rgba(239,68,68,0.2); }
-.alert-icon { font-size: 18px; flex-shrink: 0; }
-.alert-text { font-size: 13px; color: #1f2937; }
-.alert-sub  { font-size: 11px; color: var(--gray); margin-top: 3px; }
+.alert-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; background: rgba(245,158,11,0.05); border: 1px solid rgba(245,158,11,0.2); border-radius: 8px; margin-bottom: 8px; font-size: 13px; }
+.alert-item.high { background: rgba(200,16,46,0.05); border-color: rgba(200,16,46,0.2); }
+.alert-item .ai-body { flex:1; }
+.alert-item .ai-meta { font-size: 11px; color: var(--gray); margin-top: 2px; }
 
-/* Survey list */
-.survey-item { padding: 12px; border-bottom: 1px solid var(--light); display: flex; gap: 12px; align-items: flex-start; }
-.survey-item:last-child { border-bottom: none; }
-.si-left { flex: 1; }
-.si-name { font-size: 14px; font-weight: 700; color: var(--navy); }
-.si-meta { font-size: 12px; color: var(--gray); margin-top: 3px; display: flex; gap: 8px; flex-wrap: wrap; }
-.si-right { text-align: right; }
-.si-price { font-size: 15px; font-weight: 700; color: var(--red); }
-.si-date  { font-size: 11px; color: var(--gray); }
+/* Filter row */
+.filter-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+.filter-row select, .filter-row input { border: 1.5px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 13px; font-family: inherit; outline: none; background: white; }
+.filter-row select:focus { border-color: var(--navy); }
+.ftab { border: 1.5px solid var(--border); background: white; color: var(--gray); border-radius: 8px; padding: 6px 14px; font-size: 12px; cursor: pointer; font-weight: 500; }
+.ftab.active { border-color: var(--navy); background: var(--navy); color: white; font-weight: 600; }
 
-/* Filter */
-.filter-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-.filter-btn { border: 1.5px solid var(--border); background: white; color: var(--gray); border-radius: 8px; padding: 6px 14px; font-size: 13px; cursor: pointer; }
-.filter-btn.active { border-color: var(--navy); background: var(--navy); color: white; font-weight: 600; }
-
-/* Form modals */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 500; }
+/* Modals */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 500; }
 .modal-overlay.hidden { display: none; }
-.modal { background: white; border-radius: 14px; width: 560px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
-.modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-.modal-header h3 { font-size: 16px; font-weight: 700; color: var(--navy); }
-.modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--gray); }
-.modal-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+.modal { background: white; border-radius: 14px; width: 540px; max-width: 96vw; max-height: 88vh; overflow-y: auto; }
+.modal-hdr { padding: 18px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.modal-hdr h3 { font-size: 15px; font-weight: 700; color: var(--navy); }
+.modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--gray); line-height:1; }
+.modal-body { padding: 18px 22px; display: flex; flex-direction: column; gap: 13px; }
+.modal-foot { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+.field-label { font-size: 11px; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 5px; }
+input, select, textarea { width: 100%; border: 1.5px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.15s; }
+input:focus, select:focus, textarea:focus { border-color: var(--navy); }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.field-label { font-size: 12px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 5px; }
-input, select, textarea { width: 100%; border: 1.5px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 14px; font-family: inherit; outline: none; }
-input:focus, select:focus { border-color: var(--navy); }
-.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
-.btn { border-radius: 8px; padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; }
-.btn-primary { background: var(--red); color: white; }
-.btn-secondary { background: var(--light); color: var(--navy); }
+
+/* Shimmer */
+.shimmer { background: linear-gradient(90deg,#f0f2f5 25%,#e8eaed 50%,#f0f2f5 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:6px; height:14px; margin-bottom:8px; }
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
 /* Toast */
-.toast { position: fixed; bottom: 24px; right: 24px; background: #1f2937; color: white; padding: 12px 20px; border-radius: 10px; font-size: 14px; opacity: 0; transition: all 0.3s; z-index: 1000; }
-.toast.show { opacity: 1; }
-.toast.success { background: var(--green); }
-.toast.error   { background: var(--red); }
+.toast { position:fixed; bottom:20px; right:20px; background:#1f2937; color:white; padding:11px 18px; border-radius:10px; font-size:13px; opacity:0; transition:all 0.3s; z-index:1000; max-width:360px; }
+.toast.show { opacity:1; }
+.toast.success { background:var(--green); }
+.toast.error   { background:var(--red); }
 
-/* Empty state */
-.empty-state { text-align: center; padding: 40px; color: var(--gray); }
-.empty-icon  { font-size: 40px; margin-bottom: 10px; }
+/* Hint box */
+.hint { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #1e40af; }
+.hint.yellow { background: #fefce8; border-color: #fde68a; color: #92400e; }
+.hint.green  { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
 
-/* SKU counter chips */
-.sku-chips { display: flex; gap: 12px; margin-bottom: 16px; }
-.sku-chip { background: var(--light); border-radius: 8px; padding: 12px 16px; flex: 1; text-align: center; }
-.sku-chip .sc-num { font-size: 24px; font-weight: 700; color: var(--navy); }
-.sku-chip .sc-label { font-size: 12px; color: var(--gray); margin-top: 2px; }
+/* Grid 2 */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
 
-@media (max-width: 900px) {
-  .sidebar { width: 60px; }
-  .sidebar-logo h1, .sidebar-logo p, .nav-item span:not(.nav-icon), .nav-badge, .sidebar-user .un, .sidebar-user .ur, .nav-section-title { display: none; }
-  .main { margin-left: 60px; }
-  .stats-grid { grid-template-columns: 1fr 1fr; }
-  .grid-2 { grid-template-columns: 1fr; }
+/* Responsive */
+@media (max-width: 960px) {
+  .sidebar { width: 56px; }
+  .sidebar-logo h1, .sidebar-logo p, .nav-item span:not(.nav-icon), .nav-badge, .sidebar-foot .un, .sidebar-foot .ur, .nav-label { display: none; }
+  .main { margin-left: 56px; }
+  .kpi-row.cols-4 { grid-template-columns: 1fr 1fr; }
+  .grid2 { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -178,29 +175,27 @@ input:focus, select:focus { border-color: var(--navy); }
 <nav class="sidebar">
   <div class="sidebar-logo">
     <div class="mark">D</div>
-    <h1>DGM Manager</h1>
-    <p>Price Intelligence</p>
+    <h1>DGM Price Intel</h1>
+    <p>Manager Dashboard v11</p>
   </div>
+
   <div class="nav-section">
-    <div class="nav-section-title">Tổng quan</div>
-    <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span><span>Dashboard</span></div>
-    <div class="nav-item" onclick="showPage('team',this)"><span class="nav-icon">👥</span><span>Hoạt động Team</span></div>
-    <div class="nav-item" onclick="showPage('alerts',this)"><span class="nav-icon">🚨</span><span>Cảnh báo</span><span class="nav-badge" id="alert-badge">0</span></div>
+    <div class="nav-label">Phân tích giá</div>
+    <div class="nav-item active" onclick="nav('dashboard',this)"><span class="nav-icon">📊</span><span>Tổng quan</span></div>
+    <div class="nav-item" onclick="nav('mt',this)"><span class="nav-icon">🏬</span><span>MT — Pass-through</span></div>
+    <div class="nav-item" onclick="nav('gt',this)"><span class="nav-icon">🛒</span><span>GT — Pass-through</span></div>
+    <div class="nav-item" onclick="nav('drift',this)"><span class="nav-icon">📡</span><span>Drift & Biến động</span><span class="nav-badge" id="drift-badge">0</span></div>
   </div>
+
   <div class="nav-section">
-    <div class="nav-section-title">Theo dõi giá</div>
-    <div class="nav-item" onclick="showPage('propagation',this)"><span class="nav-icon">📡</span><span>Lan truyền giá</span></div>
-    <div class="nav-item" onclick="showPage('compare',this)"><span class="nav-icon">📈</span><span>So sánh giá</span></div>
-    <div class="nav-item" onclick="showPage('history',this)"><span class="nav-icon">📋</span><span>Lịch sử Survey</span></div>
+    <div class="nav-label">Quản lý</div>
+    <div class="nav-item" onclick="nav('events',this)"><span class="nav-icon">📢</span><span>Mốc tăng giá</span></div>
+    <div class="nav-item" onclick="nav('alerts',this)"><span class="nav-icon">🚨</span><span>Cảnh báo</span><span class="nav-badge" id="alert-badge">0</span></div>
+    <div class="nav-item" onclick="nav('history',this)"><span class="nav-icon">📋</span><span>Lịch sử Survey</span></div>
+    <div class="nav-item" onclick="nav('masterdata',this)"><span class="nav-icon">⚙️</span><span>Master Data</span></div>
   </div>
-  <div class="nav-section">
-    <div class="nav-section-title">Quản lý</div>
-    <div class="nav-item" onclick="showPage('events',this)"><span class="nav-icon">📢</span><span>Mốc tăng giá</span></div>
-    <div class="nav-item" onclick="showPage('tracker',this)"><span class="nav-icon">🎯</span><span>MT Price Tracker</span></div>
-    <div class="nav-item" onclick="showPage('gt-tracker',this)"><span class="nav-icon">🛒</span><span>GT Price Tracker</span></div>
-    <div class="nav-item" onclick="showPage('masterdata',this)"><span class="nav-icon">⚙️</span><span>Master Data</span></div>
-  </div>
-  <div class="sidebar-user">
+
+  <div class="sidebar-foot">
     <div class="av">Q</div>
     <div><div class="un">Bùi Quang Quý</div><div class="ur">Sales Manager</div></div>
   </div>
@@ -209,429 +204,468 @@ input:focus, select:focus { border-color: var(--navy); }
 <!-- MAIN -->
 <main class="main">
   <div class="top-bar">
-    <h2 id="page-title">Dashboard</h2>
+    <h2 id="page-title">Tổng quan</h2>
+    <select id="event-global" onchange="onGlobalEventChange()" style="width:auto;max-width:300px;padding:6px 12px;font-size:13px;border:1.5px solid var(--border);border-radius:8px;">
+      <option value="">📢 Tất cả mốc tăng giá</option>
+    </select>
     <span class="sync-info" id="sync-info">Đang tải...</span>
-    <button class="refresh-btn" onclick="loadAll()">🔄 Làm mới</button>
-    <button class="refresh-btn" style="background:var(--red);margin-left:8px;" onclick="openModal('event-modal')">📢 Nhập mốc tăng giá</button>
+    <button class="btn btn-navy" onclick="loadAll()">🔄 Làm mới</button>
+    <button class="btn btn-primary" onclick="openModal('modal-event')">+ Mốc tăng giá mới</button>
   </div>
 
-  <!-- ── DASHBOARD ── -->
+  <!-- ══════════════════════════════════════════════════════════
+       PAGE 1: DASHBOARD — Tổng quan tác động tăng giá
+  ══════════════════════════════════════════════════════════ -->
   <div class="page active" id="page-dashboard">
-    <div class="stats-grid">
-      <div class="stat-box"><div class="sb-icon">📸</div><div class="sb-num" id="ds-today">—</div><div class="sb-label">Survey hôm nay</div></div>
-      <div class="stat-box"><div class="sb-icon">📅</div><div class="sb-num" id="ds-week">—</div><div class="sb-label">Survey tuần này</div></div>
-      <div class="stat-box"><div class="sb-icon">🏪</div><div class="sb-num" id="ds-outlets">—</div><div class="sb-label">Điểm bán hôm nay</div></div>
-      <div class="stat-box"><div class="sb-icon">🚨</div><div class="sb-num" id="ds-alerts">—</div><div class="sb-label">Cảnh báo chưa đọc</div></div>
-    </div>
-    <!-- v11 Tracker todos summary -->
-    <div class="stats-grid" style="margin-bottom:16px;" id="tracker-todos-grid" style="display:none;">
-      <div class="stat-box"><div class="sb-icon">🔘</div><div class="sb-num" id="mt-chua-cap-nhat">—</div><div class="sb-label">MT Chưa cập nhật</div></div>
-      <div class="stat-box"><div class="sb-icon">🟡</div><div class="sb-num" id="mt-chua-survey">—</div><div class="sb-label">MT Chưa có Survey</div></div>
-      <div class="stat-box"><div class="sb-icon">🔴</div><div class="sb-num" id="mt-co-drift">—</div><div class="sb-label">MT Có drift giá</div></div>
-      <div class="stat-box"><div class="sb-icon">🟢</div><div class="sb-num" id="mt-da-xac-nhan">—</div><div class="sb-label">MT Đã xác nhận</div></div>
-    </div>
 
-    <div class="grid-2">
-      <!-- Product catalog -->
-      <div class="card">
-        <div class="card-title">📦 Danh mục sản phẩm DGM <span id="sku-updated"></span></div>
-        <div class="sku-chips">
-          <div class="sku-chip"><div class="sc-num" id="sku-own">—</div><div class="sc-label">🔴 Ayam Brand SKU</div></div>
-          <div class="sku-chip"><div class="sc-num" id="sku-comp">—</div><div class="sc-label">🔵 Đối thủ SKU</div></div>
-          <div class="sku-chip"><div class="sc-num" id="sku-total">—</div><div class="sc-label">Tổng sản phẩm</div></div>
-        </div>
-        <div id="product-list-dash" style="max-height:320px;overflow-y:auto;">
-          <div class="shimmer"></div><div class="shimmer" style="width:80%"></div><div class="shimmer" style="width:60%"></div>
-        </div>
+    <!-- Event banner -->
+    <div class="event-banner" id="dash-event-banner" style="display:none;">
+      <div class="eb-icon">📢</div>
+      <div>
+        <div class="eb-name" id="dash-ev-name">—</div>
+        <div class="eb-meta" id="dash-ev-meta">—</div>
       </div>
+      <div style="margin-left:auto;text-align:right;">
+        <div class="eb-pct" id="dash-ev-pct">—</div>
+        <div class="eb-pct-label">% tăng giá DGM</div>
+      </div>
+    </div>
 
-      <!-- Recent price event -->
+    <!-- KPI top: tác động tổng -->
+    <div class="kpi-row cols-4" id="dash-kpi-row">
+      <div class="kpi"><div class="kpi-val" id="kpi-mt-applied">—</div><div class="kpi-label">MT chains đã áp dụng</div><div class="kpi-sub" id="kpi-mt-total"></div></div>
+      <div class="kpi green"><div class="kpi-val" id="kpi-mt-pt">—</div><div class="kpi-label">Pass-through MT TB</div><div class="kpi-sub">% tăng giá chuyển tới NTD</div></div>
+      <div class="kpi"><div class="kpi-val" id="kpi-gt-applied">—</div><div class="kpi-label">GT regions đã áp dụng</div><div class="kpi-sub" id="kpi-gt-total"></div></div>
+      <div class="kpi orange"><div class="kpi-val" id="kpi-drift-count">—</div><div class="kpi-label">Có drift giá</div><div class="kpi-sub">Chain tự điều chỉnh</div></div>
+    </div>
+
+    <div class="grid2">
+      <!-- MT Chain summary -->
       <div class="card">
-        <div class="card-title">📢 Mốc tăng giá gần nhất</div>
-        <div id="latest-event-dash">
-          <div class="shimmer"></div><div class="shimmer" style="width:70%"></div>
+        <div class="card-title">🏬 MT — Tiến độ áp dụng tăng giá
+          <div class="ct-right"><button class="btn btn-sm btn-secondary" onclick="nav('mt',null)">Chi tiết →</button></div>
         </div>
-
-        <div class="card-title" style="margin-top:20px;">🚨 Cảnh báo mới <span id="alert-count-dash"></span></div>
-        <div id="alerts-dash">
+        <div id="dash-mt-chains">
           <div class="shimmer"></div><div class="shimmer" style="width:80%"></div>
         </div>
       </div>
-    </div>
 
-    <!-- Competitor changes -->
-    <div class="card">
-      <div class="card-title">📊 Biến động giá đối thủ cạnh tranh <span>20 gần nhất</span></div>
-      <div style="overflow-x:auto;">
-        <table>
-          <thead><tr><th>Thương hiệu</th><th>Sản phẩm</th><th>Điểm bán</th><th>Giá hiện tại</th><th>Giá trước</th><th>Biến động</th><th>Ngày survey</th></tr></thead>
-          <tbody id="comp-changes-table"><tr><td colspan="7" style="text-align:center;color:#9ca3af;">Đang tải...</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Brands surveyed -->
-    <div class="card">
-      <div class="card-title">🎯 Brands đã survey (tần suất)</div>
-      <div id="brands-bars">
-        <div class="shimmer"></div><div class="shimmer" style="width:70%"></div><div class="shimmer" style="width:50%"></div>
-      </div>
-    </div>
-
-    <!-- Recent surveys -->
-    <div class="card">
-      <div class="card-title">📋 Survey gần nhất — toàn team <span>50 gần nhất</span></div>
-      <div id="recent-surveys-list">
-        <div class="shimmer"></div><div class="shimmer"></div><div class="shimmer"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── TEAM ACTIVITY ── -->
-  <div class="page" id="page-team">
-    <div class="card">
-      <div class="card-title">👥 Hoạt động Survey Team hôm nay</div>
-      <table>
-        <thead><tr><th>Nhân viên</th><th>Chức danh</th><th>Kênh</th><th>Khu vực</th><th>Hôm nay</th><th>Tuần này</th><th>Điểm bán</th><th>Survey gần nhất</th></tr></thead>
-        <tbody id="team-table"><tr><td colspan="8" style="text-align:center;">Đang tải...</td></tr></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- ── ALERTS ── -->
-  <div class="page" id="page-alerts">
-    <div class="card">
-      <div class="card-title">🚨 Cảnh báo thị trường <button class="btn btn-secondary" style="font-size:12px;padding:6px 12px;" onclick="markAllRead()">✓ Đánh dấu đã đọc</button></div>
-      <div id="alerts-list">
-        <div class="shimmer"></div><div class="shimmer"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── PROPAGATION ── -->
-  <div class="page" id="page-propagation">
-    <div class="card">
-      <div class="card-title">📡 Lan truyền giá DGM → Chain → Kệ hàng</div>
-      <div style="margin-bottom:12px;">
-        <select id="event-select" onchange="loadPropagation()" style="max-width:300px;">
-          <option value="">-- Chọn mốc tăng giá --</option>
-        </select>
-      </div>
-      <div id="mt-propagation">
-        <div class="empty-state"><div class="empty-icon">📡</div>Chọn mốc tăng giá để xem tiến độ</div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">🛒 GT — theo khu vực</div>
-      <div id="gt-region-table"><div class="empty-state">Đang tải...</div></div>
-    </div>
-  </div>
-
-  <!-- ── COMPARE ── -->
-  <div class="page" id="page-compare">
-    <div class="card">
-      <div class="card-title">📈 So sánh giá DGM vs kệ hàng</div>
-      <div class="filter-row" id="compare-filters">
-        <button class="filter-btn active" onclick="filterCompare('all',this)">Tất cả sản phẩm</button>
-      </div>
-      <div style="overflow-x:auto;">
-        <table>
-          <thead><tr><th>Sản phẩm</th><th>Thương hiệu</th><th>Kênh</th><th>Điểm bán</th><th>Giá DGM (đ)</th><th>Giá survey (đ)</th><th>Chênh lệch</th><th>Loại giá</th><th>Ngày</th></tr></thead>
-          <tbody id="compare-table"><tr><td colspan="9" style="text-align:center;">Đang tải...</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── HISTORY ── -->
-  <div class="page" id="page-history">
-    <div class="card">
-      <div class="card-title">📋 Lịch sử Survey — toàn bộ dữ liệu
-        <button class="btn btn-secondary" style="font-size:12px;padding:6px 12px;" onclick="exportHistory()">⬇ Export Excel</button>
-      </div>
-      <div class="filter-row">
-        <select id="hist-channel" style="width:auto;padding:6px 12px;"><option value="">Tất cả kênh</option><option value="MT">MT</option><option value="GT">GT</option></select>
-        <select id="hist-type" style="width:auto;padding:6px 12px;"><option value="">Tất cả loại</option><option value="own_brand">Ayam Brand</option><option value="competitor">Đối thủ</option></select>
-        <button class="btn btn-primary" onclick="loadSurveyList()">→ Lọc</button>
-      </div>
-      <div style="overflow-x:auto;">
-        <table>
-          <thead><tr><th>Ngày</th><th>Nhân viên</th><th>Kênh</th><th>Điểm bán</th><th>Sản phẩm</th><th>Thương hiệu</th><th>Quy cách</th><th>Loại giá</th><th>Giá (đ)</th><th>Ghi chú</th></tr></thead>
-          <tbody id="history-table"><tr><td colspan="10" style="text-align:center;color:#9ca3af;">Bấm "Lọc" để tải dữ liệu</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── EVENTS ── -->
-  <div class="page" id="page-events">
-    <div class="card">
-      <div class="card-title">📢 Mốc tăng giá DGM <button class="btn btn-primary" onclick="openModal('event-modal')" style="font-size:13px;">+ Nhập mốc mới</button></div>
-      <div id="events-list"><div class="shimmer"></div><div class="shimmer" style="width:70%"></div></div>
-    </div>
-  </div>
-
-  <!-- ── MT TRACKER ── -->
-  <div class="page" id="page-tracker">
-    <div class="card">
-      <div class="card-title">🎯 MT Price Tracker
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-primary" onclick="openBulkTrackerModal()" style="font-size:13px;">🚀 Tạo tracker hàng loạt</button>
+      <!-- GT region summary -->
+      <div class="card">
+        <div class="card-title">🛒 GT — Pass-through theo Region
+          <div class="ct-right"><button class="btn btn-sm btn-secondary" onclick="nav('gt',null)">Chi tiết →</button></div>
+        </div>
+        <div id="dash-gt-regions">
+          <div class="shimmer"></div><div class="shimmer" style="width:70%"></div>
         </div>
       </div>
-      <p style="font-size:12px;color:var(--gray);margin-bottom:14px;">
-        Click vào dòng để cập nhật <strong>Ngày chain áp dụng</strong> & <strong>Trạng thái</strong> ·
-        <strong>Giá NTD thực tế</strong> tự động từ survey nhân viên · Hệ thống tự tính lag ngày
-      </p>
+    </div>
+
+    <!-- Drift alerts + Competitor -->
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">🔴 Drift giá đang xảy ra
+          <div class="ct-right"><button class="btn btn-sm btn-secondary" onclick="nav('drift',null)">Xem tất cả →</button></div>
+        </div>
+        <div id="dash-drift-alerts">
+          <div class="shimmer"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📊 Biến động giá đối thủ cạnh tranh</div>
+        <div id="dash-comp-changes">
+          <div class="shimmer"></div><div class="shimmer" style="width:70%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cost of price increase -->
+    <div class="card">
+      <div class="card-title">💰 Chi phí hỗ trợ tăng giá (KM / Trade)</div>
+      <div class="kpi-row cols-4" style="margin-bottom:0;">
+        <div class="kpi"><div class="kpi-val" id="cost-dotKM">—</div><div class="kpi-label">Tổng đợt KM</div></div>
+        <div class="kpi red"><div class="kpi-val" id="cost-budget">—</div><div class="kpi-label">Tổng ngân sách</div><div class="kpi-sub">triệu VND</div></div>
+        <div class="kpi"><div class="kpi-val" id="cost-trackers">—</div><div class="kpi-label">Trackers có KM</div></div>
+        <div class="kpi"><div class="kpi-val" id="cost-avg">—</div><div class="kpi-label">TB / tracker</div><div class="kpi-sub">triệu VND</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       PAGE 2: MT — Pass-through chi tiết
+  ══════════════════════════════════════════════════════════ -->
+  <div class="page" id="page-mt">
+    <div class="hint yellow" style="margin-bottom:16px;">
+      💡 <strong>Pass-through %</strong> = (NTD sau − NTD trước) / (DGM sau − DGM trước) × 100. 
+      100% = chain chuyển đúng; &gt;100% = chain tăng thêm; &lt;100% = chain hấp thụ một phần.
+    </div>
+
+    <div class="filter-row">
+      <select id="mt-filter-event" onchange="renderMTPage()"><option value="">Tất cả sự kiện</option></select>
+      <select id="mt-filter-chain" onchange="renderMTPage()"><option value="">Tất cả chain</option></select>
+      <select id="mt-filter-status" onchange="renderMTPage()">
+        <option value="">Tất cả trạng thái</option>
+        <option value="Đã áp dụng">🟢 Đã áp dụng</option>
+        <option value="Đã đồng ý">✅ Đã đồng ý</option>
+        <option value="Đang đàm phán">🤝 Đang đàm phán</option>
+        <option value="Đã thông báo">📤 Đã thông báo</option>
+        <option value="Bị từ chối">❌ Bị từ chối</option>
+      </select>
+      <select id="mt-filter-drift" onchange="renderMTPage()">
+        <option value="">Tất cả drift</option>
+        <option value="High">🔴 Drift High</option>
+        <option value="Medium">🟡 Drift Medium</option>
+        <option value="Low">⚠️ Drift Low</option>
+        <option value="None">✅ Không drift</option>
+      </select>
+    </div>
+
+    <!-- MT chain cards -->
+    <div id="mt-chain-cards" style="margin-bottom:16px;"></div>
+
+    <!-- MT detail table -->
+    <div class="card">
+      <div class="card-title">Chi tiết từng SKU × Chain
+        <div class="ct-right">
+          <button class="btn btn-sm btn-primary" onclick="openBulkModal('MT')">🚀 Tạo tracker hàng loạt</button>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>Chain / Format</th>
+            <th>Sản phẩm</th>
+            <th>Giá DGM (trước→sau)</th>
+            <th>NTD cam kết</th>
+            <th>Pass-through %</th>
+            <th>Survey thực tế</th>
+            <th>Drift %</th>
+            <th>Trạng thái</th>
+            <th>Cập nhật</th>
+          </tr></thead>
+          <tbody id="mt-detail-table">
+            <tr><td colspan="9" style="text-align:center;color:#9ca3af;padding:30px;">Đang tải...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       PAGE 3: GT — Pass-through 3 tầng
+  ══════════════════════════════════════════════════════════ -->
+  <div class="page" id="page-gt">
+    <div class="hint yellow" style="margin-bottom:16px;">
+      💡 GT có <strong>3 tầng</strong>: DGM → Agent → Outlet → NTD. Pass-through tổng = (NTD sau − NTD trước) / (DGM sau − DGM trước) × 100.
+    </div>
+
+    <!-- Region summary cards -->
+    <div class="kpi-row cols-3" id="gt-region-kpis" style="margin-bottom:16px;"></div>
+
+    <div class="filter-row">
+      <select id="gt-filter-event" onchange="renderGTPage()"><option value="">Tất cả sự kiện</option></select>
+      <select id="gt-filter-region" onchange="renderGTPage()">
+        <option value="">Tất cả Region</option>
+        <option value="GT North">GT North</option>
+        <option value="GT South">GT South</option>
+        <option value="GT Central">GT Central</option>
+      </select>
+      <select id="gt-filter-status" onchange="renderGTPage()">
+        <option value="">Tất cả trạng thái</option>
+        <option value="Đã áp dụng">Đã áp dụng</option>
+        <option value="Chưa áp dụng">Chưa áp dụng</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Chi tiết GT Pass-through — 3 tầng
+        <div class="ct-right">
+          <button class="btn btn-sm btn-primary" onclick="openBulkModal('GT')">🚀 Tạo GT tracker</button>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>Region / Agent</th>
+            <th>Sản phẩm</th>
+            <th>DGM → Agent</th>
+            <th>Agent → Outlet</th>
+            <th>Outlet → NTD (cam kết)</th>
+            <th>Pass-through tổng %</th>
+            <th>Survey NTD thực tế</th>
+            <th>Drift</th>
+            <th>Trạng thái</th>
+          </tr></thead>
+          <tbody id="gt-detail-table">
+            <tr><td colspan="9" style="text-align:center;color:#9ca3af;padding:30px;">Đang tải...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       PAGE 4: DRIFT & BIẾN ĐỘNG
+  ══════════════════════════════════════════════════════════ -->
+  <div class="page" id="page-drift">
+    <div class="grid2">
+      <!-- Drift alerts -->
+      <div class="card">
+        <div class="card-title">🔴 Drift giá — chain tự điều chỉnh
+          <div class="ct-right"><button class="btn btn-sm btn-secondary" onclick="markAllResolved()">✓ Xử lý tất cả</button></div>
+        </div>
+        <div id="drift-alert-list"><div class="shimmer"></div><div class="shimmer"></div></div>
+      </div>
+      <!-- Competitor changes -->
+      <div class="card">
+        <div class="card-title">📊 Biến động giá đối thủ</div>
+        <div id="comp-full-list"><div class="shimmer"></div></div>
+      </div>
+    </div>
+    <!-- All alerts -->
+    <div class="card">
+      <div class="card-title">🚨 Tất cả cảnh báo chưa xử lý
+        <div class="ct-right"><button class="btn btn-sm btn-secondary" onclick="loadAlerts()">🔄 Làm mới</button></div>
+      </div>
+      <div id="all-alert-list"><div class="shimmer"></div></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       PAGE 5: EVENTS
+  ══════════════════════════════════════════════════════════ -->
+  <div class="page" id="page-events">
+    <div class="card">
+      <div class="card-title">📢 Mốc tăng giá DGM
+        <div class="ct-right"><button class="btn btn-primary" onclick="openModal('modal-event')">+ Tạo mốc mới</button></div>
+      </div>
+      <div id="events-list"><div class="shimmer"></div></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       PAGE 6: ALERTS
+  ══════════════════════════════════════════════════════════ -->
+  <div class="page" id="page-alerts">
+    <div class="card">
+      <div class="card-title">🚨 Cảnh báo thị trường
+        <div class="ct-right"><button class="btn btn-sm btn-secondary" onclick="markAllRead()">✓ Đánh dấu đã đọc</button></div>
+      </div>
+      <div id="alerts-full-list"><div class="shimmer"></div></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       PAGE 7: HISTORY
+  ══════════════════════════════════════════════════════════ -->
+  <div class="page" id="page-history">
+    <div class="card">
+      <div class="card-title">📋 Lịch sử Survey</div>
       <div class="filter-row">
-        <select id="tracker-event" style="width:auto;padding:6px 12px;" onchange="filterTracker()"><option value="">Sự kiện: Tất cả</option></select>
-        <select id="tracker-status" style="width:auto;padding:6px 12px;" onchange="filterTracker()">
-          <option value="">Trạng thái: Tất cả</option>
+        <select id="hist-ch" style="width:auto;"><option value="">Tất cả kênh</option><option value="MT">MT</option><option value="GT">GT</option></select>
+        <select id="hist-type" style="width:auto;"><option value="">Tất cả loại</option><option value="own_brand">Ayam Brand</option><option value="competitor">Đối thủ</option></select>
+        <button class="btn btn-primary btn-sm" onclick="loadSurveyHistory()">Lọc</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Ngày</th><th>NV</th><th>Kênh</th><th>Điểm bán</th><th>Sản phẩm</th><th>Thương hiệu</th><th>Loại giá</th><th>Giá (đ)</th><th>Ghi chú</th></tr></thead>
+          <tbody id="hist-table"><tr><td colspan="9" style="text-align:center;color:#9ca3af;">Bấm "Lọc" để tải</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       PAGE 8: MASTER DATA
+  ══════════════════════════════════════════════════════════ -->
+  <div class="page" id="page-masterdata">
+    <div class="filter-row" style="margin-bottom:16px;">
+      <button class="ftab active" onclick="showMDTab('products',this)">🏷️ Sản phẩm</button>
+      <button class="ftab" onclick="showMDTab('outlets',this)">🏪 Điểm bán</button>
+      <button class="ftab" onclick="showMDTab('brands',this)">🎯 Thương hiệu</button>
+      <button class="ftab" onclick="showMDTab('staff',this)">👥 Nhân viên</button>
+      <button class="ftab" onclick="showMDTab('agents',this)">🚛 Agents GT</button>
+    </div>
+
+    <div class="card" id="md-products">
+      <div class="card-title">Sản phẩm <div class="ct-right"><button class="btn btn-primary btn-sm" onclick="openModal('modal-product')">+ Thêm</button></div></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Mã</th><th>Tên SP</th><th>Nhóm</th><th>Thương hiệu</th><th>Quy cách</th><th>NSX</th><th>Xuất xứ</th><th>Trạng thái</th></tr></thead><tbody id="tb-products"><tr><td colspan="8" style="text-align:center;">Đang tải...</td></tr></tbody></table></div>
+    </div>
+    <div class="card" id="md-outlets" style="display:none;">
+      <div class="card-title">Điểm bán <div class="ct-right"><button class="btn btn-primary btn-sm" onclick="openModal('modal-outlet')">+ Thêm</button></div></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Mã</th><th>Tên</th><th>Kênh</th><th>Format/Loại</th><th>GT Region</th><th>Agent</th><th>Trạng thái</th></tr></thead><tbody id="tb-outlets"><tr><td colspan="7" style="text-align:center;">Đang tải...</td></tr></tbody></table></div>
+    </div>
+    <div class="card" id="md-brands" style="display:none;">
+      <div class="card-title">Thương hiệu</div>
+      <div class="tbl-wrap"><table><thead><tr><th>Mã</th><th>Tên</th><th>Phân loại</th><th>NSX</th><th>Quốc gia</th></tr></thead><tbody id="tb-brands"><tr><td colspan="5" style="text-align:center;">Đang tải...</td></tr></tbody></table></div>
+    </div>
+    <div class="card" id="md-staff" style="display:none;">
+      <div class="card-title">Nhân viên</div>
+      <div class="tbl-wrap"><table><thead><tr><th>Mã</th><th>Họ tên</th><th>Tên hiển thị</th><th>Chức danh</th><th>Kênh</th><th>Khu vực</th><th>Trạng thái</th></tr></thead><tbody id="tb-staff"><tr><td colspan="7" style="text-align:center;">Đang tải...</td></tr></tbody></table></div>
+    </div>
+    <div class="card" id="md-agents" style="display:none;">
+      <div class="card-title">Agents GT</div>
+      <div class="tbl-wrap"><table><thead><tr><th>Tên Agent</th><th>Khu vực GT</th><th>Trạng thái</th></tr></thead><tbody id="tb-agents"><tr><td colspan="3" style="text-align:center;">Đang tải...</td></tr></tbody></table></div>
+    </div>
+  </div>
+</main>
+
+<!-- ══ MODALS ══ -->
+
+<!-- Modal: Tạo mốc tăng giá (v11: 1 event = 1 SP × 1 kênh) -->
+<div class="modal-overlay hidden" id="modal-event">
+  <div class="modal">
+    <div class="modal-hdr"><h3>📢 Tạo mốc tăng giá DGM</h3><button class="modal-close" onclick="closeModal('modal-event')">✕</button></div>
+    <div class="modal-body">
+      <div class="hint yellow">💡 v11: mỗi dòng = 1 sự kiện × 1 sản phẩm × 1 kênh. Tạo nhiều dòng nếu tăng nhiều SP. Sau đó dùng "Tạo tracker hàng loạt" để expand theo chain/region.</div>
+      <div><div class="field-label">Tên sự kiện *</div><input type="text" id="ev-name" placeholder="VD: Tăng giá 2026 - Đợt 1"></div>
+      <div><div class="field-label">Mã đợt tăng giá *</div><input type="text" id="ev-ma" placeholder="VD: TG-2026-01"></div>
+      <div class="form-row">
+        <div><div class="field-label">Kênh *</div>
+          <select id="ev-kenh">
+            <option value="MT">MT</option>
+            <option value="GT">GT</option>
+          </select>
+        </div>
+        <div><div class="field-label">Ngày DGM áp dụng *</div><input type="date" id="ev-date"></div>
+      </div>
+      <div class="form-row">
+        <div><div class="field-label">Sản phẩm *</div>
+          <select id="ev-sp"><option value="">-- Chọn SP --</option></select>
+        </div>
+        <div><div class="field-label">% tăng giá</div><input type="number" id="ev-pct" placeholder="8" step="0.1"></div>
+      </div>
+      <div class="form-row">
+        <div><div class="field-label">Giá DGM trước (VND)</div><input type="number" id="ev-gia-cu" placeholder="0"></div>
+        <div><div class="field-label">Giá DGM sau (VND)</div><input type="number" id="ev-gia-moi" placeholder="0"></div>
+      </div>
+      <div><div class="field-label">Áp dụng cho khách hàng</div><input type="text" id="ev-kh" placeholder="all (để trống = tất cả)"></div>
+      <div><div class="field-label">Lý do tăng giá</div><textarea id="ev-reason" rows="2" placeholder="Giá nguyên liệu, tỷ giá..."></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeModal('modal-event')">Huỷ</button>
+      <button class="btn btn-primary" onclick="saveEvent()">💾 Lưu & Kích hoạt</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Bulk create tracker -->
+<div class="modal-overlay hidden" id="modal-bulk">
+  <div class="modal" style="width:480px;">
+    <div class="modal-hdr"><h3 id="bulk-modal-title">🚀 Tạo tracker hàng loạt</h3><button class="modal-close" onclick="closeModal('modal-bulk')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="bulk-channel" value="MT">
+      <div class="hint">Hệ thống đọc tất cả dòng Price_Events cùng mã đợt → tự expand theo chain/region.</div>
+      <div><div class="field-label">Chọn mã đợt tăng giá *</div>
+        <select id="bulk-event-sel" onchange="onBulkEventChange()" style="font-size:13px;">
+          <option value="">-- Chọn --</option>
+        </select>
+        <div id="bulk-preview" style="margin-top:8px;font-size:12px;color:var(--gray);display:none;padding:8px;background:#f8f9fa;border-radius:6px;"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeModal('modal-bulk')">Huỷ</button>
+      <button class="btn btn-primary" id="bulk-save-btn" onclick="saveBulkTracker()">🚀 Tạo tracker</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Cập nhật MT tracker row -->
+<div class="modal-overlay hidden" id="modal-tracker">
+  <div class="modal">
+    <div class="modal-hdr"><h3>✏️ Cập nhật MT Tracker</h3><button class="modal-close" onclick="closeModal('modal-tracker')">✕</button></div>
+    <div class="modal-body">
+      <div style="background:#f8f9fa;border-radius:8px;padding:10px;">
+        <div style="font-size:13px;font-weight:700;color:var(--navy);" id="tr-hdr">—</div>
+        <div style="font-size:12px;color:var(--gray);margin-top:3px;" id="tr-sub">—</div>
+      </div>
+      <input type="hidden" id="tr-id">
+      <input type="hidden" id="tr-event-id">
+      <input type="hidden" id="tr-sp-id">
+      <input type="hidden" id="tr-chain">
+      <div class="form-row">
+        <div><div class="field-label">Giá NTD cam kết trước</div><input type="number" id="tr-ntd-before" placeholder="VND"></div>
+        <div><div class="field-label">Giá NTD cam kết sau *</div><input type="number" id="tr-ntd-after" placeholder="VND — baseline drift"></div>
+      </div>
+      <div class="form-row">
+        <div><div class="field-label">Ngày chain áp dụng giá mới</div><input type="date" id="tr-date"></div>
+        <div><div class="field-label">Mức pushback</div>
+          <select id="tr-pushback">
+            <option value="">—</option>
+            <option value="None">None — đồng ý ngay</option>
+            <option value="Low">Low</option>
+            <option value="Medium">Medium — cần KM</option>
+            <option value="High">High — từ chối</option>
+          </select>
+        </div>
+      </div>
+      <div><div class="field-label">Trạng thái *</div>
+        <select id="tr-status">
           <option value="Đã thông báo">📤 Đã thông báo</option>
           <option value="Đang đàm phán">🤝 Đang đàm phán</option>
           <option value="Đã đồng ý">✅ Đã đồng ý</option>
           <option value="Đã áp dụng">🟢 Đã áp dụng</option>
           <option value="Bị từ chối">❌ Bị từ chối</option>
         </select>
-        <select id="tracker-kenh" style="width:auto;padding:6px 12px;" onchange="filterTracker()">
-          <option value="">Kênh: Tất cả</option>
-          <option value="MT">MT</option>
-          <option value="GT">GT</option>
-        </select>
       </div>
-      <div style="overflow-x:auto;">
-        <table>
-          <thead><tr>
-            <th>Sự kiện</th><th>Chain/Format</th><th>Sản phẩm</th>
-            <th>Giá DGM trước→sau</th><th>NTD cam kết</th><th>Ngày NTD mới</th>
-            <th>Pass-through %</th><th>Survey mới nhất</th><th>Drift %</th>
-            <th>Trạng thái cập nhật</th><th>Trạng thái tracker</th>
-          </tr></thead>
-          <tbody id="tracker-table"><tr><td colspan="12" style="text-align:center;">Đang tải...</td></tr></tbody>
-        </table>
-      </div>
+      <div><div class="field-label">Ghi chú pushback / đàm phán</div><textarea id="tr-note" rows="2" placeholder="Chain phản hồi gì..."></textarea></div>
+      <div class="hint green">📸 Giá NTD survey thực tế & drift sẽ tự cập nhật khi nhân viên nộp survey.</div>
     </div>
-  </div>
-
-  <!-- ── GT PRICE TRACKER v11 ── -->
-  <div class="page" id="page-gt-tracker">
-    <div class="card">
-      <div class="card-title">🛒 GT Price Tracker — theo Region & Agent
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-primary" onclick="openBulkGTTrackerModal()" style="font-size:13px;">🚀 Tạo GT tracker hàng loạt</button>
-        </div>
-      </div>
-      <div class="filter-row">
-        <select id="gt-tracker-event" style="width:auto;padding:6px 12px;" onchange="filterGTTracker()"><option value="">Sự kiện: Tất cả</option></select>
-        <select id="gt-tracker-region" style="width:auto;padding:6px 12px;" onchange="filterGTTracker()">
-          <option value="">Region: Tất cả</option>
-          <option value="GT North">GT North</option>
-          <option value="GT South">GT South</option>
-          <option value="GT Central">GT Central</option>
-        </select>
-        <select id="gt-tracker-status" style="width:auto;padding:6px 12px;" onchange="filterGTTracker()">
-          <option value="">Trạng thái: Tất cả</option>
-          <option value="Chưa áp dụng">Chưa áp dụng</option>
-          <option value="Đã áp dụng">Đã áp dụng</option>
-        </select>
-      </div>
-      <div style="overflow-x:auto;">
-        <table>
-          <thead><tr>
-            <th>Sự kiện</th><th>Region / Agent</th><th>Sản phẩm</th>
-            <th>Giá DGM→Agent</th><th>Giá Agent→Outlet</th><th>NTD cam kết</th>
-            <th>Pass-through tổng %</th><th>Survey mới nhất</th>
-            <th>Drift %</th><th>Trạng thái cập nhật</th><th>Trạng thái</th>
-          </tr></thead>
-          <tbody id="gt-tracker-table"><tr><td colspan="11" style="text-align:center;">Đang tải...</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-    <!-- GT Region Summary -->
-    <div class="card">
-      <div class="card-title">📊 Tóm tắt theo Region</div>
-      <div id="gt-region-summary"></div>
-    </div>
-  </div>
-
-  <!-- ── MASTER DATA ── -->
-  <div class="page" id="page-masterdata">
-    <div style="display:flex;gap:8px;margin-bottom:20px;">
-      <button class="filter-btn active" onclick="showMDTab('products',this)">🏷️ Sản phẩm</button>
-      <button class="filter-btn" onclick="showMDTab('outlets',this)">🏪 Điểm bán</button>
-      <button class="filter-btn" onclick="showMDTab('brands',this)">🎯 Thương hiệu</button>
-      <button class="filter-btn" onclick="showMDTab('staff',this)">👥 Nhân viên</button>
-    </div>
-    <div class="card" id="md-tab-products">
-      <div class="card-title">Danh mục sản phẩm <button class="btn btn-primary" onclick="openModal('product-modal')" style="font-size:13px;">+ Thêm sản phẩm</button></div>
-      <div style="overflow-x:auto;"><table><thead><tr><th>Mã SP</th><th>Tên sản phẩm</th><th>Nhóm</th><th>Thương hiệu</th><th>Quy cách</th><th>NSX</th><th>Xuất xứ</th><th>Trạng thái</th></tr></thead><tbody id="products-table"><tr><td colspan="8" style="text-align:center;">Đang tải...</td></tr></tbody></table></div>
-    </div>
-    <div class="card" id="md-tab-outlets" style="display:none;">
-      <div class="card-title">Điểm bán <button class="btn btn-primary" onclick="openModal('outlet-modal')" style="font-size:13px;">+ Thêm điểm bán</button></div>
-      <div style="overflow-x:auto;"><table><thead><tr><th>Mã</th><th>Tên điểm bán</th><th>Kênh</th><th>Trạng thái</th><th>Đang tiếp cận</th></tr></thead><tbody id="outlets-table"><tr><td colspan="5" style="text-align:center;">Đang tải...</td></tr></tbody></table></div>
-    </div>
-    <div class="card" id="md-tab-brands" style="display:none;">
-      <div class="card-title">Thương hiệu</div>
-      <div style="overflow-x:auto;"><table><thead><tr><th>Mã</th><th>Tên thương hiệu</th><th>Phân loại</th><th>NSX</th><th>Quốc gia</th></tr></thead><tbody id="brands-table"><tr><td colspan="5" style="text-align:center;">Đang tải...</td></tr></tbody></table></div>
-    </div>
-    <div class="card" id="md-tab-staff" style="display:none;">
-      <div class="card-title">Nhân viên</div>
-      <div style="overflow-x:auto;"><table><thead><tr><th>Mã</th><th>Họ tên</th><th>Tên hiển thị</th><th>Chức danh</th><th>Kênh</th><th>Khu vực</th><th>Trạng thái</th></tr></thead><tbody id="staff-table"><tr><td colspan="7" style="text-align:center;">Đang tải...</td></tr></tbody></table></div>
-    </div>
-  </div>
-</main>
-
-<!-- ── MODALS ── -->
-
-<!-- Modal 1: Tạo Price Event (đơn giản - 1 dòng/event) -->
-<div class="modal-overlay hidden" id="event-modal">
-  <div class="modal">
-    <div class="modal-header"><h3>📢 Tạo mốc tăng giá DGM</h3><button class="modal-close" onclick="closeModal('event-modal')">✕</button></div>
-    <div class="modal-body">
-      <div><div class="field-label">Tên sự kiện *</div><input type="text" id="ev-name" placeholder="Vd: Tăng giá 2026 - lần 2"></div>
-      <div class="form-row">
-        <div><div class="field-label">Ngày DGM thông báo/áp dụng *</div><input type="date" id="ev-date"></div>
-        <div><div class="field-label">% tăng giá (trung bình)</div><input type="number" id="ev-pct" placeholder="0" step="0.1"></div>
-      </div>
-      <div class="form-row">
-        <div><div class="field-label">Kênh áp dụng</div>
-          <select id="ev-channel">
-            <option value="MT+GT">MT + GT</option>
-            <option value="MT">Chỉ MT</option>
-            <option value="GT">Chỉ GT</option>
-          </select>
-        </div>
-        <div><div class="field-label">Kênh thông báo</div>
-          <select id="ev-notify"><option value="Email">Email</option><option value="Zalo">Zalo</option><option value="Email+Zalo">Email + Zalo</option></select>
-        </div>
-      </div>
-      <div><div class="field-label">Mô tả SP áp dụng</div><input type="text" id="ev-sp-note" placeholder="Vd: Toàn bộ cá hộp, coconut milk — xem chi tiết trong tracker"></div>
-      <div><div class="field-label">Lý do tăng giá</div><textarea id="ev-reason" rows="2" placeholder="Giá nguyên liệu tăng, tỷ giá..."></textarea></div>
-      <div class="form-row">
-        <div><div class="field-label">Mục tiêu lag MT (ngày)</div><input type="number" id="ev-lag-mt" value="14"></div>
-        <div><div class="field-label">Mục tiêu lag GT (ngày)</div><input type="number" id="ev-lag-gt" value="21"></div>
-      </div>
-      <div style="background:#fef9f0;border:1px solid #fde68a;border-radius:8px;padding:12px;font-size:12px;color:#92400e;">
-        💡 Sau khi lưu event, vào tab <strong>MT Price Tracker → Tạo tracker hàng loạt</strong> để tạo dòng theo dõi cho từng chain × sản phẩm
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('event-modal')">Huỷ</button>
-      <button class="btn btn-primary" onclick="saveEvent()">💾 Lưu & Kích hoạt</button>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeModal('modal-tracker')">Huỷ</button>
+      <button class="btn btn-primary" onclick="saveMTTracker()">💾 Lưu</button>
     </div>
   </div>
 </div>
 
-<!-- Modal 2: Bulk-create tracker - đơn giản, chỉ chọn ma_tang_gia -->
-<div class="modal-overlay hidden" id="bulk-tracker-modal">
-  <div class="modal" style="width:480px;max-width:95vw;">
-    <div class="modal-header">
-      <h3>🚀 Tạo tracker hàng loạt từ Price_Events</h3>
-      <button class="modal-close" onclick="closeModal('bulk-tracker-modal')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;font-size:13px;color:#1e40af;margin-bottom:4px;">
-        📋 Hệ thống sẽ đọc <strong>tất cả dòng</strong> trong tab Price_Events có cùng mã đợt tăng giá,<br>
-        tự động expand <strong>"all"</strong> thành toàn bộ chain của kênh đó,<br>
-        và tạo 1 dòng tracker cho mỗi <strong>chain × sản phẩm</strong>.
-      </div>
-      <div>
-        <div class="field-label">Chọn mã đợt tăng giá *</div>
-        <select id="bulk-event" style="font-size:14px;" onchange="onBulkEventChange()">
-          <option value="">-- Chọn --</option>
-        </select>
-        <div id="bulk-event-info" style="margin-top:8px;font-size:12px;color:var(--gray);padding:8px;background:#f8f9fa;border-radius:6px;display:none;"></div>
-      </div>
-      <div id="bulk-preview" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;font-size:13px;display:none;">
-        ✅ Sẽ tạo tracker cho <strong id="bulk-count">...</strong> dòng trong Price_Events<br>
-        <span style="font-size:11px;color:var(--gray);">Bỏ qua dòng đã tồn tại trong tracker</span>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('bulk-tracker-modal')">Huỷ</button>
-      <button class="btn btn-primary" onclick="saveBulkTracker()" id="bulk-save-btn">🚀 Tạo tracker</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal 3: Cập nhật 1 dòng tracker (manager nhập ngày chain / trạng thái) -->
-<div class="modal-overlay hidden" id="tracker-modal">
-  <div class="modal">
-    <div class="modal-header"><h3>✏️ Cập nhật Tracker</h3><button class="modal-close" onclick="closeModal('tracker-modal')">✕</button></div>
-    <div class="modal-body">
-      <div style="background:#f8f9fa;border-radius:8px;padding:10px;margin-bottom:4px;">
-        <div style="font-size:13px;font-weight:700;" id="tr-info-header">—</div>
-        <div style="font-size:12px;color:var(--gray);" id="tr-info-sub">—</div>
-      </div>
-      <input type="hidden" id="tr-ma-tracker">
-      <input type="hidden" id="tr-ma-su-kien">
-      <input type="hidden" id="tr-ma-sp">
-      <input type="hidden" id="tr-ten-chain">
-      <div class="form-row">
-        <div>
-          <div class="field-label">Ngày chain thông báo áp dụng</div>
-          <input type="date" id="tr-chain-date">
-          <div style="font-size:11px;color:var(--gray);margin-top:3px;">Manager nhập khi nhận được thông báo từ chain</div>
-        </div>
-        <div>
-          <div class="field-label">Trạng thái *</div>
-          <select id="tr-status">
-            <option value="Đã thông báo">📤 Đã thông báo</option>
-            <option value="Đang đàm phán">🤝 Đang đàm phán</option>
-            <option value="Đã đồng ý">✅ Đã đồng ý</option>
-            <option value="Đã áp dụng">🟢 Đã áp dụng</option>
-            <option value="Bị từ chối">❌ Bị từ chối</option>
-          </select>
-        </div>
-      </div>
-      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px;font-size:12px;color:#1e40af;">
-        📸 <strong>Giá NTD thực tế & ngày xác nhận</strong> sẽ được tự động cập nhật từ survey của nhân viên
-      </div>
-      <div><div class="field-label">Ghi chú</div><textarea id="tr-note" rows="2" placeholder="Chain phản hồi gì, lý do chưa đồng ý..."></textarea></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('tracker-modal')">Huỷ</button>
-      <button class="btn btn-primary" onclick="saveTracker()">💾 Lưu</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay hidden" id="product-modal">
-  <div class="modal">
-    <div class="modal-header"><h3>+ Thêm sản phẩm</h3><button class="modal-close" onclick="closeModal('product-modal')">✕</button></div>
+<!-- Modal: Product / Outlet (compact) -->
+<div class="modal-overlay hidden" id="modal-product">
+  <div class="modal" style="width:440px;">
+    <div class="modal-hdr"><h3>+ Thêm sản phẩm</h3><button class="modal-close" onclick="closeModal('modal-product')">✕</button></div>
     <div class="modal-body">
       <div><div class="field-label">Tên sản phẩm *</div><input type="text" id="pm-name"></div>
       <div class="form-row">
-        <div><div class="field-label">Thương hiệu *</div><select id="pm-brand"><option value="AB">Ayam Brand (AB)</option><option value="AN">Alce Nero (AN)</option><option value="DU">Duchef (DU)</option><option value="other">Đối thủ</option></select></div>
-        <div><div class="field-label">Nhóm sản phẩm</div><input type="text" id="pm-group" placeholder="Vd: Cá hộp, Coconut milk..."></div>
+        <div><div class="field-label">Thương hiệu *</div>
+          <select id="pm-brand"><option value="AB">Ayam Brand (AB)</option><option value="AN">Alce Nero (AN)</option><option value="DU">Duchef (DU)</option></select>
+        </div>
+        <div><div class="field-label">Nhóm SP</div><input type="text" id="pm-group" placeholder="Beans & Peas, Tuna..."></div>
       </div>
       <div class="form-row">
-        <div><div class="field-label">Quy cách mặc định</div><input type="number" id="pm-qty"></div>
+        <div><div class="field-label">Quy cách</div><input type="number" id="pm-qty"></div>
         <div><div class="field-label">Đơn vị</div><select id="pm-unit"><option value="g">g</option><option value="ml">ml</option><option value="kg">kg</option><option value="L">L</option></select></div>
       </div>
-      <div><div class="field-label">NSX / Nhà phân phối</div><input type="text" id="pm-mfg"></div>
+      <div><div class="field-label">NSX / NPP</div><input type="text" id="pm-mfg"></div>
       <div><div class="field-label">Xuất xứ</div><input type="text" id="pm-origin"></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('product-modal')">Huỷ</button>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeModal('modal-product')">Huỷ</button>
       <button class="btn btn-primary" onclick="saveProduct()">💾 Lưu</button>
     </div>
   </div>
 </div>
 
-<div class="modal-overlay hidden" id="outlet-modal">
-  <div class="modal">
-    <div class="modal-header"><h3>+ Thêm điểm bán</h3><button class="modal-close" onclick="closeModal('outlet-modal')">✕</button></div>
+<div class="modal-overlay hidden" id="modal-outlet">
+  <div class="modal" style="width:440px;">
+    <div class="modal-hdr"><h3>+ Thêm điểm bán</h3><button class="modal-close" onclick="closeModal('modal-outlet')">✕</button></div>
     <div class="modal-body">
       <div><div class="field-label">Tên điểm bán *</div><input type="text" id="om-name"></div>
       <div class="form-row">
-        <div><div class="field-label">Kênh</div><select id="om-channel"><option value="MT">MT</option><option value="GT">GT</option></select></div>
-        <div><div class="field-label">Trạng thái</div><select id="om-status"><option value="Active">Active</option><option value="Approaching">Approaching</option><option value="Inactive">Inactive</option></select></div>
+        <div><div class="field-label">Kênh</div><select id="om-ch"><option value="MT">MT</option><option value="GT">GT</option></select></div>
+        <div><div class="field-label">Trạng thái</div><select id="om-st"><option value="Active">Active</option><option value="Approaching">Approaching</option><option value="Inactive">Inactive</option></select></div>
       </div>
-      <div><div class="field-label">Ghi chú</div><input type="text" id="om-note"></div>
+      <div id="om-mt-fields">
+        <div><div class="field-label">Format MT</div><select id="om-fmt"><option value="Supermarket">Supermarket</option><option value="Hypermarket">Hypermarket</option></select></div>
+      </div>
+      <div id="om-gt-fields" style="display:none;">
+        <div class="form-row">
+          <div><div class="field-label">GT Region</div><select id="om-region"><option value="GT North">GT North</option><option value="GT South">GT South</option><option value="GT Central">GT Central</option></select></div>
+          <div><div class="field-label">Agent</div><select id="om-agent"><option value="TPP">TPP</option><option value="HTP">HTP</option><option value="TDH">TDH</option></select></div>
+        </div>
+        <div><div class="field-label">Loại điểm bán</div><select id="om-loai"><option value="Chợ">Chợ</option><option value="Mini-mart">Mini-mart</option><option value="Tạp hoá">Tạp hoá</option><option value="GT outlet">GT outlet</option></select></div>
+      </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('outlet-modal')">Huỷ</button>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeModal('modal-outlet')">Huỷ</button>
       <button class="btn btn-primary" onclick="saveOutlet()">💾 Lưu</button>
     </div>
   </div>
@@ -640,999 +674,834 @@ input:focus, select:focus { border-color: var(--navy); }
 <div class="toast" id="toast"></div>
 
 <script>
-// ════════════════════════════════════════════
+// ════════════════════════════════════════
 // CONFIG
-// Lấy URL từ: Apps Script → Deploy → Manage Deployments → URL Web App
-// ════════════════════════════════════════════
-const API = 'https://script.google.com/macros/s/AKfycbw1PJk1C0G_5bxjjJoV2WFURm-HsUCWyNpDAs4NOa_V76mHc40KIfJzK6L8eKxk71_jtw/exec';
-const OWN_BRANDS = ['AB','AN','DU'];
+// ════════════════════════════════════════
+const API      = 'https://script.google.com/macros/s/AKfycbw1PJk1C0G_5bxjjJoV2WFURm-HsUCWyNpDAs4NOa_V76mHc40KIfJzK6L8eKxk71_jtw/exec';
+const OWN_IDS  = ['AB','AN','DU'];
 
-// ════════════════════════════════════════════
+// ════════════════════════════════════════
 // STATE
-// ════════════════════════════════════════════
-let data = {
-  master: null,      // getMasterData
-  dashboard: null,   // getDashboardData
-  teamActivity: null,
-  events: [],
-  tracker: [],
-  alerts: [],
-  surveys: [],
+// ════════════════════════════════════════
+const D = {
+  master:    null,
+  events:    [],
+  mtTracker: [],
+  gtTracker: [],
+  alerts:    [],
+  surveys:   [],
+  dashboard: null,
+  curEvent:  '',   // currently selected global event filter
 };
 
-// ════════════════════════════════════════════
-// ROUTING
-// ════════════════════════════════════════════
-function showPage(id, navEl) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  if (navEl) navEl.classList.add('active');
-  const titles = { dashboard:'Dashboard', team:'Hoạt động Team', alerts:'Cảnh báo', propagation:'Lan truyền Giá', compare:'So sánh Giá', history:'Lịch sử Survey', events:'Mốc Tăng Giá DGM', tracker:'MT Price Tracker', 'gt-tracker':'GT Price Tracker', masterdata:'Master Data' };
-  document.getElementById('page-title').textContent = titles[id] || id;
-}
-
-// ════════════════════════════════════════════
-// FETCH
-// ════════════════════════════════════════════
-async function apiFetch(params, timeoutMs = 45000) {
-  const url = API + '?' + new URLSearchParams(params).toString();
+// ════════════════════════════════════════
+// FETCH HELPERS
+// ════════════════════════════════════════
+async function apiFetch(params, ms=45000) {
+  const url  = API + '?' + new URLSearchParams(params);
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  const t    = setTimeout(() => ctrl.abort(), ms);
   try {
-    // Google Apps Script: KHÔNG dùng redirect:'follow' — CORS sẽ bị block
     const res  = await fetch(url, { signal: ctrl.signal });
     const text = await res.text();
-    clearTimeout(timer);
-    if (text.trim().startsWith('<')) throw new Error('API returned HTML — cần redeploy AppScript và cập nhật URL mới');
+    clearTimeout(t);
+    if (text.trim().startsWith('<')) throw new Error('API returned HTML — redeploy AppScript');
     return JSON.parse(text);
-  } catch(e) {
-    clearTimeout(timer);
-    // Nếu timeout: message rõ hơn
-    if (e.name === 'AbortError') throw new Error('Timeout — Apps Script mất quá ' + Math.round(timeoutMs/1000) + 's. Thử lại sau.');
-    throw e;
-  }
+  } catch(e) { clearTimeout(t); if(e.name==='AbortError') throw new Error('Timeout'); throw e; }
 }
 
 async function apiPost(body) {
-  // KHÔNG set Content-Type header — sẽ trigger CORS preflight bị block
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 45000);
+  const t    = setTimeout(() => ctrl.abort(), 45000);
   try {
-    const res = await fetch(API, { method:'POST', body:JSON.stringify(body), signal: ctrl.signal });
-    clearTimeout(timer);
+    const res  = await fetch(API, { method:'POST', body:JSON.stringify(body), signal:ctrl.signal });
+    clearTimeout(t);
     const text = await res.text();
-    if (text.trim().startsWith('<')) throw new Error('API error');
+    if (text.trim().startsWith('<')) throw new Error('API HTML error');
     return JSON.parse(text);
-  } catch(e) {
-    clearTimeout(timer);
-    throw e;
-  }
+  } catch(e) { clearTimeout(t); throw e; }
 }
 
-// ════════════════════════════════════════════
-// LOAD ALL DATA
-// Strategy: getMasterData trước (bắt buộc), sau đó load song song
-// KHÔNG dùng getDashboard (quá chậm) — tính stats từ getSurveyList nhỏ
-// ════════════════════════════════════════════
+// ════════════════════════════════════════
+// LOAD ALL
+// ════════════════════════════════════════
 async function loadAll() {
-  document.getElementById('sync-info').textContent = '⏳ Đang tải...';
+  setSyncInfo('⏳ Đang tải...');
 
-  // ── Bước 1: getMasterData (bắt buộc, nhanh ~2-3s)
+  // 1. Master data — bắt buộc
   try {
-    const masterRes = await apiFetch({ action: 'getMasterData' });
-    data.master = masterRes;
+    D.master = await apiFetch({ action:'getMasterData' });
     renderMasterData();
-    populateEventSelects();
+    populateEventProductSelect();
   } catch(e) {
-    document.getElementById('sync-info').textContent = '❌ ' + e.message;
+    setSyncInfo('❌ ' + e.message);
     showToast('Lỗi kết nối: ' + e.message, 'error');
     return;
   }
 
-  document.getElementById('sync-info').textContent = '⏳ Đang tải dữ liệu...';
+  setSyncInfo('⏳ Đang tải data...');
 
-  // ── Bước 2: Load song song, mỗi cái fail độc lập
-  const loadSurveys = apiFetch({ action: 'getSurveyList', limit: '50' })
-    .then(res => {
-      data.surveys = res.danh_sach || [];
-      renderDashboardFromSurveys(data.surveys, res.tong_so || 0);
-    })
-    .catch(e => console.warn('Surveys:', e.message));
-
-  // v11: load dashboard cho mt_todos/gt_todos summary
-  const loadDash = apiFetch({ action: 'getDashboard' })
-    .then(res => {
-      const mt = res.mt_todos || {};
-      const gt = res.gt_todos || {};
-      const grid = document.getElementById('tracker-todos-grid');
-      if (grid) grid.style.display = 'grid';
-      const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val ?? '—'; };
-      set('mt-chua-cap-nhat', mt.chua_cap_nhat);
-      set('mt-chua-survey',   mt.chua_co_survey);
-      set('mt-co-drift',      mt.co_drift);
-      set('mt-da-xac-nhan',   mt.da_xac_nhan);
-      // Drift alerts
-      const driftAlerts = res.drift_alerts || [];
-      if (driftAlerts.length) {
-        const el2 = document.getElementById('alerts-dash');
-        if (el2) {
-          const driftHtml = driftAlerts.slice(0,3).map(a =>
-            `<div class="alert-item high"><div class="alert-icon">🔴</div><div><div class="alert-text" style="font-size:13px;">${a.mo_ta}</div></div></div>`
-          ).join('');
-          el2.innerHTML = (el2.innerHTML === '' ? '' : el2.innerHTML) + driftHtml;
-        }
-      }
-    })
-    .catch(e => console.warn('Dashboard v11:', e.message));
-
-  const loadEvts = apiFetch({ action: 'getPriceEvents' })
-    .then(res => {
-      data.events = res.su_kien || [];
+  // 2. Load song song
+  await Promise.allSettled([
+    apiFetch({ action:'getPriceEvents' }).then(r => {
+      D.events = r.su_kien || [];
       renderEvents();
       populateEventSelects();
-      // Hiện event gần nhất trên dashboard
-      if (data.events.length) {
-        const latest = data.events.sort((a,b) => b.ngay_hieu_luc?.localeCompare(a.ngay_hieu_luc))[0];
-        const el = document.getElementById('latest-event-dash');
-        if (el) el.innerHTML = `<div style="padding:12px;background:#fef9f0;border:1px solid #fde68a;border-radius:8px;">
-          <div style="font-weight:700;color:var(--navy);">${latest.ten_su_kien}</div>
-          <div style="font-size:13px;color:var(--gray);margin-top:4px;">Hiệu lực: ${latest.ngay_hieu_luc} · Kênh: ${latest.kenh||'—'}</div>
-          <div style="font-size:12px;color:var(--gray);margin-top:2px;">${latest.ghi_chu_sp||latest.ly_do||''}</div>
-        </div>`;
-      }
-    })
-    .catch(e => console.warn('Events:', e.message));
+    }).catch(e => console.warn('events:', e.message)),
 
-  const loadAlts = apiFetch({ action: 'getAlerts' })
-    .then(res => {
-      data.alerts = res.canh_bao || [];
+    apiFetch({ action:'getMTTracker' }).then(r => {
+      D.mtTracker = r.tracker || [];
+      renderMTPage();
+    }).catch(e => console.warn('mtTracker:', e.message)),
+
+    apiFetch({ action:'getGTTracker' }).then(r => {
+      D.gtTracker = r.tracker || [];
+      renderGTPage();
+    }).catch(e => console.warn('gtTracker:', e.message)),
+
+    apiFetch({ action:'getAlerts' }).then(r => {
+      D.alerts = r.canh_bao || [];
       renderAlerts();
-      document.getElementById('alert-badge').textContent = data.alerts.length;
-      document.getElementById('ds-alerts').textContent  = data.alerts.length;
-    })
-    .catch(e => console.warn('Alerts:', e.message));
+      const n = D.alerts.length;
+      el('alert-badge').textContent  = n;
+      el('drift-badge').textContent  = D.alerts.filter(a => a.loai_canh_bao==='PRICE_DRIFT_DETECTED').length;
+    }).catch(e => console.warn('alerts:', e.message)),
 
-  const loadTeam = apiFetch({ action: 'getTeamActivity' })
-    .then(res => {
-      const team = res.hoat_dong || [];
-      const tbody = document.getElementById('team-table');
-      if (!tbody) return;
-      if (!team.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9ca3af;">Chưa có dữ liệu</td></tr>'; return; }
-      tbody.innerHTML = team.map(s => `<tr>
-        <td><strong>${s.ten}</strong></td>
-        <td>${s.chuc_danh||'—'}</td>
-        <td><span class="badge ${s.kenh==='MT'?'badge-mt':'badge-gt'}">${s.kenh||'—'}</span></td>
-        <td>${s.khu_vuc||'—'}</td>
-        <td><strong style="color:${s.hom_nay>0?'var(--green)':'var(--gray)'}">${s.hom_nay}</strong></td>
-        <td>${s.tuan_nay}</td><td>${s.diem_ban}</td>
-        <td style="font-size:12px;color:var(--gray);">${s.survey_cuoi||'—'}</td>
-      </tr>`).join('');
-    })
-    .catch(e => console.warn('Team:', e.message));
+    apiFetch({ action:'getSurveyList', limit:'50' }).then(r => {
+      D.surveys = r.danh_sach || [];
+      renderCompChanges();
+    }).catch(e => console.warn('surveys:', e.message)),
 
-  // Tracker load sau cùng (có thể chậm)
-  const loadTrk = new Promise(resolve => setTimeout(resolve, 300))
-    .then(() => apiFetch({ action: 'getMTTracker' }))
-    .then(res => {
-      data.tracker = res.tracker || [];
-      renderTracker(data.tracker);
-    })
-    .catch(e => console.warn('Tracker:', e.message));
+    apiFetch({ action:'getDashboard' }).then(r => {
+      D.dashboard = r;
+      renderDashboardCost(r);
+    }).catch(e => console.warn('dashboard:', e.message)),
+  ]);
 
-  // Chờ tất cả xong (không block nếu 1 cái fail)
-  await Promise.allSettled([loadSurveys, loadEvts, loadAlts, loadTeam, loadTrk]);
-  document.getElementById('sync-info').textContent = '✅ ' + new Date().toLocaleTimeString('vi');
+  renderDashboard();
+  setSyncInfo('✅ ' + new Date().toLocaleTimeString('vi'));
 }
 
-// Tính stats dashboard từ survey list (thay vì getDashboard)
-function renderDashboardFromSurveys(surveys, total) {
-  const today   = new Date().toISOString().slice(0,10);
-  const weekAgo = new Date(Date.now()-7*86400000).toISOString().slice(0,10);
-  const todaySv = surveys.filter(s => s.ngay_survey === today);
-  const weekSv  = surveys.filter(s => s.ngay_survey >= weekAgo);
-  const outlets = new Set(todaySv.map(s => s.ten_diem_ban).filter(Boolean));
+// ════════════════════════════════════════
+// DASHBOARD RENDER
+// ════════════════════════════════════════
+function renderDashboard() {
+  const evId = D.curEvent;
 
-  document.getElementById('ds-today').textContent   = todaySv.length;
-  document.getElementById('ds-week').textContent    = weekSv.length;
-  document.getElementById('ds-outlets').textContent = outlets.size;
+  // Event banner
+  const evMap = {};
+  D.events.forEach(e => { if(e.ma_tang_gia && !evMap[e.ma_tang_gia]) evMap[e.ma_tang_gia]=e; });
+  const curEv = evId ? evMap[evId] : Object.values(evMap)[0];
+  if (curEv) {
+    el('dash-event-banner').style.display = 'flex';
+    el('dash-ev-name').textContent = curEv.ten_su_kien || curEv.ma_tang_gia;
+    el('dash-ev-meta').textContent = 'Kênh: ' + (curEv.kenh||'—') + ' · Ngày DGM: ' + (curEv.ngay_dgm_ap_dung||'—');
+    const pcts = D.events.filter(e=>e.ma_tang_gia===(evId||curEv.ma_tang_gia)).map(e=>parseFloat(e.phan_tram_tang)||0);
+    const avgPct = pcts.length ? (pcts.reduce((a,b)=>a+b,0)/pcts.length).toFixed(1) : '—';
+    el('dash-ev-pct').textContent = avgPct !== '—' ? '+' + avgPct + '%' : '—';
+  }
 
-  // Render recent surveys
-  const el = document.getElementById('recent-surveys-list');
-  if (!el) return;
-  if (!surveys.length) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div>Chưa có survey</div>';
+  // MT
+  const mtList = evId ? D.mtTracker.filter(r=>r.ma_tang_gia===evId) : D.mtTracker;
+  const mtApplied = mtList.filter(r=>r.trang_thai_tracker==='Đã áp dụng').length;
+  const mtChains  = new Set(mtList.map(r=>r.ten_khach_hang)).size;
+  el('kpi-mt-applied').textContent = mtApplied;
+  el('kpi-mt-total').textContent   = 'trên tổng ' + mtChains + ' chains';
+
+  // Pass-through MT avg
+  const ptVals = mtList.map(r=>parseFloat(r.pass_through_pct)).filter(v=>!isNaN(v)&&v>0);
+  const ptAvg  = ptVals.length ? Math.round(ptVals.reduce((a,b)=>a+b,0)/ptVals.length) : null;
+  el('kpi-mt-pt').textContent = ptAvg !== null ? ptAvg + '%' : '—';
+
+  // GT
+  const gtList    = evId ? D.gtTracker.filter(r=>r.ma_tang_gia===evId) : D.gtTracker;
+  const gtApplied = gtList.filter(r=>r.trang_thai_tracker==='Đã áp dụng').length;
+  const gtRegions = new Set(gtList.map(r=>r.gt_region)).size;
+  el('kpi-gt-applied').textContent = gtApplied;
+  el('kpi-gt-total').textContent   = 'trên ' + gtRegions + ' regions';
+
+  // Drift
+  const driftCount = [...mtList,...gtList].filter(r=>r.co_drift&&r.co_drift!=='None').length;
+  el('kpi-drift-count').textContent = driftCount;
+
+  // MT chain cards
+  renderDashMTChains(mtList);
+
+  // GT region cards
+  renderDashGTRegions(gtList);
+
+  // Drift alerts preview
+  const driftAlerts = D.alerts.filter(a=>a.loai_canh_bao==='PRICE_DRIFT_DETECTED'&&!isTrue(a.da_xu_ly));
+  el('dash-drift-alerts').innerHTML = !driftAlerts.length
+    ? '<div style="color:#9ca3af;font-size:13px;text-align:center;padding:16px;">✅ Không có drift giá</div>'
+    : driftAlerts.slice(0,5).map(a => alertHTML(a)).join('');
+
+  // Comp changes preview
+  renderCompChanges(true);
+}
+
+function renderDashMTChains(list) {
+  const chainMap = {};
+  list.forEach(r => {
+    const c = r.ten_khach_hang;
+    if (!c) return;
+    if (!chainMap[c]) chainMap[c] = { name:c, format:r.format_mt||'', total:0, applied:0, ptVals:[], drift:0 };
+    chainMap[c].total++;
+    if (r.trang_thai_tracker==='Đã áp dụng') chainMap[c].applied++;
+    const pt = parseFloat(r.pass_through_pct);
+    if (!isNaN(pt)&&pt>0) chainMap[c].ptVals.push(pt);
+    if (r.co_drift&&r.co_drift!=='None') chainMap[c].drift++;
+  });
+  const chains = Object.values(chainMap).sort((a,b)=>b.applied-a.applied);
+  if (!chains.length) {
+    el('dash-mt-chains').innerHTML = '<div style="color:#9ca3af;font-size:13px;padding:16px;text-align:center;">Chưa có tracker MT — tạo tracker sau khi nhập Price Events</div>';
     return;
   }
-  el.innerHTML = surveys.slice(0,20).map(s => {
-    const typeClass = s.phan_loai === 'own_brand' ? 'badge-ab' : 'badge-comp';
-    const chClass   = s.kenh === 'MT' ? 'badge-mt' : 'badge-gt';
-    return `<div class="survey-item">
-      <div class="si-left">
-        <div class="si-name">${s.ten_san_pham||'—'}</div>
-        <div class="si-meta">
-          <span class="badge ${chClass}">${s.kenh||'—'}</span>
-          <span class="badge ${typeClass}">${s.ten_thuong_hieu||'—'}</span>
-          <span>${s.ten_nhan_vien||'—'}</span> · <span>${s.ten_diem_ban||'—'}</span>
+  el('dash-mt-chains').innerHTML = chains.map(c => {
+    const pct = c.total>0 ? Math.round(c.applied/c.total*100) : 0;
+    const ptAvg = c.ptVals.length ? Math.round(c.ptVals.reduce((a,b)=>a+b,0)/c.ptVals.length) : null;
+    const ptColor = ptAvg===null?'var(--gray)':ptAvg>=95?'var(--green)':ptAvg>=80?'var(--orange)':'var(--red)';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--light);">
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:600;color:var(--navy);">${c.name} <span style="font-size:11px;color:var(--gray);">${c.format}</span></div>
+        <div style="margin-top:4px;display:flex;align-items:center;gap:6px;">
+          <div style="flex:1;height:5px;background:var(--light);border-radius:3px;overflow:hidden;">
+            <div style="width:${pct}%;height:100%;background:${pct===100?'var(--green)':'var(--navy)'};border-radius:3px;"></div>
+          </div>
+          <span style="font-size:11px;color:var(--gray);white-space:nowrap;">${c.applied}/${c.total} SKU</span>
         </div>
       </div>
-      <div class="si-right">
-        <div class="si-price">${s.gia ? Number(s.gia).toLocaleString('vi')+'đ' : '—'}</div>
-        <div class="si-date">${s.ngay_survey||'—'}</div>
+      <div style="text-align:right;min-width:70px;">
+        <div style="font-size:14px;font-weight:700;color:${ptColor};">${ptAvg!==null?ptAvg+'%':'—'}</div>
+        <div style="font-size:10px;color:var(--gray);">pass-through</div>
+      </div>
+      ${c.drift>0?`<span class="badge b-err">⚠ ${c.drift} drift</span>`:''}
+    </div>`;
+  }).join('');
+}
+
+function renderDashGTRegions(list) {
+  const regMap = { 'GT North':{n:0,applied:0,ptVals:[]}, 'GT South':{n:0,applied:0,ptVals:[]}, 'GT Central':{n:0,applied:0,ptVals:[]} };
+  list.forEach(r => {
+    const m = regMap[r.gt_region];
+    if (!m) return;
+    m.n++;
+    if (r.trang_thai_tracker==='Đã áp dụng') m.applied++;
+    const pt = parseFloat(r.pass_through_tong_pct);
+    if (!isNaN(pt)&&pt>0) m.ptVals.push(pt);
+  });
+  const regions = Object.entries(regMap);
+  if (!regions.some(([,v])=>v.n>0)) {
+    el('dash-gt-regions').innerHTML = '<div style="color:#9ca3af;font-size:13px;padding:16px;text-align:center;">Chưa có GT tracker — tạo sau khi nhập Price Events</div>';
+    return;
+  }
+  el('dash-gt-regions').innerHTML = regions.map(([reg,m]) => {
+    const ptAvg = m.ptVals.length ? Math.round(m.ptVals.reduce((a,b)=>a+b,0)/m.ptVals.length) : null;
+    const icon = reg.includes('North')?'🔵':reg.includes('South')?'🔴':'🟡';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--light);">
+      <span style="font-size:18px;">${icon}</span>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:600;color:var(--navy);">${reg}</div>
+        <div style="font-size:11px;color:var(--gray);">${m.applied}/${m.n} tracker đã áp dụng</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:16px;font-weight:700;color:${ptAvg!==null?(ptAvg>=90?'var(--green)':'var(--orange)'):'var(--gray)'};">${ptAvg!==null?ptAvg+'%':'—'}</div>
+        <div style="font-size:10px;color:var(--gray);">pass-through tổng</div>
       </div>
     </div>`;
   }).join('');
-
-  // Competitor changes
-  const compData = surveys.filter(s => s.phan_loai === 'competitor');
-  const tbody = document.getElementById('comp-changes-table');
-  if (tbody) {
-    if (!compData.length) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#9ca3af;">Chưa có dữ liệu biến động</td></tr>';
-    } else {
-      tbody.innerHTML = compData.slice(0,10).map(c => `<tr>
-        <td><span class="badge badge-comp">${c.ten_thuong_hieu||'—'}</span></td>
-        <td>${c.ten_san_pham||'—'}</td>
-        <td>${c.ten_diem_ban||'—'}</td>
-        <td>${c.gia?Number(c.gia).toLocaleString('vi')+'đ':'—'}</td>
-        <td>—</td><td>—</td>
-        <td>${c.ngay_survey||'—'}</td>
-      </tr>`).join('');
-    }
-  }
-
-  // Brands
-  const brandMap = {};
-  surveys.forEach(s => {
-    if (!s.ten_thuong_hieu) return;
-    if (!brandMap[s.ten_thuong_hieu]) brandMap[s.ten_thuong_hieu] = { ten: s.ten_thuong_hieu, so_lan: 0, phan_loai: s.phan_loai };
-    brandMap[s.ten_thuong_hieu].so_lan++;
-  });
-  const brands = Object.values(brandMap).sort((a,b) => b.so_lan - a.so_lan);
-  const barsEl = document.getElementById('brands-bars');
-  if (barsEl) {
-    const max = brands[0]?.so_lan || 1;
-    barsEl.innerHTML = brands.slice(0,10).map(b => `
-      <div class="bar-row">
-        <div class="bar-label">${b.ten}</div>
-        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(b.so_lan/max*100)}%;background:${b.phan_loai==='own_brand'?'var(--red)':'var(--navy2)'}"></div></div>
-        <div class="bar-val">${b.so_lan}</div>
-      </div>`).join('') || '<div style="color:#9ca3af;font-size:13px;">Chưa có dữ liệu</div>';
-  }
 }
 
-// KEY FIX: render products from getMasterData san_pham array
-function renderProductsDash() {
-  const el = document.getElementById('product-list-dash');
-  const products = data.master?.san_pham || [];
-  const ownBrandIds = data.master?.own_brand_ids || OWN_BRANDS;
+function renderDashboardCost(r) {
+  if (!r) return;
+  const c = r.cost_of_price_increase || {};
+  el('cost-dotKM').textContent  = c.tong_so_dot_km || 0;
+  el('cost-budget').textContent = c.tong_ngan_sach  ? (c.tong_ngan_sach/1e6).toFixed(1) : '0';
+  el('cost-trackers').textContent = c.so_tracker_co_km || 0;
+  el('cost-avg').textContent    = c.ngan_sach_tb_per_tracker ? (c.ngan_sach_tb_per_tracker/1e6).toFixed(1) : '0';
+}
 
-  // Robust filter: loai_thuong_hieu → brand code → brand name
-  function isOwn(p) {
-    const loai  = (p.loai_thuong_hieu || '').toLowerCase().trim();
-    const brand = (p.thuong_hieu || '').trim();
-    if (loai === 'own_brand') return true;
-    if (loai === 'competitor') return false;
-    if (ownBrandIds.includes(brand)) return true;
-    const bl = brand.toLowerCase();
-    return bl.includes('ayam') || bl.includes('alce') || bl.includes('duchef');
-  }
+// ════════════════════════════════════════
+// MT PAGE
+// ════════════════════════════════════════
+function renderMTPage() {
+  const evFilter  = val('mt-filter-event')  || D.curEvent;
+  const chFilter  = val('mt-filter-chain');
+  const stFilter  = val('mt-filter-status');
+  const drFilter  = val('mt-filter-drift');
+  let list = D.mtTracker;
+  if (evFilter) list = list.filter(r=>r.ma_tang_gia===evFilter);
+  if (chFilter) list = list.filter(r=>r.ten_khach_hang===chFilter);
+  if (stFilter) list = list.filter(r=>r.trang_thai_tracker===stFilter);
+  if (drFilter) list = list.filter(r=>r.co_drift===drFilter);
 
-  const ownProds  = products.filter(p => isOwn(p));
-  const compProds = products.filter(p => !isOwn(p));
+  // Populate chain filter
+  const chains = [...new Set(D.mtTracker.map(r=>r.ten_khach_hang).filter(Boolean))].sort();
+  const chainSel = el('mt-filter-chain');
+  const curChain = chainSel.value;
+  chainSel.innerHTML = '<option value="">Tất cả chain</option>' + chains.map(c=>`<option value="${c}">${c}</option>`).join('');
+  chainSel.value = curChain;
 
-  document.getElementById('sku-own').textContent   = ownProds.length;
-  document.getElementById('sku-comp').textContent  = compProds.length;
-  document.getElementById('sku-total').textContent = products.length;
-  document.getElementById('sku-updated').textContent = products.length + ' sản phẩm active';
+  // Chain summary cards
+  renderMTChainCards(list);
 
-  if (!products.length) {
-    el.innerHTML = `<div class="empty-state" style="padding:20px;"><div class="empty-icon">📦</div><div style="font-size:13px;">Chưa có sản phẩm — Thêm dữ liệu vào tab Products trong Google Sheet</div></div>`;
+  // Detail table
+  const tbody = el('mt-detail-table');
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#9ca3af;padding:30px;">Chưa có tracker MT — nhập Price Events trước, sau đó tạo tracker hàng loạt</td></tr>';
     return;
   }
 
-  // Group own brand by thuong_hieu
-  const byBrand = {};
-  ownProds.forEach(p => {
-    const b = p.thuong_hieu || 'Khác';
-    if (!byBrand[b]) byBrand[b] = [];
-    byBrand[b].push(p);
-  });
+  const driftCls = { None:'', Low:'b-warn', Medium:'b-warn', High:'b-err' };
+  const stCls = { 'Đã áp dụng':'b-ok','Đã đồng ý':'b-info','Đang đàm phán':'b-purple','Đã thông báo':'b-warn','Bị từ chối':'b-err' };
 
-  el.innerHTML = Object.entries(byBrand).map(([brand, prods]) => `
-    <div style="margin-bottom:12px;">
-      <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;padding:6px 0;border-bottom:1px solid var(--light);">${brand} (${prods.length} SKU)</div>
-      ${prods.map(p => `
-        <div class="product-item">
-          <div class="product-dot dot-ab"></div>
-          <div>
-            <div class="product-name">${p.ten_san_pham}</div>
-            <div class="product-meta">${p.quy_cach_mac_dinh||'—'}${p.don_vi||''} · ${p.xuat_xu||'—'} · ${p.nhom_san_pham||'—'}</div>
-          </div>
-        </div>`).join('')}
-    </div>`).join('') + (compProds.length ? `
-    <div style="margin-top:12px;">
-      <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;padding:6px 0;border-bottom:1px solid var(--light);">Đối thủ (${compProds.length} tracked)</div>
-      ${compProds.slice(0,5).map(p => `
-        <div class="product-item">
-          <div class="product-dot dot-comp"></div>
-          <div><div class="product-name">${p.ten_san_pham}</div><div class="product-meta">${p.thuong_hieu} · ${p.nhom_san_pham||'—'}</div></div>
-        </div>`).join('')}
-    </div>` : '');
+  tbody.innerHTML = list.map(r => {
+    const dgm   = r.gia_dgm_truoc&&r.gia_dgm_sau ? fmt(r.gia_dgm_truoc)+' → '+fmt(r.gia_dgm_sau) : '—';
+    const ntdCam = r.gia_ntd_cam_ket_sau ? fmt(r.gia_ntd_cam_ket_sau) : '<span style="color:#9ca3af;">Chưa nhập</span>';
+    const ptNum  = parseFloat(r.pass_through_pct);
+    const ptDisp = !isNaN(ptNum)&&ptNum>0 ? ptBar(ptNum) : '—';
+    const survey  = r.gia_ntd_moi_nhat ? fmt(r.gia_ntd_moi_nhat) + '<br><span style="font-size:10px;color:#9ca3af;">' + (r.ngay_survey_moi_nhat||'') + ' (' + (r.so_lan_survey_xac_nhan||0) + 'x)</span>' : '<span style="color:#9ca3af;">Chưa có survey</span>';
+    const driftNum = parseFloat(r.drift_pct);
+    const driftDisp = !isNaN(driftNum)&&r.co_drift&&r.co_drift!=='None'
+      ? `<span class="badge ${driftCls[r.co_drift]||''}">${driftNum>0?'+':''}${driftNum.toFixed(1)}% (${r.co_drift})</span>`
+      : '<span style="color:var(--green);font-size:12px;">✅</span>';
+    const capDisp = r.trang_thai_cap_nhat || '🔘';
+    const st = r.trang_thai_tracker || '—';
+    return `<tr class="clickable" onclick='openMTTrackerModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>
+      <td><strong>${r.ten_khach_hang||'—'}</strong><br><span style="font-size:11px;color:var(--gray);">${r.format_mt||''}</span></td>
+      <td>${r.ten_san_pham||'—'}</td>
+      <td style="font-size:12px;">${dgm}</td>
+      <td style="font-weight:600;">${ntdCam}</td>
+      <td>${ptDisp}</td>
+      <td style="font-size:12px;">${survey}</td>
+      <td>${driftDisp}</td>
+      <td><span class="badge ${stCls[st]||'b-warn'}">${st}</span></td>
+      <td style="font-size:11px;">${capDisp}</td>
+    </tr>`;
+  }).join('');
 }
 
-// ════════════════════════════════════════════
+function renderMTChainCards(list) {
+  const chainMap = {};
+  list.forEach(r => {
+    const c = r.ten_khach_hang;
+    if(!c) return;
+    if(!chainMap[c]) chainMap[c]={n:0,applied:0,pt:[],drift:0};
+    chainMap[c].n++;
+    if(r.trang_thai_tracker==='Đã áp dụng') chainMap[c].applied++;
+    const pt=parseFloat(r.pass_through_pct);
+    if(!isNaN(pt)&&pt>0) chainMap[c].pt.push(pt);
+    if(r.co_drift&&r.co_drift!=='None') chainMap[c].drift++;
+  });
+  const chains = Object.entries(chainMap);
+  if (!chains.length) { el('mt-chain-cards').innerHTML=''; return; }
+  el('mt-chain-cards').innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px;">` +
+    chains.map(([name,m]) => {
+      const pt = m.pt.length ? Math.round(m.pt.reduce((a,b)=>a+b,0)/m.pt.length) : null;
+      const pct = m.n ? Math.round(m.applied/m.n*100) : 0;
+      return `<div style="background:white;border:1px solid var(--border);border-radius:10px;padding:12px 16px;min-width:140px;flex:1;cursor:pointer;" onclick="el('mt-filter-chain').value='${name}';renderMTPage();">
+        <div style="font-size:12px;font-weight:700;color:var(--navy);">${name}</div>
+        <div style="font-size:20px;font-weight:700;color:${pct===100?'var(--green)':'var(--navy)'};">${pct}%</div>
+        <div style="font-size:11px;color:var(--gray);">áp dụng ${m.applied}/${m.n}</div>
+        ${pt!==null?`<div style="font-size:11px;color:var(--gray);">pass-through: <strong>${pt}%</strong></div>`:''}
+        ${m.drift?`<div style="font-size:11px;color:var(--red);">⚠ ${m.drift} drift</div>`:''}
+      </div>`;
+    }).join('') + '</div>';
+}
+
+// ════════════════════════════════════════
+// GT PAGE
+// ════════════════════════════════════════
+function renderGTPage() {
+  const evFilter  = val('gt-filter-event')  || D.curEvent;
+  const regFilter = val('gt-filter-region');
+  const stFilter  = val('gt-filter-status');
+  let list = D.gtTracker;
+  if (evFilter)  list = list.filter(r=>r.ma_tang_gia===evFilter);
+  if (regFilter) list = list.filter(r=>r.gt_region===regFilter);
+  if (stFilter)  list = list.filter(r=>r.trang_thai_tracker===stFilter);
+
+  // Region KPI cards
+  const regions = ['GT North','GT South','GT Central'];
+  const icons   = { 'GT North':'🔵','GT South':'🔴','GT Central':'🟡' };
+  el('gt-region-kpis').innerHTML = regions.map(reg => {
+    const inReg  = (evFilter ? D.gtTracker.filter(r=>r.ma_tang_gia===evFilter) : D.gtTracker).filter(r=>r.gt_region===reg);
+    const ptVals = inReg.map(r=>parseFloat(r.pass_through_tong_pct)).filter(v=>!isNaN(v)&&v>0);
+    const ptAvg  = ptVals.length ? Math.round(ptVals.reduce((a,b)=>a+b,0)/ptVals.length) : null;
+    const applied = inReg.filter(r=>r.trang_thai_tracker==='Đã áp dụng').length;
+    return `<div class="kpi" style="cursor:pointer;" onclick="el('gt-filter-region').value='${reg}';renderGTPage();">
+      <div style="font-size:18px;margin-bottom:4px;">${icons[reg]} ${reg.replace('GT ','')}</div>
+      <div class="kpi-val" style="font-size:22px;color:${ptAvg!==null?(ptAvg>=90?'var(--green)':'var(--orange)'):'var(--gray)'};">${ptAvg!==null?ptAvg+'%':'—'}</div>
+      <div class="kpi-label">Pass-through tổng</div>
+      <div class="kpi-sub">${applied}/${inReg.length} tracker áp dụng</div>
+    </div>`;
+  }).join('');
+
+  // Detail table
+  const tbody = el('gt-detail-table');
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#9ca3af;padding:30px;">Chưa có GT tracker — nhập Price Events (kênh GT) trước</td></tr>';
+    return;
+  }
+  const driftCls = { None:'', Low:'b-warn', Medium:'b-warn', High:'b-err' };
+  tbody.innerHTML = list.map(r => {
+    const icon  = (r.gt_region||'').includes('North')?'🔵':(r.gt_region||'').includes('South')?'🔴':'🟡';
+    const dgmStr  = r.gia_dgm_agent_truoc&&r.gia_dgm_agent_sau ? fmt(r.gia_dgm_agent_truoc)+'→'+fmt(r.gia_dgm_agent_sau) : '—';
+    const agOlStr = r.gia_agent_outlet_sau ? fmt(r.gia_agent_outlet_sau) : '—';
+    const ntdCam  = r.gia_ntd_cam_ket_sau ? fmt(r.gia_ntd_cam_ket_sau) : '<span style="color:#9ca3af;">Chưa nhập</span>';
+    const ptTot   = parseFloat(r.pass_through_tong_pct);
+    const pt1     = parseFloat(r.pass_through_dgm_outlet_pct);
+    const pt2     = parseFloat(r.pass_through_outlet_ntd_pct);
+    const ptDisp  = !isNaN(ptTot)&&ptTot>0 ? ptBar(ptTot) : '—';
+    const survey  = r.gia_ntd_moi_nhat ? fmt(r.gia_ntd_moi_nhat)+'<br><span style="font-size:10px;color:#9ca3af;">'+(r.so_outlet_survey_xac_nhan||0)+' outlets</span>' : '<span style="color:#9ca3af;">—</span>';
+    const driftNum = parseFloat(r.drift_pct);
+    const driftDisp = !isNaN(driftNum)&&r.co_drift&&r.co_drift!=='None'
+      ? `<span class="badge ${driftCls[r.co_drift]||''}">${driftNum>0?'+':''}${driftNum.toFixed(1)}%</span>` : '✅';
+    const st = r.trang_thai_tracker||'Chưa áp dụng';
+    return `<tr>
+      <td>${icon} <strong>${r.gt_region||'—'}</strong><br><span style="font-size:11px;color:var(--gray);">${r.ten_agent||'—'}</span></td>
+      <td>${r.ten_san_pham||'—'}</td>
+      <td style="font-size:12px;">${dgmStr}</td>
+      <td style="font-size:12px;">${agOlStr}${!isNaN(pt1)&&pt1>0?'<br><span style="font-size:10px;color:var(--gray);">PT: '+pt1+'%</span>':''}</td>
+      <td style="font-weight:600;">${ntdCam}${!isNaN(pt2)&&pt2>0?'<br><span style="font-size:10px;color:var(--gray);">PT: '+pt2+'%</span>':''}</td>
+      <td>${ptDisp}</td>
+      <td style="font-size:12px;">${survey}</td>
+      <td>${driftDisp}</td>
+      <td><span class="badge ${st==='Đã áp dụng'?'b-ok':'b-warn'}">${st}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════
+// DRIFT PAGE
+// ════════════════════════════════════════
+function renderAlerts() {
+  const driftAlerts = D.alerts.filter(a=>a.loai_canh_bao==='PRICE_DRIFT_DETECTED'&&!isTrue(a.da_xu_ly));
+  const otherAlerts = D.alerts.filter(a=>a.loai_canh_bao!=='PRICE_DRIFT_DETECTED'&&!isTrue(a.da_doc));
+
+  el('drift-alert-list').innerHTML = !driftAlerts.length
+    ? '<div style="color:#9ca3af;font-size:13px;padding:16px;text-align:center;">✅ Không có drift giá nào đang xảy ra</div>'
+    : driftAlerts.map(a => alertHTML(a, true)).join('');
+
+  el('all-alert-list').innerHTML = !otherAlerts.length
+    ? '<div style="color:#9ca3af;font-size:13px;padding:16px;text-align:center;">Không có cảnh báo mới</div>'
+    : otherAlerts.map(a => alertHTML(a, true)).join('');
+
+  el('alerts-full-list').innerHTML = !D.alerts.length
+    ? '<div style="color:#9ca3af;padding:20px;text-align:center;">Không có cảnh báo</div>'
+    : D.alerts.map(a => alertHTML(a, true)).join('');
+}
+
+function alertHTML(a, withBtn=false) {
+  const isDrift = a.loai_canh_bao==='PRICE_DRIFT_DETECTED';
+  const cls     = a.muc_do==='high'||isDrift ? 'high' : '';
+  const icon    = a.muc_do==='high'||isDrift ? '🔴' : '🟡';
+  return `<div class="alert-item ${cls}">
+    <div style="font-size:18px;">${icon}</div>
+    <div class="ai-body">
+      <div>${a.mo_ta||'—'}</div>
+      <div class="ai-meta">${a.ten_san_pham||''} · ${a.ten_diem_ban||''} · ${a.ngay_tao||''}
+        ${withBtn?`· <button onclick="markRead('${a.ma_canh_bao}')" style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:11px;">Đã đọc</button>
+          <button onclick="markResolved('${a.ma_canh_bao}')" style="background:none;border:none;color:var(--green);cursor:pointer;font-size:11px;">Đã xử lý</button>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ════════════════════════════════════════
+// COMP CHANGES
+// ════════════════════════════════════════
+function renderCompChanges(preview=false) {
+  const comp = D.surveys.filter(s=>s.phan_loai==='competitor');
+  const seen = new Set();
+  const changes = [];
+  comp.forEach(s => {
+    const k = s.ten_san_pham+'|'+s.ten_thuong_hieu+'|'+s.ten_diem_ban;
+    if (seen.has(k)) return;
+    seen.add(k);
+    const prev = comp.find(p=>p.ten_san_pham===s.ten_san_pham&&p.ten_thuong_hieu===s.ten_thuong_hieu&&p.ten_diem_ban===s.ten_diem_ban&&p.ngay_survey<s.ngay_survey);
+    const g1 = parseFloat(s.gia)||0;
+    const g0 = prev?(parseFloat(prev.gia)||0):0;
+    const dp = g0>0 ? Math.round((g1-g0)/g0*1000)/10 : null;
+    changes.push({ name:s.ten_san_pham, brand:s.ten_thuong_hieu, outlet:s.ten_diem_ban, gia:g1, giaTruoc:g0, dp, date:s.ngay_survey });
+  });
+  const list = preview ? changes.slice(0,6) : changes;
+  const html = !list.length
+    ? '<div style="color:#9ca3af;font-size:13px;padding:16px;text-align:center;">Chưa có dữ liệu đối thủ từ survey</div>'
+    : `<table><thead><tr><th>Thương hiệu</th><th>Sản phẩm</th><th>Điểm bán</th><th>Giá hiện (đ)</th><th>Biến động</th><th>Ngày</th></tr></thead><tbody>` +
+      list.map(c => `<tr>
+        <td><span class="badge b-comp">${c.brand||'—'}</span></td>
+        <td>${c.name||'—'}</td><td>${c.outlet||'—'}</td>
+        <td style="font-weight:600;">${c.gia?fmt(c.gia):'—'}</td>
+        <td>${c.dp!==null?`<span class="${c.dp>0?'up':c.dp<0?'down':'flat'}">${c.dp>0?'+':''}${c.dp}%</span>`:'<span class="flat">—</span>'}</td>
+        <td style="font-size:11px;color:var(--gray);">${c.date||'—'}</td>
+      </tr>`).join('') + '</tbody></table>';
+  if (preview) el('dash-comp-changes').innerHTML = html;
+  el('comp-full-list').innerHTML = html;
+}
+
+// ════════════════════════════════════════
+// EVENTS PAGE
+// ════════════════════════════════════════
+function renderEvents() {
+  const evMap = {};
+  D.events.forEach(e => { if(!evMap[e.ma_tang_gia]) evMap[e.ma_tang_gia]=[]; evMap[e.ma_tang_gia].push(e); });
+  el('events-list').innerHTML = !D.events.length
+    ? '<div style="color:#9ca3af;padding:20px;text-align:center;">Chưa có mốc tăng giá</div>'
+    : `<div class="tbl-wrap"><table>
+        <thead><tr><th>Mã đợt</th><th>Tên sự kiện</th><th>Kênh</th><th>Sản phẩm</th><th>% tăng</th><th>Giá DGM cũ → mới</th><th>Ngày áp dụng</th><th>Trạng thái</th></tr></thead>
+        <tbody>${D.events.map(e=>`<tr>
+          <td style="font-size:11px;color:var(--gray);">${e.ma_tang_gia||'—'}</td>
+          <td><strong>${e.ten_su_kien||'—'}</strong></td>
+          <td><span class="badge ${e.kenh==='MT'?'b-mt':'b-gt'}">${e.kenh||'—'}</span></td>
+          <td>${e.ten_san_pham||'all'}</td>
+          <td>${e.phan_tram_tang?'+'+e.phan_tram_tang+'%':'—'}</td>
+          <td style="font-size:12px;">${e.gia_cu?fmt(e.gia_cu)+' → '+fmt(e.gia_moi)+'đ':'—'}</td>
+          <td>${e.ngay_dgm_ap_dung||'—'}</td>
+          <td><span class="badge b-ok">${e.trang_thai||'active'}</span></td>
+        </tr>`).join('')}</tbody>
+      </table></div>`;
+}
+
+// ════════════════════════════════════════
 // MASTER DATA PAGE
-// ════════════════════════════════════════════
+// ════════════════════════════════════════
 function renderMasterData() {
-  const m = data.master;
+  const m = D.master;
   if (!m) return;
-  const ownBrandIds = m.own_brand_ids || OWN_BRANDS;
+  const ownIds = m.own_brand_ids || OWN_IDS;
 
-  // Products table
-  const products = m.san_pham || [];
-  document.getElementById('products-table').innerHTML = !products.length
-    ? '<tr><td colspan="8" style="text-align:center;color:#9ca3af;">Chưa có sản phẩm — nhập dữ liệu vào tab Products</td></tr>'
-    : products.map(p => `<tr>
+  // Products — KEY FIX: dùng m.san_pham (không phải m.products)
+  const prods = m.san_pham || [];
+  el('tb-products').innerHTML = !prods.length
+    ? '<tr><td colspan="8" style="text-align:center;color:#9ca3af;">Chưa có sản phẩm — nhập vào sheet Products</td></tr>'
+    : prods.map(p=>`<tr>
         <td style="font-size:11px;color:var(--gray);">${p.ma_san_pham||'—'}</td>
-        <td><strong>${p.ten_san_pham}</strong></td>
+        <td><strong>${p.ten_san_pham||'—'}</strong></td>
         <td>${p.nhom_san_pham||'—'}</td>
-        <td><span class="badge ${ownBrandIds.includes(p.thuong_hieu)?'badge-ab':'badge-comp'}">${p.thuong_hieu||'—'}</span></td>
+        <td><span class="badge ${ownIds.includes(p.thuong_hieu)?'b-own':'b-comp'}">${p.thuong_hieu||'—'}</span></td>
         <td>${p.quy_cach_mac_dinh||'—'}${p.don_vi||''}</td>
-        <td>${p.nsx_nha_phan_phoi||'—'}</td>
+        <td style="font-size:12px;">${p.nsx_nha_phan_phoi||'—'}</td>
         <td>${p.xuat_xu||'—'}</td>
-        <td><span class="badge badge-ok">${p.trang_thai||'Active'}</span></td>
+        <td><span class="badge ${p.trang_thai==='Active'?'b-ok':'b-warn'}">${p.trang_thai||'—'}</span></td>
       </tr>`).join('');
 
-  // Outlets table
+  // Outlets — KEY FIX: dùng m.diem_ban
   const outlets = m.diem_ban || [];
-  document.getElementById('outlets-table').innerHTML = !outlets.length
-    ? '<tr><td colspan="5" style="text-align:center;color:#9ca3af;">Chưa có điểm bán</td></tr>'
-    : outlets.map(o => `<tr>
-        <td style="font-size:11px;color:var(--gray);">${o.ma_diem_ban||'—'}</td>
-        <td><strong>${o.ten_diem_ban}</strong></td>
-        <td><span class="badge ${o.kenh==='MT'?'badge-mt':'badge-gt'}">${o.kenh||'—'}</span></td>
-        <td>${o.trang_thai||'—'}</td>
-        <td>${o.is_approaching==='TRUE'?'🎯 Đang tiếp cận':''}</td>
+  el('tb-outlets').innerHTML = !outlets.length
+    ? '<tr><td colspan="7" style="text-align:center;color:#9ca3af;">Chưa có điểm bán</td></tr>'
+    : outlets.map(o=>`<tr>
+        <td style="font-size:11px;">${o.ma_diem_ban||'—'}</td>
+        <td><strong>${o.ten_diem_ban||'—'}</strong></td>
+        <td><span class="badge ${o.kenh==='MT'?'b-mt':'b-gt'}">${o.kenh||'—'}</span></td>
+        <td>${o.format_mt||o.loai_diem_ban||'—'}</td>
+        <td>${o.gt_region||'—'}</td>
+        <td>${o.agent_phu_trach||'—'}</td>
+        <td><span class="badge ${o.trang_thai==='Active'?'b-ok':'b-warn'}">${o.trang_thai||'—'}</span></td>
       </tr>`).join('');
 
-  // Brands table
+  // Brands — KEY FIX: dùng m.thuong_hieu
   const brands = m.thuong_hieu || [];
-  document.getElementById('brands-table').innerHTML = !brands.length
+  el('tb-brands').innerHTML = !brands.length
     ? '<tr><td colspan="5" style="text-align:center;color:#9ca3af;">Chưa có thương hiệu</td></tr>'
-    : brands.map(b => `<tr>
-        <td style="font-size:11px;color:var(--gray);">${b.ma_thuong_hieu||'—'}</td>
-        <td><strong>${b.ten_thuong_hieu}</strong></td>
-        <td><span class="badge ${b.phan_loai==='own_brand'?'badge-ab':'badge-comp'}">${b.phan_loai||'—'}</span></td>
+    : brands.map(b=>`<tr>
+        <td><strong>${b.ma_thuong_hieu||'—'}</strong></td>
+        <td>${b.ten_thuong_hieu||'—'}</td>
+        <td><span class="badge ${b.phan_loai==='own_brand'?'b-own':'b-comp'}">${b.phan_loai||'—'}</span></td>
         <td>${b.nha_san_xuat||'—'}</td>
         <td>${b.quoc_gia||'—'}</td>
       </tr>`).join('');
 
-  // Staff table
+  // Staff — KEY FIX: dùng m.nhan_vien
   const staff = m.nhan_vien || [];
-  document.getElementById('staff-table').innerHTML = !staff.length
-    ? '<tr><td colspan="7" style="text-align:center;color:#9ca3af;">Chưa có nhân viên — nhập vào tab Staff</td></tr>'
-    : staff.map(s => `<tr>
-        <td style="font-size:11px;color:var(--gray);">${s.ma_nhan_vien||'—'}</td>
+  el('tb-staff').innerHTML = !staff.length
+    ? '<tr><td colspan="7" style="text-align:center;color:#9ca3af;">Chưa có nhân viên</td></tr>'
+    : staff.map(s=>`<tr>
+        <td style="font-size:11px;">${s.ma_nhan_vien||'—'}</td>
         <td>${s.ho_ten||'—'}</td>
         <td><strong>${s.ten_hien_thi||'—'}</strong></td>
         <td>${s.chuc_danh||'—'}</td>
-        <td><span class="badge ${s.kenh==='MT'?'badge-mt':'badge-gt'}">${s.kenh||'—'}</span></td>
+        <td><span class="badge ${s.kenh==='MT'?'b-mt':'b-gt'}">${s.kenh||'—'}</span></td>
         <td>${s.khu_vuc||'—'}</td>
-        <td><span class="badge badge-ok">${s.trang_thai||'—'}</span></td>
+        <td><span class="badge ${s.trang_thai==='Active'?'b-ok':'b-warn'}">${s.trang_thai||'—'}</span></td>
+      </tr>`).join('');
+
+  // Agents — KEY FIX: dùng m.agents
+  const agents = m.agents || [];
+  el('tb-agents').innerHTML = !agents.length
+    ? '<tr><td colspan="3" style="text-align:center;color:#9ca3af;">Chưa có agent</td></tr>'
+    : agents.map(a=>`<tr>
+        <td><strong>${a.ten_agent||'—'}</strong></td>
+        <td>${a.khu_vuc_gt||'—'}</td>
+        <td><span class="badge ${a.trang_thai==='active'?'b-ok':'b-warn'}">${a.trang_thai||'—'}</span></td>
       </tr>`).join('');
 }
 
 function showMDTab(tab, btn) {
-  ['products','outlets','brands','staff'].forEach(t => {
-    document.getElementById('md-tab-'+t).style.display = t===tab ? 'block' : 'none';
+  ['products','outlets','brands','staff','agents'].forEach(t => {
+    el('md-'+t).style.display = t===tab?'block':'none';
   });
-  document.querySelectorAll('#page-masterdata .filter-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
+  document.querySelectorAll('#page-masterdata .ftab').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
 }
 
-// ════════════════════════════════════════════
-// EVENTS / TRACKER / ALERTS / TEAM
-// ════════════════════════════════════════════
-async function loadEvents() {
-  try {
-    const res = await apiFetch({ action: 'getPriceEvents' });
-    data.events = res.su_kien || [];
-    renderEvents();
-    populateEventSelects();
-  } catch(e) { console.warn('Events load error', e); }
-}
-
-function renderEvents() {
-  const el = document.getElementById('events-list');
-  if (!data.events.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">📢</div>Chưa có mốc tăng giá</div>'; return; }
-  el.innerHTML = `<div style="overflow-x:auto;"><table>
-    <thead><tr><th>Sự kiện</th><th>Sản phẩm</th><th>% tăng</th><th>Giá cũ</th><th>Giá mới</th><th>Kênh</th><th>Hiệu lực</th><th>Trạng thái</th></tr></thead>
-    <tbody>${data.events.map(e => `<tr>
-      <td><strong>${e.ten_su_kien}</strong></td>
-      <td>${e.ten_san_pham}</td>
-      <td>${e.phan_tram_tang||'—'}%</td>
-      <td>${e.gia_cu?Number(e.gia_cu).toLocaleString('vi')+'đ':'—'}</td>
-      <td style="color:var(--red);font-weight:700;">${e.gia_moi?Number(e.gia_moi).toLocaleString('vi')+'đ':'—'}</td>
-      <td><span class="badge badge-mt">${e.kenh}</span></td>
-      <td>${e.ngay_hieu_luc}</td>
-      <td><span class="badge badge-ok">${e.trang_thai}</span></td>
-    </tr>`).join('')}</tbody>
-  </table></div>`;
-}
-
-async function loadTracker() {
-  try {
-    const res = await apiFetch({ action: 'getMTTracker' });
-    data.tracker = res.tracker || [];
-    renderTracker(data.tracker);
-  } catch(e) { console.warn('Tracker load error', e); }
-}
-
-function filterTracker() {
-  const ev   = document.getElementById('tracker-event').value;
-  const st   = document.getElementById('tracker-status').value;
-  const kenh = document.getElementById('tracker-kenh').value;
-  let list   = data.tracker;
-  if (ev)   list = list.filter(r => r.ten_su_kien === ev || r.ma_tang_gia === ev);
-  if (st)   list = list.filter(r => r.trang_thai === st);
-  if (kenh) list = list.filter(r => (r.kenh_khach_hang||'MT') === kenh);
-  renderTracker(list);
-}
-
-function renderTracker(list) {
-  const tbody = document.getElementById('tracker-table');
-  if (!list.length) { tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:#9ca3af;">Chưa có dữ liệu — dùng "Tạo tracker hàng loạt" để bắt đầu</td></tr>'; return; }
-
-  const statusClass = {
-    'Đã gửi thông báo': 'badge-warn',
-    'Chưa đồng ý':      'badge-err',
-    'Đã đồng ý':        'badge-ok',
-    'Đã áp dụng':       'badge-ok',
-  };
-  const statusIcon = {
-    'Đã gửi thông báo': '📤',
-    'Chưa đồng ý':      '❌',
-    'Đã đồng ý':        '✅',
-    'Đã áp dụng':       '🟢',
-  };
-
-  tbody.innerHTML = list.map((r, i) => {
-    const st   = r.trang_thai_tracker || 'Đã thông báo';
-    const stCl = statusClass[st] || 'badge-warn';
-    const stIc = statusIcon[st] || '📤';
-    const lagTB = r.lag_thong_bao ? r.lag_thong_bao + ' ngày' : '—';
-    const lagTT = r.lag_thuc_te   ? r.lag_thuc_te   + ' ngày' : '—';
-    const lagTTColor = r.lag_thuc_te > 14 ? 'color:var(--red);font-weight:700;' : '';
-    const kenhCl = (r.kenh_khach_hang||'MT') === 'MT' ? 'badge-mt' : 'badge-gt';
-    return `<tr style="cursor:pointer;" onclick='openTrackerRow(${JSON.stringify(r).replace(/'/g,"&#39;")})' title="Click để cập nhật">
-      <td style="font-size:12px;">${r.ten_su_kien||'—'}</td>
-      <td><span class="badge ${kenhCl}">${r.kenh_khach_hang||'MT'}</span></td>
-      <td><strong>${r.ten_khach_hang||'—'}</strong></td>
-      <td>${r.ten_san_pham||'—'}</td>
-      <td>${r.gia_dgm_truoc ? Number(r.gia_dgm_truoc).toLocaleString('vi')+'đ' : '—'}</td>
-      <td style="font-size:12px;">${r.ngay_dgm_ap_dung||'—'}</td>
-      <td style="font-size:12px;">${r.ngay_bat_dau_gia_ntd_moi||'<span style="color:#9ca3af;">Chưa nhập</span>'}</td>
-      <td style="font-size:12px;">${lagTB}</td>
-      <td style="font-weight:700;color:var(--green);">${r.gia_ntd_moi_nhat ? Number(r.gia_ntd_moi_nhat).toLocaleString('vi')+'đ' : '—'}</td>
-      <td style="font-size:12px;">${r.ngay_survey_moi_nhat||'—'}</td>
-      <td style="font-size:12px;${lagTTColor}">${lagTT}</td>
-      <td><span class="badge ${stCl}">${stIc} ${st}</span></td>
-    </tr>`;
-  }).join('');
-}
-
-async function loadAlerts() {
-  try {
-    const res = await apiFetch({ action: 'getAlerts' });
-    data.alerts = res.canh_bao || [];
-    renderAlerts();
-  } catch(e) { console.warn('Alerts load error', e); }
-}
-
-function renderAlerts() {
-  const el = document.getElementById('alerts-list');
-  const el2 = document.getElementById('alerts-dash');
-  if (!data.alerts.length) {
-    const empty = '<div class="empty-state"><div class="empty-icon">✅</div>Không có cảnh báo mới</div>';
-    el.innerHTML = empty; el2.innerHTML = empty;
-    return;
-  }
-  const html = data.alerts.slice(0,20).map(a => `
-    <div class="alert-item ${a.muc_do==='high'?'high':''}">
-      <div class="alert-icon">${a.muc_do==='high'?'🔴':'🟡'}</div>
-      <div>
-        <div class="alert-text">${a.mo_ta}</div>
-        <div class="alert-sub">${a.ten_diem_ban||''} · ${a.ngay_tao||''} · <button onclick="markRead('${a.ma_canh_bao}')" style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:11px;">Đánh dấu đã đọc</button></div>
-      </div>
-    </div>`).join('');
-  el.innerHTML = html;
-  el2.innerHTML = data.alerts.slice(0,3).map(a => `
-    <div class="alert-item ${a.muc_do==='high'?'high':''}">
-      <div class="alert-icon">${a.muc_do==='high'?'🔴':'🟡'}</div>
-      <div><div class="alert-text" style="font-size:13px;">${a.mo_ta}</div></div>
-    </div>`).join('');
-}
-
-async function markRead(id) {
-  try { await apiPost({ action:'markAlertRead', data:{ ma_canh_bao: id } }); loadAlerts(); } catch(e) {}
-}
-async function markAllRead() {
-  for (const a of data.alerts) { try { await apiPost({ action:'markAlertRead', data:{ ma_canh_bao: a.ma_canh_bao } }); } catch(e) {} }
-  loadAlerts();
-}
-
-async function loadTeamActivity() {
-  try {
-    const res = await apiFetch({ action: 'getTeamActivity' });
-    const team = res.hoat_dong || [];
-    const tbody = document.getElementById('team-table');
-    if (!team.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9ca3af;">Chưa có dữ liệu</td></tr>'; return; }
-    tbody.innerHTML = team.map(s => `<tr>
-      <td><strong>${s.ten}</strong></td>
-      <td>${s.chuc_danh||'—'}</td>
-      <td><span class="badge ${s.kenh==='MT'?'badge-mt':'badge-gt'}">${s.kenh||'—'}</span></td>
-      <td>${s.khu_vuc||'—'}</td>
-      <td><strong style="color:${s.hom_nay>0?'var(--green)':'var(--gray)'}">${s.hom_nay}</strong></td>
-      <td>${s.tuan_nay}</td>
-      <td>${s.diem_ban}</td>
-      <td style="font-size:12px;color:var(--gray);">${s.survey_cuoi||'—'}</td>
-    </tr>`).join('');
-  } catch(e) { console.warn('Team activity error', e); }
-}
-
-// ════════════════════════════════════════════
-// SURVEY LIST (HISTORY PAGE)
-// ════════════════════════════════════════════
-async function loadSurveyList() {
-  const channel = document.getElementById('hist-channel').value;
-  const type    = document.getElementById('hist-type').value;
-  const tbody   = document.getElementById('history-table');
-  tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;">Đang tải...</td></tr>';
+// ════════════════════════════════════════
+// SURVEY HISTORY
+// ════════════════════════════════════════
+async function loadSurveyHistory() {
+  const ch   = val('hist-ch');
+  const type = val('hist-type');
+  el('hist-table').innerHTML = '<tr><td colspan="9" style="text-align:center;">Đang tải...</td></tr>';
   try {
     const params = { action:'getSurveyList', limit:200 };
-    if (channel) params.kenh = channel;
-    if (type) params.phan_loai = type;
-    const res = await apiFetch(params);
-    const list = res.danh_sach || [];
-    if (!list.length) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#9ca3af;">Không có dữ liệu</td></tr>'; return; }
-    tbody.innerHTML = list.map(s => `<tr>
-      <td>${s.ngay_survey}</td>
-      <td>${s.ten_nhan_vien}</td>
-      <td><span class="badge ${s.kenh==='MT'?'badge-mt':'badge-gt'}">${s.kenh}</span></td>
-      <td>${s.ten_diem_ban}</td>
-      <td><strong>${s.ten_san_pham}</strong></td>
-      <td>${s.ten_thuong_hieu||'—'}</td>
-      <td>${s.quy_cach||'—'}${s.don_vi||''}</td>
-      <td>${s.loai_gia||'—'}</td>
-      <td style="font-weight:700;color:var(--red);">${s.gia?Number(s.gia).toLocaleString('vi')+'đ':'—'}</td>
-      <td style="font-size:12px;color:var(--gray);">${s.ghi_chu||''}</td>
-    </tr>`).join('');
-  } catch(e) {
-    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--red);">Lỗi tải: ' + e.message + '</td></tr>';
-  }
+    if (ch)   params.kenh     = ch;
+    if (type) params.phan_loai= type;
+    const r = await apiFetch(params);
+    const list = r.danh_sach || [];
+    el('hist-table').innerHTML = !list.length
+      ? '<tr><td colspan="9" style="text-align:center;color:#9ca3af;">Không có dữ liệu</td></tr>'
+      : list.map(s=>`<tr>
+          <td style="font-size:12px;">${s.ngay_survey||'—'}</td>
+          <td>${s.ten_nhan_vien||'—'}</td>
+          <td><span class="badge ${s.kenh==='MT'?'b-mt':'b-gt'}">${s.kenh||'—'}</span></td>
+          <td>${s.ten_diem_ban||'—'}</td>
+          <td><strong>${s.ten_san_pham||'—'}</strong></td>
+          <td><span class="badge ${s.phan_loai==='own_brand'?'b-own':'b-comp'}">${s.ten_thuong_hieu||'—'}</span></td>
+          <td style="font-size:12px;">${s.loai_gia||'—'}</td>
+          <td style="font-weight:700;color:var(--red);">${s.gia?fmt(s.gia)+'đ':'—'}</td>
+          <td style="font-size:11px;color:var(--gray);">${s.ghi_chu||''}</td>
+        </tr>`).join('');
+  } catch(e) { el('hist-table').innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--red);">Lỗi: '+e.message+'</td></tr>'; }
 }
 
-function exportHistory() { showToast('Export Excel: kéo data từ Google Sheet trực tiếp', 'success'); }
-
-// ════════════════════════════════════════════
-// PROPAGATION
-// ════════════════════════════════════════════
-function populateEventSelects() {
-  const evSel = document.getElementById('event-select');
-  const trSel = document.getElementById('tracker-event');
-
-  // Lấy unique ma_tang_gia
-  const uniqueMap = {};
-  data.events.forEach(e => {
-    if (e.ma_tang_gia && !uniqueMap[e.ma_tang_gia]) uniqueMap[e.ma_tang_gia] = e;
-  });
-
-  [evSel, trSel].forEach(sel => {
-    if (!sel) return;
-    const cur = sel.value;
-    while (sel.options.length > 1) sel.remove(1);
-    Object.values(uniqueMap).forEach(e => {
-      const opt = document.createElement('option');
-      opt.value = e.ma_tang_gia;
-      opt.textContent = e.ma_tang_gia + ' — ' + (e.ten_su_kien||'') + ' (' + (e.ngay_dgm_ap_dung||'') + ')';
-      sel.appendChild(opt);
-    });
-    sel.value = cur;
-  });
-}
-
-async function loadPropagation() {
-  const ev = document.getElementById('event-select').value;
-  const el = document.getElementById('mt-propagation');
-  if (!ev) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">📡</div>Chọn mốc tăng giá để xem</div>'; return; }
-  el.innerHTML = '<div style="color:#9ca3af;padding:20px;text-align:center;">Đang tải...</div>';
-  try {
-    const res = await apiFetch({ action:'getPropagation', ma_tang_gia: ev });
-    const mt  = res.mt_tracker || [];
-    const lag = res.lag_trung_binh_ngay;
-    el.innerHTML = `
-      <div style="margin-bottom:12px;font-size:13px;color:var(--gray);">
-        Lag trung bình: <strong>${lag !== null ? lag + ' ngày' : '—'}</strong>
-      </div>
-      <table>
-        <thead><tr><th>Khách hàng MT</th><th>Giá DGM</th><th>Giá NTD</th><th>Ngày DGM</th><th>Ngày chain</th><th>Lag TB</th><th>Trạng thái</th></tr></thead>
-        <tbody>${mt.map(r => {
-          const st = r.trang_thai;
-          const cl = st==='Đã áp dụng'?'badge-ok':st==='Chưa cập nhật'?'badge-err':'badge-warn';
-          return `<tr>
-            <td><strong>${r.ten_khach_hang}</strong></td>
-            <td>${r.gia_dgm_truoc?Number(r.gia_dgm_truoc).toLocaleString('vi')+'đ':'—'}</td>
-            <td>${r.gia_ntd_moi_nhat?Number(r.gia_ntd_moi_nhat).toLocaleString('vi')+'đ':'—'}</td>
-            <td>${r.ngay_dgm_ap_dung||'—'}</td>
-            <td>${r.ngay_khach_hang_ap_dung||'—'}</td>
-            <td>${r.so_ngay_tre_thong_bao?r.so_ngay_tre_thong_bao+' ngày':'—'}</td>
-            <td><span class="badge ${cl}">${st}</span></td>
-          </tr>`;
-        }).join('')}</tbody>
-      </table>`;
-  } catch(e) {
-    el.innerHTML = '<div style="color:var(--red);padding:20px;">Lỗi: ' + e.message + '</div>';
-  }
-}
-
-// ════════════════════════════════════════════
+// ════════════════════════════════════════
 // SAVE ACTIONS
-// ════════════════════════════════════════════
+// ════════════════════════════════════════
 async function saveEvent() {
-  // v11: addPriceEvent tạo 1 event header (ma_san_pham='all', khach_hang='all')
-  // Sau đó dùng bulkCreateMTTracker/bulkCreateGTTracker để expand
+  const maSP = val('ev-sp');
+  const spName = maSP ? (el('ev-sp').options[el('ev-sp').selectedIndex]?.text||'') : '';
   const payload = {
-    ten_su_kien:     document.getElementById('ev-name').value.trim(),
-    ngay_dgm_ap_dung: document.getElementById('ev-date').value,
-    phan_tram_tang:  document.getElementById('ev-pct').value,
-    kenh:            document.getElementById('ev-channel').value === 'MT+GT' ? 'MT' : document.getElementById('ev-channel').value,
-    khach_hang:      'all',
-    ma_san_pham:     'all',
-    ten_san_pham:    document.getElementById('ev-sp-note').value || '(Xem tracker)',
-    gia_cu:          '',
-    gia_moi:         '',
-    ly_do:           document.getElementById('ev-reason').value,
-    nguoi_tao:       'Bùi Quang Quý',
-    ma_tang_gia:     'TG-' + Date.now(),
+    ma_tang_gia:      val('ev-ma') || 'TG-'+Date.now(),
+    ten_su_kien:      val('ev-name'),
+    ma_san_pham:      maSP || 'all',
+    ten_san_pham:     spName.replace(/\s*\(.*\)/,'').trim() || 'all',
+    phan_tram_tang:   val('ev-pct'),
+    kenh:             val('ev-kenh'),
+    khach_hang:       val('ev-kh') || 'all',
+    ngay_dgm_ap_dung: val('ev-date'),
+    gia_cu:           val('ev-gia-cu'),
+    gia_moi:          val('ev-gia-moi'),
+    ly_do:            val('ev-reason'),
+    nguoi_tao:        'Bùi Quang Quý',
   };
-  if (!payload.ten_su_kien || !payload.ngay_hieu_luc) {
-    showToast('Vui lòng điền tên sự kiện và ngày hiệu lực', 'error'); return;
+  if (!payload.ten_su_kien || !payload.ngay_dgm_ap_dung) {
+    showToast('Vui lòng điền tên sự kiện và ngày áp dụng','error'); return;
   }
   try {
-    const res = await apiPost({ action:'addPriceEvent', data: payload });
-    closeModal('event-modal');
-    showToast('✅ Đã lưu mốc tăng giá — vào MT Price Tracker để tạo tracker hàng loạt', 'success');
-    await loadEvents();
-    // Tự động mở bulk tracker modal
-    setTimeout(() => {
-      openBulkTrackerModal();
-      // Pre-select event vừa tạo
-      const sel = document.getElementById('bulk-event');
-      if (sel && res.ma_tang_gia) {
-        for (let opt of sel.options) {
-          if (opt.value === res.ma_tang_gia || opt.text.includes(payload.ten_su_kien)) {
-            sel.value = opt.value; onBulkEventChange(); break;
-          }
-        }
-      }
-    }, 600);
-  } catch(e) { showToast('Lỗi: ' + e.message, 'error'); }
+    await apiPost({ action:'addPriceEvent', data:payload });
+    closeModal('modal-event');
+    showToast('✅ Đã lưu mốc tăng giá','success');
+    const r = await apiFetch({ action:'getPriceEvents' });
+    D.events = r.su_kien || [];
+    renderEvents();
+    populateEventSelects();
+  } catch(e) { showToast('Lỗi: '+e.message,'error'); }
 }
 
-// ── BULK TRACKER — ĐƠN GIẢN ──
-function openBulkTrackerModal() {
-  const sel = document.getElementById('bulk-event');
-  sel.innerHTML = '<option value="">-- Chọn mã đợt tăng giá --</option>';
-
-  // Lấy unique ma_tang_gia từ events
-  const uniqueEvents = {};
-  data.events.forEach(e => {
-    if (e.ma_tang_gia && !uniqueEvents[e.ma_tang_gia]) {
-      uniqueEvents[e.ma_tang_gia] = e;
-    }
-  });
-
-  Object.values(uniqueEvents).forEach(e => {
-    const opt = document.createElement('option');
-    opt.value = e.ma_tang_gia;
-    const count = data.events.filter(ev => ev.ma_tang_gia === e.ma_tang_gia).length;
-    opt.textContent = e.ma_tang_gia + ' — ' + (e.ten_su_kien||'') + ' (' + count + ' SP)';
+function openBulkModal(channel) {
+  el('bulk-channel').value = channel;
+  el('bulk-modal-title').textContent = '🚀 Tạo ' + channel + ' tracker hàng loạt';
+  const sel = el('bulk-event-sel');
+  sel.innerHTML = '<option value="">-- Chọn --</option>';
+  const evMap={};
+  D.events.filter(e=>e.kenh===channel).forEach(e=>{ if(e.ma_tang_gia&&!evMap[e.ma_tang_gia]) evMap[e.ma_tang_gia]=e; });
+  Object.values(evMap).forEach(e=>{
+    const cnt = D.events.filter(x=>x.ma_tang_gia===e.ma_tang_gia).length;
+    const opt=document.createElement('option');
+    opt.value=e.ma_tang_gia;
+    opt.textContent=e.ma_tang_gia+' — '+e.ten_su_kien+' ('+cnt+' SP)';
     sel.appendChild(opt);
   });
-
-  document.getElementById('bulk-event-info').style.display = 'none';
-  document.getElementById('bulk-preview').style.display = 'none';
-  openModal('bulk-tracker-modal');
+  el('bulk-preview').style.display='none';
+  openModal('modal-bulk');
 }
 
 function onBulkEventChange() {
-  const maTangGia = document.getElementById('bulk-event').value;
-  const info = document.getElementById('bulk-event-info');
-  const preview = document.getElementById('bulk-preview');
-
-  if (!maTangGia) { info.style.display='none'; preview.style.display='none'; return; }
-
-  const rows = data.events.filter(e => e.ma_tang_gia === maTangGia);
-  const kenh = [...new Set(rows.map(r => r.kenh))].join(' + ');
-  const spList = rows.map(r => r.ten_san_pham).join(', ');
-  const ngay = rows[0]?.ngay_dgm_ap_dung || '—';
-  const khachHang = rows[0]?.khach_hang || 'all';
-
-  info.innerHTML = `
-    <strong>${rows[0]?.ten_su_kien || maTangGia}</strong><br>
-    Kênh: <strong>${kenh}</strong> · Ngày DGM áp dụng: <strong>${ngay}</strong><br>
-    Khách hàng: <strong>${khachHang}</strong><br>
-    Sản phẩm (${rows.length}): ${spList}`;
-  info.style.display = 'block';
-
-  document.getElementById('bulk-count').textContent = rows.length + ' dòng Price_Events → tự expand theo chain';
-  preview.style.display = 'block';
+  const maTG = val('bulk-event-sel');
+  const prev = el('bulk-preview');
+  if (!maTG) { prev.style.display='none'; return; }
+  const rows = D.events.filter(e=>e.ma_tang_gia===maTG);
+  prev.style.display='block';
+  prev.innerHTML=`✅ Sẽ expand <strong>${rows.length} dòng</strong> trong Price_Events → 1 tracker/chain hoặc 1 tracker/region×agent.<br><span style="font-size:11px;color:var(--gray);">Bỏ qua dòng đã tồn tại.</span>`;
 }
 
 async function saveBulkTracker() {
-  const maTangGia = document.getElementById('bulk-event').value;
-  if (!maTangGia) { showToast('Chọn mã đợt tăng giá', 'error'); return; }
-
-  const btn = document.getElementById('bulk-save-btn');
-  btn.disabled = true; btn.textContent = '⏳ Đang tạo...';
-
+  const maTG = val('bulk-event-sel');
+  const ch   = val('bulk-channel');
+  if (!maTG) { showToast('Chọn mã đợt','error'); return; }
+  const btn = el('bulk-save-btn');
+  btn.disabled=true; btn.textContent='⏳ Đang tạo...';
+  const action = ch==='GT' ? 'bulkCreateGTTracker' : 'bulkCreateMTTracker';
   try {
-    const res = await apiPost({ action:'bulkCreateMTTracker', data: {
-      ma_tang_gia: maTangGia,
-      nguoi_tao:   'Bùi Quang Quý',
-    }});
-    closeModal('bulk-tracker-modal');
-    if (res.error) { showToast('Lỗi: ' + res.error, 'error'); return; }
-    showToast(`✅ Tạo ${res.created} dòng tracker (bỏ qua ${res.skipped} trùng)`, 'success');
-    loadTracker();
-  } catch(e) {
-    showToast('Lỗi: ' + e.message, 'error');
-  } finally {
-    btn.disabled = false; btn.textContent = '🚀 Tạo tracker';
-  }
+    const res = await apiPost({ action, data:{ ma_tang_gia:maTG, nguoi_tao:'Bùi Quang Quý' }});
+    closeModal('modal-bulk');
+    if (res.error) { showToast('Lỗi: '+res.error,'error'); return; }
+    showToast(`✅ Tạo ${res.created} tracker (bỏ qua ${res.skipped} trùng)`,'success');
+    const r  = await apiFetch({ action: ch==='GT'?'getGTTracker':'getMTTracker' });
+    if (ch==='GT') { D.gtTracker=r.tracker||[]; renderGTPage(); }
+    else            { D.mtTracker=r.tracker||[]; renderMTPage(); }
+    renderDashboard();
+  } catch(e) { showToast('Lỗi: '+e.message,'error'); }
+  finally { btn.disabled=false; btn.textContent='🚀 Tạo tracker'; }
 }
 
-// Stubs không còn dùng (giữ để không crash nếu còn ref)
-function selectAllChains() {}
-function selectAllProducts() {}
-function updateBulkCount() {}
-
-// ── UPDATE 1 DÒNG TRACKER ──
-function openTrackerRow(r) {
-  document.getElementById('tr-ma-tracker').value  = r.ma_tracker   || '';
-  document.getElementById('tr-ma-su-kien').value  = r.ma_tang_gia  || '';
-  document.getElementById('tr-ma-sp').value       = r.ma_san_pham  || '';
-  document.getElementById('tr-ten-chain').value   = r.ten_khach_hang || '';
-  document.getElementById('tr-info-header').textContent = r.ten_khach_hang + ' × ' + r.ten_san_pham;
-  document.getElementById('tr-info-sub').textContent    =
-    (r.ten_su_kien||'') + ' · Giá DGM: ' + (r.gia_dgm_truoc ? Number(r.gia_dgm_truoc).toLocaleString('vi')+'đ' : '—') +
-    ' · Giá NTD thực tế: ' + (r.gia_ntd_moi_nhat ? Number(r.gia_ntd_moi_nhat).toLocaleString('vi')+'đ (từ survey)' : 'Chưa có');
-  document.getElementById('tr-chain-date').value  = r.ngay_bat_dau_gia_ntd_moi || '';
-  document.getElementById('tr-status').value      = r.trang_thai_tracker || 'Đã thông báo';
-  document.getElementById('tr-note').value        = r.ghi_chu || '';
-  openModal('tracker-modal');
+function openMTTrackerModal(r) {
+  el('tr-id').value      = r.ma_tracker     || '';
+  el('tr-event-id').value= r.ma_tang_gia    || '';
+  el('tr-sp-id').value   = r.ma_san_pham    || '';
+  el('tr-chain').value   = r.ten_khach_hang || '';
+  el('tr-hdr').textContent = (r.ten_khach_hang||'—') + ' × ' + (r.ten_san_pham||'—');
+  el('tr-sub').textContent = (r.ten_su_kien||'') +
+    ' · DGM: ' + (r.gia_dgm_truoc?fmt(r.gia_dgm_truoc)+'→'+fmt(r.gia_dgm_sau)+'đ':'—') +
+    ' · Survey: ' + (r.gia_ntd_moi_nhat?fmt(r.gia_ntd_moi_nhat)+'đ':'chưa có');
+  el('tr-ntd-before').value = r.gia_ntd_cam_ket_truoc || '';
+  el('tr-ntd-after').value  = r.gia_ntd_cam_ket_sau   || '';
+  el('tr-date').value       = r.ngay_bat_dau_gia_ntd_moi || '';
+  el('tr-pushback').value   = r.muc_pushback  || '';
+  el('tr-status').value     = r.trang_thai_tracker || 'Đã thông báo';
+  el('tr-note').value       = r.ghi_chu_pushback   || '';
+  openModal('modal-tracker');
 }
 
-async function saveTracker() {
+async function saveMTTracker() {
   const payload = {
-    ma_tracker:          document.getElementById('tr-ma-tracker').value,
-    ma_tang_gia:         document.getElementById('tr-ma-su-kien').value,
-    ma_san_pham:         document.getElementById('tr-ma-sp').value,
-    ten_khach_hang:      document.getElementById('tr-ten-chain').value,
-    ngay_bat_dau_gia_ntd_moi:  document.getElementById('tr-chain-date').value,
-    trang_thai_tracker:  document.getElementById('tr-status').value,
-    ghi_chu:             document.getElementById('tr-note').value,
-    nguoi_cap_nhat:      'Bùi Quang Quý',
+    ma_tracker:                 val('tr-id'),
+    ma_tang_gia:                val('tr-event-id'),
+    ma_san_pham:                val('tr-sp-id'),
+    ten_khach_hang:             val('tr-chain'),
+    gia_ntd_cam_ket_truoc:      val('tr-ntd-before'),
+    gia_ntd_cam_ket_sau:        val('tr-ntd-after'),
+    ngay_bat_dau_gia_ntd_moi:   val('tr-date'),
+    muc_pushback:               val('tr-pushback'),
+    trang_thai_tracker:         val('tr-status'),
+    ghi_chu_pushback:           val('tr-note'),
+    nguoi_cap_nhat:             'Bùi Quang Quý',
   };
   try {
-    await apiPost({ action:'upsertMTTracker', data: payload });
-    closeModal('tracker-modal');
-    showToast('✅ Đã cập nhật tracker', 'success');
-    loadTracker();
-  } catch(e) { showToast('Lỗi: ' + e.message, 'error'); }
+    await apiPost({ action:'upsertMTTracker', data:payload });
+    closeModal('modal-tracker');
+    showToast('✅ Đã cập nhật tracker','success');
+    const r = await apiFetch({ action:'getMTTracker' });
+    D.mtTracker = r.tracker || [];
+    renderMTPage();
+    renderDashboard();
+  } catch(e) { showToast('Lỗi: '+e.message,'error'); }
 }
 
 async function saveProduct() {
-  const payload = {
-    ten_san_pham:      document.getElementById('pm-name').value,
-    thuong_hieu:       document.getElementById('pm-brand').value,
-    nhom_san_pham:     document.getElementById('pm-group').value,
-    quy_cach_mac_dinh: document.getElementById('pm-qty').value,
-    don_vi:            document.getElementById('pm-unit').value,
-    nsx_nha_phan_phoi: document.getElementById('pm-mfg').value,
-    xuat_xu:           document.getElementById('pm-origin').value,
-  };
-  if (!payload.ten_san_pham) { showToast('Nhập tên sản phẩm', 'error'); return; }
-  try {
-    await apiPost({ action:'addProduct', data: payload });
-    closeModal('product-modal');
-    showToast('✅ Đã thêm sản phẩm', 'success');
-    loadAll();
-  } catch(e) { showToast('Lỗi: ' + e.message, 'error'); }
+  const payload = { ten_san_pham:val('pm-name'), thuong_hieu:val('pm-brand'), nhom_san_pham:val('pm-group'), quy_cach_mac_dinh:val('pm-qty'), don_vi:val('pm-unit'), nsx_nha_phan_phoi:val('pm-mfg'), xuat_xu:val('pm-origin') };
+  if (!payload.ten_san_pham) { showToast('Nhập tên sản phẩm','error'); return; }
+  try { await apiPost({ action:'addProduct', data:payload }); closeModal('modal-product'); showToast('✅ Đã thêm SP','success'); D.master=await apiFetch({action:'getMasterData'}); renderMasterData(); } catch(e) { showToast('Lỗi: '+e.message,'error'); }
 }
 
 async function saveOutlet() {
-  const payload = {
-    ten_diem_ban: document.getElementById('om-name').value,
-    kenh:         document.getElementById('om-channel').value,
-    trang_thai:   document.getElementById('om-status').value,
-    ghi_chu:      document.getElementById('om-note').value,
-  };
-  if (!payload.ten_diem_ban) { showToast('Nhập tên điểm bán', 'error'); return; }
-  try {
-    await apiPost({ action:'addOutlet', data: payload });
-    closeModal('outlet-modal');
-    showToast('✅ Đã thêm điểm bán', 'success');
-    loadAll();
-  } catch(e) { showToast('Lỗi: ' + e.message, 'error'); }
+  const ch = val('om-ch');
+  const payload = { ten_diem_ban:val('om-name'), kenh:ch, trang_thai:val('om-st'), format_mt:ch==='MT'?val('om-fmt'):'', loai_diem_ban:ch==='GT'?val('om-loai'):'', gt_region:ch==='GT'?val('om-region'):'', agent_phu_trach:ch==='GT'?val('om-agent'):'' };
+  if (!payload.ten_diem_ban) { showToast('Nhập tên điểm bán','error'); return; }
+  try { await apiPost({ action:'addOutlet', data:payload }); closeModal('modal-outlet'); showToast('✅ Đã thêm điểm bán','success'); D.master=await apiFetch({action:'getMasterData'}); renderMasterData(); } catch(e) { showToast('Lỗi: '+e.message,'error'); }
 }
 
-// ════════════════════════════════════════════
-// MODAL
-// ════════════════════════════════════════════
-function openModal(id)  { document.getElementById(id).classList.remove('hidden'); }
-function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+async function markRead(id) {
+  try { await apiPost({action:'markAlertRead',data:{ma_canh_bao:id}}); D.alerts=D.alerts.filter(a=>a.ma_canh_bao!==id); renderAlerts(); } catch(e){}
+}
+async function markResolved(id) {
+  try { await apiPost({action:'markAlertResolved',data:{ma_canh_bao:id}}); D.alerts=D.alerts.filter(a=>a.ma_canh_bao!==id); renderAlerts(); } catch(e){}
+}
+async function markAllRead() {
+  for(const a of D.alerts) { try { await apiPost({action:'markAlertRead',data:{ma_canh_bao:a.ma_canh_bao}}); } catch(e){} }
+  D.alerts=[]; renderAlerts();
+}
+async function markAllResolved() {
+  const drifts = D.alerts.filter(a=>a.loai_canh_bao==='PRICE_DRIFT_DETECTED');
+  for(const a of drifts) { try { await apiPost({action:'markAlertResolved',data:{ma_canh_bao:a.ma_canh_bao}}); } catch(e){} }
+  D.alerts=D.alerts.filter(a=>a.loai_canh_bao!=='PRICE_DRIFT_DETECTED');
+  renderAlerts();
+}
 
-// ════════════════════════════════════════════
-// TOAST
-// ════════════════════════════════════════════
-let toastTimer;
+// ════════════════════════════════════════
+// POPULATE SELECTS
+// ════════════════════════════════════════
+function populateEventSelects() {
+  const evMap={};
+  D.events.forEach(e=>{ if(e.ma_tang_gia&&!evMap[e.ma_tang_gia]) evMap[e.ma_tang_gia]=e; });
+  const opts = Object.values(evMap).map(e =>
+    `<option value="${e.ma_tang_gia}">${e.ma_tang_gia} — ${e.ten_su_kien||''}</option>`
+  ).join('');
+  ['event-global','mt-filter-event','gt-filter-event'].forEach(id => {
+    const s = el(id); if(!s) return;
+    const cur=s.value;
+    s.innerHTML = (id==='event-global'?'<option value="">📢 Tất cả mốc tăng giá</option>':'<option value="">Tất cả sự kiện</option>') + opts;
+    s.value = cur;
+  });
+}
+
+function populateEventProductSelect() {
+  const prods = (D.master?.san_pham||[]).filter(p=>p.trang_thai==='Active');
+  el('ev-sp').innerHTML = '<option value="">-- Chọn SP (để trống = all) --</option>' +
+    prods.map(p=>`<option value="${p.ma_san_pham}">${p.ten_san_pham} (${p.ma_san_pham})</option>`).join('');
+}
+
+function onGlobalEventChange() {
+  D.curEvent = val('event-global');
+  renderDashboard();
+  renderMTPage();
+  renderGTPage();
+}
+
+// ════════════════════════════════════════
+// ROUTING
+// ════════════════════════════════════════
+function nav(id, navEl) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  el('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(navEl) navEl.classList.add('active');
+  const titles={dashboard:'Tổng quan — Tác động tăng giá',mt:'MT — Pass-through & Lan truyền giá',gt:'GT — Pass-through 3 tầng',drift:'Drift & Biến động giá',events:'Mốc tăng giá DGM',alerts:'Cảnh báo thị trường',history:'Lịch sử Survey',masterdata:'Master Data'};
+  el('page-title').textContent = titles[id]||id;
+  if(id==='masterdata') showMDTab('products', document.querySelector('#page-masterdata .ftab'));
+}
+
+// ════════════════════════════════════════
+// MODAL / UTILS
+// ════════════════════════════════════════
+function openModal(id)  { el(id).classList.remove('hidden'); }
+function closeModal(id) { el(id).classList.add('hidden'); }
+function el(id)   { return document.getElementById(id); }
+function val(id)  { const e=el(id); return e?e.value:''; }
+function fmt(n)   { return Number(n).toLocaleString('vi'); }
+function isTrue(v){ return String(v||'').toLowerCase().trim()==='true'||v==='1'; }
+function setSyncInfo(t){ el('sync-info').textContent=t; }
+function ptBar(pct) {
+  const capped = Math.min(pct,150);
+  const color  = pct>=95?'var(--green)':pct>=80?'var(--orange)':'var(--red)';
+  return `<div class="pt-bar"><div class="pt-fill" style="width:${Math.round(capped/150*80)}px;background:${color};"></div><span class="pt-pct" style="color:${color};">${pct}%</span></div>`;
+}
+
+// Outlet modal: toggle MT/GT fields
+document.addEventListener('DOMContentLoaded', () => {
+  el('om-ch').addEventListener('change', function() {
+    el('om-mt-fields').style.display = this.value==='MT'?'block':'none';
+    el('om-gt-fields').style.display = this.value==='GT'?'block':'none';
+  });
+  loadAll();
+});
+
+let _toastTimer;
 function showToast(msg, type='') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (type ? ' '+type : '');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.className = 'toast', 3500);
-}
-
-// ════════════════════════════════════════════
-// INIT
-// ════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', loadAll);
-
-// ════════════════════════════════════════════
-// GT TRACKER (v11)
-// ════════════════════════════════════════════
-async function loadGTTracker() {
-  try {
-    const ev     = document.getElementById('gt-tracker-event')?.value || '';
-    const region = document.getElementById('gt-tracker-region')?.value || '';
-    const params = { action: 'getGTTracker' };
-    if (ev)     params.ma_tang_gia = ev;
-    if (region) params.gt_region   = region;
-    const res = await apiFetch(params);
-    data.gtTracker = res.tracker || [];
-    renderGTTracker(data.gtTracker);
-    renderGTRegionSummary(res.region_summary || []);
-  } catch(e) { console.warn('GT Tracker:', e.message); }
-}
-
-function filterGTTracker() {
-  const ev     = document.getElementById('gt-tracker-event')?.value  || '';
-  const region = document.getElementById('gt-tracker-region')?.value || '';
-  const st     = document.getElementById('gt-tracker-status')?.value || '';
-  let list = data.gtTracker || [];
-  if (ev)     list = list.filter(r => r.ma_tang_gia === ev);
-  if (region) list = list.filter(r => r.gt_region   === region);
-  if (st)     list = list.filter(r => r.trang_thai_tracker === st);
-  renderGTTracker(list);
-}
-
-function renderGTTracker(list) {
-  const tbody = document.getElementById('gt-tracker-table');
-  if (!tbody) return;
-  if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#9ca3af;">Chưa có dữ liệu GT tracker</td></tr>';
-    return;
-  }
-  const driftColor = { None:'', Low:'color:#92400e;', Medium:'color:var(--orange);font-weight:700;', High:'color:var(--red);font-weight:700;' };
-  tbody.innerHTML = list.map(r => {
-    const dgmStr  = r.gia_dgm_agent_truoc ? Number(r.gia_dgm_agent_truoc).toLocaleString('vi')+' → '+Number(r.gia_dgm_agent_sau||0).toLocaleString('vi')+'đ' : '—';
-    const olStr   = r.gia_agent_outlet_sau ? Number(r.gia_agent_outlet_sau).toLocaleString('vi')+'đ' : '—';
-    const ntdCam  = r.gia_ntd_cam_ket_sau  ? Number(r.gia_ntd_cam_ket_sau).toLocaleString('vi')+'đ' : '—';
-    const survey  = r.gia_ntd_moi_nhat     ? Number(r.gia_ntd_moi_nhat).toLocaleString('vi')+'đ' : '—';
-    const pt      = r.pass_through_tong_pct ? r.pass_through_tong_pct+'%' : '—';
-    const drift   = r.drift_pct ? (parseFloat(r.drift_pct)>0?'+':'')+r.drift_pct+'%' : '—';
-    const dCol    = driftColor[r.co_drift] || '';
-    const stCap   = r.trang_thai_cap_nhat || '🔘 Chưa cập nhật';
-    const st      = r.trang_thai_tracker  || 'Chưa áp dụng';
-    const stCl    = st === 'Đã áp dụng' ? 'badge-ok' : 'badge-warn';
-    return `<tr>
-      <td style="font-size:12px;">${r.ten_su_kien||'—'}</td>
-      <td><strong>${r.gt_region||'—'}</strong><br><span style="font-size:11px;color:#9ca3af;">${r.ten_agent||'—'}</span></td>
-      <td>${r.ten_san_pham||'—'}</td>
-      <td style="font-size:12px;">${dgmStr}</td>
-      <td style="font-size:12px;">${olStr}</td>
-      <td style="font-weight:700;color:var(--navy);">${ntdCam}</td>
-      <td style="font-size:12px;">${pt}</td>
-      <td style="font-weight:700;color:var(--green);">${survey}<br><span style="font-size:11px;color:#9ca3af;">${r.ngay_survey_moi_nhat||''} (${r.so_outlet_survey_xac_nhan||0} outlets)</span></td>
-      <td style="font-size:12px;${dCol}">${drift} <span style="font-size:10px;">${r.co_drift&&r.co_drift!=='None'?r.co_drift:''}</span></td>
-      <td><span style="font-size:13px;">${stCap}</span></td>
-      <td><span class="badge ${stCl}">${st}</span></td>
-    </tr>`;
-  }).join('');
-}
-
-function renderGTRegionSummary(summary) {
-  const el = document.getElementById('gt-region-summary');
-  if (!el || !summary.length) return;
-  el.innerHTML = `<table>
-    <thead><tr><th>Region</th><th>Tổng tracker</th><th>Đã áp dụng</th><th>Chưa cập nhật</th><th>Có drift</th><th>Pass-through TB %</th></tr></thead>
-    <tbody>${summary.map(r => `<tr>
-      <td><strong>${r.region}</strong></td>
-      <td>${r.tong}</td>
-      <td><span class="badge badge-ok">${r.da_ap_dung}</span></td>
-      <td><span class="badge badge-warn">${r.chua_cap_nhat}</span></td>
-      <td><span class="badge badge-err">${r.co_drift}</span></td>
-      <td>${r.pass_through_tb}%</td>
-    </tr>`).join('')}</tbody>
-  </table>`;
-}
-
-function openBulkGTTrackerModal() {
-  // Reuse bulk modal, gọi bulkCreateGTTracker action
-  const sel = document.getElementById('bulk-event');
-  sel.innerHTML = '<option value="">-- Chọn mã đợt tăng giá --</option>';
-  const uniqueEvents = {};
-  data.events.forEach(e => {
-    if (e.ma_tang_gia && !uniqueEvents[e.ma_tang_gia]) uniqueEvents[e.ma_tang_gia] = e;
-  });
-  Object.values(uniqueEvents).forEach(e => {
-    const opt = document.createElement('option');
-    opt.value = e.ma_tang_gia;
-    opt.textContent = e.ma_tang_gia + ' — ' + (e.ten_su_kien||'') + ' (GT)';
-    opt.dataset.channel = 'GT';
-    sel.appendChild(opt);
-  });
-  document.getElementById('bulk-event-info').style.display = 'none';
-  document.getElementById('bulk-preview').style.display = 'none';
-  // Override saveBulkTracker to use GT action
-  window._bulkChannel = 'GT';
-  openModal('bulk-tracker-modal');
-}
-
-// Override saveBulkTracker để handle cả MT và GT
-const _origSaveBulk = saveBulkTracker;
-async function saveBulkTracker() {
-  const maTangGia = document.getElementById('bulk-event').value;
-  if (!maTangGia) { showToast('Chọn mã đợt tăng giá', 'error'); return; }
-  const btn = document.getElementById('bulk-save-btn');
-  btn.disabled = true; btn.textContent = '⏳ Đang tạo...';
-  const action = window._bulkChannel === 'GT' ? 'bulkCreateGTTracker' : 'bulkCreateMTTracker';
-  try {
-    const res = await apiPost({ action, data: { ma_tang_gia: maTangGia, nguoi_tao: 'Bùi Quang Quý' }});
-    closeModal('bulk-tracker-modal');
-    window._bulkChannel = 'MT';
-    if (res.error) { showToast('Lỗi: ' + res.error, 'error'); return; }
-    showToast(`✅ Tạo ${res.created} dòng tracker (bỏ qua ${res.skipped} trùng)`, 'success');
-    if (action === 'bulkCreateGTTracker') loadGTTracker(); else loadTracker();
-  } catch(e) {
-    showToast('Lỗi: ' + e.message, 'error');
-  } finally {
-    btn.disabled = false; btn.textContent = '🚀 Tạo tracker';
-  }
-}
-
-// Khi navigate sang GT tracker, tự load data
-const _origShowPage = showPage;
-function showPage(id, navEl) {
-  _origShowPage(id, navEl);
-  if (id === 'gt-tracker' && !data.gtTracker) loadGTTracker();
-  if (id === 'gt-tracker') populateGTEventSelect();
-}
-function populateGTEventSelect() {
-  const sel = document.getElementById('gt-tracker-event');
-  if (!sel) return;
-  while (sel.options.length > 1) sel.remove(1);
-  const uniqueMap = {};
-  (data.events||[]).forEach(e => { if(e.ma_tang_gia && !uniqueMap[e.ma_tang_gia]) uniqueMap[e.ma_tang_gia] = e; });
-  Object.values(uniqueMap).forEach(e => {
-    const opt = document.createElement('option');
-    opt.value = e.ma_tang_gia;
-    opt.textContent = e.ma_tang_gia + ' — ' + (e.ten_su_kien||'');
-    sel.appendChild(opt);
-  });
+  const t=el('toast'); t.textContent=msg;
+  t.className='toast show'+(type?' '+type:'');
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>t.className='toast',3500);
 }
 </script>
 </body>
