@@ -454,19 +454,22 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
           style="padding:7px 16px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:var(--navy);color:#fff;">
           📋 Tracker
         </button>
+        <button id="dsrc-matrix" onclick="setDistSource('matrix')"
+          style="padding:7px 16px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:#f1f5f9;color:var(--gray);">
+          📊 Matrix
+        </button>
         <button id="dsrc-combined" onclick="setDistSource('combined')"
           style="padding:7px 16px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:#f1f5f9;color:var(--gray);">
-          🔗 Tracker + Survey
-        </button>
-        <button id="dsrc-survey" onclick="setDistSource('survey')"
-          style="padding:7px 16px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:#f1f5f9;color:var(--gray);">
-          📍 Survey only
+          🔗 Tất cả nguồn
         </button>
       </div>
       <select id="dist-filter-kenh" onchange="renderDistribution()" style="width:auto;">
         <option value="">Tất cả kênh</option>
         <option value="MT">MT</option>
         <option value="GT">GT</option>
+      </select>
+      <select id="dist-filter-year" onchange="renderDistribution()" style="width:auto;">
+        <option value="">Tất cả năm</option>
       </select>
       <select id="dist-filter-event" onchange="renderDistribution()" style="width:auto;">
         <option value="">Tất cả đợt tăng giá</option>
@@ -1087,14 +1090,18 @@ const OWN_IDS  = ['AB','AN','DU'];
 // STATE
 // ════════════════════════════════════════
 const D = {
-  master:    null,
-  events:    [],
-  mtTracker: [],
-  gtTracker: [],
-  alerts:    [],
-  surveys:   [],
-  dashboard: null,
-  curEvent:  '',   // currently selected global event filter
+  master:     null,
+  events:     [],
+  mtTracker:  [],
+  gtTracker:  [],
+  alerts:     [],
+  surveys:    [],
+  dashboard:  null,
+  curEvent:   '',
+  // New master tables
+  customers:  [],   // từ sheet Customers
+  brands:     [],   // từ sheet Brands
+  distMatrix: [],   // từ sheet Distribution_Matrix (dạng dọc sau khi unpivot)
 };
 
 
@@ -1902,6 +1909,22 @@ async function loadAll() {
       D.dashboard = r;
       renderDashboardCost(r);
     }).catch(e => console.warn('dashboard:', e.message)),
+
+    // ── New master tables ─────────────────────────────────────
+    apiFetch({ action:'getCustomers' }).then(r => {
+      D.customers = r.customers || r.danh_sach || [];
+    }).catch(e => console.warn('customers:', e.message)),
+
+    apiFetch({ action:'getBrands' }).then(r => {
+      D.brands = r.brands || r.danh_sach || [];
+    }).catch(e => console.warn('brands:', e.message)),
+
+    apiFetch({ action:'getDistributionMatrix' }).then(r => {
+      // Unpivot: mỗi row trong sheet là 1 khách × 1 SKU × n năm cột
+      // Backend trả về dạng dọc hoặc dạng wide — handle cả 2
+      const raw = r.matrix || r.danh_sach || [];
+      D.distMatrix = unpivotDistMatrix(raw);
+    }).catch(e => console.warn('distMatrix:', e.message)),
   ]);
 
   renderDashboard();
@@ -2816,7 +2839,371 @@ function renderGTPage() {
 // DISTRIBUTION PAGE
 // ════════════════════════════════════════
 let _distTab = 'sku';
-let _distSource = 'tracker'; // 'tracker' | 'combined' | 'survey'
+let _distSource = 'tracker'; // 'tracker' | 'matrix' | 'combined'
+
+// Unpivot Distribution_Matrix từ wide (cột năm) → dọc (1 dòng / khách × SKU × năm)
+function unpivotDistMatrix(rows) {
+  const result = [];
+  const YEAR_RE = /^(20\d{2})$/;
+  rows.forEach(row => {
+    const years = Object.keys(row).filter(k => YEAR_RE.test(k));
+    years.forEach(yr => {
+      const val = (row[yr]||'').toString().trim().toUpperCase();
+      if (!val) return; // bỏ ô trống
+      result.push({
+        kenh:            row.kenh || row.Kenh || '',
+        ten_khach_hang:  row.ten_khach_hang || '',
+        ma_khach_hang:   row.ma_khach_hang || row.Ma_khach_hang || '',
+        khu_vuc:         row.khu_vuc || '',
+        ma_san_pham:     row.ma_san_pham || '',
+        ten_sp_en:       row.ten_sp_en || row.Ten_sp_EN || '',
+        nam:             parseInt(yr),
+        trang_thai_dist: val === 'Y' ? 'active' : val, // Y → active
+      });
+    });
+  });
+  return result;
+}
+
+// Helper: lấy thông tin product từ master
+function getProductInfo(maSP, tenSP) {
+  const prods = D.master?.san_pham || [];
+  return prods.find(p => p.ma_san_pham === maSP)
+    || prods.find(p => p.ten_san_pham === tenSP)
+    || null;
+}
+
+function setDistSource(src) {
+  _distSource = src;
+  ['tracker','matrix','combined'].forEach(s => {
+    const btn = el('dsrc-'+s);
+    if (!btn) return;
+    btn.style.background = s===src ? 'var(--navy)' : '#f1f5f9';
+    btn.style.color      = s===src ? '#fff' : 'var(--gray)';
+  });
+  renderDistribution();
+}
+
+function switchDistTab(tab) {
+  _distTab = tab;
+  ['sku','chain','region'].forEach(t => {
+    el('dist-view-'+t).style.display = t===tab ? 'block' : 'none';
+    el('dist-tab-'+t).className      = t===tab ? 'ftab active' : 'ftab';
+  });
+}
+
+async function renderDistribution() {
+  // Populate event filter
+  const evSel = el('dist-filter-event');
+  if (evSel && evSel.options.length <= 1) {
+    const evMap = {};
+    D.events.forEach(e => { if(e.ma_tang_gia&&!evMap[e.ma_tang_gia]) evMap[e.ma_tang_gia]=e.ten_su_kien||e.ma_tang_gia; });
+    Object.entries(evMap).forEach(([ma,ten]) => {
+      const opt = document.createElement('option'); opt.value=ma; opt.textContent=ten; evSel.appendChild(opt);
+    });
+  }
+
+  const kenhFilter = val('dist-filter-kenh');
+  const evFilter   = val('dist-filter-event') || D.curEvent;
+  const yearFilter = parseInt(val('dist-filter-year')||'0') || null;
+
+  // ── Source 1: MT/GT Tracker ──────────────────────────────────
+  const mtList = evFilter ? D.mtTracker.filter(r=>r.ma_tang_gia===evFilter) : D.mtTracker;
+  const gtList = evFilter ? D.gtTracker.filter(r=>r.ma_tang_gia===evFilter) : D.gtTracker;
+
+  // Build chainHasData (same logic as renderMTPage)
+  const chainHasData = {};
+  mtList.forEach(r => {
+    const c = r.ten_khach_hang; if(!c) return;
+    const has = (r.gia_ntd_cam_ket_sau&&r.gia_ntd_cam_ket_sau!=='0')
+             || (r.gia_dgm_moi&&r.gia_dgm_moi!=='0')
+             || (r.ngay_bat_dau_gia_ntd_moi&&r.ngay_bat_dau_gia_ntd_moi!=='');
+    if(!chainHasData[c]) chainHasData[c]=false;
+    if(has) chainHasData[c]=true;
+  });
+
+  // ── Source 2: Distribution Matrix ───────────────────────────
+  let matrixRows = D.distMatrix;
+  if (yearFilter) matrixRows = matrixRows.filter(r=>r.nam===yearFilter);
+  if (kenhFilter) matrixRows = matrixRows.filter(r=>r.kenh===kenhFilter);
+  const activeMatrix = matrixRows.filter(r=>r.trang_thai_dist==='active');
+
+  // ── Build unified skuToChains & chainToSKUs ─────────────────
+  // { sku → { active:Set<chain>, inactive:Set<chain>, sources:Set, years:Set,
+  //           nhom, xuat_xu, trang_thai_product, surveyCount, lastSurvey } }
+  const skuToChains  = {};
+  const chainToSKUs  = {};
+
+  const addEntry = (sku, maSP, chain, kenh, active, source, year, nhom, xuat_xu, prodSt) => {
+    if(!sku||!chain) return;
+    if(!skuToChains[sku]) skuToChains[sku] = {
+      active:new Set(), inactive:new Set(), sources:new Set(), years:new Set(),
+      ma_san_pham:maSP, nhom:nhom||'—', xuat_xu:xuat_xu||'—',
+      trang_thai_product:prodSt||'Active', surveyCount:0, lastSurvey:''
+    };
+    if(active) skuToChains[sku].active.add(chain);
+    else       skuToChains[sku].inactive.add(chain);
+    skuToChains[sku].sources.add(source);
+    if(year) skuToChains[sku].years.add(year);
+
+    const kenhLabel = kenh || (chain.startsWith('GT')?'GT':'MT');
+    if(!chainToSKUs[chain]) chainToSKUs[chain] = { active:new Set(), inactive:new Set(), kenh:kenhLabel, khu_vuc:'', surveyCount:0 };
+    if(active) chainToSKUs[chain].active.add(sku);
+    else       chainToSKUs[chain].inactive.add(sku);
+  };
+
+  // All unique SKUs across all products (active only) for gap analysis
+  const allActiveSKUs = (D.master?.san_pham||[])
+    .filter(p=>p.trang_thai==='Active'&&p.loai_thuong_hieu==='own_brand')
+    .map(p=>p.ten_san_pham||p.ma_san_pham);
+
+  // All customers from Customers sheet
+  const allCustomers = D.customers.filter(c=>!kenhFilter||c.kenh===kenhFilter);
+
+  // Populate from Tracker (if _distSource includes tracker)
+  if (_distSource === 'tracker' || _distSource === 'combined') {
+    if (!kenhFilter||kenhFilter==='MT') {
+      mtList.forEach(r => {
+        const sku = r.ten_san_pham; const chain = r.ten_khach_hang;
+        if(!sku||!chain) return;
+        const hasPD = (r.gia_ntd_cam_ket_sau&&r.gia_ntd_cam_ket_sau!=='0')
+                   || (r.gia_dgm_moi&&r.gia_dgm_moi!=='0')
+                   || (r.ngay_bat_dau_gia_ntd_moi&&r.ngay_bat_dau_gia_ntd_moi!=='');
+        const isActive = hasPD || !chainHasData[chain]; // nếu chain chưa nhập gì = chưa xác định → active
+        const isUnlisted = !hasPD && chainHasData[chain];
+        const prod = getProductInfo(r.ma_san_pham, sku);
+        addEntry(sku, r.ma_san_pham, chain, 'MT', !isUnlisted, 'tracker', null,
+          prod?.nhom_san_pham, prod?.xuat_xu, prod?.trang_thai);
+      });
+    }
+    if (!kenhFilter||kenhFilter==='GT') {
+      gtList.forEach(r => {
+        const sku = r.ten_san_pham; const region = r.gt_region;
+        if(!sku||!region) return;
+        const prod = getProductInfo(r.ma_san_pham, sku);
+        addEntry(sku, r.ma_san_pham, region, 'GT', true, 'tracker', null,
+          prod?.nhom_san_pham, prod?.xuat_xu, prod?.trang_thai);
+      });
+    }
+  }
+
+  // Populate from Distribution Matrix (if _distSource includes matrix)
+  if (_distSource === 'matrix' || _distSource === 'combined') {
+    activeMatrix.forEach(r => {
+      const sku = r.ten_sp_en; const chain = r.ten_khach_hang;
+      const prod = getProductInfo(r.ma_san_pham, sku);
+      // Cross-check with Products: if product discontinued → mark inactive
+      const isActive = !prod || prod.trang_thai === 'Active';
+      addEntry(sku, r.ma_san_pham, chain, r.kenh, isActive, 'matrix', r.nam,
+        prod?.nhom_san_pham, prod?.xuat_xu, prod?.trang_thai);
+      // Update khu_vuc from customers
+      if(chainToSKUs[chain]) {
+        const cust = D.customers.find(c=>c.ten_khach_hang===chain||c.ma_khach_hang===r.ma_khach_hang);
+        if(cust) chainToSKUs[chain].khu_vuc = cust.khu_vuc||'';
+      }
+    });
+  }
+
+  // Populate survey data if combined
+  let surveys = [];
+  if (_distSource === 'combined') {
+    if (!D.surveys||!D.surveys.length) {
+      try { const r2 = await apiFetch({action:'getSurveyList',limit:'500'}); D.surveys=r2.danh_sach||[]; } catch(e) {}
+    }
+    surveys = D.surveys.filter(s=>s.ten_san_pham);
+    if(kenhFilter) surveys = surveys.filter(s=>s.kenh===kenhFilter);
+    surveys.forEach(s => {
+      const sku=s.ten_san_pham||'', chain=s.ten_diem_ban||s.ten_khach_hang||'';
+      const date=s.ngay_survey||'';
+      if(!sku||!chain) return;
+      const prod = getProductInfo('', sku);
+      addEntry(sku,'',chain,s.kenh,true,'survey',null,prod?.nhom_san_pham,prod?.xuat_xu,prod?.trang_thai);
+      if(skuToChains[sku]) {
+        skuToChains[sku].surveyCount++;
+        if(date>skuToChains[sku].lastSurvey) skuToChains[sku].lastSurvey=date;
+      }
+      if(chainToSKUs[chain]) chainToSKUs[chain].surveyCount++;
+    });
+  }
+
+  // ── Gap analysis: add inactive entries cho SKUs chưa listing ─
+  // Với mỗi active SKU × mỗi active customer → nếu chưa có trong active → mark inactive gap
+  if (Object.keys(skuToChains).length && allCustomers.length) {
+    allActiveSKUs.forEach(sku => {
+      if(!skuToChains[sku]) return;
+      allCustomers.forEach(cust => {
+        const chain = cust.ten_khach_hang;
+        const inActive   = skuToChains[sku].active.has(chain);
+        const inInactive = skuToChains[sku].inactive.has(chain);
+        if(!inActive&&!inInactive) skuToChains[sku].inactive.add(chain); // gap
+        if(chainToSKUs[chain] && !inActive&&!inInactive) chainToSKUs[chain].inactive.add(sku);
+      });
+    });
+  }
+
+  // ── KPI ──────────────────────────────────────────────────────
+  const totalSKUs    = Object.keys(skuToChains).length;
+  const totalChains  = Object.keys(chainToSKUs).length;
+  let   totalGaps    = 0;
+  Object.values(skuToChains).forEach(d => totalGaps += d.inactive.size);
+  const matrixYears  = [...new Set(D.distMatrix.map(r=>r.nam))].filter(Boolean).sort();
+  const latestYear   = matrixYears[matrixYears.length-1]||new Date().getFullYear();
+
+  el('dist-kpi-skus').textContent       = totalSKUs;
+  el('dist-kpi-skus-sub').textContent   = 'SKU đang theo dõi';
+  el('dist-kpi-chains').textContent     = totalChains;
+  el('dist-kpi-chains-sub').textContent = `${allCustomers.length} khách hàng active`;
+  el('dist-kpi-not-listed').textContent = totalGaps;
+  el('dist-kpi-not-sub').textContent    = 'cơ hội listing';
+  el('dist-kpi-surveys').textContent    = surveys.length || (D.distMatrix.length ? D.distMatrix.length : '—');
+  el('dist-kpi-surveys-sub').textContent= D.distMatrix.length
+    ? `${matrixYears[0]||''}–${latestYear} · ${D.distMatrix.length} records`
+    : 'bật Combined để xem survey';
+
+  // Info bar
+  const srcLabels = {
+    tracker:  '📋 Tracker — dữ liệu từ MT/GT Price Tracker đợt tăng giá đang chọn.',
+    matrix:   '📊 Distribution Matrix — lịch sử kinh doanh theo năm từ sheet Distribution_Matrix.',
+    combined: '🔗 Tracker + Matrix + Survey — kết hợp toàn bộ nguồn dữ liệu.'
+  };
+  el('dist-info-bar').textContent = srcLabels[_distSource] + (totalGaps>0?` ${totalGaps} slot trống = cơ hội listing.`:'');
+
+  // Year filter populate
+  const yrSel = el('dist-filter-year');
+  if (yrSel && matrixYears.length && yrSel.options.length <= 1) {
+    matrixYears.forEach(y => {
+      const o=document.createElement('option'); o.value=y; o.textContent=y; yrSel.appendChild(o);
+    });
+  }
+
+  // Render tabs
+  renderDistSKU(skuToChains, chainToSKUs);
+  renderDistChain(chainToSKUs, skuToChains);
+  renderDistRegion(
+    Object.fromEntries(Object.entries(skuToChains).map(([sku,d])=>([sku,{
+      North:  new Set([...d.active].filter(c=>c.includes('North')||(chainToSKUs[c]?.khu_vuc||'').includes('North'))),
+      South:  new Set([...d.active].filter(c=>c.includes('South')||(chainToSKUs[c]?.khu_vuc||'').includes('South'))),
+      Central:new Set([...d.active].filter(c=>c.includes('Central')||(chainToSKUs[c]?.khu_vuc||'').includes('Central'))),
+    }]))),
+    surveys, gtList
+  );
+}
+
+function renderDistSKU(skuToChains, chainToSKUs) {
+  const rows = Object.entries(skuToChains).sort((a,b)=>b[1].active.size-a[1].active.size);
+  const maxActive = rows.length ? rows[0][1].active.size : 1;
+  const totalChains = Object.keys(chainToSKUs).length||1;
+
+  el('dist-sku-count').textContent = rows.length+' SKU';
+
+  // Group by nhom_san_pham for the bar chart
+  const nhomColors = {
+    'Sardine':'#3b82f6','Tuna':'#06b6d4','Mackerel':'#8b5cf6',
+    'Coconut':'#10b981','Beans & Peas':'#f59e0b','Tomato':'#ef4444',
+    'Alce Nero':'#84cc16','Asian Sauce':'#f97316','Corn':'#eab308',
+    'Yumeat':'#6366f1','Bonduelle':'#14b8a6'
+  };
+
+  el('dist-sku-bars').innerHTML = rows.map(([sku,d]) => {
+    const pct   = Math.round(d.active.size/Math.max(maxActive,1)*100);
+    const color = nhomColors[d.nhom]||'var(--navy)';
+    const gapPct= Math.round(d.inactive.size/totalChains*100);
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+      <div style="width:190px;font-size:11px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${sku}">${sku}</div>
+      <div style="flex:1;background:var(--light);border-radius:3px;height:14px;overflow:hidden;position:relative;">
+        <div style="width:${pct}%;height:100%;background:${color};border-radius:3px;"></div>
+        ${d.inactive.size>0?`<div style="position:absolute;left:${pct}%;top:0;width:${gapPct}%;height:100%;background:rgba(245,158,11,0.2);"></div>`:''}
+      </div>
+      <div style="width:30px;font-size:11px;font-weight:700;color:${color};text-align:right;">${d.active.size}</div>
+      ${d.inactive.size>0?`<div style="width:55px;font-size:10px;color:#f59e0b;">+${d.inactive.size} gap</div>`:'<div style="width:55px;"></div>'}
+      <div style="width:70px;">
+        ${d.xuat_xu?`<span style="font-size:9px;background:#f1f5f9;border-radius:3px;padding:1px 5px;color:var(--gray);">${d.xuat_xu}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Legend
+  const nhoms = [...new Set(rows.map(([,d])=>d.nhom).filter(Boolean))];
+  el('dist-sku-bars').insertAdjacentHTML('afterbegin',
+    `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+      ${nhoms.map(n=>`<span style="font-size:10px;display:flex;align-items:center;gap:3px;">
+        <span style="width:10px;height:10px;background:${nhomColors[n]||'var(--navy)'};border-radius:2px;display:inline-block;"></span>${n}
+      </span>`).join('')}
+    </div>`
+  );
+
+  el('dist-sku-tbody').innerHTML = rows.map(([sku,d]) => {
+    const activeList   = [...d.active].sort().join(', ')||'—';
+    const inactiveList = [...d.inactive].sort().join(', ')||'—';
+    const activeColor  = d.active.size===maxActive?'var(--green)':d.active.size===0?'var(--red)':'var(--navy)';
+    const srcBadges    = [...d.sources].map(s=>s==='tracker'?'<span style="font-size:9px;background:#dbeafe;color:#1d4ed8;border-radius:3px;padding:1px 4px;">Tracker</span>'
+      :s==='matrix'?'<span style="font-size:9px;background:#dcfce7;color:#166534;border-radius:3px;padding:1px 4px;">Matrix</span>'
+      :'<span style="font-size:9px;background:#fef9c3;color:#854d0e;border-radius:3px;padding:1px 4px;">Survey</span>').join(' ');
+    const prodSt = d.trang_thai_product;
+    const stBadge = prodSt==='Discontinued'?'<span class="badge b-err" style="font-size:9px;">Discontinued</span>':'';
+    return `<tr>
+      <td>
+        <strong style="font-size:12px;">${sku}</strong> ${stBadge}<br>
+        <span style="font-size:10px;color:var(--gray);">${d.nhom||'—'} · ${d.xuat_xu||'—'} · ${d.ma_san_pham||'—'}</span><br>
+        <span style="font-size:9px;">${srcBadges}</span>
+      </td>
+      <td style="text-align:center;font-size:20px;font-weight:700;color:${activeColor};">${d.active.size}</td>
+      <td style="font-size:10px;color:var(--gray);max-width:180px;">${activeList}</td>
+      <td style="font-size:10px;color:#f59e0b;max-width:140px;">${d.inactive.size>0?inactiveList:'<span style="color:#d1d5db;">Không có gap</span>'}</td>
+      <td style="text-align:center;">${d.surveyCount>0?`<span style="color:var(--green);font-size:11px;">✅ ${d.surveyCount}</span>`:'<span style="color:#d1d5db;">—</span>'}</td>
+      <td style="font-size:11px;">${d.lastSurvey?fmtDate(d.lastSurvey):'—'}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:20px;">Chưa có data — chọn nguồn dữ liệu bên trên</td></tr>';
+}
+
+function renderDistChain(chainToSKUs, skuToChains) {
+  const rows = Object.entries(chainToSKUs).sort((a,b)=>b[1].active.size-a[1].active.size);
+  const maxSKU    = rows.length?rows[0][1].active.size:1;
+  const totalSKUs = Object.keys(skuToChains).length||1;
+
+  el('dist-chain-count').textContent = rows.length+' hệ thống';
+
+  el('dist-chain-bars').innerHTML = rows.map(([chain,d]) => {
+    const pct   = Math.round(d.active.size/Math.max(maxSKU,1)*100);
+    const color = d.active.size===maxSKU?'var(--green)':d.active.size<=2?'var(--orange)':'var(--navy)';
+    const icon  = d.kenh==='MT'?'🏬':'🛒';
+    const gapPct= Math.round(d.inactive.size/totalSKUs*100);
+    const cust  = D.customers.find(c=>c.ten_khach_hang===chain);
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+      <div style="width:190px;font-size:11px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${icon} ${chain}</div>
+      <div style="flex:1;background:var(--light);border-radius:3px;height:14px;overflow:hidden;position:relative;">
+        <div style="width:${pct}%;height:100%;background:${color};border-radius:3px;"></div>
+        ${d.inactive.size>0?`<div style="position:absolute;left:${pct}%;top:0;width:${gapPct}%;height:100%;background:rgba(245,158,11,0.2);"></div>`:''}
+      </div>
+      <div style="width:30px;font-size:11px;font-weight:700;color:${color};text-align:right;">${d.active.size}</div>
+      ${d.inactive.size>0?`<div style="width:55px;font-size:10px;color:#f59e0b;">+${d.inactive.size} gap</div>`:'<div style="width:55px;"></div>'}
+      <div style="width:80px;font-size:9px;color:var(--gray);">${cust?.tier||''}</div>
+    </div>`;
+  }).join('');
+
+  el('dist-chain-tbody').innerHTML = rows.map(([chain,d]) => {
+    const skuList  = [...d.active].sort().join(', ')||'—';
+    const gapList  = [...d.inactive].sort().join(', ')||'—';
+    const cust     = D.customers.find(c=>c.ten_khach_hang===chain);
+    const kenhBadge= d.kenh==='MT'?'<span class="badge b-mt">MT</span>':'<span class="badge b-gt">GT</span>';
+    const tierBadge= cust?.tier==='Key Account'?'<span style="font-size:9px;background:#fef3c7;color:#92400e;border-radius:3px;padding:1px 5px;">Key Account</span>':'';
+    const skuColor = d.active.size===maxSKU?'var(--green)':d.active.size<=2?'var(--orange)':'var(--navy)';
+    return `<tr>
+      <td>
+        <strong>${chain}</strong> ${tierBadge}<br>
+        ${kenhBadge} ${cust?.format?`<span style="font-size:10px;color:var(--gray);">${cust.format}</span>`:''}
+        ${cust?.khu_vuc?`<span style="font-size:10px;color:var(--gray);"> · ${cust.khu_vuc}</span>`:''}
+      </td>
+      <td>${kenhBadge}</td>
+      <td style="text-align:center;font-size:20px;font-weight:700;color:${skuColor};">${d.active.size}</td>
+      <td style="font-size:10px;color:var(--gray);max-width:200px;">${skuList}</td>
+      <td style="text-align:center;">${d.inactive.size>0
+        ?`<details style="cursor:pointer;"><summary style="color:#f59e0b;font-weight:600;font-size:11px;">${d.inactive.size} SKU gap</summary><div style="font-size:9px;color:var(--gray);margin-top:4px;">${gapList}</div></details>`
+        :'<span style="color:var(--green);">✅ full</span>'}</td>
+      <td style="text-align:center;">${d.surveyCount>0?`<span style="color:var(--green);">✅ ${d.surveyCount}</span>`:'<span style="color:#d1d5db;">—</span>'}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:20px;">Chưa có data</td></tr>';
+}
 
 function setDistSource(src) {
   _distSource = src;
