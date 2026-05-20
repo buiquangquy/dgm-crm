@@ -193,7 +193,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
 
   <div class="nav-section">
     <div class="nav-label">Phân tích giá</div>
-    <div class="nav-item active" onclick="nav('dashboard',this)"><span class="nav-icon">📊</span><span id="nav-dashboard">Tổng quan</span></div>
+    <div class="nav-item" onclick="nav('dashboard',this)"><span class="nav-icon">📊</span><span id="nav-dashboard">Tổng quan</span></div>
+    <div class="nav-item" onclick="nav('distribution',this)"><span class="nav-icon">🗂️</span><span id="nav-distribution">Distribution</span></div>
     <div class="nav-item" onclick="nav('mt',this)"><span class="nav-icon">🏬</span><span id="nav-mt">MT — Pass-through</span></div>
     <div class="nav-item" onclick="nav('gt',this)"><span class="nav-icon">🛒</span><span id="nav-gt">GT — Pass-through</span></div>
     <div class="nav-item" onclick="nav('drift',this)"><span class="nav-icon">📡</span><span id="nav-drift">Drift & Biến động</span><span class="nav-badge" id="drift-badge">0</span></div>
@@ -439,6 +440,110 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
     <div style="display:none;">
       <span id="cost-avg"></span>
     </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       PAGE 1B: DISTRIBUTION — Phủ mã & hiện diện kênh
+  ══════════════════════════════════════════════════════════ -->
+  <div class="page" id="page-distribution">
+
+    <!-- Filter row -->
+    <div class="filter-row" style="margin-bottom:16px;">
+      <button class="ftab active" id="dist-tab-sku" onclick="switchDistTab('sku')">📦 SKU → Hệ thống</button>
+      <button class="ftab" id="dist-tab-chain" onclick="switchDistTab('chain')">🏪 Hệ thống → SKU</button>
+      <button class="ftab" id="dist-tab-region" onclick="switchDistTab('region')">🗺️ GT theo vùng</button>
+      <select id="dist-filter-kenh" onchange="renderDistribution()" style="width:auto;margin-left:8px;">
+        <option value="">Tất cả kênh</option>
+        <option value="MT">MT</option>
+        <option value="GT">GT</option>
+      </select>
+      <select id="dist-filter-brand" onchange="renderDistribution()" style="width:auto;">
+        <option value="">Tất cả thương hiệu</option>
+        <option value="own_brand">Ayam Brand</option>
+        <option value="competitor">Đối thủ</option>
+      </select>
+    </div>
+
+    <div class="hint" style="margin-bottom:14px;">
+      💡 Dữ liệu từ <strong>Survey thực tế</strong> của team Sales — mỗi lần survey 1 mã tại 1 điểm bán = xác nhận mã đó đang kinh doanh tại hệ thống đó. Càng nhiều survey → độ chính xác càng cao.
+    </div>
+
+    <!-- KPI summary row -->
+    <div class="kpi-row cols-4" id="dist-kpi-row" style="margin-bottom:18px;">
+      <div class="kpi blue"><div class="kpi-val" id="dist-kpi-skus">—</div><div class="kpi-label">SKU được survey</div><div class="kpi-sub" id="dist-kpi-skus-sub"></div></div>
+      <div class="kpi green"><div class="kpi-val" id="dist-kpi-chains">—</div><div class="kpi-label">Hệ thống được survey</div><div class="kpi-sub" id="dist-kpi-chains-sub"></div></div>
+      <div class="kpi"><div class="kpi-val" id="dist-kpi-surveys">—</div><div class="kpi-label">Tổng lần survey</div><div class="kpi-sub" id="dist-kpi-surveys-sub"></div></div>
+      <div class="kpi orange"><div class="kpi-val" id="dist-kpi-last">—</div><div class="kpi-label">Survey gần nhất</div><div class="kpi-sub" id="dist-kpi-last-sub"></div></div>
+    </div>
+
+    <!-- TAB 1: SKU → bao nhiêu hệ thống đang bán -->
+    <div id="dist-view-sku">
+      <div class="card">
+        <div class="card-title">📦 Mỗi SKU đang có mặt tại bao nhiêu hệ thống?
+          <div class="ct-right"><span id="dist-sku-count" style="font-size:12px;color:var(--gray);"></span></div>
+        </div>
+        <!-- Visual bar chart -->
+        <div id="dist-sku-bars" style="margin-bottom:16px;"></div>
+        <!-- Detail table -->
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>SKU</th>
+              <th>Thương hiệu</th>
+              <th style="text-align:center;">Số hệ thống</th>
+              <th>Hệ thống đang KD</th>
+              <th style="text-align:center;">Lần survey</th>
+              <th>Survey gần nhất</th>
+            </tr></thead>
+            <tbody id="dist-sku-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: Chain → bao nhiêu SKU đang bán -->
+    <div id="dist-view-chain" style="display:none;">
+      <div class="card">
+        <div class="card-title">🏪 Mỗi hệ thống đang kinh doanh bao nhiêu SKU?
+          <div class="ct-right"><span id="dist-chain-count" style="font-size:12px;color:var(--gray);"></span></div>
+        </div>
+        <div id="dist-chain-bars" style="margin-bottom:16px;"></div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>Hệ thống / Kênh</th>
+              <th style="text-align:center;">Số SKU</th>
+              <th>Danh sách SKU đang KD</th>
+              <th style="text-align:center;">Lần survey</th>
+              <th>Survey gần nhất</th>
+            </tr></thead>
+            <tbody id="dist-chain-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: GT theo vùng -->
+    <div id="dist-view-region" style="display:none;">
+      <div class="grid3" id="dist-region-cards" style="margin-bottom:18px;"></div>
+      <div class="card">
+        <div class="card-title">🗺️ So sánh phủ mã theo vùng GT — SKU nào có mặt ở cả 3 vùng?</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>SKU</th>
+              <th style="text-align:center;">🔵 North</th>
+              <th style="text-align:center;">🔴 South</th>
+              <th style="text-align:center;">🟡 Central</th>
+              <th style="text-align:center;">Tổng vùng</th>
+              <th>Đánh giá</th>
+            </tr></thead>
+            <tbody id="dist-region-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- ══════════════════════════════════════════════════════════
@@ -979,6 +1084,7 @@ const LANG = {
     nav_masterdata:  'Master Data',
     // Page titles
     title_dashboard: 'Tổng quan — Tác động tăng giá',
+    title_distribution: 'Distribution — Phủ mã & Hiện diện kênh',
     title_mt:        'MT — Pass-through & Lan truyền giá',
     title_gt:        'GT — Pass-through 3 tầng',
     title_drift:     'Drift & Biến động giá',
@@ -1110,6 +1216,7 @@ const LANG = {
     nav_masterdata:  'Master Data',
     // Page titles
     title_dashboard: 'Overview — Price Increase Impact',
+    title_distribution: 'Distribution — SKU Coverage & Channel Presence',
     title_mt:        'MT — Pass-through & Price Propagation',
     title_gt:        'GT — 3-tier Pass-through',
     title_drift:     'Drift & Price Changes',
@@ -1513,10 +1620,10 @@ function renderTimelineMT(mtList, activeEvId) {
     return `<tr>
       <td><strong>${r.ten_khach_hang||'—'}</strong><br><span style="font-size:10px;color:var(--gray);">${r.format_mt||''}</span></td>
       <td style="font-size:12px;">${r.ten_san_pham||'—'}</td>
-      <td style="font-size:12px;font-weight:600;color:var(--navy);">${ngayDGM||na}</td>
+      <td style="font-size:12px;font-weight:600;color:var(--navy);">${fmtDate(ngayDGM)||na}</td>
       <td style="font-size:11px;">${!isNaN(dgmT)&&dgmT>0?fmt(dgmT):na} → ${!isNaN(dgmS)&&dgmS>0?fmt(dgmS):na}</td>
       <td>${dgmPct!==null?`<span style="font-weight:700;color:var(--navy);">+${dgmPct}%</span>`:na}</td>
-      <td style="font-size:12px;font-weight:600;color:${ngayKH?'var(--green)':'var(--gray)'};">${ngayKH||'<span style="color:#9ca3af;">Chưa có</span>'}</td>
+      <td style="font-size:12px;font-weight:600;color:${ngayKH?'var(--green)':'var(--gray)'};">${ngayKH?fmtDate(ngayKH):'<span style="color:#9ca3af;">Chưa có</span>'}</td>
       <td style="text-align:center;">${lagDisp}</td>
       <td style="font-size:11px;">${!isNaN(ntdT)&&ntdT>0?fmt(ntdT):na} → ${!isNaN(ntdS)&&ntdS>0?fmt(ntdS):na}</td>
       <td>${ntdPct!==null?`<span style="font-weight:700;color:${parseFloat(ntdPct)>=parseFloat(dgmPct||0)-0.5?'var(--green)':'var(--orange)'};">+${ntdPct}%</span>`:na}</td>
@@ -1670,7 +1777,7 @@ function renderTimelineGT(gtList, activeEvId) {
     return `<tr>
       <td>${icon} <strong>${(r.gt_region||'—').replace('GT ','')}</strong><br><span style="font-size:10px;color:var(--gray);">${r.ten_agent||'—'}</span></td>
       <td style="font-size:11px;">${r.ten_san_pham||'—'}</td>
-      <td style="font-size:11px;font-weight:600;color:var(--navy);">${ngayDGMRow||na}</td>
+      <td style="font-size:11px;font-weight:600;color:var(--navy);">${fmtDate(ngayDGMRow)||na}</td>
       <td>${tierCell(dT,dS,dgmPct,null)}</td>
       <td>${tierCell(aT,aS,aoPct,dgmPct)}</td>
       <td>${tierCell(nT,nS,ntdPct,dgmPct)}</td>
@@ -1796,7 +1903,7 @@ function renderDashboard() {
     const channels = [...new Set(evSKUs.map(e=>e.kenh).filter(Boolean))];
     el('dash-ev-meta').textContent =
       'Mã: ' + (curEv.ma_tang_gia||'—') +
-      ' · Ngày DGM: ' + (curEv.ngay_dgm_ap_dung||'—') +
+      ' · Ngày DGM: ' + fmtDate(curEv.ngay_dgm_ap_dung||'—') +
       ' · ' + evSKUs.length + ' SKU trong đợt';
 
     // Tags: kênh & lý do
@@ -2440,14 +2547,14 @@ function renderMTPage() {
         const lagD = Math.round((new Date(ngayAD) - new Date(r.ngay_dgm_ap_dung)) / 86400000);
         if (!isNaN(lagD)) {
           const lagColor = lagD <= 7 ? 'var(--green)' : lagD <= 21 ? 'var(--orange)' : 'var(--red)';
-          lagDisp = `<span style="font-size:11px;font-weight:600;">${ngayAD}</span><br><span style="font-size:10px;color:${lagColor};">lag: ${lagD} ngày</span>`;
-        } else { lagDisp = `<span style="font-size:11px;">${ngayAD}</span>`; }
-      } else { lagDisp = `<span style="font-size:11px;">${ngayAD}</span>`; }
+          lagDisp = `<span style="font-size:11px;font-weight:600;">${fmtDate(ngayAD)}</span><br><span style="font-size:10px;color:${lagColor};">lag: ${lagD} ngày</span>`;
+        } else { lagDisp = `<span style="font-size:11px;">${fmtDate(ngayAD)}</span>`; }
+      } else { lagDisp = `<span style="font-size:11px;">${fmtDate(ngayAD)}</span>`; }
     }
 
     // ── Survey NTD ──
     const survey = r.gia_ntd_moi_nhat
-      ? fmt(r.gia_ntd_moi_nhat) + '<br><span style="font-size:10px;color:#9ca3af;">' + (r.ngay_survey_moi_nhat||'') + ' (' + (r.so_lan_survey_xac_nhan||0) + 'x)</span>'
+      ? fmt(r.gia_ntd_moi_nhat) + '<br><span style="font-size:10px;color:#9ca3af;">' + fmtDate(r.ngay_survey_moi_nhat||'') + ' (' + (r.so_lan_survey_xac_nhan||0) + 'x)</span>'
       : na;
 
     // ── Phân tích tự động ──
@@ -2676,6 +2783,249 @@ function renderGTPage() {
 }
 
 // ════════════════════════════════════════
+// ════════════════════════════════════════
+// DISTRIBUTION PAGE
+// ════════════════════════════════════════
+let _distTab = 'sku';
+
+function switchDistTab(tab) {
+  _distTab = tab;
+  ['sku','chain','region'].forEach(t => {
+    el('dist-view-'+t).style.display  = t===tab ? 'block' : 'none';
+    el('dist-tab-'+t).className       = t===tab ? 'ftab active' : 'ftab';
+  });
+}
+
+async function renderDistribution() {
+  // Load survey data nếu chưa có
+  if (!D.surveys || !D.surveys.length) {
+    try {
+      const r = await apiFetch({ action:'getSurveyList', limit:'500' });
+      D.surveys = r.danh_sach || [];
+    } catch(e) {
+      ['dist-sku-tbody','dist-chain-tbody','dist-region-tbody'].forEach(id => {
+        const el2 = el(id); if(el2) el2.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--red);">Lỗi tải survey: ${e.message}</td></tr>`;
+      });
+      return;
+    }
+  }
+
+  const kenhFilter  = val('dist-filter-kenh');
+  const brandFilter = val('dist-filter-brand');
+
+  // Lọc chỉ Ayam Brand (own_brand) survey hoặc theo filter
+  let surveys = D.surveys.filter(s => s.ten_san_pham); // có tên SP
+  if (kenhFilter)  surveys = surveys.filter(s => s.kenh === kenhFilter);
+  if (brandFilter) surveys = surveys.filter(s => s.phan_loai === brandFilter);
+
+  if (!surveys.length) {
+    const msg = '<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:24px;">Chưa có dữ liệu survey — team Sales cần thực hiện survey thực tế</td></tr>';
+    ['dist-sku-tbody','dist-chain-tbody','dist-region-tbody'].forEach(id => {
+      const el2 = el(id); if(el2) el2.innerHTML = msg;
+    });
+    el('dist-kpi-skus').textContent = '0';
+    el('dist-kpi-chains').textContent = '0';
+    el('dist-kpi-surveys').textContent = '0';
+    el('dist-kpi-last').textContent = '—';
+    return;
+  }
+
+  // ── KPI ──────────────────────────────
+  const uniqueSKUs   = new Set(surveys.map(s=>s.ten_san_pham)).size;
+  const uniqueChains = new Set(surveys.map(s=>s.ten_diem_ban||s.ten_khach_hang)).size;
+  const allDates     = surveys.map(s=>s.ngay_survey).filter(Boolean).sort();
+  const lastDate     = allDates[allDates.length-1] || '';
+  const firstDate    = allDates[0] || '';
+
+  el('dist-kpi-skus').textContent      = uniqueSKUs;
+  el('dist-kpi-skus-sub').textContent  = 'mã được khảo sát';
+  el('dist-kpi-chains').textContent    = uniqueChains;
+  el('dist-kpi-chains-sub').textContent= 'hệ thống / điểm bán';
+  el('dist-kpi-surveys').textContent   = surveys.length;
+  el('dist-kpi-surveys-sub').textContent= firstDate ? 'từ ' + fmtDate(firstDate) : '';
+  el('dist-kpi-last').textContent      = lastDate ? fmtDate(lastDate) : '—';
+  el('dist-kpi-last-sub').textContent  = lastDate ? 'ngày survey gần nhất' : 'Chưa có survey';
+
+  // ── Build lookup: SKU → set of chains; chain → set of SKUs ──
+  // Key: tên điểm bán (MT: ten_khach_hang / ten_diem_ban, GT: ten_diem_ban)
+  const skuToChains  = {}; // ten_san_pham → { chains: Set, surveys: [], lastDate }
+  const chainToSKUs  = {}; // ten_diem_ban/chain → { skus: Set, kenh, surveys: [], lastDate }
+  const skuToRegions = {}; // ten_san_pham → { North: Set, South: Set, Central: Set }
+
+  surveys.forEach(s => {
+    const sku    = s.ten_san_pham || '';
+    const chain  = s.ten_diem_ban || s.ten_khach_hang || '';
+    const kenh   = s.kenh || '';
+    const region = s.gt_region || s.khu_vuc || '';
+    const date   = s.ngay_survey || '';
+    const brand  = s.phan_loai || '';
+
+    if (!sku || !chain) return;
+
+    // SKU → chains
+    if (!skuToChains[sku]) skuToChains[sku] = { chains: new Set(), surveys: 0, lastDate: '', brand };
+    skuToChains[sku].chains.add(chain);
+    skuToChains[sku].surveys++;
+    if (date > skuToChains[sku].lastDate) skuToChains[sku].lastDate = date;
+
+    // chain → SKUs
+    if (!chainToSKUs[chain]) chainToSKUs[chain] = { skus: new Set(), kenh, surveys: 0, lastDate: '' };
+    chainToSKUs[chain].skus.add(sku);
+    chainToSKUs[chain].surveys++;
+    if (date > chainToSKUs[chain].lastDate) chainToSKUs[chain].lastDate = date;
+
+    // SKU → GT regions
+    if (kenh === 'GT' && region) {
+      if (!skuToRegions[sku]) skuToRegions[sku] = { North: new Set(), South: new Set(), Central: new Set() };
+      const reg = region.includes('North') ? 'North' : region.includes('South') ? 'South' : region.includes('Central') ? 'Central' : null;
+      if (reg) skuToRegions[sku][reg].add(chain);
+    }
+  });
+
+  // Render tất cả tabs
+  renderDistSKU(skuToChains);
+  renderDistChain(chainToSKUs);
+  renderDistRegion(skuToRegions, surveys);
+}
+
+function renderDistSKU(skuToChains) {
+  const rows = Object.entries(skuToChains).sort((a,b) => b[1].chains.size - a[1].chains.size);
+  const maxChains = rows.length ? rows[0][1].chains.size : 1;
+
+  el('dist-sku-count').textContent = rows.length + ' SKU';
+
+  // Bar chart
+  el('dist-sku-bars').innerHTML = rows.map(([sku, d]) => {
+    const pct = Math.round(d.chains.size / maxChains * 100);
+    const color = d.chains.size === maxChains ? 'var(--green)' : d.chains.size <= 1 ? 'var(--red)' : 'var(--navy)';
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+      <div style="width:160px;font-size:12px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${sku}">${sku}</div>
+      <div style="flex:1;background:var(--light);border-radius:4px;height:18px;overflow:hidden;">
+        <div style="width:${pct}%;height:100%;background:${color};border-radius:4px;transition:width 0.3s;"></div>
+      </div>
+      <div style="width:80px;font-size:12px;font-weight:700;color:${color};">${d.chains.size} hệ thống</div>
+    </div>`;
+  }).join('');
+
+  // Table
+  el('dist-sku-tbody').innerHTML = rows.map(([sku, d]) => {
+    const chainList = [...d.chains].sort().join(', ');
+    const brand = d.brand === 'own_brand' ? '<span class="badge b-own">Ayam Brand</span>' : '<span class="badge b-comp">Đối thủ</span>';
+    const distColor = d.chains.size === maxChains ? 'var(--green)' : d.chains.size <= 1 ? 'var(--red)' : 'var(--navy)';
+    return `<tr>
+      <td><strong>${sku}</strong></td>
+      <td>${brand}</td>
+      <td style="text-align:center;font-size:18px;font-weight:700;color:${distColor};">${d.chains.size}</td>
+      <td style="font-size:11px;color:var(--gray);">${chainList}</td>
+      <td style="text-align:center;">${d.surveys}</td>
+      <td style="font-size:12px;">${fmtDate(d.lastDate)||'—'}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:20px;">Không có dữ liệu</td></tr>';
+}
+
+function renderDistChain(chainToSKUs) {
+  const rows = Object.entries(chainToSKUs).sort((a,b) => b[1].skus.size - a[1].skus.size);
+  const maxSKUs = rows.length ? rows[0][1].skus.size : 1;
+
+  el('dist-chain-count').textContent = rows.length + ' hệ thống';
+
+  // Bar chart
+  el('dist-chain-bars').innerHTML = rows.map(([chain, d]) => {
+    const pct = Math.round(d.skus.size / maxSKUs * 100);
+    const color = d.skus.size === maxSKUs ? 'var(--green)' : d.skus.size <= 1 ? 'var(--orange)' : 'var(--navy)';
+    const kenhBadge = d.kenh === 'MT' ? '🏬' : '🛒';
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+      <div style="width:160px;font-size:12px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${chain}">${kenhBadge} ${chain}</div>
+      <div style="flex:1;background:var(--light);border-radius:4px;height:18px;overflow:hidden;">
+        <div style="width:${pct}%;height:100%;background:${color};border-radius:4px;transition:width 0.3s;"></div>
+      </div>
+      <div style="width:60px;font-size:12px;font-weight:700;color:${color};">${d.skus.size} SKU</div>
+    </div>`;
+  }).join('');
+
+  // Table
+  el('dist-chain-tbody').innerHTML = rows.map(([chain, d]) => {
+    const skuList = [...d.skus].sort().join(', ');
+    const kenhBadge = d.kenh === 'MT'
+      ? '<span class="badge b-mt">MT</span>'
+      : '<span class="badge b-gt">GT</span>';
+    const skuColor = d.skus.size === maxSKUs ? 'var(--green)' : d.skus.size <= 1 ? 'var(--orange)' : 'var(--navy)';
+    return `<tr>
+      <td><strong>${chain}</strong><br>${kenhBadge}</td>
+      <td style="text-align:center;font-size:18px;font-weight:700;color:${skuColor};">${d.skus.size}</td>
+      <td style="font-size:11px;color:var(--gray);">${skuList}</td>
+      <td style="text-align:center;">${d.surveys}</td>
+      <td style="font-size:12px;">${fmtDate(d.lastDate)||'—'}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:20px;">Không có dữ liệu</td></tr>';
+}
+
+function renderDistRegion(skuToRegions, surveys) {
+  // Region summary cards
+  const regions = ['North','South','Central'];
+  const icons   = { North:'🔵', South:'🔴', Central:'🟡' };
+  const regStats = {};
+  regions.forEach(reg => {
+    const regSurveys = surveys.filter(s => {
+      const r = s.gt_region || s.khu_vuc || '';
+      return r.includes(reg) && s.kenh === 'GT';
+    });
+    const skus   = new Set(regSurveys.map(s=>s.ten_san_pham).filter(Boolean));
+    const chains = new Set(regSurveys.map(s=>s.ten_diem_ban||s.ten_khach_hang).filter(Boolean));
+    regStats[reg] = { skus: skus.size, chains: chains.size, total: regSurveys.length };
+  });
+
+  el('dist-region-cards').innerHTML = regions.map(reg => {
+    const s = regStats[reg];
+    return `<div class="kpi">
+      <div style="font-size:20px;margin-bottom:6px;">${icons[reg]} GT ${reg}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+        <div style="text-align:center;background:var(--light);border-radius:6px;padding:8px;">
+          <div style="font-size:20px;font-weight:700;color:var(--navy);">${s.skus}</div>
+          <div style="font-size:10px;color:var(--gray);">SKU</div>
+        </div>
+        <div style="text-align:center;background:var(--light);border-radius:6px;padding:8px;">
+          <div style="font-size:20px;font-weight:700;color:var(--blue);">${s.chains}</div>
+          <div style="font-size:10px;color:var(--gray);">Điểm bán</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--gray);margin-top:6px;text-align:center;">${s.total} lần survey</div>
+    </div>`;
+  }).join('');
+
+  // Cross-region SKU table
+  const allGTSKUs = [...new Set(Object.keys(skuToRegions))].sort();
+  if (!allGTSKUs.length) {
+    el('dist-region-tbody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:20px;">Chưa có survey GT</td></tr>';
+    return;
+  }
+
+  el('dist-region-tbody').innerHTML = allGTSKUs.map(sku => {
+    const d = skuToRegions[sku] || { North: new Set(), South: new Set(), Central: new Set() };
+    const hasN = d.North.size  > 0;
+    const hasS = d.South.size  > 0;
+    const hasC = d.Central.size > 0;
+    const total = [hasN,hasS,hasC].filter(Boolean).length;
+    const cellStyle = (has, count) => has
+      ? `<span style="color:var(--green);font-weight:700;">✅ ${count} điểm</span>`
+      : `<span style="color:#d1d5db;">—</span>`;
+    const totalColor = total === 3 ? 'var(--green)' : total === 2 ? 'var(--orange)' : 'var(--red)';
+    let eval2 = '';
+    if (total === 3) eval2 = '<span style="color:var(--green);font-size:10px;">✅ Phủ toàn quốc</span>';
+    else if (total === 2) eval2 = '<span style="color:var(--orange);font-size:10px;">⚠ Thiếu 1 vùng</span>';
+    else eval2 = '<span style="color:var(--red);font-size:10px;">⚠ Chỉ có 1 vùng — cần mở rộng</span>';
+    return `<tr>
+      <td><strong>${sku}</strong></td>
+      <td style="text-align:center;">${cellStyle(hasN, d.North.size)}</td>
+      <td style="text-align:center;">${cellStyle(hasS, d.South.size)}</td>
+      <td style="text-align:center;">${cellStyle(hasC, d.Central.size)}</td>
+      <td style="text-align:center;font-size:18px;font-weight:700;color:${totalColor};">${total}/3</td>
+      <td>${eval2}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════
 // DRIFT PAGE
 // ════════════════════════════════════════
 function renderAlerts() {
@@ -2703,7 +3053,7 @@ function alertHTML(a, withBtn=false) {
     <div style="font-size:18px;">${icon}</div>
     <div class="ai-body">
       <div>${a.mo_ta||'—'}</div>
-      <div class="ai-meta">${a.ten_san_pham||''} · ${a.ten_diem_ban||''} · ${a.ngay_tao||''}
+      <div class="ai-meta">${a.ten_san_pham||''} · ${a.ten_diem_ban||''} · ${fmtDate(a.ngay_tao||'')}
         ${withBtn?`· <button onclick="markRead('${a.ma_canh_bao}')" style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:11px;">Đã đọc</button>
           <button onclick="markResolved('${a.ma_canh_bao}')" style="background:none;border:none;color:var(--green);cursor:pointer;font-size:11px;">Đã xử lý</button>`:''}
       </div>
@@ -2760,7 +3110,7 @@ function renderEvents() {
           <td>${e.ten_san_pham||'all'}</td>
           <td>${e.phan_tram_tang?'+'+e.phan_tram_tang+'%':'—'}</td>
           <td style="font-size:12px;">${e.gia_cu?fmt(e.gia_cu)+' → '+fmt(e.gia_moi)+'đ':'—'}</td>
-          <td>${e.ngay_dgm_ap_dung||'—'}</td>
+          <td>${fmtDate(e.ngay_dgm_ap_dung)||'—'}</td>
           <td><span class="badge b-ok">${e.trang_thai||'active'}</span></td>
         </tr>`).join('')}</tbody>
       </table></div>`;
@@ -2864,7 +3214,7 @@ async function loadSurveyHistory() {
     el('hist-table').innerHTML = !list.length
       ? '<tr><td colspan="9" style="text-align:center;color:#9ca3af;">Không có dữ liệu</td></tr>'
       : list.map(s=>`<tr>
-          <td style="font-size:12px;">${s.ngay_survey||'—'}</td>
+          <td style="font-size:12px;">${fmtDate(s.ngay_survey)||'—'}</td>
           <td>${s.ten_nhan_vien||'—'}</td>
           <td><span class="badge ${s.kenh==='MT'?'b-mt':'b-gt'}">${s.kenh||'—'}</span></td>
           <td>${s.ten_diem_ban||'—'}</td>
@@ -3071,12 +3421,14 @@ function nav(id, navEl) {
   if(navEl) navEl.classList.add('active');
   // Page title dùng i18n
   const titleMap = {
-    dashboard:'title_dashboard', mt:'title_mt', gt:'title_gt',
+    dashboard:'title_dashboard', distribution:'title_distribution',
+    mt:'title_mt', gt:'title_gt',
     drift:'title_drift', events:'title_events', alerts:'title_alerts',
     history:'title_history', masterdata:'title_masterdata'
   };
   el('page-title').textContent = tr(titleMap[id]||'title_dashboard');
   if(id==='masterdata') showMDTab('products', document.querySelector('#page-masterdata .ftab'));
+  if(id==='distribution') renderDistribution();
   // Apply lang để update table headers, card titles khi switch page
   applyLang();
 }
@@ -3089,6 +3441,27 @@ function closeModal(id) { el(id).classList.add('hidden'); }
 function el(id)   { return document.getElementById(id); }
 function val(id)  { const e=el(id); return e?e.value:''; }
 function fmt(n)   { return Number(n).toLocaleString('vi'); }
+
+// Chuẩn hóa hiển thị ngày: input YYYY-MM-DD → hiển thị DD/MM/YYYY
+// Nếu đã là DD/MM/YYYY hoặc format khác → cố parse rồi reformat, fallback giữ nguyên
+function fmtDate(raw) {
+  if (!raw || raw === '—') return raw || '—';
+  const s = String(raw).trim();
+  // Đã đúng YYYY-MM-DD
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+  // Đã DD/MM/YYYY → giữ nguyên
+  if (s.match(/^\d{2}\/\d{2}\/\d{4}$/)) return s;
+  // Thử parse generic
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) {
+    const dd = String(d.getDate()).padStart(2,'0');
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  }
+  return s; // fallback: hiển thị nguyên
+}
 function isTrue(v){ return String(v||'').toLowerCase().trim()==='true'||v==='1'; }
 function setSyncInfo(msg){ el('sync-info').textContent=msg; }
 function ptBar(pct) {
