@@ -2856,7 +2856,7 @@ function unpivotDistMatrix(rows) {
         ma_khach_hang:   row.ma_khach_hang || row.Ma_khach_hang || '',
         khu_vuc:         row.khu_vuc || '',
         ma_san_pham:     row.ma_san_pham || '',
-        ten_sp_en:       row.ten_sp_en || row.Ten_sp_EN || '',
+        ten_san_pham:    row.ten_san_pham || row.ten_sp_en || '',
         nam:             parseInt(yr),
         trang_thai_dist: val === 'Y' ? 'active' : val, // Y → active
       });
@@ -2990,7 +2990,7 @@ async function renderDistribution() {
   // Populate from Distribution Matrix (if _distSource includes matrix)
   if (_distSource === 'matrix' || _distSource === 'combined') {
     activeMatrix.forEach(r => {
-      const sku = r.ten_sp_en; const chain = r.ten_khach_hang;
+      const sku = r.ten_san_pham; const chain = r.ten_khach_hang;
       const prod = getProductInfo(r.ma_san_pham, sku);
       // Cross-check with Products: if product discontinued → mark inactive
       const isActive = !prod || prod.trang_thai === 'Active';
