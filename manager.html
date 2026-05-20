@@ -479,9 +479,10 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
 
     <!-- Tab switcher -->
     <div class="filter-row" style="margin-bottom:14px;">
-      <button class="ftab active" id="dist-tab-sku"    onclick="switchDistTab('sku')">📦 SKU → Hệ thống</button>
-      <button class="ftab"        id="dist-tab-chain"  onclick="switchDistTab('chain')">🏪 Hệ thống → SKU</button>
-      <button class="ftab"        id="dist-tab-region" onclick="switchDistTab('region')">🗺️ GT theo vùng</button>
+      <button class="ftab active" id="dist-tab-sku"      onclick="switchDistTab('sku')">📦 SKU → Hệ thống</button>
+      <button class="ftab"        id="dist-tab-chain"    onclick="switchDistTab('chain')">🏪 Hệ thống → SKU</button>
+      <button class="ftab"        id="dist-tab-region"   onclick="switchDistTab('region')">🗺️ GT theo vùng</button>
+      <button class="ftab"        id="dist-tab-analysis" onclick="switchDistTab('analysis')" style="background:linear-gradient(135deg,#1B3A57,#2a4f72);color:#FFE140;border:none;">📈 Phân tích</button>
     </div>
 
     <!-- KPI row -->
@@ -577,6 +578,143 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
         </div>
       </div>
     </div>
+
+    <!-- TAB 4: PHÂN TÍCH QUẢN TRỊ -->
+    <div id="dist-view-analysis" style="display:none;">
+
+      <!-- Sub-nav -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+        <button class="btn btn-sm btn-primary" id="ana-btn-whitespace"  onclick="showAnaSection('whitespace')">🗺️ White Space</button>
+        <button class="btn btn-sm btn-secondary" id="ana-btn-atrisk"    onclick="showAnaSection('atrisk')">⚠️ At-Risk SKU</button>
+        <button class="btn btn-sm btn-secondary" id="ana-btn-newlisting" onclick="showAnaSection('newlisting')">🆕 New Listing 2026</button>
+        <button class="btn btn-sm btn-secondary" id="ana-btn-loyalty"   onclick="showAnaSection('loyalty')">🏆 Chain Loyalty</button>
+        <button class="btn btn-sm btn-secondary" id="ana-btn-origin"    onclick="showAnaSection('origin')">🌍 Origin Analysis</button>
+        <button class="btn btn-sm btn-secondary" id="ana-btn-category"  onclick="showAnaSection('category')">📂 Category × Chain</button>
+      </div>
+
+      <!-- 1. WHITE SPACE MAP -->
+      <div id="ana-whitespace">
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-title">🗺️ White Space Map — Chain × SKU
+            <div class="ct-right">
+              <span style="font-size:11px;color:var(--gray);">Ô xanh = đang KD · Ô đỏ = có giao dịch 2026 · Ô trống = cơ hội listing</span>
+            </div>
+          </div>
+          <div id="ana-ws-insight" class="hint" style="margin-bottom:12px;"></div>
+          <div style="overflow-x:auto;" id="ana-ws-wrap"></div>
+        </div>
+      </div>
+
+      <!-- 2. AT-RISK SKUs -->
+      <div id="ana-atrisk" style="display:none;">
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-title">⚠️ At-Risk SKU — Cần quyết định chiến lược
+            <div class="ct-right"><span class="card-sub">SKU discontinued hoặc không có giao dịch 2026 tại nhiều chain</span></div>
+          </div>
+          <div id="ana-atrisk-insight" class="hint" style="margin-bottom:12px;background:#fef2f2;border-color:#fca5a5;color:#991b1b;"></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th>SKU</th><th>Category</th><th>Origin</th><th>Status</th>
+                <th style="text-align:center;">KD 2025</th>
+                <th style="text-align:center;">Có GT 2026</th>
+                <th style="text-align:center;">Không có GT 2026</th>
+                <th>Nhận định</th>
+              </tr></thead>
+              <tbody id="ana-atrisk-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. NEW LISTING 2026 -->
+      <div id="ana-newlisting" style="display:none;">
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-title">🆕 New Listing 2026 — Mã mới phát sinh giao dịch
+            <div class="ct-right"><span class="card-sub">Chain × SKU không có 2025 nhưng có giao dịch 2026</span></div>
+          </div>
+          <div id="ana-newlisting-insight" class="hint" style="margin-bottom:12px;background:#f0fdf4;border-color:#86efac;color:#166534;"></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th>SKU</th><th>Category</th><th>Origin</th>
+                <th>Chain mới listing 2026</th>
+                <th style="text-align:center;">Số chain mới</th>
+                <th>Gợi ý mở rộng</th>
+              </tr></thead>
+              <tbody id="ana-newlisting-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. CHAIN LOYALTY -->
+      <div id="ana-loyalty" style="display:none;">
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-title">🏆 Chain Loyalty — Hệ thống nào giữ danh mục ổn định?
+            <div class="ct-right"><span class="card-sub">Dựa trên 2025→2026 continuity</span></div>
+          </div>
+          <div id="ana-loyalty-insight" class="hint" style="margin-bottom:12px;"></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th>Chain</th><th>Kênh</th><th>Tier</th>
+                <th style="text-align:center;">SKU 2025</th>
+                <th style="text-align:center;">Còn giữ 2026</th>
+                <th style="text-align:center;">Thêm mới 2026</th>
+                <th style="text-align:center;">Drop 2026</th>
+                <th style="text-align:center;">Loyalty %</th>
+                <th>Phân loại</th>
+              </tr></thead>
+              <tbody id="ana-loyalty-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. ORIGIN ANALYSIS -->
+      <div id="ana-origin" style="display:none;">
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-title">🌍 Origin Analysis — Xuất xứ nào đang phủ rộng hơn?</div>
+          <div id="ana-origin-insight" class="hint" style="margin-bottom:12px;"></div>
+          <div id="ana-origin-bars" style="margin-bottom:16px;"></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th>Xuất xứ</th><th>Số SKU</th>
+                <th style="text-align:center;">Avg chain/SKU</th>
+                <th style="text-align:center;">Max chain</th>
+                <th style="text-align:center;">SKU phủ toàn quốc</th>
+                <th>SKU đại diện</th>
+              </tr></thead>
+              <tbody id="ana-origin-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. CATEGORY × CHAIN -->
+      <div id="ana-category" style="display:none;">
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-title">📂 Category × Chain — Ngành hàng nào mạnh ở kênh nào?</div>
+          <div id="ana-category-insight" class="hint" style="margin-bottom:12px;"></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th>Category</th><th>Kênh</th>
+                <th style="text-align:center;">Số chain KD</th>
+                <th style="text-align:center;">Số SKU active</th>
+                <th style="text-align:center;">Avg SKU/chain</th>
+                <th>Chain mạnh nhất</th>
+                <th>Cross-sell gap</th>
+              </tr></thead>
+              <tbody id="ana-category-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /dist-view-analysis -->
   </div>
 
   <!-- ══════════════════════════════════════════════════════════
@@ -2884,13 +3022,7 @@ function setDistSource(src) {
   renderDistribution();
 }
 
-function switchDistTab(tab) {
-  _distTab = tab;
-  ['sku','chain','region'].forEach(t => {
-    el('dist-view-'+t).style.display = t===tab ? 'block' : 'none';
-    el('dist-tab-'+t).className      = t===tab ? 'ftab active' : 'ftab';
-  });
-}
+// switchDistTab defined below (v2 with analysis tab)
 
 async function renderDistribution() {
   // Populate event filter
@@ -3218,14 +3350,368 @@ function setDistSource(src) {
 
 function switchDistTab(tab) {
   _distTab = tab;
-  ['sku','chain','region'].forEach(t => {
-    el('dist-view-'+t).style.display = t===tab ? 'block' : 'none';
-    el('dist-tab-'+t).className      = t===tab ? 'ftab active' : 'ftab';
+  ['sku','chain','region','analysis'].forEach(t => {
+    const view = el('dist-view-'+t); if (view) view.style.display = t===tab ? 'block' : 'none';
+    const btn  = el('dist-tab-'+t);
+    if (!btn) return;
+    if (t === 'analysis') {
+      btn.style.background = tab==='analysis' ? 'var(--navy)' : 'linear-gradient(135deg,#1B3A57,#2a4f72)';
+      btn.style.color = '#FFE140';
+    } else {
+      btn.className = t===tab ? 'ftab active' : 'ftab';
+    }
+  });
+  if (tab === 'analysis') renderDistAnalysis();
+}
+
+// ── ANALYSIS SUB-NAV ────────────────────────────────────────────────────────
+let _anaSection = 'whitespace';
+function showAnaSection(sec) {
+  _anaSection = sec;
+  ['whitespace','atrisk','newlisting','loyalty','origin','category'].forEach(s => {
+    const div = el('ana-'+s); if (div) div.style.display = s===sec ? 'block' : 'none';
+    const btn = el('ana-btn-'+s);
+    if (btn) { btn.className = s===sec ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary'; }
   });
 }
 
-async function renderDistribution() {
-  // Populate event filter from D.events
+// ═══════════════════════════════════════════════════════════════════════════
+// DISTRIBUTION ANALYSIS ENGINE — Join Matrix + Products + Customers
+// ═══════════════════════════════════════════════════════════════════════════
+function renderDistAnalysis() {
+  const matrix    = D.distMatrix || [];
+  const products  = D.master?.san_pham || [];
+  const customers = D.customers || [];
+
+  if (!matrix.length) {
+    ['whitespace','atrisk','newlisting','loyalty','origin','category'].forEach(s => {
+      const d = el('ana-'+s+'-insight');
+      if (d) d.innerHTML = '⚠️ Chưa có dữ liệu Distribution Matrix. Chọn nguồn <strong>📊 Matrix</strong> hoặc <strong>🔗 Tất cả nguồn</strong> rồi nhấn Làm mới.';
+    });
+    return;
+  }
+
+  // prodMap: ma_san_pham → {nhom, xuat_xu, trang_thai, ten}
+  const prodMap = {};
+  products.forEach(p => {
+    prodMap[p.ma_san_pham] = {
+      nhom:       p.nhom_san_pham || '—',
+      xuat_xu:    p.xuat_xu || '—',
+      trang_thai: p.trang_thai || 'Active',
+      ten:        p.ten_san_pham || p.ma_san_pham
+    };
+  });
+
+  // custMap: ten_khach_hang → customer row
+  const custMap = {};
+  customers.forEach(c => { custMap[c.ten_khach_hang] = c; });
+
+  // Build pivot: chain+sku → {y2025, y2026}
+  const pivot = {};
+  const allChainsSet = new Set();
+  const allSKUsSet   = new Set();
+  const skuToMA      = {};
+
+  matrix.forEach(r => {
+    const chain = r.ten_khach_hang; const sku = r.ten_san_pham; const ma = r.ma_san_pham;
+    if (!chain || !sku) return;
+    allChainsSet.add(chain);
+    allSKUsSet.add(sku);
+    if (ma) skuToMA[sku] = ma;
+    const key = chain+'||'+sku;
+    if (!pivot[key]) pivot[key] = { chain, sku, ma_sp:ma, kenh:r.kenh, y2025:false, y2026:false };
+    if (r.nam === 2025) pivot[key].y2025 = true;
+    if (r.nam === 2026) pivot[key].y2026 = true;
+  });
+
+  const chainArr = [...allChainsSet].sort();
+  const skuArr   = [...allSKUsSet].sort();
+
+  // ── 1. WHITE SPACE ────────────────────────────────────────────────────────
+  const wsWrap = el('ana-ws-wrap');
+  if (wsWrap) {
+    const activeSlots = Object.values(pivot).filter(v=>v.y2025||v.y2026).length;
+    const tx2026      = Object.values(pivot).filter(v=>v.y2026).length;
+    const gapSlots    = chainArr.length * skuArr.length - activeSlots;
+
+    el('ana-ws-insight').innerHTML =
+      `Tổng <strong>${chainArr.length} chain × ${skuArr.length} SKU = ${chainArr.length*skuArr.length} slot</strong>. ` +
+      `<span style="color:var(--green);font-weight:600;">${activeSlots} ô đang KD</span> · ` +
+      `<span style="color:#dc2626;font-weight:600;">${tx2026} có giao dịch 2026</span> · ` +
+      `<span style="color:#f59e0b;font-weight:600;">${gapSlots} ô trống = cơ hội listing</span>`;
+
+    const CELL = 28;
+    let html = `<table style="border-collapse:collapse;font-size:9px;">`;
+    html += `<tr><th style="min-width:130px;padding:4px 6px;background:#1B3A57;color:#FFE140;font-size:9px;position:sticky;left:0;z-index:2;border-bottom:2px solid #FFE140;">Chain / SKU</th>`;
+    skuArr.forEach(sku => {
+      const ma = skuToMA[sku]||'';
+      html += `<th style="width:${CELL}px;padding:3px 1px;background:#1B3A57;color:white;writing-mode:vertical-lr;transform:rotate(180deg);white-space:nowrap;font-size:9px;border-bottom:2px solid #FFE140;" title="${sku}">${ma||sku.substring(0,8)}</th>`;
+    });
+    html += `<th style="padding:4px 8px;background:#1B3A57;color:#FFE140;font-size:9px;border-bottom:2px solid #FFE140;white-space:nowrap;">SKU count</th></tr>`;
+
+    chainArr.forEach((chain, ci) => {
+      const cust  = custMap[chain]||{};
+      const isKA  = cust.tier==='Key Account';
+      const rowBg = ci%2===0 ? (isKA?'#fffbeb':'white') : (isKA?'#fef9c3':'#fafafa');
+      let chainTotal = 0;
+      html += `<tr style="background:${rowBg};">`;
+      html += `<td style="position:sticky;left:0;z-index:1;background:${rowBg};padding:3px 8px;font-size:9px;font-weight:600;white-space:nowrap;border-bottom:1px solid #f3f4f6;border-right:2px solid #e5e7eb;">`;
+      html += `${cust.kenh==='MT'?'🏬':'🛒'} ${chain}${isKA?'<span style="color:#d97706;"> ★</span>':''}</td>`;
+      skuArr.forEach(sku => {
+        const key = chain+'||'+sku;
+        const p   = pivot[key];
+        const ma  = skuToMA[sku]||'';
+        const prod= prodMap[ma]||{};
+        let bg='#f9fafb', icon='', title='Chưa listing — cơ hội';
+        if (p?.y2026)      { bg='#dcfce7'; icon='●'; title='Có giao dịch 2026'; chainTotal++; }
+        else if (p?.y2025) { bg='#dbeafe'; icon='○'; title='KD 2025, chưa xác nhận 2026'; chainTotal++; }
+        if (prod.trang_thai==='Discontinued') { bg='#f5f5f5'; icon=icon||'×'; title='Sản phẩm Discontinued'; }
+        html += `<td style="width:${CELL}px;height:${CELL}px;background:${bg};text-align:center;border:1px solid #e5e7eb;cursor:default;font-size:11px;color:${p?.y2026?'#166534':p?.y2025?'#1d4ed8':'#d1d5db'};" title="${chain} × ${sku}: ${title}">${icon}</td>`;
+      });
+      const skuPct = skuArr.length>0 ? Math.round(chainTotal/skuArr.length*100) : 0;
+      html += `<td style="padding:2px 8px;font-size:10px;font-weight:700;color:${skuPct>=70?'var(--green)':skuPct>=40?'var(--orange)':'var(--red)'};">${chainTotal}<span style="font-weight:400;color:var(--gray);font-size:9px;"> (${skuPct}%)</span></td>`;
+      html += `</tr>`;
+    });
+
+    // Footer totals
+    html += `<tr style="background:#f1f5f9;border-top:2px solid var(--border);">`;
+    html += `<td style="position:sticky;left:0;background:#f1f5f9;padding:3px 8px;font-weight:700;font-size:9px;color:var(--navy);border-right:2px solid #e5e7eb;">Chain coverage</td>`;
+    skuArr.forEach(sku => {
+      const cnt = chainArr.filter(c=>pivot[c+'||'+sku]?.y2025||pivot[c+'||'+sku]?.y2026).length;
+      const pct = chainArr.length>0 ? Math.round(cnt/chainArr.length*100) : 0;
+      html += `<td style="text-align:center;font-size:9px;font-weight:700;color:${pct>=70?'var(--green)':pct>=40?'var(--orange)':'var(--red)'};">${cnt}<br><span style="font-weight:400;font-size:8px;">${pct}%</span></td>`;
+    });
+    html += `<td></td></tr>`;
+    html += `</table>`;
+    html += `<div style="margin-top:10px;font-size:10px;color:var(--gray);display:flex;gap:20px;flex-wrap:wrap;">
+      <span><span style="color:#166534;font-weight:700;">●</span> Có giao dịch 2026</span>
+      <span><span style="color:#1d4ed8;font-weight:700;">○</span> KD 2025, chưa confirm 2026</span>
+      <span style="color:#9ca3af;">□ Chưa listing = cơ hội</span>
+      <span style="color:#d97706;">★ Key Account</span>
+    </div>`;
+    wsWrap.innerHTML = html;
+  }
+
+  // ── 2. AT-RISK SKUs ───────────────────────────────────────────────────────
+  const skuStats = {};
+  skuArr.forEach(sku => {
+    const ma   = skuToMA[sku]||'';
+    const prod = prodMap[ma]||{};
+    const c25  = chainArr.filter(c=>pivot[c+'||'+sku]?.y2025);
+    const c26  = chainArr.filter(c=>pivot[c+'||'+sku]?.y2026);
+    skuStats[sku] = { ma, nhom:prod.nhom||'—', xuat_xu:prod.xuat_xu||'—', prodStatus:prod.trang_thai||'Active', chains2025:c25, chains2026tx:c26 };
+  });
+
+  const atRisk = Object.entries(skuStats)
+    .filter(([,s]) => s.chains2025.length>0 && (s.chains2026tx.length===0 || s.prodStatus==='Discontinued'))
+    .sort((a,b) => b[1].chains2025.length - a[1].chains2025.length);
+
+  el('ana-atrisk-insight').innerHTML = atRisk.length
+    ? `<strong>${atRisk.length} SKU cần quyết định:</strong> ${atRisk.filter(([,s])=>s.prodStatus==='Discontinued').length} đã Discontinued · ${atRisk.filter(([,s])=>s.prodStatus!=='Discontinued').length} active nhưng chưa có giao dịch 2026. Cần xác nhận thực tế với từng KAM.`
+    : '✅ Không có SKU at-risk — toàn bộ SKU KD 2025 đều có giao dịch 2026.';
+
+  el('ana-atrisk-tbody').innerHTML = atRisk.map(([sku,s]) => {
+    const isDisc = s.prodStatus==='Discontinued';
+    const reason = isDisc ? '🔴 Đã Discontinued — lên kế hoạch exit/thay thế'
+      : s.chains2025.length>=4 ? '🟠 Phủ rộng 2025 nhưng không có GT 2026 — kiểm tra delist thực tế'
+      : '🟡 Phân phối nhỏ + chưa có GT 2026 — review tiếp tục hay không';
+    return `<tr style="${isDisc?'background:#fff5f5;':''}">
+      <td><strong style="font-size:12px;">${sku}</strong><br><span style="font-size:10px;color:var(--gray);">${s.ma}</span></td>
+      <td style="font-size:11px;">${s.nhom}</td>
+      <td style="font-size:11px;">${s.xuat_xu}</td>
+      <td>${isDisc
+        ?'<span style="font-size:10px;background:#fee2e2;color:#991b1b;border-radius:4px;padding:2px 6px;">Discontinued</span>'
+        :'<span style="font-size:10px;background:#dcfce7;color:#166534;border-radius:4px;padding:2px 6px;">Active</span>'}</td>
+      <td style="text-align:center;font-weight:700;">${s.chains2025.length}</td>
+      <td style="text-align:center;font-weight:700;color:${s.chains2026tx.length>0?'var(--green)':'var(--red)'};">${s.chains2026tx.length}</td>
+      <td style="text-align:center;font-weight:700;color:#f59e0b;">${s.chains2025.length-s.chains2026tx.length}</td>
+      <td style="font-size:11px;">${reason}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:20px;">✅ Không có SKU at-risk</td></tr>';
+
+  // ── 3. NEW LISTING 2026 ───────────────────────────────────────────────────
+  const newListings = {};
+  Object.values(pivot).forEach(p => {
+    if (p.y2026 && !p.y2025) {
+      if (!newListings[p.sku]) newListings[p.sku] = [];
+      newListings[p.sku].push(p.chain);
+    }
+  });
+  const nlTotal   = Object.keys(newListings).length;
+  const chainNew  = [...new Set(Object.values(newListings).flat())].length;
+  el('ana-newlisting-insight').innerHTML = nlTotal
+    ? `<strong>${nlTotal} SKU</strong> mới có giao dịch tại <strong>${chainNew} chain</strong> trong 2026 (chưa có 2025). Cần nhân rộng sang các chain tương tự.`
+    : '⚠️ Chưa phát hiện new listing 2026 — có thể do data 2026 chưa đủ hoặc format highlight chưa map được.';
+
+  el('ana-newlisting-tbody').innerHTML = Object.entries(newListings)
+    .sort((a,b)=>b[1].length-a[1].length)
+    .map(([sku,chains]) => {
+      const ma   = skuToMA[sku]||'';
+      const prod = prodMap[ma]||{};
+      const skuChainsSet = new Set(chains);
+      const suggest = chainArr.filter(c => {
+        const cc = custMap[c]; const firstChain = custMap[chains[0]];
+        return cc && firstChain && cc.kenh===firstChain.kenh && !skuChainsSet.has(c) && !pivot[c+'||'+sku]?.y2025;
+      }).slice(0,3);
+      return `<tr>
+        <td><strong>${sku}</strong><br><span style="font-size:10px;color:var(--gray);">${ma}</span></td>
+        <td style="font-size:11px;">${prod.nhom||'—'}</td>
+        <td style="font-size:11px;">${prod.xuat_xu||'—'}</td>
+        <td style="font-size:11px;color:var(--green);">${chains.join(', ')}</td>
+        <td style="text-align:center;font-weight:700;color:var(--green);">${chains.length}</td>
+        <td style="font-size:10px;color:#f59e0b;">${suggest.length?'→ Thử: '+suggest.join(', '):'—'}</td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:20px;">Không có new listing 2026</td></tr>';
+
+  // ── 4. CHAIN LOYALTY ──────────────────────────────────────────────────────
+  const loyaltyData = chainArr.map(chain => {
+    const cust   = custMap[chain]||{};
+    const sku25  = skuArr.filter(sku=>pivot[chain+'||'+sku]?.y2025);
+    const sku26  = skuArr.filter(sku=>pivot[chain+'||'+sku]?.y2026);
+    const kept   = sku25.filter(sku=>sku26.includes(sku));
+    const added  = sku26.filter(sku=>!sku25.includes(sku));
+    const dropped= sku25.filter(sku=>!sku26.includes(sku));
+    const loyalty= sku25.length>0 ? Math.round(kept.length/sku25.length*100) : null;
+    return { chain, kenh:cust.kenh||'—', tier:cust.tier||'—', sku25:sku25.length, kept:kept.length, added:added.length, dropped:dropped.length, loyalty };
+  }).filter(d=>d.sku25>0).sort((a,b)=>(b.loyalty||0)-(a.loyalty||0));
+
+  const loyAvg  = loyaltyData.length ? Math.round(loyaltyData.reduce((s,d)=>s+(d.loyalty||0),0)/loyaltyData.length) : 0;
+  const fullLoy = loyaltyData.filter(d=>d.loyalty===100).length;
+  el('ana-loyalty-insight').innerHTML =
+    `Loyalty trung bình: <strong>${loyAvg}%</strong>. <strong style="color:var(--green);">${fullLoy} chain</strong> giữ 100% danh mục 2025→2026. ` +
+    `Chain loyalty thấp (<60%) + Key Account → <span style="color:var(--red);font-weight:600;">KAM cần ưu tiên xử lý ngay.</span>`;
+
+  el('ana-loyalty-tbody').innerHTML = loyaltyData.map(d => {
+    const lc    = d.loyalty===100?'var(--green)':d.loyalty>=70?'var(--navy)':d.loyalty>=40?'var(--orange)':'var(--red)';
+    const label = d.loyalty===100?'🏆 Loyal':d.loyalty>=70?'✅ Ổn định':d.loyalty>=40?'⚠️ Thu hẹp':'🔴 Risk cao';
+    const isKA  = d.tier==='Key Account';
+    const urgent= d.loyalty!==null && d.loyalty<60 && isKA ? ' 🚨 KAM vào cuộc' : '';
+    return `<tr style="${d.loyalty!==null&&d.loyalty<40&&isKA?'background:#fff5f5;':''}">
+      <td><strong>${d.chain}</strong>${isKA?'<span style="color:#d97706;font-size:10px;"> ★KA</span>':''}</td>
+      <td><span class="badge ${d.kenh==='MT'?'b-mt':'b-gt'}">${d.kenh}</span></td>
+      <td style="font-size:11px;">${d.tier}</td>
+      <td style="text-align:center;font-weight:700;">${d.sku25}</td>
+      <td style="text-align:center;font-weight:700;color:var(--green);">${d.kept}</td>
+      <td style="text-align:center;font-weight:600;color:var(--blue);">${d.added>0?'+'+d.added:'—'}</td>
+      <td style="text-align:center;font-weight:600;color:var(--red);">${d.dropped>0?'-'+d.dropped:'—'}</td>
+      <td style="text-align:center;font-size:18px;font-weight:700;color:${lc};">${d.loyalty!=null?d.loyalty+'%':'N/A'}</td>
+      <td style="font-size:11px;">${label}${urgent}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="9" style="text-align:center;color:#9ca3af;padding:20px;">Chưa có data</td></tr>';
+
+  // ── 5. ORIGIN ANALYSIS ────────────────────────────────────────────────────
+  const originMap = {};
+  skuArr.forEach(sku => {
+    const ma   = skuToMA[sku]||'';
+    const prod = prodMap[ma]||{};
+    const ox   = prod.xuat_xu||'Unknown';
+    if (!originMap[ox]) originMap[ox] = [];
+    if (!originMap[ox].includes(sku)) originMap[ox].push(sku);
+  });
+
+  const originStats = Object.entries(originMap).map(([ox,skus]) => {
+    const counts    = skus.map(sku=>chainArr.filter(c=>pivot[c+'||'+sku]?.y2025||pivot[c+'||'+sku]?.y2026).length);
+    const avg       = counts.length ? (counts.reduce((a,b)=>a+b,0)/counts.length).toFixed(1) : 0;
+    const max       = counts.length ? Math.max(...counts) : 0;
+    const threshold = Math.round(chainArr.length*0.6);
+    const nationwide= skus.filter(sku=>chainArr.filter(c=>pivot[c+'||'+sku]?.y2025||pivot[c+'||'+sku]?.y2026).length>=threshold).length;
+    const topSKUs   = skus.slice().sort((a,b)=>{
+      const ca=chainArr.filter(c=>pivot[c+'||'+a]?.y2025||pivot[c+'||'+a]?.y2026).length;
+      const cb=chainArr.filter(c=>pivot[c+'||'+b]?.y2025||pivot[c+'||'+b]?.y2026).length;
+      return cb-ca;
+    }).slice(0,2);
+    return { ox, skuCount:skus.length, avg:parseFloat(avg), max, nationwide, topSKUs };
+  }).sort((a,b)=>b.avg-a.avg);
+
+  const topOx = originStats[0];
+  el('ana-origin-insight').innerHTML = topOx
+    ? `<strong>${topOx.ox}</strong> dẫn đầu: avg <strong>${topOx.avg} chain/SKU</strong>, ${topOx.nationwide} SKU phủ toàn quốc (≥${Math.round(chainArr.length*0.6)} chain). ` +
+      `Đây là xuất xứ có distribution rộng nhất hiện tại.`
+    : '—';
+
+  const OX_COLORS = { Vietnam:'#10b981', Malaysia:'#3b82f6', Thailand:'#f59e0b', Italy:'#8b5cf6', Indonesia:'#ef4444' };
+  const maxAvgOx = originStats.length ? originStats[0].avg : 1;
+  el('ana-origin-bars').innerHTML = originStats.map(s => {
+    const color = OX_COLORS[s.ox]||'var(--navy)';
+    const pct   = Math.round(s.avg/Math.max(maxAvgOx,1)*100);
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+      <div style="width:90px;font-size:12px;font-weight:600;color:${color};">${s.ox}</div>
+      <div style="flex:1;background:var(--light);border-radius:4px;height:22px;overflow:hidden;">
+        <div style="width:${Math.max(pct,4)}%;height:100%;background:${color};border-radius:4px;display:flex;align-items:center;padding-left:8px;">
+          <span style="font-size:10px;color:white;font-weight:700;">${s.avg} avg</span>
+        </div>
+      </div>
+      <div style="width:60px;font-size:11px;color:var(--gray);">${s.skuCount} SKU</div>
+      <div style="width:70px;font-size:11px;font-weight:600;color:var(--green);">${s.nationwide} 🌏 national</div>
+    </div>`;
+  }).join('');
+
+  el('ana-origin-tbody').innerHTML = originStats.map(s => {
+    const color = OX_COLORS[s.ox]||'var(--navy)';
+    return `<tr>
+      <td><strong style="color:${color};">${s.ox}</strong></td>
+      <td style="text-align:center;font-weight:700;">${s.skuCount}</td>
+      <td style="text-align:center;font-weight:700;color:${color};">${s.avg}</td>
+      <td style="text-align:center;">${s.max}</td>
+      <td style="text-align:center;font-weight:700;color:var(--green);">${s.nationwide}</td>
+      <td style="font-size:10px;color:var(--gray);">${s.topSKUs.join(', ')||'—'}</td>
+    </tr>`;
+  }).join('');
+
+  // ── 6. CATEGORY × CHAIN ───────────────────────────────────────────────────
+  const catMap = {};
+  skuArr.forEach(sku => {
+    const ma   = skuToMA[sku]||'';
+    const prod = prodMap[ma]||{};
+    const nhom = prod.nhom||'Unknown';
+    chainArr.forEach(chain => {
+      const p = pivot[chain+'||'+sku];
+      if (!p?.y2025 && !p?.y2026) return;
+      const cust = custMap[chain]||{};
+      const kenh = cust.kenh||p.kenh||'—';
+      const catKey = nhom+'||'+kenh;
+      if (!catMap[catKey]) catMap[catKey] = { nhom, kenh, chains:new Set(), skus:new Set(), chainSKUs:{} };
+      catMap[catKey].chains.add(chain);
+      catMap[catKey].skus.add(sku);
+      if (!catMap[catKey].chainSKUs[chain]) catMap[catKey].chainSKUs[chain] = new Set();
+      catMap[catKey].chainSKUs[chain].add(sku);
+    });
+  });
+
+  const catRows = Object.values(catMap).map(d => {
+    const avgSKU   = d.chains.size>0 ? (Object.values(d.chainSKUs).reduce((s,sk)=>s+sk.size,0)/d.chains.size).toFixed(1) : 0;
+    const topEntry = Object.entries(d.chainSKUs).sort((a,b)=>b[1].size-a[1].size)[0];
+    const topChain = topEntry ? `${topEntry[0]} (${topEntry[1].size} SKU)` : '—';
+    // Cross-sell: find same-kenh categories not present at these chains
+    const crossGaps = Object.values(catMap)
+      .filter(c=>c.kenh===d.kenh&&c.nhom!==d.nhom)
+      .map(other => {
+        const missing = [...d.chains].filter(c=>!other.chains.has(c));
+        return missing.length>0 ? `${other.nhom}: ${missing.length} chain chưa có` : null;
+      }).filter(Boolean).slice(0,2);
+    return { nhom:d.nhom, kenh:d.kenh, chainCount:d.chains.size, skuCount:d.skus.size, avgSKU:parseFloat(avgSKU), topChain, crossGaps };
+  }).sort((a,b)=>b.chainCount-a.chainCount);
+
+  const topCat = catRows[0];
+  el('ana-category-insight').innerHTML = topCat
+    ? `<strong>${topCat.nhom}</strong> (${topCat.kenh}) mạnh nhất: <strong>${topCat.chainCount} chain</strong>, avg <strong>${topCat.avgSKU} SKU/chain</strong>. ` +
+      `Cross-sell gap = danh sách chain đang KD category này nhưng chưa có category khác — cơ hội upsell cho KAM.`
+    : '—';
+
+  const CAT_COLORS = { 'Sardine':'#3b82f6','Tuna':'#06b6d4','Mackerel':'#8b5cf6','Coconut':'#10b981','Beans & Peas':'#f59e0b','Tomato':'#ef4444','Alce Nero':'#84cc16','Asian Sauce':'#f97316','Corn':'#eab308','Yumeat':'#6366f1','Bonduelle':'#14b8a6' };
+  el('ana-category-tbody').innerHTML = catRows.map(d => {
+    const color = CAT_COLORS[d.nhom]||'var(--navy)';
+    return `<tr>
+      <td><strong style="color:${color};">${d.nhom}</strong></td>
+      <td><span class="badge ${d.kenh==='MT'?'b-mt':'b-gt'}">${d.kenh}</span></td>
+      <td style="text-align:center;font-weight:700;">${d.chainCount}</td>
+      <td style="text-align:center;font-weight:700;">${d.skuCount}</td>
+      <td style="text-align:center;font-weight:600;color:${color};">${d.avgSKU}</td>
+      <td style="font-size:11px;">${d.topChain}</td>
+      <td style="font-size:10px;color:#f59e0b;">${d.crossGaps.length?d.crossGaps.join(' | '):'✅ Phủ đều'}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:20px;">Chưa có data</td></tr>';
+}
   const evSel = el('dist-filter-event');
   if (evSel && evSel.options.length <= 1) {
     const evMap = {};
