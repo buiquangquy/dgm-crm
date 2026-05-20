@@ -452,6 +452,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
 
     <div class="filter-row">
       <select id="mt-filter-event" onchange="renderMTPage()"><option value="">Tất cả sự kiện</option></select>
+      <select id="mt-filter-sku" onchange="renderMTPage()"><option value="">Tất cả sản phẩm</option></select>
       <select id="mt-filter-chain" onchange="renderMTPage()"><option value="">Tất cả chain</option></select>
       <select id="mt-filter-status" onchange="renderMTPage()">
         <option value="">Tất cả trạng thái</option>
@@ -526,6 +527,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
 
     <div class="filter-row">
       <select id="gt-filter-event" onchange="renderGTPage()"><option value="">Tất cả sự kiện</option></select>
+      <select id="gt-filter-sku" onchange="renderGTPage()"><option value="">Tất cả sản phẩm</option></select>
       <select id="gt-filter-region" onchange="renderGTPage()">
         <option value="">Tất cả Region</option>
         <option value="GT North">GT North</option>
@@ -1447,13 +1449,19 @@ function renderTimelineMT(mtList, activeEvId) {
   const tbody = el('tl-mt-tbody');
   const sumEl = el('tl-mt-summary');
 
-  // Only rows with some data (has ngay_bat_dau or ntd_sau)
+  // Build event date lookup: ma_tang_gia → ngay_dgm_ap_dung (from Price Events)
+  const evDateMap = {};
+  D.events.forEach(e => {
+    if (e.ma_tang_gia && e.ngay_dgm_ap_dung && !evDateMap[e.ma_tang_gia])
+      evDateMap[e.ma_tang_gia] = e.ngay_dgm_ap_dung;
+  });
+
+  // Only rows with some data
   const rows = mtList.filter(r => {
     const hasPriceData = (r.gia_ntd_cam_ket_sau && r.gia_ntd_cam_ket_sau!=='0')
       || (r.ngay_bat_dau_gia_ntd_moi && r.ngay_bat_dau_gia_ntd_moi!=='');
     return hasPriceData;
   }).sort((a,b) => {
-    // Sort: đã có ngày áp dụng lên đầu, sort theo ngày
     const da = a.ngay_bat_dau_gia_ntd_moi ? new Date(a.ngay_bat_dau_gia_ntd_moi) : new Date('9999');
     const db = b.ngay_bat_dau_gia_ntd_moi ? new Date(b.ngay_bat_dau_gia_ntd_moi) : new Date('9999');
     return da - db;
@@ -1473,7 +1481,9 @@ function renderTimelineMT(mtList, activeEvId) {
     const ntdT = parseFloat(r.gia_ntd_cam_ket_truoc), ntdS = parseFloat(r.gia_ntd_cam_ket_sau);
     const dgmPct = (!isNaN(dgmT)&&dgmT>0&&!isNaN(dgmS)) ? ((dgmS/dgmT-1)*100).toFixed(1) : null;
     const ntdPct = (!isNaN(ntdT)&&ntdT>0&&!isNaN(ntdS)) ? ((ntdS/ntdT-1)*100).toFixed(1) : null;
-    const ngayDGM = r.ngay_dgm_ap_dung || '';
+
+    // ngay_dgm_ap_dung: từ Price Events (lookup by ma_tang_gia), fallback r.ngay_dgm_ap_dung
+    const ngayDGM = evDateMap[r.ma_tang_gia] || r.ngay_dgm_ap_dung || '';
     const ngayKH  = r.ngay_bat_dau_gia_ntd_moi || '';
 
     let lagD = null, lagDisp = na, lagColor = 'var(--gray)';
@@ -1618,6 +1628,28 @@ function renderTimelineGT(gtList, activeEvId) {
       return `<div style="font-size:10px;">${!isNaN(t)&&t>0?fmt(t):na} → ${!isNaN(s)&&s>0?fmt(s):na}</div>${pctCell(pct,ref)}`;
     };
 
+    // ── Pass-through với context đ tăng thực tế ──
+    // DGM tăng Xđ, Agent+Outlet cộng thêm Yđ vào NTD
+    const dgmDelta = (!isNaN(dT)&&dT>0&&!isNaN(dS)) ? Math.round(dS-dT) : null;
+    const ntdDelta = (!isNaN(nT)&&nT>0&&!isNaN(nS)) ? Math.round(nS-nT) : null;
+    const chainExtra = (dgmDelta!==null && ntdDelta!==null) ? ntdDelta - dgmDelta : null;
+
+    let ptDisp = na;
+    if (!isNaN(ptTot) && ptTot > 0) {
+      const ptColor = ptTot>=95&&ptTot<=115 ? 'var(--green)' : ptTot>115 ? 'var(--red)' : 'var(--orange)';
+      const ptBar2 = `<div class="pt-bar"><div class="pt-fill" style="width:${Math.round(Math.min(ptTot,200)/200*80)}px;background:${ptColor};"></div><span class="pt-pct" style="color:${ptColor};">${ptTot.toFixed(0)}%</span></div>`;
+      // Context line: DGM +Xđ, Agent+Outlet: +Yđ
+      let contextLine = '';
+      if (dgmDelta!==null && chainExtra!==null) {
+        const chainColor = chainExtra > 0 ? 'var(--red)' : chainExtra < 0 ? 'var(--orange)' : 'var(--green)';
+        contextLine = `<div style="font-size:10px;color:var(--gray);margin-top:2px;">DGM <strong>+${fmt(dgmDelta)}đ</strong>, Agent+Outlet: <strong style="color:${chainColor};">${chainExtra>=0?'+':''}${fmt(chainExtra)}đ</strong></div>`;
+      }
+      ptDisp = ptBar2 + contextLine;
+    }
+
+    // ── Ngày DGM từ Price Events ──
+    const ngayDGMRow = evDateMap[r.ma_tang_gia] || r.ngay_dgm_ap_dung || '';
+
     // Đánh giá
     const evals = [];
     if (dgmPct!==null && aoPct!==null) {
@@ -1630,18 +1662,19 @@ function renderTimelineGT(gtList, activeEvId) {
       if (ab>2) evals.push(`<span style="color:var(--orange);font-size:10px;">Outlet absorb ${ab.toFixed(1)}pp</span>`);
     }
     if (!isNaN(ptTot)&&ptTot>0) {
-      if (ptTot>=95) evals.push(`<span style="color:var(--green);font-size:10px;">✅ PT tốt (${ptTot.toFixed(0)}%)</span>`);
-      else if (ptTot<80) evals.push(`<span style="color:var(--red);font-size:10px;">⚠ PT thấp (${ptTot.toFixed(0)}%)</span>`);
+      if (ptTot>=95&&ptTot<=115) evals.push(`<span style="color:var(--green);font-size:10px;">✅ PT tốt (${ptTot.toFixed(0)}%)</span>`);
+      else if (ptTot>115) evals.push(`<span style="color:var(--red);font-size:10px;">⚠ NTD gánh thêm ngoài DGM (${ptTot.toFixed(0)}%)</span>`);
+      else if (ptTot<80) evals.push(`<span style="color:var(--orange);font-size:10px;">⚠ PT thấp — chuỗi đang absorb (${ptTot.toFixed(0)}%)</span>`);
     }
 
     return `<tr>
       <td>${icon} <strong>${(r.gt_region||'—').replace('GT ','')}</strong><br><span style="font-size:10px;color:var(--gray);">${r.ten_agent||'—'}</span></td>
       <td style="font-size:11px;">${r.ten_san_pham||'—'}</td>
-      <td style="font-size:11px;font-weight:600;color:var(--navy);">${r.ngay_dgm_ap_dung||na}</td>
+      <td style="font-size:11px;font-weight:600;color:var(--navy);">${ngayDGMRow||na}</td>
       <td>${tierCell(dT,dS,dgmPct,null)}</td>
       <td>${tierCell(aT,aS,aoPct,dgmPct)}</td>
       <td>${tierCell(nT,nS,ntdPct,dgmPct)}</td>
-      <td>${!isNaN(ptTot)&&ptTot>0?ptBar(ptTot):na}</td>
+      <td>${ptDisp}</td>
       <td style="font-size:10px;line-height:1.6;">${evals.join('<br>')||'<span style="color:#9ca3af;">Chờ data</span>'}</td>
     </tr>`;
   }).join('');
@@ -1772,9 +1805,30 @@ function renderDashboard() {
     if (curEv.ly_do) tags.push(`<span style="background:rgba(255,255,255,0.1);border-radius:4px;padding:2px 8px;font-size:11px;">${curEv.ly_do}</span>`);
     el('dash-ev-tags').innerHTML = tags.join('');
 
-    const pcts = evSKUs.map(e=>parseFloat(e.phan_tram_tang)||0).filter(v=>v>0);
-    const avgPct = pcts.length ? (pcts.reduce((a,b)=>a+b,0)/pcts.length).toFixed(1) : null;
-    el('dash-ev-pct').textContent = avgPct ? '+' + avgPct + '%' : '—';
+    const pcts = evSKUs.map(e=>{
+      const raw = parseFloat(e.phan_tram_tang)||0;
+      // phan_tram_tang có thể lưu dạng 0.08 (decimal) hoặc 8 (percent) — normalize về %
+      return raw > 0 && raw < 1 ? raw * 100 : raw;
+    }).filter(v=>v>0);
+    const avgPct = pcts.length ? (pcts.reduce((a,b)=>a+b,0)/pcts.length) : null;
+    const maxPct = pcts.length ? Math.max(...pcts) : null;
+    const minPct = pcts.length ? Math.min(...pcts) : null;
+
+    // Hiển thị: TB% lớn, bên dưới min–max
+    if (avgPct !== null) {
+      el('dash-ev-pct').textContent = '+' + avgPct.toFixed(1) + '%';
+      el('dash-ev-pct-label') && (el('dash-ev-pct-label').textContent = '% tăng giá TB');
+    } else {
+      el('dash-ev-pct').textContent = '—';
+    }
+    // Thêm dòng min–max vào eb-pct-label
+    const pctLabelEl = el('dash-ev-pct').nextElementSibling;
+    if (pctLabelEl) {
+      pctLabelEl.innerHTML = '% tăng giá DGM (TB)<br>'
+        + (maxPct!==null&&minPct!==null&&maxPct!==minPct
+          ? `<span style="font-size:10px;opacity:0.75;">Cao: +${maxPct.toFixed(1)}% · Thấp: +${minPct.toFixed(1)}%</span>`
+          : `<span style="font-size:10px;opacity:0.75;">Đồng nhất tất cả SKU</span>`);
+    }
 
     // Lag: ngày DGM → hôm nay
     if (curEv.ngay_dgm_ap_dung) {
@@ -2253,13 +2307,25 @@ function renderDashboardCost(r) {
 // ════════════════════════════════════════
 function renderMTPage() {
   const evFilter  = val('mt-filter-event')  || D.curEvent;
+  const skuFilter = val('mt-filter-sku');
   const chFilter  = val('mt-filter-chain');
   const stFilter  = val('mt-filter-status');
   const drFilter  = val('mt-filter-drift');
   let list = D.mtTracker;
-  if (evFilter) list = list.filter(r=>r.ma_tang_gia===evFilter);
-  if (chFilter) list = list.filter(r=>r.ten_khach_hang===chFilter);
-  if (drFilter) list = list.filter(r=>r.co_drift===drFilter);
+  if (evFilter)  list = list.filter(r=>r.ma_tang_gia===evFilter);
+  if (skuFilter) list = list.filter(r=>r.ma_san_pham===skuFilter||r.ten_san_pham===skuFilter);
+  if (chFilter)  list = list.filter(r=>r.ten_khach_hang===chFilter);
+  if (drFilter)  list = list.filter(r=>r.co_drift===drFilter);
+
+  // Populate SKU filter (duy nhất theo mã + tên, sorted)
+  const skuSel = el('mt-filter-sku');
+  const curSKU = skuSel.value;
+  const skus = [...new Map(D.mtTracker.map(r=>[r.ma_san_pham||r.ten_san_pham, r])).values()]
+    .filter(r=>r.ten_san_pham||r.ma_san_pham)
+    .sort((a,b)=>(a.ma_san_pham||'').localeCompare(b.ma_san_pham||''));
+  skuSel.innerHTML = '<option value="">Tất cả sản phẩm</option>' +
+    skus.map(r=>`<option value="${r.ma_san_pham||r.ten_san_pham}">${r.ma_san_pham ? r.ma_san_pham+' — ' : ''}${r.ten_san_pham||''}</option>`).join('');
+  skuSel.value = curSKU;
 
   // Populate chain filter
   const chains = [...new Set(D.mtTracker.map(r=>r.ten_khach_hang).filter(Boolean))].sort();
@@ -2467,12 +2533,24 @@ function renderMTChainCards(list) {
 // ════════════════════════════════════════
 function renderGTPage() {
   const evFilter  = val('gt-filter-event')  || D.curEvent;
+  const skuFilter = val('gt-filter-sku');
   const regFilter = val('gt-filter-region');
   const stFilter  = val('gt-filter-status');
   let list = D.gtTracker;
   if (evFilter)  list = list.filter(r=>r.ma_tang_gia===evFilter);
+  if (skuFilter) list = list.filter(r=>r.ma_san_pham===skuFilter||r.ten_san_pham===skuFilter);
   if (regFilter) list = list.filter(r=>r.gt_region===regFilter);
   if (stFilter)  list = list.filter(r=>r.trang_thai_tracker===stFilter);
+
+  // Populate SKU filter
+  const gtSkuSel = el('gt-filter-sku');
+  const curGTSKU = gtSkuSel.value;
+  const gtSkus = [...new Map(D.gtTracker.map(r=>[r.ma_san_pham||r.ten_san_pham, r])).values()]
+    .filter(r=>r.ten_san_pham||r.ma_san_pham)
+    .sort((a,b)=>(a.ma_san_pham||'').localeCompare(b.ma_san_pham||''));
+  gtSkuSel.innerHTML = '<option value="">Tất cả sản phẩm</option>' +
+    gtSkus.map(r=>`<option value="${r.ma_san_pham||r.ten_san_pham}">${r.ma_san_pham ? r.ma_san_pham+' — ' : ''}${r.ten_san_pham||''}</option>`).join('');
+  gtSkuSel.value = curGTSKU;
 
   // Region KPI cards
   const regions = ['GT North','GT South','GT Central'];
@@ -2493,9 +2571,13 @@ function renderGTPage() {
   // Detail table
   const tbody = el('gt-detail-table');
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#9ca3af;padding:30px;">Chưa có GT tracker — nhập Price Events (kênh GT) trước</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;color:#9ca3af;padding:30px;">Chưa có GT tracker — nhập Price Events (kênh GT) trước</td></tr>';
     return;
   }
+  // Build event date lookup for GT page too
+  const evDateMap = {};
+  D.events.forEach(e => { if (e.ma_tang_gia && e.ngay_dgm_ap_dung && !evDateMap[e.ma_tang_gia]) evDateMap[e.ma_tang_gia] = e.ngay_dgm_ap_dung; });
+
   const driftCls = { None:'', Low:'b-warn', Medium:'b-warn', High:'b-err' };
   tbody.innerHTML = list.map(r => {
     const icon = (r.gt_region||'').includes('North')?'🔵':(r.gt_region||'').includes('South')?'🔴':'🟡';
@@ -2519,9 +2601,22 @@ function renderGTPage() {
     const ntdT = parseFloat(r.gia_ntd_cam_ket_truoc), ntdS = parseFloat(r.gia_ntd_cam_ket_sau);
     const ntdPct = (!isNaN(ntdT)&&!isNaN(ntdS)&&ntdT>0) ? ((ntdS/ntdT-1)*100).toFixed(1) : null;
 
-    // ── Pass-through tổng ──
+    // ── Pass-through tổng với context đ ──
     const ptTot = parseFloat(r.pass_through_tong_pct);
-    const ptDisp = !isNaN(ptTot)&&ptTot>0 ? ptBar(ptTot) : na;
+    const dgmDeltaR = (!isNaN(dgmT)&&dgmT>0&&!isNaN(dgmS)) ? Math.round(dgmS-dgmT) : null;
+    const ntdDeltaR = (!isNaN(ntdT)&&ntdT>0&&!isNaN(ntdS)) ? Math.round(ntdS-ntdT) : null;
+    const chainExtraR = (dgmDeltaR!==null && ntdDeltaR!==null) ? ntdDeltaR - dgmDeltaR : null;
+    let ptDisp = na;
+    if (!isNaN(ptTot) && ptTot > 0) {
+      const ptColor = ptTot>=95&&ptTot<=115 ? 'var(--green)' : ptTot>115 ? 'var(--red)' : 'var(--orange)';
+      const bar = `<div class="pt-bar"><div class="pt-fill" style="width:${Math.round(Math.min(ptTot,200)/200*80)}px;background:${ptColor};"></div><span class="pt-pct" style="color:${ptColor};">${ptTot.toFixed(0)}%</span></div>`;
+      let ctx = '';
+      if (dgmDeltaR!==null && chainExtraR!==null) {
+        const chainColor = chainExtraR > 0 ? 'var(--red)' : chainExtraR < -500 ? 'var(--orange)' : 'var(--green)';
+        ctx = `<div style="font-size:9px;color:var(--gray);margin-top:1px;">DGM <strong>+${fmt(dgmDeltaR)}đ</strong>, Agent+Outlet: <strong style="color:${chainColor};">${chainExtraR>=0?'+':''}${fmt(chainExtraR)}đ</strong></div>`;
+      }
+      ptDisp = bar + ctx;
+    }
 
     // ── Survey ──
     const survey = r.gia_ntd_moi_nhat
@@ -2549,9 +2644,11 @@ function renderGTPage() {
     }
     if (!isNaN(ptTot) && ptTot > 0) {
       if (ptTot < 80)
-        analysisItems.push(`<span style="color:var(--red);font-size:10px;">PT tổng thấp ${ptTot.toFixed(0)}% — NTD chưa nhận đủ mức tăng</span>`);
-      else if (ptTot >= 95)
-        analysisItems.push(`<span style="color:var(--green);font-size:10px;">✅ Pass-through tốt</span>`);
+        analysisItems.push(`<span style="color:var(--orange);font-size:10px;">⚠ Chuỗi absorb — NTD tăng ít hơn DGM (PT ${ptTot.toFixed(0)}%)</span>`);
+      else if (ptTot>=95 && ptTot<=115)
+        analysisItems.push(`<span style="color:var(--green);font-size:10px;">✅ Pass-through hợp lý</span>`);
+      else if (ptTot > 115)
+        analysisItems.push(`<span style="color:var(--red);font-size:10px;">⚠ NTD gánh thêm ngoài mức DGM (PT ${ptTot.toFixed(0)}%)</span>`);
     }
     const analysisDisp = analysisItems.length
       ? analysisItems.join('<br>')
