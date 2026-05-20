@@ -304,6 +304,71 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
       </div>
     </div>
 
+    <!-- P3.5: Timeline áp dụng giá — MT & GT -->
+    <div class="card">
+      <div class="card-title">
+        📅 Timeline áp dụng giá — Ai đã xong, ai chưa, lag bao lâu?
+        <div class="ct-right">
+          <button class="ftab active" id="tl-tab-mt" onclick="switchTimelineTab('mt')">🏬 MT</button>
+          <button class="ftab" id="tl-tab-gt" onclick="switchTimelineTab('gt')">🛒 GT</button>
+        </div>
+      </div>
+
+      <!-- MT Timeline -->
+      <div id="tl-mt">
+        <div style="font-size:11px;color:var(--gray);margin-bottom:10px;">
+          <strong>Quy trình MT:</strong> Ngày DGM thông báo → Chain nhập giá NTD mới → Áp dụng tại điểm bán. Lag = khoảng cách thực tế từ ngày DGM đến ngày chain áp dụng.
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>Chain</th>
+              <th>Sản phẩm</th>
+              <th>Ngày DGM tăng giá</th>
+              <th>DGM: trước → sau</th>
+              <th>% tăng DGM</th>
+              <th>Ngày chain áp dụng</th>
+              <th>Lag (ngày)</th>
+              <th>NTD: trước → sau</th>
+              <th>% tăng NTD</th>
+              <th>Đánh giá</th>
+            </tr></thead>
+            <tbody id="tl-mt-tbody">
+              <tr><td colspan="10" style="text-align:center;color:#9ca3af;padding:20px;">Đang tải...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- MT Summary row -->
+        <div id="tl-mt-summary" style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;"></div>
+      </div>
+
+      <!-- GT Timeline -->
+      <div id="tl-gt" style="display:none;">
+        <div style="font-size:11px;color:var(--gray);margin-bottom:10px;">
+          <strong>Quy trình GT:</strong> Ngày DGM áp dụng = Agent đã biết và bắt đầu áp dụng đồng loạt. Theo dõi mức tăng từng tầng: DGM → Agent → Outlet → NTD và so sánh giữa các vùng.
+        </div>
+        <!-- GT Region comparison cards -->
+        <div id="tl-gt-region-compare" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;"></div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>Vùng / Agent</th>
+              <th>Sản phẩm</th>
+              <th>Ngày DGM</th>
+              <th>DGM→Agent: trước/sau/%</th>
+              <th>Agent→Outlet: trước/sau/%</th>
+              <th>Outlet→NTD: trước/sau/%</th>
+              <th>PT tổng %</th>
+              <th>Đánh giá</th>
+            </tr></thead>
+            <tbody id="tl-gt-tbody">
+              <tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:20px;">Đang tải...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- P4: Timeline & Chi phí cho chain chưa đồng ý + P5: GT Heatmap -->
     <div class="grid2">
 
@@ -418,19 +483,30 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
       </div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr>
-            <th>Chain / Format</th>
-            <th>Sản phẩm</th>
-            <th>Giá DGM (trước→sau)</th>
-            <th>NTD cam kết</th>
-            <th>Pass-through %</th>
-            <th>Survey thực tế</th>
-            <th>Drift %</th>
-            <th>Trạng thái</th>
-            <th>Cập nhật</th>
-          </tr></thead>
+          <thead>
+            <tr>
+              <th rowspan="2" style="vertical-align:middle;">Chain / Format</th>
+              <th rowspan="2" style="vertical-align:middle;">Sản phẩm</th>
+              <th colspan="3" style="text-align:center;background:#eef2ff;border-bottom:1px solid #c7d2fe;">Giá DGM (bán cho KH)</th>
+              <th colspan="3" style="text-align:center;background:#f0fdf4;border-bottom:1px solid #bbf7d0;">Giá NTD cam kết</th>
+              <th rowspan="2" style="vertical-align:middle;">Pass-through %</th>
+              <th rowspan="2" style="vertical-align:middle;">Ngày áp dụng</th>
+              <th rowspan="2" style="vertical-align:middle;">Survey NTD</th>
+              <th rowspan="2" style="vertical-align:middle;">Phân tích</th>
+              <th rowspan="2" style="vertical-align:middle;">Trạng thái</th>
+              <th rowspan="2" style="vertical-align:middle;">Cập nhật</th>
+            </tr>
+            <tr>
+              <th style="background:#eef2ff;font-size:10px;">Trước</th>
+              <th style="background:#eef2ff;font-size:10px;">Sau</th>
+              <th style="background:#eef2ff;font-size:10px;">% tăng</th>
+              <th style="background:#f0fdf4;font-size:10px;">Trước</th>
+              <th style="background:#f0fdf4;font-size:10px;">Sau</th>
+              <th style="background:#f0fdf4;font-size:10px;">% tăng</th>
+            </tr>
+          </thead>
           <tbody id="mt-detail-table">
-            <tr><td colspan="9" style="text-align:center;color:#9ca3af;padding:30px;">Đang tải...</td></tr>
+            <tr><td colspan="14" style="text-align:center;color:#9ca3af;padding:30px;">Đang tải...</td></tr>
           </tbody>
         </table>
       </div>
@@ -471,19 +547,32 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
       </div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr>
-            <th>Region / Agent</th>
-            <th>Sản phẩm</th>
-            <th>DGM → Agent</th>
-            <th>Agent → Outlet</th>
-            <th>Outlet → NTD (cam kết)</th>
-            <th>Pass-through tổng %</th>
-            <th>Survey NTD thực tế</th>
-            <th>Drift</th>
-            <th>Trạng thái</th>
-          </tr></thead>
+          <thead>
+            <tr>
+              <th rowspan="2" style="vertical-align:middle;">Region / Agent</th>
+              <th rowspan="2" style="vertical-align:middle;">Sản phẩm</th>
+              <th colspan="3" style="text-align:center;background:#eef2ff;border-bottom:1px solid #c7d2fe;">DGM → Agent</th>
+              <th colspan="3" style="text-align:center;background:#fef9ee;border-bottom:1px solid #fde68a;">Agent → Outlet</th>
+              <th colspan="3" style="text-align:center;background:#f0fdf4;border-bottom:1px solid #bbf7d0;">Outlet → NTD</th>
+              <th rowspan="2" style="vertical-align:middle;">Pass-through %</th>
+              <th rowspan="2" style="vertical-align:middle;">Survey NTD</th>
+              <th rowspan="2" style="vertical-align:middle;">Phân tích</th>
+              <th rowspan="2" style="vertical-align:middle;">Trạng thái</th>
+            </tr>
+            <tr>
+              <th style="background:#eef2ff;font-size:10px;">Trước</th>
+              <th style="background:#eef2ff;font-size:10px;">Sau</th>
+              <th style="background:#eef2ff;font-size:10px;">% tăng</th>
+              <th style="background:#fef9ee;font-size:10px;">Trước</th>
+              <th style="background:#fef9ee;font-size:10px;">Sau</th>
+              <th style="background:#fef9ee;font-size:10px;">% tăng</th>
+              <th style="background:#f0fdf4;font-size:10px;">Trước</th>
+              <th style="background:#f0fdf4;font-size:10px;">Sau</th>
+              <th style="background:#f0fdf4;font-size:10px;">% tăng</th>
+            </tr>
+          </thead>
           <tbody id="gt-detail-table">
-            <tr><td colspan="9" style="text-align:center;color:#9ca3af;padding:30px;">Đang tải...</td></tr>
+            <tr><td colspan="15" style="text-align:center;color:#9ca3af;padding:30px;">Đang tải...</td></tr>
           </tbody>
         </table>
       </div>
@@ -1340,8 +1429,225 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ════════════════════════════════════════
-// FETCH HELPERS
+// TIMELINE — Dashboard section
 // ════════════════════════════════════════
+function switchTimelineTab(tab) {
+  el('tl-mt').style.display = tab==='mt' ? 'block' : 'none';
+  el('tl-gt').style.display = tab==='gt' ? 'block' : 'none';
+  el('tl-tab-mt').className = tab==='mt' ? 'ftab active' : 'ftab';
+  el('tl-tab-gt').className = tab==='gt' ? 'ftab active' : 'ftab';
+}
+
+function renderTimeline(mtList, gtList, activeEvId) {
+  renderTimelineMT(mtList, activeEvId);
+  renderTimelineGT(gtList, activeEvId);
+}
+
+function renderTimelineMT(mtList, activeEvId) {
+  const tbody = el('tl-mt-tbody');
+  const sumEl = el('tl-mt-summary');
+
+  // Only rows with some data (has ngay_bat_dau or ntd_sau)
+  const rows = mtList.filter(r => {
+    const hasPriceData = (r.gia_ntd_cam_ket_sau && r.gia_ntd_cam_ket_sau!=='0')
+      || (r.ngay_bat_dau_gia_ntd_moi && r.ngay_bat_dau_gia_ntd_moi!=='');
+    return hasPriceData;
+  }).sort((a,b) => {
+    // Sort: đã có ngày áp dụng lên đầu, sort theo ngày
+    const da = a.ngay_bat_dau_gia_ntd_moi ? new Date(a.ngay_bat_dau_gia_ntd_moi) : new Date('9999');
+    const db = b.ngay_bat_dau_gia_ntd_moi ? new Date(b.ngay_bat_dau_gia_ntd_moi) : new Date('9999');
+    return da - db;
+  });
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#9ca3af;padding:20px;">Chưa có chain nào nhập giá mới</td></tr>';
+    sumEl.innerHTML = '';
+    return;
+  }
+
+  const na = '<span style="color:#d1d5db;">—</span>';
+  let totalLag = 0, lagCount = 0, completed = 0, pending = 0;
+
+  tbody.innerHTML = rows.map(r => {
+    const dgmT = parseFloat(r.gia_dgm_truoc), dgmS = parseFloat(r.gia_dgm_sau);
+    const ntdT = parseFloat(r.gia_ntd_cam_ket_truoc), ntdS = parseFloat(r.gia_ntd_cam_ket_sau);
+    const dgmPct = (!isNaN(dgmT)&&dgmT>0&&!isNaN(dgmS)) ? ((dgmS/dgmT-1)*100).toFixed(1) : null;
+    const ntdPct = (!isNaN(ntdT)&&ntdT>0&&!isNaN(ntdS)) ? ((ntdS/ntdT-1)*100).toFixed(1) : null;
+    const ngayDGM = r.ngay_dgm_ap_dung || '';
+    const ngayKH  = r.ngay_bat_dau_gia_ntd_moi || '';
+
+    let lagD = null, lagDisp = na, lagColor = 'var(--gray)';
+    if (ngayKH && ngayDGM) {
+      lagD = Math.round((new Date(ngayKH) - new Date(ngayDGM)) / 86400000);
+      if (!isNaN(lagD) && lagD >= 0) {
+        totalLag += lagD; lagCount++;
+        lagColor = lagD === 0 ? 'var(--green)' : lagD <= 7 ? 'var(--green)' : lagD <= 21 ? 'var(--orange)' : 'var(--red)';
+        lagDisp = `<span style="font-weight:700;color:${lagColor};font-size:13px;">${lagD}</span> <span style="font-size:10px;color:var(--gray);">ngày</span>`;
+      }
+    }
+
+    // Đánh giá
+    const evals = [];
+    const isApplied = r.trang_thai_tracker === 'Đã áp dụng';
+    if (isApplied) { completed++; evals.push(`<span style="color:var(--green);font-size:11px;">✅ Đã hoàn thành</span>`); }
+    else { pending++; evals.push(`<span style="color:var(--orange);font-size:11px;">⏳ Chờ xác nhận</span>`); }
+
+    if (dgmPct!==null && ntdPct!==null) {
+      const diff = parseFloat(ntdPct) - parseFloat(dgmPct);
+      if (diff < -1.5) evals.push(`<span style="color:var(--orange);font-size:10px;">NTD tăng nhẹ hơn DGM (${diff.toFixed(1)}pp) — chain đang absorb</span>`);
+      else if (diff > 2) evals.push(`<span style="color:var(--red);font-size:10px;">NTD tăng cao hơn DGM (+${diff.toFixed(1)}pp) — chain có margin thêm</span>`);
+    }
+    if (lagD !== null && lagD > 30) evals.push(`<span style="color:var(--red);font-size:10px;">🕐 Lag ${lagD} ngày — cần Sales follow-up</span>`);
+    if (lagD !== null && lagD === 0) evals.push(`<span style="color:var(--green);font-size:10px;">⚡ Áp dụng ngay ngày DGM</span>`);
+
+    return `<tr>
+      <td><strong>${r.ten_khach_hang||'—'}</strong><br><span style="font-size:10px;color:var(--gray);">${r.format_mt||''}</span></td>
+      <td style="font-size:12px;">${r.ten_san_pham||'—'}</td>
+      <td style="font-size:12px;font-weight:600;color:var(--navy);">${ngayDGM||na}</td>
+      <td style="font-size:11px;">${!isNaN(dgmT)&&dgmT>0?fmt(dgmT):na} → ${!isNaN(dgmS)&&dgmS>0?fmt(dgmS):na}</td>
+      <td>${dgmPct!==null?`<span style="font-weight:700;color:var(--navy);">+${dgmPct}%</span>`:na}</td>
+      <td style="font-size:12px;font-weight:600;color:${ngayKH?'var(--green)':'var(--gray)'};">${ngayKH||'<span style="color:#9ca3af;">Chưa có</span>'}</td>
+      <td style="text-align:center;">${lagDisp}</td>
+      <td style="font-size:11px;">${!isNaN(ntdT)&&ntdT>0?fmt(ntdT):na} → ${!isNaN(ntdS)&&ntdS>0?fmt(ntdS):na}</td>
+      <td>${ntdPct!==null?`<span style="font-weight:700;color:${parseFloat(ntdPct)>=parseFloat(dgmPct||0)-0.5?'var(--green)':'var(--orange)'};">+${ntdPct}%</span>`:na}</td>
+      <td style="font-size:10px;line-height:1.6;">${evals.join('<br>')}</td>
+    </tr>`;
+  }).join('');
+
+  // Summary bar
+  const avgLag = lagCount > 0 ? Math.round(totalLag/lagCount) : null;
+  const lagBarColor = avgLag===null?'var(--gray)':avgLag<=7?'var(--green)':avgLag<=21?'var(--orange)':'var(--red)';
+  sumEl.innerHTML = `
+    <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:10px 16px;flex:1;min-width:140px;">
+      <div style="font-size:20px;font-weight:700;color:var(--green);">${completed}</div>
+      <div style="font-size:11px;color:var(--gray);">Chain đã hoàn thành</div>
+    </div>
+    <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:10px 16px;flex:1;min-width:140px;">
+      <div style="font-size:20px;font-weight:700;color:var(--orange);">${pending}</div>
+      <div style="font-size:11px;color:var(--gray);">Chain chờ xác nhận</div>
+    </div>
+    <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 16px;flex:1;min-width:140px;">
+      <div style="font-size:20px;font-weight:700;color:${lagBarColor};">${avgLag!==null?avgLag+' ngày':'—'}</div>
+      <div style="font-size:11px;color:var(--gray);">Lag TB (DGM → áp dụng)</div>
+    </div>
+  `;
+}
+
+function renderTimelineGT(gtList, activeEvId) {
+  const tbody = el('tl-gt-tbody');
+  const compareEl = el('tl-gt-region-compare');
+  const na = '<span style="color:#d1d5db;">—</span>';
+
+  // Per-region summary for comparison cards
+  const regData = {};
+  ['GT North','GT South','GT Central'].forEach(reg => {
+    const rows = gtList.filter(r=>r.gt_region===reg);
+    const dgmPcts=[], aoPcts=[], ntdPcts=[], ptTots=[];
+    rows.forEach(r => {
+      const dT=parseFloat(r.gia_dgm_agent_truoc), dS=parseFloat(r.gia_dgm_agent_sau);
+      const aT=parseFloat(r.gia_agent_outlet_truoc), aS=parseFloat(r.gia_agent_outlet_sau);
+      const nT=parseFloat(r.gia_ntd_cam_ket_truoc), nS=parseFloat(r.gia_ntd_cam_ket_sau);
+      if (!isNaN(dT)&&dT>0&&!isNaN(dS)) dgmPcts.push((dS/dT-1)*100);
+      if (!isNaN(aT)&&aT>0&&!isNaN(aS)) aoPcts.push((aS/aT-1)*100);
+      if (!isNaN(nT)&&nT>0&&!isNaN(nS)) ntdPcts.push((nS/nT-1)*100);
+      const pt=parseFloat(r.pass_through_tong_pct); if(!isNaN(pt)&&pt>0) ptTots.push(pt);
+    });
+    const avg = arr => arr.length ? (arr.reduce((a,b)=>a+b,0)/arr.length) : null;
+    regData[reg] = { rows:rows.length, dgmAvg:avg(dgmPcts), aoAvg:avg(aoPcts), ntdAvg:avg(ntdPcts), ptAvg:avg(ptTots) };
+  });
+
+  const icons = {'GT North':'🔵','GT South':'🔴','GT Central':'🟡'};
+  const regArr = Object.entries(regData).filter(([,v])=>v.rows>0);
+
+  // Find best PT region
+  const ptVals = regArr.map(([,v])=>v.ptAvg).filter(v=>v!==null);
+  const maxPT = ptVals.length ? Math.max(...ptVals) : null;
+
+  compareEl.innerHTML = regArr.map(([reg, v]) => {
+    const isBest = maxPT!==null && v.ptAvg!==null && Math.abs(v.ptAvg-maxPT)<0.01;
+    const ptColor = v.ptAvg===null?'var(--gray)':v.ptAvg>=95?'var(--green)':v.ptAvg>=80?'var(--orange)':'var(--red)';
+    const fmtPct = (p) => p!==null ? `+${p.toFixed(1)}%` : '—';
+    return `<div style="background:white;border:1.5px solid ${isBest?'var(--green)':'var(--border)'};border-radius:10px;padding:14px 16px;">
+      <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:8px;">${icons[reg]} ${reg.replace('GT ','')}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;font-size:11px;margin-bottom:8px;">
+        <div style="text-align:center;">
+          <div style="font-weight:700;color:var(--navy);">${fmtPct(v.dgmAvg)}</div>
+          <div style="color:var(--gray);">DGM→Ag</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-weight:700;color:var(--orange);">${fmtPct(v.aoAvg)}</div>
+          <div style="color:var(--gray);">Ag→Outlet</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-weight:700;color:var(--green);">${fmtPct(v.ntdAvg)}</div>
+          <div style="color:var(--gray);">Outlet→NTD</div>
+        </div>
+      </div>
+      <div style="text-align:center;padding:6px;background:${ptColor==='var(--green)'?'rgba(16,185,129,0.08)':'rgba(245,158,11,0.08)'};border-radius:6px;">
+        <span style="font-size:16px;font-weight:700;color:${ptColor};">${v.ptAvg!==null?v.ptAvg.toFixed(0)+'%':'—'}</span>
+        <span style="font-size:10px;color:var(--gray);"> PT tổng</span>
+        ${isBest?'<div style="font-size:10px;color:var(--green);">▲ Tốt nhất</div>':''}
+      </div>
+    </div>`;
+  }).join('');
+
+  if (!gtList.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:20px;">Chưa có GT tracker</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = gtList.map(r => {
+    const icon = (r.gt_region||'').includes('North')?'🔵':(r.gt_region||'').includes('South')?'🔴':'🟡';
+    const dT=parseFloat(r.gia_dgm_agent_truoc), dS=parseFloat(r.gia_dgm_agent_sau);
+    const aT=parseFloat(r.gia_agent_outlet_truoc), aS=parseFloat(r.gia_agent_outlet_sau);
+    const nT=parseFloat(r.gia_ntd_cam_ket_truoc), nS=parseFloat(r.gia_ntd_cam_ket_sau);
+    const dgmPct = (!isNaN(dT)&&dT>0&&!isNaN(dS))?((dS/dT-1)*100).toFixed(1):null;
+    const aoPct  = (!isNaN(aT)&&aT>0&&!isNaN(aS))?((aS/aT-1)*100).toFixed(1):null;
+    const ntdPct = (!isNaN(nT)&&nT>0&&!isNaN(nS))?((nS/nT-1)*100).toFixed(1):null;
+    const ptTot  = parseFloat(r.pass_through_tong_pct);
+
+    const pctCell = (pct, ref) => {
+      if (pct===null) return na;
+      const v=parseFloat(pct), r2=parseFloat(ref||0);
+      const color = v>=r2-0.5?'var(--green)':v>=r2-3?'var(--orange)':'var(--red)';
+      return `<span style="font-weight:700;color:${color};font-size:11px;">+${pct}%</span>`;
+    };
+
+    const tierCell = (truoc, sau, pct, ref) => {
+      const t=parseFloat(truoc), s=parseFloat(sau);
+      return `<div style="font-size:10px;">${!isNaN(t)&&t>0?fmt(t):na} → ${!isNaN(s)&&s>0?fmt(s):na}</div>${pctCell(pct,ref)}`;
+    };
+
+    // Đánh giá
+    const evals = [];
+    if (dgmPct!==null && aoPct!==null) {
+      const ab = parseFloat(dgmPct)-parseFloat(aoPct);
+      if (ab>2) evals.push(`<span style="color:var(--orange);font-size:10px;">Agent absorb ${ab.toFixed(1)}pp</span>`);
+      else if (parseFloat(aoPct)>parseFloat(dgmPct)+1) evals.push(`<span style="color:var(--red);font-size:10px;">⚠ Agent margin cao</span>`);
+    }
+    if (aoPct!==null && ntdPct!==null) {
+      const ab = parseFloat(aoPct)-parseFloat(ntdPct);
+      if (ab>2) evals.push(`<span style="color:var(--orange);font-size:10px;">Outlet absorb ${ab.toFixed(1)}pp</span>`);
+    }
+    if (!isNaN(ptTot)&&ptTot>0) {
+      if (ptTot>=95) evals.push(`<span style="color:var(--green);font-size:10px;">✅ PT tốt (${ptTot.toFixed(0)}%)</span>`);
+      else if (ptTot<80) evals.push(`<span style="color:var(--red);font-size:10px;">⚠ PT thấp (${ptTot.toFixed(0)}%)</span>`);
+    }
+
+    return `<tr>
+      <td>${icon} <strong>${(r.gt_region||'—').replace('GT ','')}</strong><br><span style="font-size:10px;color:var(--gray);">${r.ten_agent||'—'}</span></td>
+      <td style="font-size:11px;">${r.ten_san_pham||'—'}</td>
+      <td style="font-size:11px;font-weight:600;color:var(--navy);">${r.ngay_dgm_ap_dung||na}</td>
+      <td>${tierCell(dT,dS,dgmPct,null)}</td>
+      <td>${tierCell(aT,aS,aoPct,dgmPct)}</td>
+      <td>${tierCell(nT,nS,ntdPct,dgmPct)}</td>
+      <td>${!isNaN(ptTot)&&ptTot>0?ptBar(ptTot):na}</td>
+      <td style="font-size:10px;line-height:1.6;">${evals.join('<br>')||'<span style="color:#9ca3af;">Chờ data</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+
 async function apiFetch(params, ms=45000) {
   // Cache-busting: _t timestamp đảm bảo không dùng cached response
   const p = { ...params, _t: Date.now() };
@@ -1534,6 +1840,9 @@ function renderDashboard() {
 
   // ── P6: Insights tự động ──────────────────────────────────
   renderDashInsights(mtList, gtList, chainHasAnyDataDash);
+
+  // ── P3.5: Timeline ────────────────────────────────────────
+  renderTimeline(mtList, gtList, activeEvId);
 
   // ── Drift alerts preview ───────────────────────────────────
   const driftAlerts = D.alerts.filter(a=>a.loai_canh_bao==='PRICE_DRIFT_DETECTED'&&!isTrue(a.da_xu_ly));
@@ -2034,30 +2343,91 @@ function renderMTPage() {
       'SP chưa kinh doanh': 'b-comp'
     };
 
-    const dgm   = r.gia_dgm_truoc&&r.gia_dgm_sau ? fmt(r.gia_dgm_truoc)+' → '+fmt(r.gia_dgm_sau) : '—';
-    const ntdCam = effectiveSt === 'SP chưa kinh doanh'
-      ? '<span style="color:#9ca3af;font-style:italic;">Không kinh doanh</span>'
-      : (r.gia_ntd_cam_ket_sau ? fmt(r.gia_ntd_cam_ket_sau) : '<span style="color:#9ca3af;">Chưa nhập</span>');
-    const ptNum  = parseFloat(r.pass_through_pct);
-    const ptDisp = (!isNaN(ptNum)&&ptNum>0 && effectiveSt !== 'SP chưa kinh doanh') ? ptBar(ptNum) : '—';
-    const survey  = r.gia_ntd_moi_nhat ? fmt(r.gia_ntd_moi_nhat) + '<br><span style="font-size:10px;color:#9ca3af;">' + (r.ngay_survey_moi_nhat||'') + ' (' + (r.so_lan_survey_xac_nhan||0) + 'x)</span>' : '<span style="color:#9ca3af;">Chưa có survey</span>';
-    const driftNum = parseFloat(r.drift_pct);
-    const driftDisp = (!isNaN(driftNum)&&r.co_drift&&r.co_drift!=='None' && effectiveSt !== 'SP chưa kinh doanh')
-      ? `<span class="badge ${driftCls[r.co_drift]||''}">${driftNum>0?'+':''}${driftNum.toFixed(1)}% (${r.co_drift})</span>`
-      : '<span style="color:var(--green);font-size:12px;">✅</span>';
-    const capDisp = effectiveSt === 'SP chưa kinh doanh'
-      ? '<span style="color:#9ca3af;font-size:11px;">—</span>'
-      : (r.trang_thai_cap_nhat || '🔘');
+    const isUnlisted = effectiveSt === 'SP chưa kinh doanh';
+    const na = '<span style="color:#d1d5db;">—</span>';
+    const pctBadge = (val, refVal) => {
+      if (val === null) return na;
+      const v = parseFloat(val), ref = parseFloat(refVal||0);
+      const color = v >= ref - 0.5 ? 'var(--green)' : v >= ref - 3 ? 'var(--orange)' : 'var(--red)';
+      return `<span style="font-weight:700;color:${color};font-size:12px;">+${val}%</span>`;
+    };
 
-    const rowStyle = effectiveSt === 'SP chưa kinh doanh' ? 'opacity:0.55;' : '';
+    // ── Giá DGM ──
+    const dgmTruoc = parseFloat(r.gia_dgm_truoc);
+    const dgmSau   = parseFloat(r.gia_dgm_sau);
+    const dgmPct   = (!isNaN(dgmTruoc)&&!isNaN(dgmSau)&&dgmTruoc>0) ? ((dgmSau/dgmTruoc-1)*100).toFixed(1) : null;
+
+    // ── Giá NTD cam kết ──
+    const ntdTruoc = parseFloat(r.gia_ntd_cam_ket_truoc);
+    const ntdSau   = parseFloat(r.gia_ntd_cam_ket_sau);
+    const ntdPct   = (!isNaN(ntdTruoc)&&!isNaN(ntdSau)&&ntdTruoc>0) ? ((ntdSau/ntdTruoc-1)*100).toFixed(1) : null;
+
+    // ── Pass-through ──
+    const ptNum  = parseFloat(r.pass_through_pct);
+    const ptDisp = (!isNaN(ptNum)&&ptNum>0&&!isUnlisted) ? ptBar(ptNum) : na;
+
+    // ── Ngày áp dụng + lag ──
+    const ngayAD = r.ngay_bat_dau_gia_ntd_moi || '';
+    let lagDisp = na;
+    if (ngayAD) {
+      if (r.ngay_dgm_ap_dung) {
+        const lagD = Math.round((new Date(ngayAD) - new Date(r.ngay_dgm_ap_dung)) / 86400000);
+        if (!isNaN(lagD)) {
+          const lagColor = lagD <= 7 ? 'var(--green)' : lagD <= 21 ? 'var(--orange)' : 'var(--red)';
+          lagDisp = `<span style="font-size:11px;font-weight:600;">${ngayAD}</span><br><span style="font-size:10px;color:${lagColor};">lag: ${lagD} ngày</span>`;
+        } else { lagDisp = `<span style="font-size:11px;">${ngayAD}</span>`; }
+      } else { lagDisp = `<span style="font-size:11px;">${ngayAD}</span>`; }
+    }
+
+    // ── Survey NTD ──
+    const survey = r.gia_ntd_moi_nhat
+      ? fmt(r.gia_ntd_moi_nhat) + '<br><span style="font-size:10px;color:#9ca3af;">' + (r.ngay_survey_moi_nhat||'') + ' (' + (r.so_lan_survey_xac_nhan||0) + 'x)</span>'
+      : na;
+
+    // ── Phân tích tự động ──
+    const analysisItems = [];
+    if (!isUnlisted) {
+      if (!isNaN(ptNum) && ptNum > 0) {
+        if (ptNum > 110)
+          analysisItems.push(`<span style="color:var(--red);font-size:10px;">⚠ NTD tăng vượt DGM +${(ptNum-100).toFixed(0)}pp</span>`);
+        else if (ptNum >= 95)
+          analysisItems.push(`<span style="color:var(--green);font-size:10px;">✅ Pass-through hợp lý</span>`);
+        else if (ptNum < 80)
+          analysisItems.push(`<span style="color:var(--orange);font-size:10px;">⚠ Chain absorb ${(100-ptNum).toFixed(0)}pp</span>`);
+      }
+      if (ntdPct !== null && dgmPct !== null) {
+        const diff = parseFloat(ntdPct) - parseFloat(dgmPct);
+        if (diff < -1)
+          analysisItems.push(`<span style="color:var(--orange);font-size:10px;">NTD +${ntdPct}% &lt; DGM +${dgmPct}% (${diff.toFixed(1)}pp)</span>`);
+        else if (diff > 2)
+          analysisItems.push(`<span style="color:var(--red);font-size:10px;">NTD +${ntdPct}% &gt; DGM +${dgmPct}% → chain margin cao</span>`);
+      }
+      if (ngayAD && r.ngay_dgm_ap_dung) {
+        const lagD2 = Math.round((new Date(ngayAD) - new Date(r.ngay_dgm_ap_dung)) / 86400000);
+        if (!isNaN(lagD2) && lagD2 > 30)
+          analysisItems.push(`<span style="color:var(--red);font-size:10px;">🕐 Lag ${lagD2}d — cần follow-up</span>`);
+      }
+    }
+    const analysisDisp = analysisItems.length
+      ? analysisItems.join('<br>')
+      : (isUnlisted ? na : '<span style="color:#9ca3af;font-size:10px;">Chờ data</span>');
+
+    const capDisp = isUnlisted ? na : (r.trang_thai_cap_nhat || '🔘');
+    const rowStyle = isUnlisted ? 'opacity:0.50;background:#fafafa;' : '';
+
     return `<tr class="clickable" style="${rowStyle}" onclick='openMTTrackerModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>
-      <td><strong>${r.ten_khach_hang||'—'}</strong><br><span style="font-size:11px;color:var(--gray);">${r.format_mt||''}</span></td>
-      <td>${r.ten_san_pham||'—'}</td>
-      <td style="font-size:12px;">${dgm}</td>
-      <td style="font-weight:600;">${ntdCam}</td>
+      <td><strong>${r.ten_khach_hang||'—'}</strong><br><span style="font-size:10px;color:var(--gray);">${r.format_mt||''}</span></td>
+      <td style="font-size:12px;">${r.ten_san_pham||'—'}</td>
+      <td style="background:#f5f7ff;font-size:12px;">${!isNaN(dgmTruoc)&&dgmTruoc>0 ? fmt(dgmTruoc) : na}</td>
+      <td style="background:#f5f7ff;font-size:12px;font-weight:600;">${!isNaN(dgmSau)&&dgmSau>0 ? fmt(dgmSau) : na}</td>
+      <td style="background:#f5f7ff;">${pctBadge(dgmPct, null)}</td>
+      <td style="background:#f6fef9;font-size:12px;">${isUnlisted ? '<span style="color:#9ca3af;font-style:italic;font-size:11px;">Không KD</span>' : (!isNaN(ntdTruoc)&&ntdTruoc>0 ? fmt(ntdTruoc) : na)}</td>
+      <td style="background:#f6fef9;font-size:12px;font-weight:600;">${isUnlisted ? na : (!isNaN(ntdSau)&&ntdSau>0 ? fmt(ntdSau) : '<span style="color:#9ca3af;">Chưa nhập</span>')}</td>
+      <td style="background:#f6fef9;">${isUnlisted ? na : pctBadge(ntdPct, dgmPct)}</td>
       <td>${ptDisp}</td>
+      <td style="font-size:11px;white-space:nowrap;">${lagDisp}</td>
       <td style="font-size:12px;">${survey}</td>
-      <td>${driftDisp}</td>
+      <td style="max-width:160px;font-size:10px;line-height:1.6;">${analysisDisp}</td>
       <td><span class="badge ${stClsExt[effectiveSt]||'b-warn'}">${effectiveSt}</span></td>
       <td style="font-size:11px;">${capDisp}</td>
     </tr>`;
@@ -2128,28 +2498,81 @@ function renderGTPage() {
   }
   const driftCls = { None:'', Low:'b-warn', Medium:'b-warn', High:'b-err' };
   tbody.innerHTML = list.map(r => {
-    const icon  = (r.gt_region||'').includes('North')?'🔵':(r.gt_region||'').includes('South')?'🔴':'🟡';
-    const dgmStr  = r.gia_dgm_agent_truoc&&r.gia_dgm_agent_sau ? fmt(r.gia_dgm_agent_truoc)+'→'+fmt(r.gia_dgm_agent_sau) : '—';
-    const agOlStr = r.gia_agent_outlet_sau ? fmt(r.gia_agent_outlet_sau) : '—';
-    const ntdCam  = r.gia_ntd_cam_ket_sau ? fmt(r.gia_ntd_cam_ket_sau) : '<span style="color:#9ca3af;">Chưa nhập</span>';
-    const ptTot   = parseFloat(r.pass_through_tong_pct);
-    const pt1     = parseFloat(r.pass_through_dgm_outlet_pct);
-    const pt2     = parseFloat(r.pass_through_outlet_ntd_pct);
-    const ptDisp  = !isNaN(ptTot)&&ptTot>0 ? ptBar(ptTot) : '—';
-    const survey  = r.gia_ntd_moi_nhat ? fmt(r.gia_ntd_moi_nhat)+'<br><span style="font-size:10px;color:#9ca3af;">'+(r.so_outlet_survey_xac_nhan||0)+' outlets</span>' : '<span style="color:#9ca3af;">—</span>';
-    const driftNum = parseFloat(r.drift_pct);
-    const driftDisp = !isNaN(driftNum)&&r.co_drift&&r.co_drift!=='None'
-      ? `<span class="badge ${driftCls[r.co_drift]||''}">${driftNum>0?'+':''}${driftNum.toFixed(1)}%</span>` : '✅';
+    const icon = (r.gt_region||'').includes('North')?'🔵':(r.gt_region||'').includes('South')?'🔴':'🟡';
+    const na   = '<span style="color:#d1d5db;">—</span>';
+    const pctBadge = (val, refVal) => {
+      if (val === null) return na;
+      const v = parseFloat(val), ref = parseFloat(refVal||0);
+      const color = v >= ref - 0.5 ? 'var(--green)' : v >= ref - 3 ? 'var(--orange)' : 'var(--red)';
+      return `<span style="font-weight:700;color:${color};font-size:11px;">+${val}%</span>`;
+    };
+
+    // ── DGM → Agent ──
+    const dgmT = parseFloat(r.gia_dgm_agent_truoc), dgmS = parseFloat(r.gia_dgm_agent_sau);
+    const dgmPct = (!isNaN(dgmT)&&!isNaN(dgmS)&&dgmT>0) ? ((dgmS/dgmT-1)*100).toFixed(1) : null;
+
+    // ── Agent → Outlet ──
+    const aoT = parseFloat(r.gia_agent_outlet_truoc), aoS = parseFloat(r.gia_agent_outlet_sau);
+    const aoPct = (!isNaN(aoT)&&!isNaN(aoS)&&aoT>0) ? ((aoS/aoT-1)*100).toFixed(1) : null;
+
+    // ── Outlet → NTD ──
+    const ntdT = parseFloat(r.gia_ntd_cam_ket_truoc), ntdS = parseFloat(r.gia_ntd_cam_ket_sau);
+    const ntdPct = (!isNaN(ntdT)&&!isNaN(ntdS)&&ntdT>0) ? ((ntdS/ntdT-1)*100).toFixed(1) : null;
+
+    // ── Pass-through tổng ──
+    const ptTot = parseFloat(r.pass_through_tong_pct);
+    const ptDisp = !isNaN(ptTot)&&ptTot>0 ? ptBar(ptTot) : na;
+
+    // ── Survey ──
+    const survey = r.gia_ntd_moi_nhat
+      ? fmt(r.gia_ntd_moi_nhat)+'<br><span style="font-size:10px;color:#9ca3af;">'+(r.so_outlet_survey_xac_nhan||0)+' outlets</span>'
+      : na;
+
+    // ── Phân tích tự động GT ──
+    // GT lưu ý: khi DGM áp dụng = agent đã biết và bắt đầu áp dụng đồng loạt
+    const analysisItems = [];
+    const dgmPctF = parseFloat(dgmPct), aoPctF = parseFloat(aoPct), ntdPctF = parseFloat(ntdPct);
+
+    if (dgmPct !== null && aoPct !== null) {
+      const agentAbsorb = dgmPctF - aoPctF;
+      if (agentAbsorb > 2)
+        analysisItems.push(`<span style="color:var(--orange);font-size:10px;">Agent absorb ${agentAbsorb.toFixed(1)}pp (DGM +${dgmPct}% → AO +${aoPct}%)</span>`);
+      else if (aoPctF > dgmPctF + 1)
+        analysisItems.push(`<span style="color:var(--red);font-size:10px;">⚠ Agent margin cao — AO +${aoPct}% vs DGM +${dgmPct}%</span>`);
+    }
+    if (aoPct !== null && ntdPct !== null) {
+      const outletAbsorb = aoPctF - ntdPctF;
+      if (outletAbsorb > 2)
+        analysisItems.push(`<span style="color:var(--orange);font-size:10px;">Outlet absorb ${outletAbsorb.toFixed(1)}pp (AO +${aoPct}% → NTD +${ntdPct}%)</span>`);
+      else if (ntdPctF > aoPctF + 1)
+        analysisItems.push(`<span style="color:var(--red);font-size:10px;">⚠ Outlet margin cao — NTD +${ntdPct}% vs AO +${aoPct}%</span>`);
+    }
+    if (!isNaN(ptTot) && ptTot > 0) {
+      if (ptTot < 80)
+        analysisItems.push(`<span style="color:var(--red);font-size:10px;">PT tổng thấp ${ptTot.toFixed(0)}% — NTD chưa nhận đủ mức tăng</span>`);
+      else if (ptTot >= 95)
+        analysisItems.push(`<span style="color:var(--green);font-size:10px;">✅ Pass-through tốt</span>`);
+    }
+    const analysisDisp = analysisItems.length
+      ? analysisItems.join('<br>')
+      : '<span style="color:#9ca3af;font-size:10px;">Chờ data</span>';
+
     const st = r.trang_thai_tracker||'Chưa áp dụng';
     return `<tr>
-      <td>${icon} <strong>${r.gt_region||'—'}</strong><br><span style="font-size:11px;color:var(--gray);">${r.ten_agent||'—'}</span></td>
-      <td>${r.ten_san_pham||'—'}</td>
-      <td style="font-size:12px;">${dgmStr}</td>
-      <td style="font-size:12px;">${agOlStr}${!isNaN(pt1)&&pt1>0?'<br><span style="font-size:10px;color:var(--gray);">PT: '+pt1+'%</span>':''}</td>
-      <td style="font-weight:600;">${ntdCam}${!isNaN(pt2)&&pt2>0?'<br><span style="font-size:10px;color:var(--gray);">PT: '+pt2+'%</span>':''}</td>
+      <td>${icon} <strong>${r.gt_region||'—'}</strong><br><span style="font-size:10px;color:var(--gray);">${r.ten_agent||'—'}</span></td>
+      <td style="font-size:12px;">${r.ten_san_pham||'—'}</td>
+      <td style="background:#f5f7ff;font-size:11px;">${!isNaN(dgmT)&&dgmT>0?fmt(dgmT):na}</td>
+      <td style="background:#f5f7ff;font-size:11px;font-weight:600;">${!isNaN(dgmS)&&dgmS>0?fmt(dgmS):na}</td>
+      <td style="background:#f5f7ff;">${pctBadge(dgmPct, null)}</td>
+      <td style="background:#fef9ee;font-size:11px;">${!isNaN(aoT)&&aoT>0?fmt(aoT):na}</td>
+      <td style="background:#fef9ee;font-size:11px;font-weight:600;">${!isNaN(aoS)&&aoS>0?fmt(aoS):na}</td>
+      <td style="background:#fef9ee;">${pctBadge(aoPct, dgmPct)}</td>
+      <td style="background:#f6fef9;font-size:11px;">${!isNaN(ntdT)&&ntdT>0?fmt(ntdT):na}</td>
+      <td style="background:#f6fef9;font-size:11px;font-weight:600;">${!isNaN(ntdS)&&ntdS>0?fmt(ntdS):'<span style="color:#9ca3af;">Chưa nhập</span>'}</td>
+      <td style="background:#f6fef9;">${pctBadge(ntdPct, dgmPct)}</td>
       <td>${ptDisp}</td>
-      <td style="font-size:12px;">${survey}</td>
-      <td>${driftDisp}</td>
+      <td style="font-size:11px;">${survey}</td>
+      <td style="max-width:160px;font-size:10px;line-height:1.6;">${analysisDisp}</td>
       <td><span class="badge ${st==='Đã áp dụng'?'b-ok':'b-warn'}">${st}</span></td>
     </tr>`;
   }).join('');
