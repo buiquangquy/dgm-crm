@@ -3022,7 +3022,82 @@ function setDistSource(src) {
   renderDistribution();
 }
 
-// switchDistTab defined below (v2 with analysis tab)
+// ── SWITCH DIST TAB ──────────────────────────────────────────────────────────
+function switchDistTab(tab) {
+  _distTab = tab;
+  ['sku','chain','region','analysis'].forEach(t => {
+    const view = el('dist-view-'+t); if (view) view.style.display = t===tab ? 'block' : 'none';
+    const btn  = el('dist-tab-'+t);
+    if (!btn) return;
+    if (t === 'analysis') {
+      btn.style.background = tab==='analysis' ? 'var(--navy)' : 'linear-gradient(135deg,#1B3A57,#2a4f72)';
+      btn.style.color = '#FFE140';
+    } else {
+      btn.className = t===tab ? 'ftab active' : 'ftab';
+    }
+  });
+  if (tab === 'analysis') renderDistAnalysis();
+}
+
+// ── RENDER GT REGION ─────────────────────────────────────────────────────────
+function renderDistRegion(skuToRegions, surveys, gtList) {
+  const regions = ['North','South','Central'];
+  const icons   = { North:'🔵', South:'🔴', Central:'🟡' };
+
+  // Region summary cards
+  const regStats = {};
+  regions.forEach(reg => {
+    const regRows = gtList.filter(r=>(r.gt_region||'').includes(reg));
+    const skus    = new Set(regRows.map(r=>r.ten_san_pham).filter(Boolean));
+    const agents  = new Set(regRows.map(r=>r.ten_agent).filter(Boolean));
+    const applied = regRows.filter(r=>r.trang_thai_tracker==='Đã áp dụng').length;
+    regStats[reg] = { skus: skus.size, agents: agents.size, applied };
+  });
+
+  el('dist-region-cards').innerHTML = regions.map(reg => {
+    const s = regStats[reg]||{};
+    return `<div class="card" style="text-align:center;">
+      <div style="font-size:24px;">${icons[reg]}</div>
+      <div style="font-size:18px;font-weight:700;color:var(--navy);margin:6px 0;">${reg}</div>
+      <div style="font-size:28px;font-weight:700;color:var(--blue);">${s.skus||0}</div>
+      <div style="font-size:12px;color:var(--gray);">SKU đang KD</div>
+      <div style="font-size:13px;font-weight:600;margin-top:8px;">${s.agents||0} Agents</div>
+    </div>`;
+  }).join('');
+
+  // Region comparison table
+  const allSKUs = [...new Set(Object.values(skuToRegions||{}).length
+    ? Object.keys(skuToRegions)
+    : gtList.map(r=>r.ten_san_pham).filter(Boolean))];
+
+  el('dist-region-tbody').innerHTML = allSKUs.map(sku => {
+    const rd = skuToRegions?.[sku]||{};
+    const n  = (rd.North||new Set()).size;
+    const s  = (rd.South||new Set()).size;
+    const c  = (rd.Central||new Set()).size;
+    const total = (n>0?1:0)+(s>0?1:0)+(c>0?1:0);
+    const eval_ = total===3?'✅ Phủ toàn quốc':total===2?'⚡ 2/3 vùng':total===1?'⚠️ Chỉ 1 vùng':'—';
+    return `<tr>
+      <td style="font-size:12px;font-weight:600;">${sku}</td>
+      <td style="text-align:center;">${n>0?'<span class="badge" style="background:#dbeafe;color:#1d4ed8;">+1sv</span>':'—'}</td>
+      <td style="text-align:center;">${s>0?'<span class="badge" style="background:#fce7f3;color:#be185d;">+1sv</span>':'—'}</td>
+      <td style="text-align:center;">${c>0?'<span class="badge" style="background:#fef9c3;color:#92400e;">+1sv</span>':'—'}</td>
+      <td style="text-align:center;font-weight:700;color:var(--navy);">${total}/3</td>
+      <td style="font-size:12px;">${eval_}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:20px;">Chưa có data GT</td></tr>';
+}
+
+// ── ANALYSIS SUB-NAV ─────────────────────────────────────────────────────────
+let _anaSection = 'whitespace';
+function showAnaSection(sec) {
+  _anaSection = sec;
+  ['whitespace','atrisk','newlisting','loyalty','origin','category'].forEach(s => {
+    const div = el('ana-'+s); if (div) div.style.display = s===sec ? 'block' : 'none';
+    const btn = el('ana-btn-'+s);
+    if (btn) btn.className = s===sec ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary';
+  });
+}
 
 async function renderDistribution() {
   // Populate event filter
@@ -3337,47 +3412,12 @@ function renderDistChain(chainToSKUs, skuToChains) {
   }).join('')||'<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:20px;">Chưa có data</td></tr>';
 }
 
-function setDistSource(src) {
-  _distSource = src;
-  ['tracker','combined','survey'].forEach(s => {
-    const btn = el('dsrc-'+s);
-    if (!btn) return;
-    btn.style.background = s===src ? 'var(--navy)' : '#f1f5f9';
-    btn.style.color      = s===src ? '#fff' : 'var(--gray)';
-  });
-  renderDistribution();
-}
 
-function switchDistTab(tab) {
-  _distTab = tab;
-  ['sku','chain','region','analysis'].forEach(t => {
-    const view = el('dist-view-'+t); if (view) view.style.display = t===tab ? 'block' : 'none';
-    const btn  = el('dist-tab-'+t);
-    if (!btn) return;
-    if (t === 'analysis') {
-      btn.style.background = tab==='analysis' ? 'var(--navy)' : 'linear-gradient(135deg,#1B3A57,#2a4f72)';
-      btn.style.color = '#FFE140';
-    } else {
-      btn.className = t===tab ? 'ftab active' : 'ftab';
-    }
-  });
-  if (tab === 'analysis') renderDistAnalysis();
-}
 
-// ── ANALYSIS SUB-NAV ────────────────────────────────────────────────────────
-let _anaSection = 'whitespace';
-function showAnaSection(sec) {
-  _anaSection = sec;
-  ['whitespace','atrisk','newlisting','loyalty','origin','category'].forEach(s => {
-    const div = el('ana-'+s); if (div) div.style.display = s===sec ? 'block' : 'none';
-    const btn = el('ana-btn-'+s);
-    if (btn) { btn.className = s===sec ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary'; }
-  });
-}
 
-// ═══════════════════════════════════════════════════════════════════════════
-// DISTRIBUTION ANALYSIS ENGINE — Join Matrix + Products + Customers
-// ═══════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════
+// DISTRIBUTION ANALYSIS ENGINE
+// ════════════════════════════════════════
 function renderDistAnalysis() {
   const matrix    = D.distMatrix || [];
   const products  = D.master?.san_pham || [];
@@ -3391,14 +3431,11 @@ function renderDistAnalysis() {
     return;
   }
 
-  // prodMap: ma_san_pham → {nhom, xuat_xu, trang_thai, ten}
+  // prodMap: ma → {nhom, xuat_xu, trang_thai}
   const prodMap = {};
   products.forEach(p => {
     prodMap[p.ma_san_pham] = {
-      nhom:       p.nhom_san_pham || '—',
-      xuat_xu:    p.xuat_xu || '—',
-      trang_thai: p.trang_thai || 'Active',
-      ten:        p.ten_san_pham || p.ma_san_pham
+      nhom: p.nhom_san_pham||'—', xuat_xu: p.xuat_xu||'—', trang_thai: p.trang_thai||'Active'
     };
   });
 
@@ -3406,34 +3443,31 @@ function renderDistAnalysis() {
   const custMap = {};
   customers.forEach(c => { custMap[c.ten_khach_hang] = c; });
 
-  // Build pivot: chain+sku → {y2025, y2026}
+  // Build pivot
   const pivot = {};
-  const allChainsSet = new Set();
-  const allSKUsSet   = new Set();
-  const skuToMA      = {};
+  const allChainsSet = new Set(), allSKUsSet = new Set();
+  const skuToMA = {};
 
   matrix.forEach(r => {
-    const chain = r.ten_khach_hang; const sku = r.ten_san_pham; const ma = r.ma_san_pham;
+    const chain = r.ten_khach_hang, sku = r.ten_san_pham, ma = r.ma_san_pham;
     if (!chain || !sku) return;
-    allChainsSet.add(chain);
-    allSKUsSet.add(sku);
+    allChainsSet.add(chain); allSKUsSet.add(sku);
     if (ma) skuToMA[sku] = ma;
     const key = chain+'||'+sku;
     if (!pivot[key]) pivot[key] = { chain, sku, ma_sp:ma, kenh:r.kenh, y2025:false, y2026:false };
-    if (r.nam === 2025) pivot[key].y2025 = true;
-    if (r.nam === 2026) pivot[key].y2026 = true;
+    if (r.nam===2025) pivot[key].y2025 = true;
+    if (r.nam===2026) pivot[key].y2026 = true;
   });
 
   const chainArr = [...allChainsSet].sort();
   const skuArr   = [...allSKUsSet].sort();
 
-  // ── 1. WHITE SPACE ────────────────────────────────────────────────────────
+  // ── 1. WHITE SPACE MAP ──────────────────────────────────────────────────
   const wsWrap = el('ana-ws-wrap');
   if (wsWrap) {
     const activeSlots = Object.values(pivot).filter(v=>v.y2025||v.y2026).length;
     const tx2026      = Object.values(pivot).filter(v=>v.y2026).length;
     const gapSlots    = chainArr.length * skuArr.length - activeSlots;
-
     el('ana-ws-insight').innerHTML =
       `Tổng <strong>${chainArr.length} chain × ${skuArr.length} SKU = ${chainArr.length*skuArr.length} slot</strong>. ` +
       `<span style="color:var(--green);font-weight:600;">${activeSlots} ô đang KD</span> · ` +
@@ -3455,34 +3489,30 @@ function renderDistAnalysis() {
       const rowBg = ci%2===0 ? (isKA?'#fffbeb':'white') : (isKA?'#fef9c3':'#fafafa');
       let chainTotal = 0;
       html += `<tr style="background:${rowBg};">`;
-      html += `<td style="position:sticky;left:0;z-index:1;background:${rowBg};padding:3px 8px;font-size:9px;font-weight:600;white-space:nowrap;border-bottom:1px solid #f3f4f6;border-right:2px solid #e5e7eb;">`;
-      html += `${cust.kenh==='MT'?'🏬':'🛒'} ${chain}${isKA?'<span style="color:#d97706;"> ★</span>':''}</td>`;
+      html += `<td style="position:sticky;left:0;z-index:1;background:${rowBg};padding:3px 8px;font-size:9px;font-weight:600;white-space:nowrap;border-bottom:1px solid #f3f4f6;border-right:2px solid #e5e7eb;">${cust.kenh==='MT'?'🏬':'🛒'} ${chain}${isKA?'<span style="color:#d97706;"> ★</span>':''}</td>`;
       skuArr.forEach(sku => {
         const key = chain+'||'+sku;
         const p   = pivot[key];
         const ma  = skuToMA[sku]||'';
         const prod= prodMap[ma]||{};
         let bg='#f9fafb', icon='', title='Chưa listing — cơ hội';
-        if (p?.y2026)      { bg='#dcfce7'; icon='●'; title='Có giao dịch 2026'; chainTotal++; }
-        else if (p?.y2025) { bg='#dbeafe'; icon='○'; title='KD 2025, chưa xác nhận 2026'; chainTotal++; }
-        if (prod.trang_thai==='Discontinued') { bg='#f5f5f5'; icon=icon||'×'; title='Sản phẩm Discontinued'; }
-        html += `<td style="width:${CELL}px;height:${CELL}px;background:${bg};text-align:center;border:1px solid #e5e7eb;cursor:default;font-size:11px;color:${p?.y2026?'#166534':p?.y2025?'#1d4ed8':'#d1d5db'};" title="${chain} × ${sku}: ${title}">${icon}</td>`;
+        if (p?.y2026)           { bg='#dcfce7'; icon='●'; title='Có giao dịch 2026'; chainTotal++; }
+        else if (p?.y2025)      { bg='#dbeafe'; icon='○'; title='KD 2025, chưa confirm 2026'; chainTotal++; }
+        if (prod.trang_thai==='Discontinued') { bg='#f5f5f5'; icon=icon||'×'; }
+        html += `<td style="width:${CELL}px;height:${CELL}px;background:${bg};text-align:center;border:1px solid #e5e7eb;font-size:11px;color:${p?.y2026?'#166534':p?.y2025?'#1d4ed8':'#d1d5db'};" title="${chain} × ${sku}: ${title}">${icon}</td>`;
       });
       const skuPct = skuArr.length>0 ? Math.round(chainTotal/skuArr.length*100) : 0;
-      html += `<td style="padding:2px 8px;font-size:10px;font-weight:700;color:${skuPct>=70?'var(--green)':skuPct>=40?'var(--orange)':'var(--red)'};">${chainTotal}<span style="font-weight:400;color:var(--gray);font-size:9px;"> (${skuPct}%)</span></td>`;
-      html += `</tr>`;
+      html += `<td style="padding:2px 8px;font-size:10px;font-weight:700;color:${skuPct>=70?'var(--green)':skuPct>=40?'var(--orange)':'var(--red)'};">${chainTotal}<span style="font-weight:400;color:var(--gray);font-size:9px;"> (${skuPct}%)</span></td></tr>`;
     });
 
-    // Footer totals
-    html += `<tr style="background:#f1f5f9;border-top:2px solid var(--border);">`;
-    html += `<td style="position:sticky;left:0;background:#f1f5f9;padding:3px 8px;font-weight:700;font-size:9px;color:var(--navy);border-right:2px solid #e5e7eb;">Chain coverage</td>`;
+    // Footer
+    html += `<tr style="background:#f1f5f9;border-top:2px solid var(--border);"><td style="position:sticky;left:0;background:#f1f5f9;padding:3px 8px;font-weight:700;font-size:9px;color:var(--navy);border-right:2px solid #e5e7eb;">Chain coverage</td>`;
     skuArr.forEach(sku => {
       const cnt = chainArr.filter(c=>pivot[c+'||'+sku]?.y2025||pivot[c+'||'+sku]?.y2026).length;
       const pct = chainArr.length>0 ? Math.round(cnt/chainArr.length*100) : 0;
       html += `<td style="text-align:center;font-size:9px;font-weight:700;color:${pct>=70?'var(--green)':pct>=40?'var(--orange)':'var(--red)'};">${cnt}<br><span style="font-weight:400;font-size:8px;">${pct}%</span></td>`;
     });
-    html += `<td></td></tr>`;
-    html += `</table>`;
+    html += `<td></td></tr></table>`;
     html += `<div style="margin-top:10px;font-size:10px;color:var(--gray);display:flex;gap:20px;flex-wrap:wrap;">
       <span><span style="color:#166534;font-weight:700;">●</span> Có giao dịch 2026</span>
       <span><span style="color:#1d4ed8;font-weight:700;">○</span> KD 2025, chưa confirm 2026</span>
@@ -3492,44 +3522,45 @@ function renderDistAnalysis() {
     wsWrap.innerHTML = html;
   }
 
-  // ── 2. AT-RISK SKUs ───────────────────────────────────────────────────────
+  // ── 2. AT-RISK SKUs ──────────────────────────────────────────────────────
   const skuStats = {};
   skuArr.forEach(sku => {
     const ma   = skuToMA[sku]||'';
     const prod = prodMap[ma]||{};
-    const c25  = chainArr.filter(c=>pivot[c+'||'+sku]?.y2025);
-    const c26  = chainArr.filter(c=>pivot[c+'||'+sku]?.y2026);
-    skuStats[sku] = { ma, nhom:prod.nhom||'—', xuat_xu:prod.xuat_xu||'—', prodStatus:prod.trang_thai||'Active', chains2025:c25, chains2026tx:c26 };
+    skuStats[sku] = {
+      ma, nhom:prod.nhom||'—', xuat_xu:prod.xuat_xu||'—', prodStatus:prod.trang_thai||'Active',
+      chains2025: chainArr.filter(c=>pivot[c+'||'+sku]?.y2025),
+      chains2026tx: chainArr.filter(c=>pivot[c+'||'+sku]?.y2026)
+    };
   });
 
   const atRisk = Object.entries(skuStats)
     .filter(([,s]) => s.chains2025.length>0 && (s.chains2026tx.length===0 || s.prodStatus==='Discontinued'))
     .sort((a,b) => b[1].chains2025.length - a[1].chains2025.length);
 
-  el('ana-atrisk-insight').innerHTML = atRisk.length
-    ? `<strong>${atRisk.length} SKU cần quyết định:</strong> ${atRisk.filter(([,s])=>s.prodStatus==='Discontinued').length} đã Discontinued · ${atRisk.filter(([,s])=>s.prodStatus!=='Discontinued').length} active nhưng chưa có giao dịch 2026. Cần xác nhận thực tế với từng KAM.`
-    : '✅ Không có SKU at-risk — toàn bộ SKU KD 2025 đều có giao dịch 2026.';
+  const arInsight = el('ana-atrisk-insight');
+  if (arInsight) arInsight.innerHTML = atRisk.length
+    ? `<strong>${atRisk.length} SKU cần quyết định:</strong> ${atRisk.filter(([,s])=>s.prodStatus==='Discontinued').length} đã Discontinued · ${atRisk.filter(([,s])=>s.prodStatus!=='Discontinued').length} active nhưng chưa có giao dịch 2026. Xác nhận với KAM trước khi quyết định exit.`
+    : '✅ Không có SKU at-risk.';
 
-  el('ana-atrisk-tbody').innerHTML = atRisk.map(([sku,s]) => {
+  const arTbody = el('ana-atrisk-tbody');
+  if (arTbody) arTbody.innerHTML = atRisk.map(([sku,s]) => {
     const isDisc = s.prodStatus==='Discontinued';
     const reason = isDisc ? '🔴 Đã Discontinued — lên kế hoạch exit/thay thế'
       : s.chains2025.length>=4 ? '🟠 Phủ rộng 2025 nhưng không có GT 2026 — kiểm tra delist thực tế'
       : '🟡 Phân phối nhỏ + chưa có GT 2026 — review tiếp tục hay không';
     return `<tr style="${isDisc?'background:#fff5f5;':''}">
-      <td><strong style="font-size:12px;">${sku}</strong><br><span style="font-size:10px;color:var(--gray);">${s.ma}</span></td>
-      <td style="font-size:11px;">${s.nhom}</td>
-      <td style="font-size:11px;">${s.xuat_xu}</td>
-      <td>${isDisc
-        ?'<span style="font-size:10px;background:#fee2e2;color:#991b1b;border-radius:4px;padding:2px 6px;">Discontinued</span>'
-        :'<span style="font-size:10px;background:#dcfce7;color:#166534;border-radius:4px;padding:2px 6px;">Active</span>'}</td>
+      <td><strong>${sku}</strong><br><span style="font-size:10px;color:var(--gray);">${s.ma}</span></td>
+      <td>${s.nhom}</td><td>${s.xuat_xu}</td>
+      <td>${isDisc?'<span style="font-size:10px;background:#fee2e2;color:#991b1b;border-radius:4px;padding:2px 6px;">Discontinued</span>':'<span style="font-size:10px;background:#dcfce7;color:#166534;border-radius:4px;padding:2px 6px;">Active</span>'}</td>
       <td style="text-align:center;font-weight:700;">${s.chains2025.length}</td>
       <td style="text-align:center;font-weight:700;color:${s.chains2026tx.length>0?'var(--green)':'var(--red)'};">${s.chains2026tx.length}</td>
       <td style="text-align:center;font-weight:700;color:#f59e0b;">${s.chains2025.length-s.chains2026tx.length}</td>
       <td style="font-size:11px;">${reason}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:20px;">✅ Không có SKU at-risk</td></tr>';
+  }).join('')||'<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:20px;">✅ Không có SKU at-risk</td></tr>';
 
-  // ── 3. NEW LISTING 2026 ───────────────────────────────────────────────────
+  // ── 3. NEW LISTING 2026 ──────────────────────────────────────────────────
   const newListings = {};
   Object.values(pivot).forEach(p => {
     if (p.y2026 && !p.y2025) {
@@ -3537,51 +3568,54 @@ function renderDistAnalysis() {
       newListings[p.sku].push(p.chain);
     }
   });
-  const nlTotal   = Object.keys(newListings).length;
-  const chainNew  = [...new Set(Object.values(newListings).flat())].length;
-  el('ana-newlisting-insight').innerHTML = nlTotal
-    ? `<strong>${nlTotal} SKU</strong> mới có giao dịch tại <strong>${chainNew} chain</strong> trong 2026 (chưa có 2025). Cần nhân rộng sang các chain tương tự.`
-    : '⚠️ Chưa phát hiện new listing 2026 — có thể do data 2026 chưa đủ hoặc format highlight chưa map được.';
+  const nlTotal  = Object.keys(newListings).length;
+  const nlChains = [...new Set(Object.values(newListings).flat())].length;
+  const nlInsight = el('ana-newlisting-insight');
+  if (nlInsight) nlInsight.innerHTML = nlTotal
+    ? `<strong>${nlTotal} SKU</strong> mới có giao dịch tại <strong>${nlChains} chain</strong> trong 2026. Cần nhân rộng sang chain tương tự chưa có.`
+    : '⚠️ Chưa phát hiện new listing 2026. Có thể data 2026 chưa đủ — kiểm tra lại format highlight trong sheet.';
 
-  el('ana-newlisting-tbody').innerHTML = Object.entries(newListings)
+  const nlTbody = el('ana-newlisting-tbody');
+  if (nlTbody) nlTbody.innerHTML = Object.entries(newListings)
     .sort((a,b)=>b[1].length-a[1].length)
     .map(([sku,chains]) => {
       const ma   = skuToMA[sku]||'';
       const prod = prodMap[ma]||{};
-      const skuChainsSet = new Set(chains);
+      const skuSet = new Set(chains);
       const suggest = chainArr.filter(c => {
-        const cc = custMap[c]; const firstChain = custMap[chains[0]];
-        return cc && firstChain && cc.kenh===firstChain.kenh && !skuChainsSet.has(c) && !pivot[c+'||'+sku]?.y2025;
+        const cc = custMap[c], fc = custMap[chains[0]];
+        return cc && fc && cc.kenh===fc.kenh && !skuSet.has(c) && !pivot[c+'||'+sku]?.y2025;
       }).slice(0,3);
       return `<tr>
         <td><strong>${sku}</strong><br><span style="font-size:10px;color:var(--gray);">${ma}</span></td>
-        <td style="font-size:11px;">${prod.nhom||'—'}</td>
-        <td style="font-size:11px;">${prod.xuat_xu||'—'}</td>
-        <td style="font-size:11px;color:var(--green);">${chains.join(', ')}</td>
+        <td>${prod.nhom||'—'}</td><td>${prod.xuat_xu||'—'}</td>
+        <td style="color:var(--green);">${chains.join(', ')}</td>
         <td style="text-align:center;font-weight:700;color:var(--green);">${chains.length}</td>
         <td style="font-size:10px;color:#f59e0b;">${suggest.length?'→ Thử: '+suggest.join(', '):'—'}</td>
       </tr>`;
-    }).join('') || '<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:20px;">Không có new listing 2026</td></tr>';
+    }).join('')||'<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:20px;">Không có new listing 2026</td></tr>';
 
-  // ── 4. CHAIN LOYALTY ──────────────────────────────────────────────────────
+  // ── 4. CHAIN LOYALTY ────────────────────────────────────────────────────
   const loyaltyData = chainArr.map(chain => {
-    const cust   = custMap[chain]||{};
-    const sku25  = skuArr.filter(sku=>pivot[chain+'||'+sku]?.y2025);
-    const sku26  = skuArr.filter(sku=>pivot[chain+'||'+sku]?.y2026);
-    const kept   = sku25.filter(sku=>sku26.includes(sku));
-    const added  = sku26.filter(sku=>!sku25.includes(sku));
-    const dropped= sku25.filter(sku=>!sku26.includes(sku));
-    const loyalty= sku25.length>0 ? Math.round(kept.length/sku25.length*100) : null;
+    const cust = custMap[chain]||{};
+    const sku25   = skuArr.filter(sku=>pivot[chain+'||'+sku]?.y2025);
+    const sku26tx = skuArr.filter(sku=>pivot[chain+'||'+sku]?.y2026);
+    const kept    = sku25.filter(sku=>sku26tx.includes(sku));
+    const added   = sku26tx.filter(sku=>!sku25.includes(sku));
+    const dropped = sku25.filter(sku=>!sku26tx.includes(sku));
+    const loyalty = sku25.length>0 ? Math.round(kept.length/sku25.length*100) : null;
     return { chain, kenh:cust.kenh||'—', tier:cust.tier||'—', sku25:sku25.length, kept:kept.length, added:added.length, dropped:dropped.length, loyalty };
   }).filter(d=>d.sku25>0).sort((a,b)=>(b.loyalty||0)-(a.loyalty||0));
 
   const loyAvg  = loyaltyData.length ? Math.round(loyaltyData.reduce((s,d)=>s+(d.loyalty||0),0)/loyaltyData.length) : 0;
   const fullLoy = loyaltyData.filter(d=>d.loyalty===100).length;
-  el('ana-loyalty-insight').innerHTML =
+  const loyInsight = el('ana-loyalty-insight');
+  if (loyInsight) loyInsight.innerHTML =
     `Loyalty trung bình: <strong>${loyAvg}%</strong>. <strong style="color:var(--green);">${fullLoy} chain</strong> giữ 100% danh mục 2025→2026. ` +
-    `Chain loyalty thấp (<60%) + Key Account → <span style="color:var(--red);font-weight:600;">KAM cần ưu tiên xử lý ngay.</span>`;
+    `Chain loyalty <60% + Key Account → <span style="color:var(--red);font-weight:600;">KAM cần ưu tiên xử lý ngay.</span>`;
 
-  el('ana-loyalty-tbody').innerHTML = loyaltyData.map(d => {
+  const loyTbody = el('ana-loyalty-tbody');
+  if (loyTbody) loyTbody.innerHTML = loyaltyData.map(d => {
     const lc    = d.loyalty===100?'var(--green)':d.loyalty>=70?'var(--navy)':d.loyalty>=40?'var(--orange)':'var(--red)';
     const label = d.loyalty===100?'🏆 Loyal':d.loyalty>=70?'✅ Ổn định':d.loyalty>=40?'⚠️ Thu hẹp':'🔴 Risk cao';
     const isKA  = d.tier==='Key Account';
@@ -3597,41 +3631,40 @@ function renderDistAnalysis() {
       <td style="text-align:center;font-size:18px;font-weight:700;color:${lc};">${d.loyalty!=null?d.loyalty+'%':'N/A'}</td>
       <td style="font-size:11px;">${label}${urgent}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="9" style="text-align:center;color:#9ca3af;padding:20px;">Chưa có data</td></tr>';
+  }).join('')||'<tr><td colspan="9" style="text-align:center;color:#9ca3af;padding:20px;">Chưa có data</td></tr>';
 
-  // ── 5. ORIGIN ANALYSIS ────────────────────────────────────────────────────
+  // ── 5. ORIGIN ANALYSIS ──────────────────────────────────────────────────
   const originMap = {};
   skuArr.forEach(sku => {
-    const ma   = skuToMA[sku]||'';
-    const prod = prodMap[ma]||{};
+    const prod = prodMap[skuToMA[sku]||'']||{};
     const ox   = prod.xuat_xu||'Unknown';
     if (!originMap[ox]) originMap[ox] = [];
     if (!originMap[ox].includes(sku)) originMap[ox].push(sku);
   });
 
+  const OX_COLORS = { Vietnam:'#10b981', Malaysia:'#3b82f6', Thailand:'#f59e0b', Italy:'#8b5cf6', Indonesia:'#ef4444' };
   const originStats = Object.entries(originMap).map(([ox,skus]) => {
-    const counts    = skus.map(sku=>chainArr.filter(c=>pivot[c+'||'+sku]?.y2025||pivot[c+'||'+sku]?.y2026).length);
-    const avg       = counts.length ? (counts.reduce((a,b)=>a+b,0)/counts.length).toFixed(1) : 0;
-    const max       = counts.length ? Math.max(...counts) : 0;
-    const threshold = Math.round(chainArr.length*0.6);
-    const nationwide= skus.filter(sku=>chainArr.filter(c=>pivot[c+'||'+sku]?.y2025||pivot[c+'||'+sku]?.y2026).length>=threshold).length;
-    const topSKUs   = skus.slice().sort((a,b)=>{
-      const ca=chainArr.filter(c=>pivot[c+'||'+a]?.y2025||pivot[c+'||'+a]?.y2026).length;
-      const cb=chainArr.filter(c=>pivot[c+'||'+b]?.y2025||pivot[c+'||'+b]?.y2026).length;
-      return cb-ca;
+    const counts     = skus.map(sku=>chainArr.filter(c=>pivot[c+'||'+sku]?.y2025||pivot[c+'||'+sku]?.y2026).length);
+    const avg        = counts.length ? (counts.reduce((a,b)=>a+b,0)/counts.length).toFixed(1) : 0;
+    const max        = counts.length ? Math.max(...counts) : 0;
+    const threshold  = Math.round(chainArr.length*0.6);
+    const nationwide = skus.filter(sku=>chainArr.filter(c=>pivot[c+'||'+sku]?.y2025||pivot[c+'||'+sku]?.y2026).length>=threshold).length;
+    const topSKUs    = skus.slice().sort((a,b)=>{
+      return chainArr.filter(c=>pivot[c+'||'+b]?.y2025||pivot[c+'||'+b]?.y2026).length
+           - chainArr.filter(c=>pivot[c+'||'+a]?.y2025||pivot[c+'||'+a]?.y2026).length;
     }).slice(0,2);
     return { ox, skuCount:skus.length, avg:parseFloat(avg), max, nationwide, topSKUs };
   }).sort((a,b)=>b.avg-a.avg);
 
   const topOx = originStats[0];
-  el('ana-origin-insight').innerHTML = topOx
-    ? `<strong>${topOx.ox}</strong> dẫn đầu: avg <strong>${topOx.avg} chain/SKU</strong>, ${topOx.nationwide} SKU phủ toàn quốc (≥${Math.round(chainArr.length*0.6)} chain). ` +
-      `Đây là xuất xứ có distribution rộng nhất hiện tại.`
+  const oxInsight = el('ana-origin-insight');
+  if (oxInsight) oxInsight.innerHTML = topOx
+    ? `<strong>${topOx.ox}</strong> dẫn đầu: avg <strong>${topOx.avg} chain/SKU</strong>, ${topOx.nationwide} SKU phủ toàn quốc (≥${Math.round(chainArr.length*0.6)} chain). Xuất xứ có distribution rộng nhất hiện tại.`
     : '—';
 
-  const OX_COLORS = { Vietnam:'#10b981', Malaysia:'#3b82f6', Thailand:'#f59e0b', Italy:'#8b5cf6', Indonesia:'#ef4444' };
   const maxAvgOx = originStats.length ? originStats[0].avg : 1;
-  el('ana-origin-bars').innerHTML = originStats.map(s => {
+  const oxBars = el('ana-origin-bars');
+  if (oxBars) oxBars.innerHTML = originStats.map(s => {
     const color = OX_COLORS[s.ox]||'var(--navy)';
     const pct   = Math.round(s.avg/Math.max(maxAvgOx,1)*100);
     return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
@@ -3641,12 +3674,13 @@ function renderDistAnalysis() {
           <span style="font-size:10px;color:white;font-weight:700;">${s.avg} avg</span>
         </div>
       </div>
-      <div style="width:60px;font-size:11px;color:var(--gray);">${s.skuCount} SKU</div>
-      <div style="width:70px;font-size:11px;font-weight:600;color:var(--green);">${s.nationwide} 🌏 national</div>
+      <div style="width:55px;font-size:11px;color:var(--gray);">${s.skuCount} SKU</div>
+      <div style="width:75px;font-size:11px;font-weight:600;color:var(--green);">${s.nationwide} 🌏 national</div>
     </div>`;
   }).join('');
 
-  el('ana-origin-tbody').innerHTML = originStats.map(s => {
+  const oxTbody = el('ana-origin-tbody');
+  if (oxTbody) oxTbody.innerHTML = originStats.map(s => {
     const color = OX_COLORS[s.ox]||'var(--navy)';
     return `<tr>
       <td><strong style="color:${color};">${s.ox}</strong></td>
@@ -3658,33 +3692,32 @@ function renderDistAnalysis() {
     </tr>`;
   }).join('');
 
-  // ── 6. CATEGORY × CHAIN ───────────────────────────────────────────────────
+  // ── 6. CATEGORY × CHAIN ─────────────────────────────────────────────────
   const catMap = {};
   skuArr.forEach(sku => {
-    const ma   = skuToMA[sku]||'';
-    const prod = prodMap[ma]||{};
+    const prod = prodMap[skuToMA[sku]||'']||{};
     const nhom = prod.nhom||'Unknown';
     chainArr.forEach(chain => {
       const p = pivot[chain+'||'+sku];
       if (!p?.y2025 && !p?.y2026) return;
       const cust = custMap[chain]||{};
       const kenh = cust.kenh||p.kenh||'—';
-      const catKey = nhom+'||'+kenh;
-      if (!catMap[catKey]) catMap[catKey] = { nhom, kenh, chains:new Set(), skus:new Set(), chainSKUs:{} };
-      catMap[catKey].chains.add(chain);
-      catMap[catKey].skus.add(sku);
-      if (!catMap[catKey].chainSKUs[chain]) catMap[catKey].chainSKUs[chain] = new Set();
-      catMap[catKey].chainSKUs[chain].add(sku);
+      const key  = nhom+'||'+kenh;
+      if (!catMap[key]) catMap[key] = { nhom, kenh, chains:new Set(), skus:new Set(), chainSKUs:{} };
+      catMap[key].chains.add(chain);
+      catMap[key].skus.add(sku);
+      if (!catMap[key].chainSKUs[chain]) catMap[key].chainSKUs[chain] = new Set();
+      catMap[key].chainSKUs[chain].add(sku);
     });
   });
 
+  const CAT_COLORS = { 'Sardine':'#3b82f6','Tuna':'#06b6d4','Mackerel':'#8b5cf6','Coconut':'#10b981','Beans & Peas':'#f59e0b','Tomato':'#ef4444','Alce Nero':'#84cc16','Asian Sauce':'#f97316','Corn':'#eab308','Yumeat':'#6366f1','Bonduelle':'#14b8a6' };
   const catRows = Object.values(catMap).map(d => {
     const avgSKU   = d.chains.size>0 ? (Object.values(d.chainSKUs).reduce((s,sk)=>s+sk.size,0)/d.chains.size).toFixed(1) : 0;
     const topEntry = Object.entries(d.chainSKUs).sort((a,b)=>b[1].size-a[1].size)[0];
     const topChain = topEntry ? `${topEntry[0]} (${topEntry[1].size} SKU)` : '—';
-    // Cross-sell: find same-kenh categories not present at these chains
     const crossGaps = Object.values(catMap)
-      .filter(c=>c.kenh===d.kenh&&c.nhom!==d.nhom)
+      .filter(c=>c.kenh===d.kenh && c.nhom!==d.nhom)
       .map(other => {
         const missing = [...d.chains].filter(c=>!other.chains.has(c));
         return missing.length>0 ? `${other.nhom}: ${missing.length} chain chưa có` : null;
@@ -3693,13 +3726,13 @@ function renderDistAnalysis() {
   }).sort((a,b)=>b.chainCount-a.chainCount);
 
   const topCat = catRows[0];
-  el('ana-category-insight').innerHTML = topCat
-    ? `<strong>${topCat.nhom}</strong> (${topCat.kenh}) mạnh nhất: <strong>${topCat.chainCount} chain</strong>, avg <strong>${topCat.avgSKU} SKU/chain</strong>. ` +
-      `Cross-sell gap = danh sách chain đang KD category này nhưng chưa có category khác — cơ hội upsell cho KAM.`
+  const catInsight = el('ana-category-insight');
+  if (catInsight) catInsight.innerHTML = topCat
+    ? `<strong>${topCat.nhom}</strong> (${topCat.kenh}) mạnh nhất: <strong>${topCat.chainCount} chain</strong>, avg <strong>${topCat.avgSKU} SKU/chain</strong>. Cross-sell gap = cơ hội giới thiệu thêm category cho chain đang KD nhưng thiếu ngành hàng khác.`
     : '—';
 
-  const CAT_COLORS = { 'Sardine':'#3b82f6','Tuna':'#06b6d4','Mackerel':'#8b5cf6','Coconut':'#10b981','Beans & Peas':'#f59e0b','Tomato':'#ef4444','Alce Nero':'#84cc16','Asian Sauce':'#f97316','Corn':'#eab308','Yumeat':'#6366f1','Bonduelle':'#14b8a6' };
-  el('ana-category-tbody').innerHTML = catRows.map(d => {
+  const catTbody = el('ana-category-tbody');
+  if (catTbody) catTbody.innerHTML = catRows.map(d => {
     const color = CAT_COLORS[d.nhom]||'var(--navy)';
     return `<tr>
       <td><strong style="color:${color};">${d.nhom}</strong></td>
@@ -3708,350 +3741,10 @@ function renderDistAnalysis() {
       <td style="text-align:center;font-weight:700;">${d.skuCount}</td>
       <td style="text-align:center;font-weight:600;color:${color};">${d.avgSKU}</td>
       <td style="font-size:11px;">${d.topChain}</td>
-      <td style="font-size:10px;color:#f59e0b;">${d.crossGaps.length?d.crossGaps.join(' | '):'✅ Phủ đều'}</td>
+      <td style="font-size:10px;color:#f59e0b;">${d.crossGaps.length ? d.crossGaps.join(' | ') : '✅ Phủ đều'}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:20px;">Chưa có data</td></tr>';
+  }).join('')||'<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:20px;">Chưa có data</td></tr>';
 }
-  const evSel = el('dist-filter-event');
-  if (evSel && evSel.options.length <= 1) {
-    const evMap = {};
-    D.events.forEach(e => { if (e.ma_tang_gia && !evMap[e.ma_tang_gia]) evMap[e.ma_tang_gia] = e.ten_su_kien||e.ma_tang_gia; });
-    Object.entries(evMap).forEach(([ma, ten]) => {
-      const opt = document.createElement('option');
-      opt.value = ma; opt.textContent = ten;
-      evSel.appendChild(opt);
-    });
-  }
-
-  const kenhFilter = val('dist-filter-kenh');
-  const evFilter   = val('dist-filter-event') || D.curEvent;
-
-  // ── Build from TRACKER (always available) ──────────────────
-  // MT Tracker: mỗi row mà effectiveSt ≠ 'SP chưa kinh doanh' → chain đang KD SKU đó
-  const mtList = evFilter ? D.mtTracker.filter(r=>r.ma_tang_gia===evFilter) : D.mtTracker;
-  const gtList = evFilter ? D.gtTracker.filter(r=>r.ma_tang_gia===evFilter) : D.gtTracker;
-
-  // Build chainHasAnyData per event (reuse logic from renderMTPage)
-  const chainHasData = {};
-  mtList.forEach(r => {
-    const c = r.ten_khach_hang; if (!c) return;
-    const hasPD = (r.gia_ntd_cam_ket_sau&&r.gia_ntd_cam_ket_sau!=='0'&&r.gia_ntd_cam_ket_sau!=='')
-               || (r.gia_dgm_moi&&r.gia_dgm_moi!=='0')
-               || (r.ngay_bat_dau_gia_ntd_moi&&r.ngay_bat_dau_gia_ntd_moi!=='');
-    if (!chainHasData[c]) chainHasData[c] = false;
-    if (hasPD) chainHasData[c] = true;
-  });
-
-  // skuToChains from tracker
-  const trackerSKUtoChains = {}; // sku → { active: Set<chain>, inactive: Set<chain>, kenh:'MT' }
-  const trackerChainToSKUs = {}; // chain → { active: Set<sku>, inactive: Set<sku>, kenh, format }
-
-  // All unique SKUs in this event
-  const allSKUs = [...new Set([
-    ...mtList.map(r=>r.ten_san_pham),
-    ...gtList.map(r=>r.ten_san_pham)
-  ].filter(Boolean))];
-
-  // MT
-  if (!kenhFilter || kenhFilter==='MT') {
-    // Get all chains in this event
-    const allMTChains = [...new Set(mtList.map(r=>r.ten_khach_hang).filter(Boolean))];
-    mtList.forEach(r => {
-      const sku   = r.ten_san_pham; const chain = r.ten_khach_hang;
-      if (!sku || !chain) return;
-      const hasPD = (r.gia_ntd_cam_ket_sau&&r.gia_ntd_cam_ket_sau!=='0'&&r.gia_ntd_cam_ket_sau!=='')
-                 || (r.gia_dgm_moi&&r.gia_dgm_moi!=='0')
-                 || (r.ngay_bat_dau_gia_ntd_moi&&r.ngay_bat_dau_gia_ntd_moi!=='');
-      const isUnlisted = !hasPD && chainHasData[chain];
-      const isActive   = hasPD && !isUnlisted;
-
-      if (!trackerSKUtoChains[sku]) trackerSKUtoChains[sku] = { active:new Set(), inactive:new Set(), kenh:'MT', surveyCount:0, lastSurvey:'' };
-      if (!trackerChainToSKUs[chain]) trackerChainToSKUs[chain] = { active:new Set(), inactive:new Set(), kenh:'MT', format:r.format_mt||'', surveyCount:0 };
-
-      if (isActive)    { trackerSKUtoChains[sku].active.add(chain);  trackerChainToSKUs[chain].active.add(sku); }
-      else if (isUnlisted) { trackerSKUtoChains[sku].inactive.add(chain); trackerChainToSKUs[chain].inactive.add(sku); }
-      else             { trackerSKUtoChains[sku].inactive.add(chain); trackerChainToSKUs[chain].inactive.add(sku); }
-    });
-  }
-
-  // GT: mỗi row trong GT tracker = 1 vùng đang KD SKU đó (vì GT thông báo đồng loạt)
-  const trackerSKUtoRegions = {}; // sku → { North: Set<agent>, South: Set, Central: Set }
-  if (!kenhFilter || kenhFilter==='GT') {
-    gtList.forEach(r => {
-      const sku = r.ten_san_pham; const region = r.gt_region; const agent = r.ten_agent||region;
-      if (!sku || !region) return;
-      const reg = region.includes('North')?'North':region.includes('South')?'South':region.includes('Central')?'Central':null;
-      if (!reg) return;
-      if (!trackerSKUtoRegions[sku]) trackerSKUtoRegions[sku] = { North:new Set(), South:new Set(), Central:new Set() };
-      trackerSKUtoRegions[sku][reg].add(agent);
-
-      const regionKey = 'GT '+reg;
-      if (!trackerChainToSKUs[regionKey]) trackerChainToSKUs[regionKey] = { active:new Set(), inactive:new Set(), kenh:'GT', format:reg, surveyCount:0 };
-      trackerChainToSKUs[regionKey].active.add(sku);
-      if (!trackerSKUtoChains[sku]) trackerSKUtoChains[sku] = { active:new Set(), inactive:new Set(), kenh:'GT', surveyCount:0, lastSurvey:'' };
-      trackerSKUtoChains[sku].active.add(regionKey);
-    });
-  }
-
-  // ── Load Survey if needed ───────────────────────────────────
-  let surveys = [];
-  if (_distSource === 'combined' || _distSource === 'survey') {
-    if (!D.surveys || !D.surveys.length) {
-      try {
-        const r = await apiFetch({ action:'getSurveyList', limit:'500' });
-        D.surveys = r.danh_sach || [];
-      } catch(e) { D.surveys = []; }
-    }
-    surveys = (D.surveys||[]).filter(s=>s.ten_san_pham);
-    if (kenhFilter) surveys = surveys.filter(s=>s.kenh===kenhFilter);
-  }
-
-  // ── Merge survey into maps ──────────────────────────────────
-  const surveyMap = {}; // sku+chain → { count, lastDate }
-  surveys.forEach(s => {
-    const sku   = s.ten_san_pham||'';
-    const chain = s.ten_diem_ban||s.ten_khach_hang||'';
-    const date  = s.ngay_survey||'';
-    const kenh  = s.kenh||'';
-    const region= s.gt_region||s.khu_vuc||'';
-    if (!sku||!chain) return;
-    const k = sku+'||'+chain;
-    if (!surveyMap[k]) surveyMap[k] = { count:0, lastDate:'' };
-    surveyMap[k].count++;
-    if (date > surveyMap[k].lastDate) surveyMap[k].lastDate = date;
-
-    if (_distSource !== 'tracker') {
-      // Enrich tracker maps with survey confirmation
-      if (!trackerSKUtoChains[sku]) trackerSKUtoChains[sku] = { active:new Set(), inactive:new Set(), kenh, surveyCount:0, lastSurvey:'' };
-      trackerSKUtoChains[sku].active.add(chain);
-      trackerSKUtoChains[sku].surveyCount++;
-      if (date > trackerSKUtoChains[sku].lastSurvey) trackerSKUtoChains[sku].lastSurvey = date;
-
-      if (!trackerChainToSKUs[chain]) trackerChainToSKUs[chain] = { active:new Set(), inactive:new Set(), kenh, format:'', surveyCount:0 };
-      trackerChainToSKUs[chain].active.add(sku);
-      trackerChainToSKUs[chain].surveyCount++;
-
-      if (kenh==='GT' && region) {
-        const reg = region.includes('North')?'North':region.includes('South')?'South':region.includes('Central')?'Central':null;
-        if (reg) {
-          if (!trackerSKUtoRegions[sku]) trackerSKUtoRegions[sku] = { North:new Set(), South:new Set(), Central:new Set() };
-          trackerSKUtoRegions[sku][reg].add(chain);
-        }
-      }
-    }
-  });
-
-  // ── If survey-only, clear tracker data ─────────────────────
-  let skuToChains  = trackerSKUtoChains;
-  let chainToSKUs  = trackerChainToSKUs;
-  let skuToRegions = trackerSKUtoRegions;
-  if (_distSource === 'survey') {
-    skuToChains = {}; chainToSKUs = {}; skuToRegions = {};
-    surveys.forEach(s => {
-      const sku=s.ten_san_pham||'', chain=s.ten_diem_ban||s.ten_khach_hang||'';
-      const kenh=s.kenh||'', region=s.gt_region||s.khu_vuc||'', date=s.ngay_survey||'';
-      if (!sku||!chain) return;
-      if (!skuToChains[sku]) skuToChains[sku] = { active:new Set(), inactive:new Set(), kenh, surveyCount:0, lastSurvey:'' };
-      skuToChains[sku].active.add(chain); skuToChains[sku].surveyCount++;
-      if (date>skuToChains[sku].lastSurvey) skuToChains[sku].lastSurvey=date;
-      if (!chainToSKUs[chain]) chainToSKUs[chain] = { active:new Set(), inactive:new Set(), kenh, format:'', surveyCount:0 };
-      chainToSKUs[chain].active.add(sku); chainToSKUs[chain].surveyCount++;
-      if (kenh==='GT'&&region) {
-        const reg=region.includes('North')?'North':region.includes('South')?'South':region.includes('Central')?'Central':null;
-        if (reg) { if (!skuToRegions[sku]) skuToRegions[sku]={North:new Set(),South:new Set(),Central:new Set()}; skuToRegions[sku][reg].add(chain); }
-      }
-    });
-  }
-
-  // ── KPI ────────────────────────────────────────────────────
-  const totalSKUs   = Object.keys(skuToChains).length;
-  const totalChains = Object.keys(chainToSKUs).length;
-  let notListed = 0;
-  Object.values(skuToChains).forEach(d => notListed += d.inactive.size);
-  const totalSurveys = surveys.length;
-
-  el('dist-kpi-skus').textContent       = totalSKUs;
-  el('dist-kpi-skus-sub').textContent   = 'mã đang kinh doanh';
-  el('dist-kpi-chains').textContent     = totalChains;
-  el('dist-kpi-chains-sub').textContent = 'chain / vùng GT';
-  el('dist-kpi-not-listed').textContent = notListed;
-  el('dist-kpi-surveys').textContent    = _distSource==='tracker' ? '—' : totalSurveys;
-  el('dist-kpi-surveys-sub').textContent= _distSource==='tracker' ? 'bật Tracker+Survey để xem' : 'lần survey thực tế';
-
-  // Info bar
-  const srcLabels = {
-    tracker:  '📋 Nguồn: Tracker — dữ liệu từ MT/GT Price Tracker (các mã không có giá mới = SP chưa KD). Không cần survey.',
-    combined: '🔗 Nguồn: Tracker + Survey — Tracker làm nền, survey thực tế xác nhận & bổ sung thêm.',
-    survey:   '📍 Nguồn: Survey only — chỉ dùng dữ liệu survey thực tế từ team Sales.'
-  };
-  el('dist-info-bar').textContent = srcLabels[_distSource];
-  el('dist-source-label').textContent = _distSource==='tracker'&&!Object.keys(skuToChains).length
-    ? '⚠ Chưa có Tracker data — hãy tạo tracker cho đợt tăng giá' : '';
-
-  // Render tabs
-  renderDistSKU(skuToChains, chainToSKUs);
-  renderDistChain(chainToSKUs, skuToChains);
-  renderDistRegion(skuToRegions, surveys, gtList);
-}
-
-function renderDistSKU(skuToChains, chainToSKUs) {
-  const rows = Object.entries(skuToChains)
-    .sort((a,b) => b[1].active.size - a[1].active.size);
-  const maxActive = rows.length ? rows[0][1].active.size : 1;
-  const totalChains = Object.keys(chainToSKUs).length;
-
-  el('dist-sku-count').textContent = rows.length + ' SKU';
-
-  // Bar chart
-  el('dist-sku-bars').innerHTML = rows.map(([sku, d]) => {
-    const pct     = Math.round(d.active.size / Math.max(maxActive,1) * 100);
-    const color   = d.active.size === maxActive ? 'var(--green)' : d.active.size === 0 ? 'var(--red)' : 'var(--navy)';
-    const inaPct  = totalChains > 0 ? Math.round(d.inactive.size/totalChains*100) : 0;
-    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
-      <div style="width:200px;font-size:11px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${sku}">${sku}</div>
-      <div style="flex:1;background:var(--light);border-radius:4px;height:16px;overflow:hidden;position:relative;">
-        <div style="width:${pct}%;height:100%;background:${color};border-radius:4px;"></div>
-      </div>
-      <div style="width:90px;font-size:11px;font-weight:700;color:${color};">${d.active.size} hệ thống ${d.inactive.size>0?'<span style="color:#f59e0b;font-weight:400;">(+'+d.inactive.size+' chưa KD)</span>':''}</div>
-    </div>`;
-  }).join('');
-
-  // Table
-  el('dist-sku-tbody').innerHTML = rows.map(([sku, d]) => {
-    const activeList   = [...d.active].sort().join(', ') || '—';
-    const inactiveList = [...d.inactive].sort().join(', ') || '—';
-    const activeColor  = d.active.size===maxActive?'var(--green)':d.active.size===0?'var(--red)':'var(--navy)';
-    const hasSurvey = d.surveyCount > 0;
-    return `<tr>
-      <td><strong style="font-size:12px;">${sku}</strong></td>
-      <td style="text-align:center;font-size:20px;font-weight:700;color:${activeColor};">${d.active.size}</td>
-      <td style="font-size:11px;color:var(--gray);max-width:200px;">${activeList}</td>
-      <td style="font-size:11px;color:#f59e0b;max-width:150px;">${d.inactive.size>0?inactiveList:'<span style="color:#d1d5db;">—</span>'}</td>
-      <td style="text-align:center;">${hasSurvey?`<span style="color:var(--green);font-size:12px;">✅ ${d.surveyCount}</span>`:'<span style="color:#d1d5db;">—</span>'}</td>
-      <td style="font-size:11px;">${d.lastSurvey?fmtDate(d.lastSurvey):'—'}</td>
-    </tr>`;
-  }).join('') || '<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:20px;">Chưa có data</td></tr>';
-}
-
-function renderDistChain(chainToSKUs, skuToChains) {
-  const rows = Object.entries(chainToSKUs)
-    .sort((a,b) => b[1].active.size - a[1].active.size);
-  const maxSKU = rows.length ? rows[0][1].active.size : 1;
-  const totalSKUs = Object.keys(skuToChains).length;
-
-  el('dist-chain-count').textContent = rows.length + ' hệ thống / vùng';
-
-  // Bar chart
-  el('dist-chain-bars').innerHTML = rows.map(([chain, d]) => {
-    const pct   = Math.round(d.active.size / Math.max(maxSKU,1) * 100);
-    const color = d.active.size===maxSKU?'var(--green)':d.active.size===0?'var(--red)':'var(--navy)';
-    const icon  = d.kenh==='MT'?'🏬':'🛒';
-    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
-      <div style="width:200px;font-size:11px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${icon} ${chain}</div>
-      <div style="flex:1;background:var(--light);border-radius:4px;height:16px;overflow:hidden;">
-        <div style="width:${pct}%;height:100%;background:${color};border-radius:4px;"></div>
-      </div>
-      <div style="width:60px;font-size:11px;font-weight:700;color:${color};">${d.active.size}/${totalSKUs} SKU</div>
-    </div>`;
-  }).join('');
-
-  // Table
-  el('dist-chain-tbody').innerHTML = rows.map(([chain, d]) => {
-    const kenhBadge = d.kenh==='MT'
-      ? '<span class="badge b-mt">MT</span>'
-      : '<span class="badge b-gt">GT</span>';
-    const skuList   = [...d.active].sort().join(', ') || '—';
-    const notCount  = d.inactive.size;
-    const skuColor  = d.active.size===maxSKU?'var(--green)':d.active.size<2?'var(--orange)':'var(--navy)';
-    return `<tr>
-      <td><strong>${chain}</strong>${d.format?`<br><span style="font-size:10px;color:var(--gray);">${d.format}</span>`:''}</td>
-      <td>${kenhBadge}</td>
-      <td style="text-align:center;font-size:20px;font-weight:700;color:${skuColor};">${d.active.size}</td>
-      <td style="font-size:11px;color:var(--gray);max-width:220px;">${skuList}</td>
-      <td style="text-align:center;">${notCount>0?`<span style="color:#f59e0b;font-weight:600;">${notCount} chưa KD</span>`:'<span style="color:var(--green);">✅ full</span>'}</td>
-      <td style="text-align:center;">${d.surveyCount>0?`<span style="color:var(--green);font-size:12px;">✅ ${d.surveyCount}</span>`:'<span style="color:#d1d5db;">—</span>'}</td>
-    </tr>`;
-  }).join('') || '<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:20px;">Chưa có data</td></tr>';
-}
-
-function renderDistRegion(skuToRegions, surveys, gtList) {
-  const regions = ['North','South','Central'];
-  const icons   = { North:'🔵', South:'🔴', Central:'🟡' };
-
-  // Region summary from GT tracker
-  const regStats = {};
-  regions.forEach(reg => {
-    const regRows   = gtList.filter(r=>(r.gt_region||'').includes(reg));
-    const skus      = new Set(regRows.map(r=>r.ten_san_pham).filter(Boolean));
-    const agents    = new Set(regRows.map(r=>r.ten_agent).filter(Boolean));
-    const surveyRows= surveys.filter(s=>(s.gt_region||s.khu_vuc||'').includes(reg)&&s.kenh==='GT');
-    const outlets   = new Set(surveyRows.map(s=>s.ten_diem_ban).filter(Boolean));
-    regStats[reg]   = { skus:skus.size, agents:agents.size, outlets:outlets.size, surveyCount:surveyRows.length };
-  });
-
-  el('dist-region-cards').innerHTML = regions.map(reg => {
-    const s = regStats[reg];
-    return `<div class="kpi" style="text-align:left;">
-      <div style="font-size:16px;font-weight:700;margin-bottom:10px;">${icons[reg]} GT ${reg}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <div style="background:var(--light);border-radius:6px;padding:8px;text-align:center;">
-          <div style="font-size:22px;font-weight:700;color:var(--navy);">${s.skus}</div>
-          <div style="font-size:10px;color:var(--gray);">SKU đang KD</div>
-        </div>
-        <div style="background:var(--light);border-radius:6px;padding:8px;text-align:center;">
-          <div style="font-size:22px;font-weight:700;color:var(--blue);">${s.agents}</div>
-          <div style="font-size:10px;color:var(--gray);">Agents</div>
-        </div>
-        ${s.outlets>0?`<div style="background:var(--light);border-radius:6px;padding:8px;text-align:center;grid-column:span 2;">
-          <div style="font-size:16px;font-weight:700;color:var(--green);">${s.outlets} điểm bán</div>
-          <div style="font-size:10px;color:var(--gray);">survey xác nhận · ${s.surveyCount} lần</div>
-        </div>`:''}
-      </div>
-    </div>`;
-  }).join('');
-
-  // Cross-region SKU table
-  const allGTSKUs = [...new Set([
-    ...Object.keys(skuToRegions),
-    ...gtList.map(r=>r.ten_san_pham).filter(Boolean)
-  ])].sort();
-
-  if (!allGTSKUs.length) {
-    el('dist-region-tbody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:20px;">Chưa có GT tracker</td></tr>';
-    return;
-  }
-
-  el('dist-region-tbody').innerHTML = allGTSKUs.map(sku => {
-    const d    = skuToRegions[sku] || { North:new Set(), South:new Set(), Central:new Set() };
-    // Also check GT tracker directly
-    const hasN = d.North.size>0  || gtList.some(r=>r.ten_san_pham===sku&&(r.gt_region||'').includes('North'));
-    const hasS = d.South.size>0  || gtList.some(r=>r.ten_san_pham===sku&&(r.gt_region||'').includes('South'));
-    const hasC = d.Central.size>0|| gtList.some(r=>r.ten_san_pham===sku&&(r.gt_region||'').includes('Central'));
-    const total = [hasN,hasS,hasC].filter(Boolean).length;
-
-    const cell = (has, survCount) => has
-      ? `<span style="color:var(--green);font-weight:600;">✅${survCount>0?' +'+survCount+'sv':''}</span>`
-      : `<span style="color:#d1d5db;">—</span>`;
-
-    const totalColor = total===3?'var(--green)':total===2?'var(--orange)':'var(--red)';
-    const evalStr    = total===3
-      ? '<span style="color:var(--green);font-size:10px;">✅ Phủ toàn quốc</span>'
-      : total===2
-        ? '<span style="color:var(--orange);font-size:10px;">⚠ Thiếu 1 vùng — cần mở rộng</span>'
-        : '<span style="color:var(--red);font-size:10px;">⚠ Chỉ 1 vùng — ưu tiên expand</span>';
-
-    return `<tr>
-      <td><strong style="font-size:12px;">${sku}</strong></td>
-      <td style="text-align:center;">${cell(hasN, d.North.size)}</td>
-      <td style="text-align:center;">${cell(hasS, d.South.size)}</td>
-      <td style="text-align:center;">${cell(hasC, d.Central.size)}</td>
-      <td style="text-align:center;font-size:20px;font-weight:700;color:${totalColor};">${total}/3</td>
-      <td>${evalStr}</td>
-    </tr>`;
-  }).join('');
-}
-
-
 
 // ════════════════════════════════════════
 // DRIFT PAGE
