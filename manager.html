@@ -584,12 +584,19 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
 
       <!-- Sub-nav -->
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
-        <button class="btn btn-sm btn-primary" id="ana-btn-whitespace"  onclick="showAnaSection('whitespace')">🗺️ White Space</button>
-        <button class="btn btn-sm btn-secondary" id="ana-btn-atrisk"    onclick="showAnaSection('atrisk')">⚠️ At-Risk SKU</button>
-        <button class="btn btn-sm btn-secondary" id="ana-btn-newlisting" onclick="showAnaSection('newlisting')">🆕 New Listing 2026</button>
-        <button class="btn btn-sm btn-secondary" id="ana-btn-loyalty"   onclick="showAnaSection('loyalty')">🏆 Chain Loyalty</button>
-        <button class="btn btn-sm btn-secondary" id="ana-btn-origin"    onclick="showAnaSection('origin')">🌍 Origin Analysis</button>
-        <button class="btn btn-sm btn-secondary" id="ana-btn-category"  onclick="showAnaSection('category')">📂 Category × Chain</button>
+        <button class="btn btn-sm btn-primary"   id="ana-btn-whitespace"  onclick="showAnaSection('whitespace')">🗺️ White Space</button>
+        <button class="btn btn-sm btn-secondary" id="ana-btn-atrisk"      onclick="showAnaSection('atrisk')">⚠️ At-Risk SKU</button>
+        <button class="btn btn-sm btn-secondary" id="ana-btn-newlisting"  onclick="showAnaSection('newlisting')">🆕 New Listing</button>
+        <button class="btn btn-sm btn-secondary" id="ana-btn-loyalty"     onclick="showAnaSection('loyalty')">🏆 Chain Loyalty</button>
+        <button class="btn btn-sm btn-secondary" id="ana-btn-origin"      onclick="showAnaSection('origin')">🌍 Origin</button>
+        <button class="btn btn-sm btn-secondary" id="ana-btn-category"    onclick="showAnaSection('category')">📂 Category×Chain</button>
+        <button class="btn btn-sm btn-secondary" id="ana-btn-skuchain"    onclick="showAnaSection('skuchain')">📊 SKU/Hệ thống</button>
+        <button class="btn btn-sm btn-secondary" id="ana-btn-catchain"    onclick="showAnaSection('catchain')">🗂️ Cat/Hệ thống</button>
+        <button class="btn btn-sm btn-secondary" id="ana-btn-origincov"   onclick="showAnaSection('origincov')">🌐 Độ phủ Origin</button>
+        <button class="btn btn-sm btn-secondary" id="ana-btn-mtka"        onclick="showAnaSection('mtka')">⭐ MT Key Account</button>
+        <button class="btn btn-sm btn-secondary" id="ana-btn-mtother"     onclick="showAnaSection('mtother')">🏪 MT Other</button>
+        <button class="btn btn-sm btn-secondary" id="ana-btn-gtregion"    onclick="showAnaSection('gtregion')">🗺️ GT Vùng</button>
+        <button class="btn btn-sm btn-secondary" id="ana-btn-strategic"   onclick="showAnaSection('strategic')" style="background:#1B3A57;color:#FFE140;border:none;">📋 Nhận định CL</button>
       </div>
 
       <!-- 1. WHITE SPACE MAP -->
@@ -714,6 +721,161 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
         </div>
       </div>
 
+      <!-- 7. SKU / CHAIN HEATMAP -->
+      <div id="ana-skuchain" style="display:none;">
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-title">📊 SKU trung bình / Hệ thống
+            <div class="ct-right"><span class="card-sub">Chain nào carry nhiều SKU nhất so với benchmark</span></div>
+          </div>
+          <div id="ana-skuchain-insight" class="hint" style="margin-bottom:12px;"></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th>Chain</th><th>Kênh</th><th>Tier</th>
+                <th style="text-align:center;">SKU đang KD</th>
+                <th style="text-align:center;">vs TB kênh</th>
+                <th style="text-align:center;">Coverage %</th>
+                <th>Nhận định</th>
+              </tr></thead>
+              <tbody id="ana-skuchain-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8. CATEGORY / CHAIN -->
+      <div id="ana-catchain" style="display:none;">
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-title">🗂️ Category / Hệ thống — Danh mục ngành hàng theo từng chain
+            <div class="ct-right"><span class="card-sub">Chain nào đang carry đủ categories, chain nào thiếu</span></div>
+          </div>
+          <div id="ana-catchain-insight" class="hint" style="margin-bottom:12px;"></div>
+          <div style="overflow-x:auto;" id="ana-catchain-wrap"></div>
+        </div>
+      </div>
+
+      <!-- 9. ORIGIN COVERAGE -->
+      <div id="ana-origincov" style="display:none;">
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-title">🌍 So sánh Coverage xuất xứ / Độ phủ chain
+            <div class="ct-right"><span class="card-sub">VN vs MY vs TH vs IT — origin nào có độ phủ rộng hơn ở từng kênh</span></div>
+          </div>
+          <div id="ana-origincov-insight" class="hint" style="margin-bottom:12px;"></div>
+          <div id="ana-origincov-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;"></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th>Xuất xứ</th><th>Kênh</th>
+                <th style="text-align:center;">Chains có SKU này</th>
+                <th style="text-align:center;">Avg SKU/chain</th>
+                <th style="text-align:center;">SKU count</th>
+                <th style="text-align:center;">Coverage %</th>
+                <th>Nhận định</th>
+              </tr></thead>
+              <tbody id="ana-origincov-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 10. MT KEY ACCOUNT FOCUS -->
+      <div id="ana-mtka" style="display:none;">
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-title">⭐ MT Key Account — Focus SKU & Xuất xứ
+            <div class="ct-right"><span class="card-sub">Mega Market · Lotte · Go! · Coop Xtra · Tops · Coop Finelife</span></div>
+          </div>
+          <div id="ana-mtka-insight" class="hint" style="margin-bottom:12px;background:#fffbeb;border-color:#fcd34d;color:#92400e;"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--border);">Top SKU (số KA listing nhiều nhất)</div>
+              <div id="ana-mtka-sku"></div>
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--border);">Breakdown theo xuất xứ</div>
+              <div id="ana-mtka-origin"></div>
+            </div>
+          </div>
+          <div style="margin-top:12px;">
+            <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--border);">Chi tiết từng KA</div>
+            <div class="tbl-wrap"><table>
+              <thead><tr><th>KA Chain</th><th>SKU count</th><th>Top Category</th><th>Origin mix</th><th>Nhận định</th></tr></thead>
+              <tbody id="ana-mtka-tbody"></tbody>
+            </table></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 11. MT OTHER FOCUS -->
+      <div id="ana-mtother" style="display:none;">
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-title">🏪 MT Other — Focus SKU & Xuất xứ
+            <div class="ct-right"><span class="card-sub">An Nam · An Phu · Nam An · King Food · K-Market · Menas · Roots · Sai Gon HD · Emart</span></div>
+          </div>
+          <div id="ana-mtother-insight" class="hint" style="margin-bottom:12px;"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--border);">Top SKU</div>
+              <div id="ana-mtother-sku"></div>
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--border);">Breakdown xuất xứ</div>
+              <div id="ana-mtother-origin"></div>
+            </div>
+          </div>
+          <div style="margin-top:12px;">
+            <div class="tbl-wrap"><table>
+              <thead><tr><th>Chain</th><th>SKU count</th><th>Top Category</th><th>Origin mix</th><th>Nhận định</th></tr></thead>
+              <tbody id="ana-mtother-tbody"></tbody>
+            </table></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 12. GT REGION FOCUS -->
+      <div id="ana-gtregion" style="display:none;">
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-title">🗺️ GT North · Central · South — Focus SKU & Xuất xứ
+            <div class="ct-right"><span class="card-sub">So sánh danh mục theo vùng GT</span></div>
+          </div>
+          <div id="ana-gtregion-insight" class="hint" style="margin-bottom:12px;"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;" id="ana-gtregion-cards"></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th>SKU</th><th>Category</th><th>Xuất xứ</th>
+                <th style="text-align:center;">🔵 North</th>
+                <th style="text-align:center;">🟡 Central</th>
+                <th style="text-align:center;">🔴 South</th>
+                <th>Nhận định phân vùng</th>
+              </tr></thead>
+              <tbody id="ana-gtregion-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 13. STRATEGIC SUMMARY TABLE -->
+      <div id="ana-strategic" style="display:none;">
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-title">📋 Bảng Nhận định & Định hướng Chiến lược
+            <div class="ct-right"><span class="card-sub">Rule-based từ data distribution — SKU × Chain × Region</span></div>
+          </div>
+          <div id="ana-strategic-insight" class="hint" style="margin-bottom:12px;background:#f0f9ff;border-color:#7dd3fc;color:#075985;"></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th>SKU / Nhóm</th><th>Khu vực / Chain</th>
+                <th>Tình trạng</th>
+                <th>Nguyên nhân có thể</th>
+                <th>Định hướng</th>
+                <th style="text-align:center;">Độ ưu tiên</th>
+              </tr></thead>
+              <tbody id="ana-strategic-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
     </div><!-- /dist-view-analysis -->
   </div>
 
@@ -767,6 +929,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
               <th colspan="3" style="text-align:center;background:#eef2ff;border-bottom:1px solid #c7d2fe;">Giá DGM (bán cho KH)</th>
               <th colspan="3" style="text-align:center;background:#f0fdf4;border-bottom:1px solid #bbf7d0;">Giá NTD cam kết</th>
               <th rowspan="2" style="vertical-align:middle;">Pass-through %</th>
+              <th rowspan="2" style="vertical-align:middle;background:#fdf4ff;border-left:2px solid #e9d5ff;">Front Margin Chain</th>
               <th rowspan="2" style="vertical-align:middle;">Ngày áp dụng</th>
               <th rowspan="2" style="vertical-align:middle;">Survey NTD</th>
               <th rowspan="2" style="vertical-align:middle;">Phân tích</th>
@@ -783,7 +946,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
             </tr>
           </thead>
           <tbody id="mt-detail-table">
-            <tr><td colspan="14" style="text-align:center;color:#9ca3af;padding:30px;">Đang tải...</td></tr>
+            <tr><td colspan="15" style="text-align:center;color:#9ca3af;padding:30px;">Đang tải...</td></tr>
           </tbody>
         </table>
       </div>
@@ -833,6 +996,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
               <th colspan="3" style="text-align:center;background:#fef9ee;border-bottom:1px solid #fde68a;">Agent → Outlet</th>
               <th colspan="3" style="text-align:center;background:#f0fdf4;border-bottom:1px solid #bbf7d0;">Outlet → NTD</th>
               <th rowspan="2" style="vertical-align:middle;">Pass-through %</th>
+              <th rowspan="2" style="vertical-align:middle;background:#fdf4ff;border-left:2px solid #e9d5ff;">Front Margin<br><span style="font-size:9px;font-weight:400;">Agent / Outlet→NTD</span></th>
               <th rowspan="2" style="vertical-align:middle;">Survey NTD</th>
               <th rowspan="2" style="vertical-align:middle;">Phân tích</th>
               <th rowspan="2" style="vertical-align:middle;">Trạng thái</th>
@@ -850,7 +1014,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
             </tr>
           </thead>
           <tbody id="gt-detail-table">
-            <tr><td colspan="15" style="text-align:center;color:#9ca3af;padding:30px;">Đang tải...</td></tr>
+            <tr><td colspan="16" style="text-align:center;color:#9ca3af;padding:30px;">Đang tải...</td></tr>
           </tbody>
         </table>
       </div>
@@ -2744,9 +2908,48 @@ function renderMTPage() {
     }
 
     // ── Survey NTD ──
-    const survey = r.gia_ntd_moi_nhat
-      ? fmt(r.gia_ntd_moi_nhat) + '<br><span style="font-size:10px;color:#9ca3af;">' + fmtDate(r.ngay_survey_moi_nhat||'') + ' (' + (r.so_lan_survey_xac_nhan||0) + 'x)</span>'
+    const surveyPrice = parseFloat(r.gia_ntd_moi_nhat);
+    const survey = !isNaN(surveyPrice) && surveyPrice > 0
+      ? fmt(surveyPrice) + '<br><span style="font-size:10px;color:#9ca3af;">' + fmtDate(r.ngay_survey_moi_nhat||'') + ' (' + (r.so_lan_survey_xac_nhan||0) + 'x)</span>'
       : na;
+
+    // ── FRONT MARGIN MT ──
+    // Formula: (Giá bán NTD − Giá DGM mới) / Giá DGM mới × 100%
+    // Priority: survey price → committed NTD price (sau)
+    const dgmBase     = !isNaN(dgmSau) && dgmSau > 0 ? dgmSau : (!isNaN(dgmTruoc) && dgmTruoc > 0 ? dgmTruoc : null);
+    const dgmBasePrev = !isNaN(dgmTruoc) && dgmTruoc > 0 ? dgmTruoc : null;
+    const ntdUsed     = (!isNaN(surveyPrice) && surveyPrice > 0) ? surveyPrice
+                      : (!isNaN(ntdSau) && ntdSau > 0 ? ntdSau : null);
+    const ntdPrev     = !isNaN(ntdTruoc) && ntdTruoc > 0 ? ntdTruoc : null;
+    const ntdSource   = (!isNaN(surveyPrice) && surveyPrice > 0) ? 'survey' : 'cam kết';
+
+    let fmCellMT = na;
+    if (dgmBase && ntdUsed && !isUnlisted) {
+      const fmNow  = ((ntdUsed - dgmBase) / dgmBase * 100);
+      const fmNowStr = fmNow.toFixed(1) + '%';
+      const fmColor  = fmNow >= 30 ? '#7c3aed' : fmNow >= 15 ? 'var(--green)' : fmNow >= 5 ? 'var(--orange)' : 'var(--red)';
+      const fmBadge  = `<span style="font-size:13px;font-weight:700;color:${fmColor};">${fmNowStr}</span>
+        <br><span style="font-size:9px;color:var(--gray);">(${ntdSource})</span>`;
+
+      // Previous margin (before price increase)
+      let prevBlock = '';
+      if (dgmBasePrev && ntdPrev) {
+        const fmPrev    = ((ntdPrev - dgmBasePrev) / dgmBasePrev * 100);
+        const fmDiff    = fmNow - fmPrev;
+        const diffColor = fmDiff > 0 ? '#7c3aed' : fmDiff < -2 ? 'var(--red)' : 'var(--gray)';
+        const uid = `fm-mt-${r.ten_khach_hang||''}-${r.ma_san_pham||''}-${r.ma_tang_gia||''}`.replace(/[^a-z0-9]/gi,'_');
+        prevBlock = `<div style="margin-top:3px;">
+          <button onclick="event.stopPropagation();toggleFM('${uid}')" style="font-size:9px;background:none;border:none;color:#8b5cf6;cursor:pointer;padding:0;text-decoration:underline;">▸ trước tăng giá</button>
+          <div id="${uid}" style="display:none;margin-top:3px;padding:4px 6px;background:#fdf4ff;border-radius:4px;border-left:2px solid #c4b5fd;">
+            <span style="font-size:10px;color:#6d28d9;">Trước: <strong>${fmPrev.toFixed(1)}%</strong></span><br>
+            <span style="font-size:9px;color:${diffColor};">${fmDiff>0?'↑':'↓'} ${Math.abs(fmDiff).toFixed(1)}pp sau tăng giá</span>
+          </div>
+        </div>`;
+      }
+      fmCellMT = fmBadge + prevBlock;
+    } else if (!isUnlisted && dgmBase && !ntdUsed) {
+      fmCellMT = `<span style="font-size:10px;color:#9ca3af;">Cần giá NTD</span>`;
+    }
 
     // ── Phân tích tự động ──
     const analysisItems = [];
@@ -2789,6 +2992,7 @@ function renderMTPage() {
       <td style="background:#f6fef9;font-size:12px;font-weight:600;">${isUnlisted ? na : (!isNaN(ntdSau)&&ntdSau>0 ? fmt(ntdSau) : '<span style="color:#9ca3af;">Chưa nhập</span>')}</td>
       <td style="background:#f6fef9;">${isUnlisted ? na : pctBadge(ntdPct, dgmPct)}</td>
       <td>${ptDisp}</td>
+      <td style="background:#fdf4ff;border-left:2px solid #e9d5ff;min-width:110px;">${fmCellMT}</td>
       <td style="font-size:11px;white-space:nowrap;">${lagDisp}</td>
       <td style="font-size:12px;">${survey}</td>
       <td style="max-width:160px;font-size:10px;line-height:1.6;">${analysisDisp}</td>
@@ -2917,11 +3121,66 @@ function renderGTPage() {
     }
 
     // ── Survey ──
-    const survey = r.gia_ntd_moi_nhat
-      ? fmt(r.gia_ntd_moi_nhat)+'<br><span style="font-size:10px;color:#9ca3af;">'+(r.so_outlet_survey_xac_nhan||0)+' outlets</span>'
+    const gtSurveyPrice = parseFloat(r.gia_ntd_moi_nhat);
+    const survey = !isNaN(gtSurveyPrice) && gtSurveyPrice > 0
+      ? fmt(gtSurveyPrice)+'<br><span style="font-size:10px;color:#9ca3af;">'+(r.so_outlet_survey_xac_nhan||0)+' outlets</span>'
       : na;
 
-    // ── Phân tích tự động GT ──
+    // ── FRONT MARGIN GT ──
+    // Agent margin:  (Giá Agent bán cho Outlet − Giá DGM bán cho Agent) / Giá DGM bán cho Agent × 100%
+    // Outlet margin: (Giá NTD − Giá Agent bán cho Outlet) / Giá Agent bán cho Outlet × 100%
+    // Prioritise survey for NTD price
+    const gtNTDUsed    = (!isNaN(gtSurveyPrice) && gtSurveyPrice > 0) ? gtSurveyPrice : (ntdS > 0 ? ntdS : null);
+    const gtNTDSrc     = (!isNaN(gtSurveyPrice) && gtSurveyPrice > 0) ? 'survey' : 'cam kết';
+
+    // Agent margin (current = after price increase if available)
+    const agentBase    = aoS > 0 ? aoS : (aoT > 0 ? aoT : null);
+    const agentBasePrev= aoT > 0 ? aoT : null;
+    const dgmCurr      = dgmS > 0 ? dgmS : (dgmT > 0 ? dgmT : null);
+    const dgmPrev      = dgmT > 0 ? dgmT : null;
+
+    let fmCellGT = na;
+    const fmParts = [];
+
+    if (dgmCurr && agentBase) {
+      const fmAgent = ((agentBase - dgmCurr) / dgmCurr * 100);
+      const fmAgentColor = fmAgent >= 20 ? '#7c3aed' : fmAgent >= 10 ? 'var(--green)' : fmAgent >= 3 ? 'var(--orange)' : 'var(--red)';
+      let agentBlock = `<div style="font-size:11px;"><span style="color:var(--gray);font-size:9px;">Agent: </span><strong style="color:${fmAgentColor};">${fmAgent.toFixed(1)}%</strong></div>`;
+
+      // Agent prev margin
+      if (dgmPrev && agentBasePrev && (dgmPrev !== dgmCurr || agentBasePrev !== agentBase)) {
+        const fmAgentPrev = ((agentBasePrev - dgmPrev) / dgmPrev * 100);
+        const diff = fmAgent - fmAgentPrev;
+        const uid2 = `fm-gt-ag-${(r.ten_agent||'')}${(r.ma_san_pham||'')}`.replace(/[^a-z0-9]/gi,'_');
+        agentBlock += `<button onclick="event.stopPropagation();toggleFM('${uid2}')" style="font-size:9px;background:none;border:none;color:#8b5cf6;cursor:pointer;padding:0;text-decoration:underline;">▸ trước tăng</button>
+          <div id="${uid2}" style="display:none;padding:3px 5px;background:#fdf4ff;border-radius:3px;border-left:2px solid #c4b5fd;margin-top:2px;">
+            <span style="font-size:9px;color:#6d28d9;">Trước: ${fmAgentPrev.toFixed(1)}% <span style="color:${diff>0?'#7c3aed':'var(--red)'};">(${diff>0?'+':''}${diff.toFixed(1)}pp)</span></span>
+          </div>`;
+      }
+      fmParts.push(agentBlock);
+    }
+
+    if (agentBase && gtNTDUsed) {
+      const fmOutlet = ((gtNTDUsed - agentBase) / agentBase * 100);
+      const fmOutColor = fmOutlet >= 20 ? '#7c3aed' : fmOutlet >= 10 ? 'var(--green)' : fmOutlet >= 3 ? 'var(--orange)' : 'var(--red)';
+      let outletBlock = `<div style="font-size:11px;margin-top:4px;padding-top:4px;border-top:1px solid #f3e8ff;"><span style="color:var(--gray);font-size:9px;">Outlet (${gtNTDSrc}): </span><strong style="color:${fmOutColor};">${fmOutlet.toFixed(1)}%</strong></div>`;
+
+      // Outlet prev margin
+      const ntdPrevV = ntdT > 0 ? ntdT : null;
+      const aoPrevV  = aoT > 0 ? aoT : null;
+      if (ntdPrevV && aoPrevV && (ntdPrevV !== gtNTDUsed || aoPrevV !== agentBase)) {
+        const fmOutPrev = ((ntdPrevV - aoPrevV) / aoPrevV * 100);
+        const diff2 = fmOutlet - fmOutPrev;
+        const uid3 = `fm-gt-ot-${(r.ten_agent||'')}${(r.ma_san_pham||'')}`.replace(/[^a-z0-9]/gi,'_');
+        outletBlock += `<button onclick="event.stopPropagation();toggleFM('${uid3}')" style="font-size:9px;background:none;border:none;color:#8b5cf6;cursor:pointer;padding:0;text-decoration:underline;">▸ trước tăng</button>
+          <div id="${uid3}" style="display:none;padding:3px 5px;background:#fdf4ff;border-radius:3px;border-left:2px solid #c4b5fd;margin-top:2px;">
+            <span style="font-size:9px;color:#6d28d9;">Trước: ${fmOutPrev.toFixed(1)}% <span style="color:${diff2>0?'#7c3aed':'var(--red)'};">(${diff2>0?'+':''}${diff2.toFixed(1)}pp)</span></span>
+          </div>`;
+      }
+      fmParts.push(outletBlock);
+    }
+
+    fmCellGT = fmParts.length ? fmParts.join('') : `<span style="font-size:10px;color:#9ca3af;">Cần thêm giá</span>`;
     // GT lưu ý: khi DGM áp dụng = agent đã biết và bắt đầu áp dụng đồng loạt
     const analysisItems = [];
     const dgmPctF = parseFloat(dgmPct), aoPctF = parseFloat(aoPct), ntdPctF = parseFloat(ntdPct);
@@ -2966,11 +3225,19 @@ function renderGTPage() {
       <td style="background:#f6fef9;font-size:11px;font-weight:600;">${!isNaN(ntdS)&&ntdS>0?fmt(ntdS):'<span style="color:#9ca3af;">Chưa nhập</span>'}</td>
       <td style="background:#f6fef9;">${pctBadge(ntdPct, dgmPct)}</td>
       <td>${ptDisp}</td>
+      <td style="background:#fdf4ff;border-left:2px solid #e9d5ff;min-width:120px;vertical-align:top;">${fmCellGT}</td>
       <td style="font-size:11px;">${survey}</td>
       <td style="max-width:160px;font-size:10px;line-height:1.6;">${analysisDisp}</td>
       <td><span class="badge ${st==='Đã áp dụng'?'b-ok':'b-warn'}">${st}</span></td>
     </tr>`;
   }).join('');
+}
+
+// ── Front Margin toggle ───────────────────────────────────────────────────────
+function toggleFM(uid) {
+  const d = el(uid);
+  if (!d) return;
+  d.style.display = d.style.display === 'none' ? 'block' : 'none';
 }
 
 // ════════════════════════════════════════
@@ -3089,13 +3356,16 @@ function renderDistRegion(skuToRegions, surveys, gtList) {
 }
 
 // ── ANALYSIS SUB-NAV ─────────────────────────────────────────────────────────
+const ANA_SECTIONS = ['whitespace','atrisk','newlisting','loyalty','origin','category','skuchain','catchain','origincov','mtka','mtother','gtregion','strategic'];
 let _anaSection = 'whitespace';
 function showAnaSection(sec) {
   _anaSection = sec;
-  ['whitespace','atrisk','newlisting','loyalty','origin','category'].forEach(s => {
+  ANA_SECTIONS.forEach(s => {
     const div = el('ana-'+s); if (div) div.style.display = s===sec ? 'block' : 'none';
     const btn = el('ana-btn-'+s);
-    if (btn) btn.className = s===sec ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary';
+    if (!btn) return;
+    if (s==='strategic') { btn.style.background = sec==='strategic'?'var(--navy)':'#1B3A57'; btn.style.color='#FFE140'; btn.style.border='none'; }
+    else btn.className = s===sec ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary';
   });
 }
 
@@ -3744,11 +4014,532 @@ function renderDistAnalysis() {
       <td style="font-size:10px;color:#f59e0b;">${d.crossGaps.length ? d.crossGaps.join(' | ') : '✅ Phủ đều'}</td>
     </tr>`;
   }).join('')||'<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:20px;">Chưa có data</td></tr>';
-}
 
-// ════════════════════════════════════════
-// DRIFT PAGE
-// ════════════════════════════════════════
+  // ════════════════════════════════════════════════════════════════════════
+  // ── 7. SKU / CHAIN HEATMAP ─────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════
+  const skuChainRows = chainArr.map(chain => {
+    const cust  = custMap[chain]||{};
+    const skuKD = skuArr.filter(sku => pivot[chain+'||'+sku]?.y2025 || pivot[chain+'||'+sku]?.y2026);
+    return { chain, kenh:cust.kenh||'—', tier:cust.tier||'—', skuCount:skuKD.length };
+  }).filter(d=>d.skuCount>0);
+
+  const mtRows  = skuChainRows.filter(d=>d.kenh==='MT');
+  const gtRows  = skuChainRows.filter(d=>d.kenh==='GT');
+  const mtAvg   = mtRows.length ? Math.round(mtRows.reduce((s,d)=>s+d.skuCount,0)/mtRows.length) : 0;
+  const gtAvg   = gtRows.length ? Math.round(gtRows.reduce((s,d)=>s+d.skuCount,0)/gtRows.length) : 0;
+
+  const scInsight = el('ana-skuchain-insight');
+  if(scInsight) scInsight.innerHTML =
+    `MT avg: <strong>${mtAvg} SKU/chain</strong> · GT avg: <strong>${gtAvg} SKU/chain</strong>. ` +
+    `Chain trên mức trung bình = có potential hoặc đã được đầu tư tốt. Chain dưới trung bình = cần review danh mục.`;
+
+  const scTbody = el('ana-skuchain-tbody');
+  if(scTbody) scTbody.innerHTML = skuChainRows
+    .sort((a,b)=>b.skuCount-a.skuCount)
+    .map(d => {
+      const avg  = d.kenh==='MT' ? mtAvg : gtAvg;
+      const diff = d.skuCount - avg;
+      const dStr = diff>0 ? `<span style="color:var(--green);font-weight:600;">+${diff} vs TB</span>`
+                 : diff<0 ? `<span style="color:var(--red);font-weight:600;">${diff} vs TB</span>`
+                 : `<span style="color:var(--gray);">= TB</span>`;
+      const totalActive = skuArr.length;
+      const covPct = totalActive>0 ? Math.round(d.skuCount/totalActive*100) : 0;
+      const covBar = `<div style="display:flex;align-items:center;gap:6px;">
+        <div style="width:80px;background:var(--light);border-radius:3px;height:8px;overflow:hidden;">
+          <div style="width:${covPct}%;height:100%;background:${covPct>=70?'var(--green)':covPct>=40?'var(--navy)':'var(--orange)'};border-radius:3px;"></div>
+        </div>
+        <span style="font-size:11px;font-weight:600;">${covPct}%</span>
+      </div>`;
+      const note = d.skuCount >= avg*1.3 ? '🌟 Portfolio rộng — loyalty cao hoặc KAM đầu tư tốt'
+        : d.skuCount >= avg ? '✅ Trên mức trung bình kênh'
+        : d.skuCount >= avg*0.6 ? '🟡 Dưới TB — review cơ hội upsell thêm SKU'
+        : '⚠️ Danh mục hẹp — cần mở rộng hoặc kiểm tra lý do';
+      return `<tr>
+        <td><strong>${d.chain}</strong>${d.tier==='Key Account'?'<span style="color:#d97706;font-size:10px;"> ★</span>':''}</td>
+        <td><span class="badge ${d.kenh==='MT'?'b-mt':'b-gt'}">${d.kenh}</span></td>
+        <td style="font-size:11px;">${d.tier}</td>
+        <td style="text-align:center;font-size:18px;font-weight:700;color:var(--navy);">${d.skuCount}</td>
+        <td style="text-align:center;">${dStr}</td>
+        <td>${covBar}</td>
+        <td style="font-size:11px;">${note}</td>
+      </tr>`;
+    }).join('');
+
+  // ════════════════════════════════════════════════════════════════════════
+  // ── 8. CATEGORY / CHAIN HEATMAP ────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════
+  // Collect all unique categories
+  const allCats = [...new Set(skuArr.map(sku => (prodMap[skuToMA[sku]||'']||{}).nhom||'Unknown'))].sort();
+
+  const ccInsight = el('ana-catchain-insight');
+  if(ccInsight) ccInsight.innerHTML =
+    `Matrix cho thấy chain nào đang carry đủ <strong>${allCats.length} categories</strong>. ` +
+    `Ô trống = category chưa có tại chain đó — cơ hội upsell. ● = đang KD, ○ = chỉ có 2025.`;
+
+  const ccWrap = el('ana-catchain-wrap');
+  if(ccWrap) {
+    let html = `<table style="border-collapse:collapse;font-size:10px;">`;
+    html += `<tr><th style="min-width:130px;padding:4px 6px;background:#1B3A57;color:#FFE140;position:sticky;left:0;z-index:2;border-bottom:2px solid #FFE140;">Chain</th>`;
+    allCats.forEach(cat => {
+      const CAT_COLORS2 = { 'Sardine':'#3b82f6','Tuna':'#06b6d4','Mackerel':'#8b5cf6','Coconut':'#10b981','Beans & Peas':'#f59e0b','Tomato':'#ef4444','Alce Nero':'#84cc16','Asian Sauce':'#f97316','Corn':'#eab308','Yumeat':'#6366f1','Bonduelle':'#14b8a6','Unknown':'#9ca3af' };
+      const cc = CAT_COLORS2[cat]||'var(--navy)';
+      html += `<th style="padding:3px 1px;background:#1B3A57;writing-mode:vertical-lr;transform:rotate(180deg);white-space:nowrap;font-size:9px;border-bottom:2px solid #FFE140;color:${cc};" title="${cat}">${cat}</th>`;
+    });
+    html += `<th style="padding:4px 6px;background:#1B3A57;color:#FFE140;font-size:9px;border-bottom:2px solid #FFE140;">Cat count</th></tr>`;
+
+    chainArr.forEach((chain, ci) => {
+      const cust  = custMap[chain]||{};
+      const rowBg = ci%2===0?'white':'#fafafa';
+      let catCount = 0;
+      html += `<tr style="background:${rowBg};">`;
+      html += `<td style="position:sticky;left:0;z-index:1;background:${rowBg};padding:3px 8px;font-size:10px;font-weight:600;white-space:nowrap;border-right:2px solid #e5e7eb;">${cust.kenh==='MT'?'🏬':'🛒'} ${chain}</td>`;
+      allCats.forEach(cat => {
+        const catSKUs = skuArr.filter(sku => (prodMap[skuToMA[sku]||'']||{}).nhom===cat);
+        const has26   = catSKUs.some(sku=>pivot[chain+'||'+sku]?.y2026);
+        const has25   = catSKUs.some(sku=>pivot[chain+'||'+sku]?.y2025);
+        const skuCnt  = catSKUs.filter(sku=>pivot[chain+'||'+sku]?.y2025||pivot[chain+'||'+sku]?.y2026).length;
+        if(has25||has26) catCount++;
+        const bg   = has26?'#dcfce7':has25?'#dbeafe':'#f9fafb';
+        const icon = has26?`<span style="font-size:9px;color:#166534;">●${skuCnt}</span>`:has25?`<span style="font-size:9px;color:#1d4ed8;">○${skuCnt}</span>`:'';
+        const CAT_COLORS2 = { 'Sardine':'#3b82f6','Tuna':'#06b6d4','Mackerel':'#8b5cf6','Coconut':'#10b981','Beans & Peas':'#f59e0b','Tomato':'#ef4444','Alce Nero':'#84cc16','Asian Sauce':'#f97316','Corn':'#eab308','Yumeat':'#6366f1','Bonduelle':'#14b8a6','Unknown':'#9ca3af' };
+        html += `<td style="height:28px;min-width:36px;background:${bg};text-align:center;border:1px solid #e5e7eb;" title="${chain} × ${cat}: ${skuCnt} SKU">${icon}</td>`;
+      });
+      const catPct = allCats.length>0?Math.round(catCount/allCats.length*100):0;
+      html += `<td style="padding:2px 8px;font-size:10px;font-weight:700;color:${catPct>=80?'var(--green)':catPct>=50?'var(--navy)':'var(--orange)'};">${catCount}/${allCats.length} <span style="font-weight:400;font-size:9px;color:var(--gray);">(${catPct}%)</span></td></tr>`;
+    });
+    html += `</table><div style="margin-top:8px;font-size:10px;color:var(--gray);display:flex;gap:16px;">
+      <span><span style="color:#166534;font-weight:700;">●</span> Có GT 2026 (số SKU)</span>
+      <span><span style="color:#1d4ed8;font-weight:700;">○</span> KD 2025 chưa confirm</span>
+      <span style="color:#9ca3af;">□ Chưa có — cơ hội upsell</span></div>`;
+    ccWrap.innerHTML = html;
+  }
+
+  // ════════════════════════════════════════════════════════════════════════
+  // ── 9. ORIGIN COVERAGE COMPARISON ──────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════
+  const OX_COLORS2 = { Vietnam:'#10b981',Malaysia:'#3b82f6',Thailand:'#f59e0b',Italy:'#8b5cf6',Indonesia:'#ef4444',Unknown:'#9ca3af' };
+  // Build: origin × kenh → {chains, skuCount, avgSKU}
+  const ocMap = {};
+  skuArr.forEach(sku => {
+    const ma   = skuToMA[sku]||'';
+    const prod = prodMap[ma]||{};
+    const ox   = prod.xuat_xu||'Unknown';
+    chainArr.forEach(chain => {
+      const p    = pivot[chain+'||'+sku];
+      if(!p?.y2025 && !p?.y2026) return;
+      const cust = custMap[chain]||{};
+      const kenh = cust.kenh||p.kenh||'—';
+      const key  = ox+'||'+kenh;
+      if(!ocMap[key]) ocMap[key] = { ox, kenh, chains:new Set(), totalSKU:0 };
+      ocMap[key].chains.add(chain);
+      ocMap[key].totalSKU++;
+    });
+  });
+
+  const ocRows = Object.values(ocMap).map(d => {
+    const totalChainsInKenh = chainArr.filter(c=>(custMap[c]||{}).kenh===d.kenh||(!custMap[c]&&d.kenh==='GT')).length||1;
+    const covPct = Math.round(d.chains.size/Math.max(totalChainsInKenh,1)*100);
+    const avgSKU = (d.totalSKU/d.chains.size).toFixed(1);
+    const note = covPct>=80?'🌟 Rất rộng':covPct>=60?'✅ Tốt':covPct>=40?'🟡 Trung bình':'⚠️ Hẹp';
+    return { ...d, chainCount:d.chains.size, covPct, avgSKU:parseFloat(avgSKU), note };
+  }).sort((a,b)=>b.covPct-a.covPct);
+
+  const ocInsight = el('ana-origincov-insight');
+  if(ocInsight) {
+    const topOcMT = ocRows.filter(r=>r.kenh==='MT').sort((a,b)=>b.covPct-a.covPct)[0];
+    const topOcGT = ocRows.filter(r=>r.kenh==='GT').sort((a,b)=>b.covPct-a.covPct)[0];
+    ocInsight.innerHTML =
+      `MT: <strong style="color:${OX_COLORS2[topOcMT?.ox]||'var(--navy)'}">${topOcMT?.ox||'—'}</strong> phủ rộng nhất (${topOcMT?.covPct||0}%) · ` +
+      `GT: <strong style="color:${OX_COLORS2[topOcGT?.ox]||'var(--navy)'}">${topOcGT?.ox||'—'}</strong> phủ rộng nhất (${topOcGT?.covPct||0}%).`;
+  }
+
+  // Mini bar cards per origin
+  const ocGrid = el('ana-origincov-grid');
+  if(ocGrid) {
+    const oxList = [...new Set(ocRows.map(r=>r.ox))];
+    ocGrid.innerHTML = oxList.map(ox => {
+      const color = OX_COLORS2[ox]||'var(--navy)';
+      const mtR = ocRows.find(r=>r.ox===ox&&r.kenh==='MT');
+      const gtR = ocRows.find(r=>r.ox===ox&&r.kenh==='GT');
+      return `<div class="card" style="padding:12px;">
+        <div style="font-size:14px;font-weight:700;color:${color};margin-bottom:8px;">🌐 ${ox}</div>
+        ${mtR?`<div style="margin-bottom:4px;font-size:11px;">🏬 MT <strong>${mtR.chainCount} chain</strong> (${mtR.covPct}%) · avg ${mtR.avgSKU} SKU
+          <div style="background:var(--light);border-radius:3px;height:6px;margin-top:2px;"><div style="width:${mtR.covPct}%;height:100%;background:${color};border-radius:3px;"></div></div></div>`:'<div style="font-size:11px;color:var(--gray);">MT: chưa có</div>'}
+        ${gtR?`<div style="font-size:11px;">🛒 GT <strong>${gtR.chainCount} agent</strong> (${gtR.covPct}%) · avg ${gtR.avgSKU} SKU
+          <div style="background:var(--light);border-radius:3px;height:6px;margin-top:2px;"><div style="width:${gtR.covPct}%;height:100%;background:${color};border-radius:3px;"></div></div></div>`:'<div style="font-size:11px;color:var(--gray);">GT: chưa có</div>'}
+      </div>`;
+    }).join('');
+  }
+
+  const ocTbody = el('ana-origincov-tbody');
+  if(ocTbody) ocTbody.innerHTML = ocRows.map(d => {
+    const color = OX_COLORS2[d.ox]||'var(--navy)';
+    return `<tr>
+      <td><strong style="color:${color};">${d.ox}</strong></td>
+      <td><span class="badge ${d.kenh==='MT'?'b-mt':'b-gt'}">${d.kenh}</span></td>
+      <td style="text-align:center;font-weight:700;">${d.chainCount}</td>
+      <td style="text-align:center;font-weight:600;color:${color};">${d.avgSKU}</td>
+      <td style="text-align:center;">${d.totalSKU}</td>
+      <td style="text-align:center;">
+        <div style="display:flex;align-items:center;gap:4px;">
+          <div style="width:60px;background:var(--light);border-radius:3px;height:8px;overflow:hidden;">
+            <div style="width:${d.covPct}%;height:100%;background:${color};border-radius:3px;"></div>
+          </div>
+          <span style="font-weight:700;color:${d.covPct>=70?'var(--green)':d.covPct>=40?'var(--orange)':'var(--red)'};">${d.covPct}%</span>
+        </div>
+      </td>
+      <td style="font-size:11px;">${d.note}</td>
+    </tr>`;
+  }).join('');
+
+  // ════════════════════════════════════════════════════════════════════════
+  // ── HELPER: build segment analysis (MT KA / MT Other / GT region) ──────
+  // ════════════════════════════════════════════════════════════════════════
+  function buildSegmentAnalysis(filterFn, containerId, insightId) {
+    const segChains = chainArr.filter(filterFn);
+    if(!segChains.length) {
+      const ins = el(insightId); if(ins) ins.textContent='Không có chain trong segment này.'; return;
+    }
+
+    // SKU frequency in segment
+    const skuFreq = {};
+    const catFreq = {};
+    const oxFreq  = {};
+    segChains.forEach(chain => {
+      skuArr.forEach(sku => {
+        if(!pivot[chain+'||'+sku]?.y2025 && !pivot[chain+'||'+sku]?.y2026) return;
+        skuFreq[sku] = (skuFreq[sku]||0)+1;
+        const prod = prodMap[skuToMA[sku]||'']||{};
+        const cat = prod.nhom||'Unknown';
+        const ox  = prod.xuat_xu||'Unknown';
+        catFreq[cat] = (catFreq[cat]||0)+1;
+        oxFreq[ox]   = (oxFreq[ox]||0)+1;
+      });
+    });
+
+    const topSKUs = Object.entries(skuFreq).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    const topOXs  = Object.entries(oxFreq).sort((a,b)=>b[1]-a[1]);
+    const totalOX = Object.values(oxFreq).reduce((a,b)=>a+b,0)||1;
+
+    // Top SKU bars
+    const skuDiv = el(containerId+'-sku');
+    if(skuDiv) {
+      const maxF = topSKUs[0]?.[1]||1;
+      skuDiv.innerHTML = topSKUs.map(([sku,cnt]) => {
+        const pct  = Math.round(cnt/Math.max(segChains.length,1)*100);
+        const prod = prodMap[skuToMA[sku]||'']||{};
+        const CAT_COLORS2 = { 'Sardine':'#3b82f6','Tuna':'#06b6d4','Mackerel':'#8b5cf6','Coconut':'#10b981','Beans & Peas':'#f59e0b','Tomato':'#ef4444','Alce Nero':'#84cc16','Asian Sauce':'#f97316','Corn':'#eab308','Yumeat':'#6366f1' };
+        const color = CAT_COLORS2[prod.nhom]||'var(--navy)';
+        const shortName = sku.length>35?sku.substring(0,33)+'…':sku;
+        return `<div style="margin-bottom:6px;">
+          <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px;">
+            <span style="color:${color};font-weight:600;">${shortName}</span>
+            <span style="font-weight:700;">${cnt}/${segChains.length} chain (${pct}%)</span>
+          </div>
+          <div style="background:var(--light);border-radius:3px;height:6px;overflow:hidden;">
+            <div style="width:${Math.round(cnt/maxF*100)}%;height:100%;background:${color};border-radius:3px;"></div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // Origin breakdown donut-like bars
+    const oxDiv = el(containerId+'-origin');
+    if(oxDiv) {
+      oxDiv.innerHTML = topOXs.map(([ox,cnt]) => {
+        const pct  = Math.round(cnt/totalOX*100);
+        const color = OX_COLORS2[ox]||'var(--navy)';
+        return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <div style="width:70px;font-size:11px;font-weight:600;color:${color};">${ox}</div>
+          <div style="flex:1;background:var(--light);border-radius:3px;height:14px;overflow:hidden;">
+            <div style="width:${pct}%;height:100%;background:${color};border-radius:3px;display:flex;align-items:center;padding-left:4px;">
+              <span style="font-size:9px;color:white;font-weight:700;">${pct}%</span>
+            </div>
+          </div>
+          <span style="font-size:11px;color:var(--gray);">${cnt} SKU·chain</span>
+        </div>`;
+      }).join('');
+    }
+
+    // Insight
+    const ins = el(insightId);
+    const topSKU = topSKUs[0];
+    const topOX  = topOXs[0];
+    if(ins && topSKU) ins.innerHTML =
+      `<strong>${segChains.length} chain</strong> trong segment. SKU được listing rộng nhất: <strong>${topSKU[0].substring(0,40)}</strong> (${topSKU[1]} chain). ` +
+      `Xuất xứ dominant: <strong style="color:${OX_COLORS2[topOX?.[0]]||'var(--navy)'};">${topOX?.[0]||'—'}</strong> chiếm ${Math.round((topOX?.[1]||0)/totalOX*100)}% SKU·chain combinations.`;
+
+    return { segChains, topSKUs, topOXs, skuFreq, catFreq };
+  }
+
+  // ── 10. MT KEY ACCOUNT ─────────────────────────────────────────────────
+  const kaResult = buildSegmentAnalysis(
+    c => (custMap[c]||{}).tier==='Key Account' && (custMap[c]||{}).kenh==='MT',
+    'ana-mtka', 'ana-mtka-insight'
+  );
+  const kaTbody = el('ana-mtka-tbody');
+  if(kaTbody && kaResult) {
+    const kaChains = kaResult.segChains;
+    kaTbody.innerHTML = kaChains.map(chain => {
+      const skuKD = skuArr.filter(sku=>pivot[chain+'||'+sku]?.y2025||pivot[chain+'||'+sku]?.y2026);
+      const catBreak = {};
+      const oxBreak  = {};
+      skuKD.forEach(sku => {
+        const prod = prodMap[skuToMA[sku]||'']||{};
+        catBreak[prod.nhom||'?'] = (catBreak[prod.nhom||'?']||0)+1;
+        oxBreak[prod.xuat_xu||'?'] = (oxBreak[prod.xuat_xu||'?']||0)+1;
+      });
+      const topCat = Object.entries(catBreak).sort((a,b)=>b[1]-a[1])[0];
+      const oxStr  = Object.entries(oxBreak).sort((a,b)=>b[1]-a[1]).map(([ox,n])=>`${ox}(${n})`).join(' · ');
+      const avgSKU = kaResult.segChains.length ? Math.round(kaResult.segChains.reduce((s,c)=>{
+        return s+skuArr.filter(sku=>pivot[c+'||'+sku]?.y2025||pivot[c+'||'+sku]?.y2026).length;
+      },0)/kaResult.segChains.length) : 0;
+      const note = skuKD.length>=avgSKU*1.2?'🌟 Danh mục rộng — đối tác tốt'
+        :skuKD.length>=avgSKU?'✅ Đủ portfolio'
+        :'⚠️ Dưới TB KA — cần review';
+      return `<tr>
+        <td><strong>${chain}</strong></td>
+        <td style="text-align:center;font-size:18px;font-weight:700;color:var(--navy);">${skuKD.length}</td>
+        <td style="font-size:11px;">${topCat?`${topCat[0]} (${topCat[1]} SKU)`:'—'}</td>
+        <td style="font-size:10px;color:var(--gray);">${oxStr}</td>
+        <td style="font-size:11px;">${note}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── 11. MT OTHER ───────────────────────────────────────────────────────
+  const otherResult = buildSegmentAnalysis(
+    c => (custMap[c]||{}).tier!=='Key Account' && (custMap[c]||{}).kenh==='MT',
+    'ana-mtother', 'ana-mtother-insight'
+  );
+  const otTbody = el('ana-mtother-tbody');
+  if(otTbody && otherResult) {
+    otTbody.innerHTML = otherResult.segChains.map(chain => {
+      const skuKD = skuArr.filter(sku=>pivot[chain+'||'+sku]?.y2025||pivot[chain+'||'+sku]?.y2026);
+      const catBreak={}, oxBreak={};
+      skuKD.forEach(sku=>{
+        const prod=prodMap[skuToMA[sku]||'']||{};
+        catBreak[prod.nhom||'?']=(catBreak[prod.nhom||'?']||0)+1;
+        oxBreak[prod.xuat_xu||'?']=(oxBreak[prod.xuat_xu||'?']||0)+1;
+      });
+      const topCat=Object.entries(catBreak).sort((a,b)=>b[1]-a[1])[0];
+      const oxStr=Object.entries(oxBreak).sort((a,b)=>b[1]-a[1]).map(([ox,n])=>`${ox}(${n})`).join(' · ');
+      const note = skuKD.length>=15?'✅ Danh mục tốt cho Other tier'
+        :skuKD.length>=8?'🟡 Trung bình — cơ hội thêm SKU'
+        :'⚠️ Hẹp — cần activation plan';
+      return `<tr>
+        <td><strong>${chain}</strong></td>
+        <td style="text-align:center;font-size:18px;font-weight:700;color:var(--navy);">${skuKD.length}</td>
+        <td style="font-size:11px;">${topCat?`${topCat[0]} (${topCat[1]} SKU)`:'—'}</td>
+        <td style="font-size:10px;color:var(--gray);">${oxStr}</td>
+        <td style="font-size:11px;">${note}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── 12. GT REGION FOCUS ─────────────────────────────────────────────────
+  const regionDefs = [
+    { name:'North', icon:'🔵', agents:['TPP'] },
+    { name:'Central', icon:'🟡', agents:['TDH'] },
+    { name:'South', icon:'🔴', agents:['HTP'] }
+  ];
+
+  const gtCards = el('ana-gtregion-cards');
+  if(gtCards) {
+    gtCards.innerHTML = regionDefs.map(reg => {
+      const regChains = chainArr.filter(c => reg.agents.includes(c) || (custMap[c]?.khu_vuc||'').includes(reg.name));
+      const skuKD = new Set();
+      regChains.forEach(c => skuArr.forEach(sku=>{ if(pivot[c+'||'+sku]?.y2025||pivot[c+'||'+sku]?.y2026) skuKD.add(sku); }));
+      const catBreak={};
+      [...skuKD].forEach(sku=>{ const prod=prodMap[skuToMA[sku]||'']||{}; catBreak[prod.nhom||'?']=(catBreak[prod.nhom||'?']||0)+1; });
+      const topCat=Object.entries(catBreak).sort((a,b)=>b[1]-a[1])[0];
+      return `<div class="card" style="text-align:center;padding:12px;">
+        <div style="font-size:22px;">${reg.icon}</div>
+        <div style="font-size:14px;font-weight:700;color:var(--navy);margin:4px 0;">GT ${reg.name}</div>
+        <div style="font-size:28px;font-weight:700;color:var(--blue);">${skuKD.size}</div>
+        <div style="font-size:11px;color:var(--gray);">SKU đang KD</div>
+        <div style="font-size:11px;margin-top:6px;color:var(--gray);">Top: <strong>${topCat?topCat[0]:'—'}</strong></div>
+      </div>`;
+    }).join('');
+  }
+
+  const grInsight = el('ana-gtregion-insight');
+  // Per SKU × region comparison
+  const gtSKUs = skuArr.filter(sku => chainArr.some(c=>(custMap[c]||{}).kenh==='GT' && (pivot[c+'||'+sku]?.y2025||pivot[c+'||'+sku]?.y2026)));
+
+  if(grInsight) {
+    const regionSkuCounts = regionDefs.map(reg => {
+      const regChains = chainArr.filter(c=>reg.agents.includes(c));
+      return gtSKUs.filter(sku=>regChains.some(c=>pivot[c+'||'+sku]?.y2025||pivot[c+'||'+sku]?.y2026)).length;
+    });
+    grInsight.innerHTML =
+      regionDefs.map((r,i)=>`<strong>${r.icon} ${r.name}: ${regionSkuCounts[i]} SKU</strong>`).join(' · ') +
+      `. SKU có mặt cả 3 vùng = core portfolio GT. SKU chỉ 1 vùng = cơ hội mở rộng hoặc regional-specific.`;
+  }
+
+  const grTbody = el('ana-gtregion-tbody');
+  if(grTbody) {
+    grTbody.innerHTML = gtSKUs.map(sku => {
+      const ma   = skuToMA[sku]||'';
+      const prod = prodMap[ma]||{};
+      const cells = regionDefs.map(reg => {
+        const regChains = chainArr.filter(c=>reg.agents.includes(c));
+        const hasTx  = regChains.some(c=>pivot[c+'||'+sku]?.y2026);
+        const hasKD  = regChains.some(c=>pivot[c+'||'+sku]?.y2025);
+        if(hasTx)  return `<td style="text-align:center;background:#dcfce7;"><span style="color:#166534;font-weight:700;">●</span></td>`;
+        if(hasKD)  return `<td style="text-align:center;background:#dbeafe;"><span style="color:#1d4ed8;">○</span></td>`;
+        return `<td style="text-align:center;background:#f9fafb;color:#d1d5db;">—</td>`;
+      });
+      const presentIn = regionDefs.filter((reg,i) => {
+        const regChains = chainArr.filter(c=>reg.agents.includes(c));
+        return regChains.some(c=>pivot[c+'||'+sku]?.y2025||pivot[c+'||'+sku]?.y2026);
+      });
+      const note = presentIn.length===3?'✅ Full GT coverage'
+        :presentIn.length===2?`🟡 ${presentIn.map(r=>r.name).join('+')} — thiếu ${regionDefs.filter(r=>!presentIn.includes(r)).map(r=>r.name).join(', ')}`
+        :presentIn.length===1?`⚠️ Chỉ ${presentIn[0].name} — cân nhắc mở rộng sang vùng khác`
+        :'—';
+      return `<tr>
+        <td style="font-size:11px;"><strong>${sku.length>35?sku.substring(0,33)+'…':sku}</strong></td>
+        <td style="font-size:10px;">${prod.nhom||'—'}</td>
+        <td style="font-size:10px;color:${OX_COLORS2[prod.xuat_xu]||'var(--gray)'};">${prod.xuat_xu||'—'}</td>
+        ${cells.join('')}
+        <td style="font-size:11px;">${note}</td>
+      </tr>`;
+    }).join('')||'<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:20px;">Chưa có data GT</td></tr>';
+  }
+
+  // ════════════════════════════════════════════════════════════════════════
+  // ── 13. STRATEGIC SUMMARY TABLE ────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════
+  const stInsight = el('ana-strategic-insight');
+  if(stInsight) stInsight.innerHTML =
+    `Bảng nhận định tổng hợp từ toàn bộ data distribution — rule-based, không cần AI. ` +
+    `Mỗi dòng = 1 insight cụ thể kèm nguyên nhân có thể và định hướng hành động.`;
+
+  const strategicRows = [];
+
+  // Pattern 1: High-distribution SKU (best sellers)
+  const highDistSKU = skuArr.filter(sku => {
+    const cnt = chainArr.filter(c=>pivot[c+'||'+sku]?.y2025||pivot[c+'||'+sku]?.y2026).length;
+    return cnt >= Math.round(chainArr.length*0.7);
+  });
+  highDistSKU.forEach(sku => {
+    const ma = skuToMA[sku]||''; const prod = prodMap[ma]||{};
+    const cnt = chainArr.filter(c=>pivot[c+'||'+sku]?.y2025||pivot[c+'||'+sku]?.y2026).length;
+    strategicRows.push({
+      sku: sku.length>35?sku.substring(0,33)+'…':sku,
+      area: `${cnt}/${chainArr.length} chain (${Math.round(cnt/chainArr.length*100)}%)`,
+      status: '🌟 Core SKU',
+      reason: `Phủ rộng nhất portfolio — có thể do: nhu cầu phổ biến, giá tốt, đã có nhận biết thương hiệu, hoặc được KAM push mạnh`,
+      direction: `Bảo vệ listing, ưu tiên trong mọi đàm phán. Đây là anchor SKU — không nên để bị delist dù có áp lực tăng giá`,
+      priority: '🔴 Cao', _pri: 3
+    });
+  });
+
+  // Pattern 2: Low distribution SKU (active but narrow)
+  const lowDistSKU = skuArr.filter(sku => {
+    const prod = prodMap[skuToMA[sku]||'']||{};
+    if(prod.trang_thai==='Discontinued') return false;
+    const cnt = chainArr.filter(c=>pivot[c+'||'+sku]?.y2025||pivot[c+'||'+sku]?.y2026).length;
+    return cnt>0 && cnt<=Math.round(chainArr.length*0.3);
+  });
+  lowDistSKU.forEach(sku => {
+    const ma = skuToMA[sku]||''; const prod = prodMap[ma]||{};
+    const cnt = chainArr.filter(c=>pivot[c+'||'+sku]?.y2025||pivot[c+'||'+sku]?.y2026).length;
+    strategicRows.push({
+      sku: sku.length>35?sku.substring(0,33)+'…':sku,
+      area: `Chỉ ${cnt} chain`,
+      status: '🟡 Phân phối hẹp',
+      reason: `Có thể do: SKU mới chưa push đủ rộng; sản phẩm niche phù hợp thị trường cụ thể (vd: Alce Nero → gourmet chain); hoặc KAM chưa pitch đủ chain; giá cao so với đối thủ tại kênh phổ thông`,
+      direction: `Review chain nào phù hợp nhất với profile SKU (premium vs mass). Nếu là niche — OK. Nếu là mass — cần activation plan mở thêm ${Math.round(chainArr.length*0.5)-cnt} chain`,
+      priority: '🟡 Trung bình', _pri: 2
+    });
+  });
+
+  // Pattern 3: SKU present only in GT not MT
+  const gtOnlySKU = skuArr.filter(sku => {
+    const gtHas = chainArr.some(c=>(custMap[c]||{}).kenh==='GT'&&(pivot[c+'||'+sku]?.y2025||pivot[c+'||'+sku]?.y2026));
+    const mtHas = chainArr.some(c=>(custMap[c]||{}).kenh==='MT'&&(pivot[c+'||'+sku]?.y2025||pivot[c+'||'+sku]?.y2026));
+    return gtHas && !mtHas;
+  });
+  if(gtOnlySKU.length) strategicRows.push({
+    sku: `${gtOnlySKU.length} SKU chỉ có ở GT`,
+    area: 'GT only — MT = 0',
+    status: '⚠️ Kênh lệch',
+    reason: `SKU chưa được list ở MT có thể do: chưa đủ MOQ/điều kiện listing MT; giá chưa phù hợp format MT; chưa có POSM/packaging phù hợp; hoặc KAM MT chưa pitch`,
+    direction: `Review từng SKU: nếu phù hợp MT (packaging, giá) → lên kế hoạch pitch 2–3 MT chain phù hợp nhất. Ưu tiên Key Account trước`,
+    priority: '🟡 Trung bình', _pri: 2
+  });
+
+  // Pattern 4: SKU only MT not GT
+  const mtOnlySKU = skuArr.filter(sku => {
+    const gtHas = chainArr.some(c=>(custMap[c]||{}).kenh==='GT'&&(pivot[c+'||'+sku]?.y2025||pivot[c+'||'+sku]?.y2026));
+    const mtHas = chainArr.some(c=>(custMap[c]||{}).kenh==='MT'&&(pivot[c+'||'+sku]?.y2025||pivot[c+'||'+sku]?.y2026));
+    const prod  = prodMap[skuToMA[sku]||'']||{};
+    return mtHas && !gtHas && prod.trang_thai!=='Discontinued';
+  });
+  if(mtOnlySKU.length) strategicRows.push({
+    sku: `${mtOnlySKU.length} SKU chỉ có ở MT`,
+    area: 'MT only — GT = 0',
+    status: '🔵 MT Focus',
+    reason: `SKU premium (Alce Nero, Sardine EVOO) hoặc format lớn thường phù hợp MT hơn. GT có thể chưa demand hoặc agent chưa push vì margin thấp hơn`,
+    direction: `Kiểm tra xem có SKU nào trong nhóm này phù hợp GT không (giá cạnh tranh, nhu cầu đại trà). Nếu có → brief agent, làm thử ở 1 vùng trước`,
+    priority: '🟢 Thấp', _pri: 1
+  });
+
+  // Pattern 5: Discontinued SKU still listed
+  const discStillListed = Object.entries(skuStats).filter(([,s])=>s.prodStatus==='Discontinued'&&s.chains2025.length>0);
+  if(discStillListed.length) strategicRows.push({
+    sku: `${discStillListed.length} SKU Discontinued còn listing`,
+    area: `${[...new Set(discStillListed.flatMap(([,s])=>s.chains2025))].length} chain`,
+    status: '🔴 Cần xử lý',
+    reason: `Sản phẩm đã ngưng kinh doanh nhưng vẫn còn tồn tại trong danh sách của một số chain — có thể do: còn tồn kho tại chain; chưa thông báo delist chính thức; hoặc data chưa cập nhật`,
+    direction: `Liên hệ từng chain để xác nhận tình trạng thực tế. Nếu còn hàng → quản lý bán hết. Nếu đã hết → update data và gửi thông báo delist chính thức`,
+    priority: '🔴 Cao', _pri: 3
+  });
+
+  // Pattern 6: Chain with no GT 2026 transactions (at risk)
+  const chainNoTx26 = loyaltyData.filter(d=>d.loyalty!==null&&d.loyalty<50&&d.tier==='Key Account');
+  if(chainNoTx26.length) strategicRows.push({
+    sku: `${chainNoTx26.map(d=>d.chain).join(', ')}`,
+    area: 'Key Account MT',
+    status: '🚨 KA Loyalty thấp',
+    reason: `Key Account với loyalty <50% có thể do: phản ứng sau tăng giá 2026 (delist một số SKU); chain đang tái cơ cấu danh mục; competitor gain shelf space; hoặc thiếu activation/support từ KAM`,
+    direction: `KAM gặp ngay — tìm hiểu nguyên nhân cụ thể. Đề xuất: trade deal đặc biệt, co-funding display, hoặc review lại pricing. Không để mất thêm SKU tại KA`,
+    priority: '🔴 Khẩn cấp', _pri: 4
+  });
+
+  // Pattern 7: GT region gaps
+  regionDefs.forEach(reg => {
+    const regChains = chainArr.filter(c=>reg.agents.includes(c));
+    const missingCore = highDistSKU.filter(sku => !regChains.some(c=>pivot[c+'||'+sku]?.y2025||pivot[c+'||'+sku]?.y2026));
+    if(missingCore.length>0) strategicRows.push({
+      sku: `${missingCore.length} Core SKU thiếu`,
+      area: `GT ${reg.name} ${reg.icon}`,
+      status: '⚠️ Coverage gap',
+      reason: `Core SKU (phủ ≥70% chain toàn mạng) nhưng chưa có ở GT ${reg.name}. Có thể do: agent chưa push; demand khu vực khác nhau; hoặc logistics/supply chain chưa cover vùng này tốt`,
+      direction: `Brief agent ${reg.agents.join('/')} về ${missingCore.length} SKU còn thiếu. Cung cấp sample + incentive để thêm vào portfolio. Đặt mục tiêu list ít nhất ${Math.ceil(missingCore.length*0.6)} SKU trong Q3`,
+      priority: '🟡 Trung bình', _pri: 2
+    });
+  });
+
+  const stTbody = el('ana-strategic-tbody');
+  if(stTbody) {
+    const sorted = strategicRows.sort((a,b)=>b._pri-a._pri);
+    stTbody.innerHTML = sorted.map(r => {
+      const priBg = r._pri>=4?'#fff5f5':r._pri===3?'#fff7ed':r._pri===2?'#fffbeb':'white';
+      return `<tr style="background:${priBg};">
+        <td style="font-size:11px;font-weight:600;max-width:160px;">${r.sku}</td>
+        <td style="font-size:11px;color:var(--gray);max-width:120px;">${r.area}</td>
+        <td style="font-size:11px;white-space:nowrap;">${r.status}</td>
+        <td style="font-size:11px;color:var(--gray);max-width:220px;line-height:1.5;">${r.reason}</td>
+        <td style="font-size:11px;max-width:200px;line-height:1.5;">${r.direction}</td>
+        <td style="text-align:center;font-size:11px;white-space:nowrap;font-weight:600;">${r.priority}</td>
+      </tr>`;
+    }).join('')||'<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:20px;">Chưa có data đủ để phân tích</td></tr>';
+  }
+}
 function renderAlerts() {
   const driftAlerts = D.alerts.filter(a=>a.loai_canh_bao==='PRICE_DRIFT_DETECTED'&&!isTrue(a.da_xu_ly));
   const otherAlerts = D.alerts.filter(a=>a.loai_canh_bao!=='PRICE_DRIFT_DETECTED'&&!isTrue(a.da_doc));
