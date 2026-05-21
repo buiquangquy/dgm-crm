@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
-<title>DGM Survey v11</title>
+<title>DGM Survey v12</title>
 <style>
 :root {
   --red: #C8102E;
@@ -410,7 +410,11 @@ input[type=file] { display: none; }
           <div style="display:flex;flex-direction:column;gap:10px;">
             <div>
               <div class="field-label">Tên sản phẩm <span class="req">*</span></div>
-              <input type="text" id="f-comp-name" placeholder="Vd: Cá thu sốt cà chua">
+              <input type="text" id="f-comp-name" placeholder="Vd: Đậu sốt, Cá thu, Cháo..." oninput="_onCompNameInput()">
+            </div>
+            <div>
+              <div class="field-label">Hương vị / Loại sốt <span style="font-size:10px;color:#9ca3af;">(ghép vào tên SP khi lưu)</span></div>
+              <input type="text" id="f-comp-flavour" placeholder="Vd: Cà chua, Cà ri, Tương đen, Dầu ô liu..." oninput="_onCompNameInput()">
             </div>
             <div>
               <div class="field-label">Loại sản phẩm</div>
@@ -543,7 +547,13 @@ input[type=file] { display: none; }
     <div class="section-card">
       <div class="section-title">📸 Ảnh chụp</div>
       <div class="section-body">
-        <div class="nip-hint">📌 Chụp đủ 4 ảnh bắt buộc để AI extract thông tin</div>
+        <!-- Smart-skip banner — hiện khi sản phẩm đã survey trước đó -->
+        <div id="photo-skip-banner" style="display:none;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:10px;padding:10px 12px;margin-bottom:10px;">
+          <div style="font-size:13px;font-weight:700;color:#065f46;">✅ Đã có dữ liệu sản phẩm này</div>
+          <div style="font-size:11px;color:#047857;margin-top:3px;" id="photo-skip-detail"></div>
+          <div style="font-size:11px;color:#6b7280;margin-top:4px;">Ảnh & NIP không bắt buộc — có thể bổ sung nếu muốn cập nhật</div>
+        </div>
+        <div class="nip-hint" id="photo-hint-text">📌 Chụp đủ 4 ảnh bắt buộc để AI extract thông tin</div>
         <div class="photo-section" id="photo-slots">
           <!-- slots injected by JS -->
         </div>
@@ -926,6 +936,7 @@ function resetForm() {
   state.photoFiles = {1:null,2:null,3:null,4:null};
   state.extraFiles = [];
   state.productType = 'own';
+  state.photoSkipReason = null; // clear skip state
   document.querySelectorAll('#scr-form input:not([type=file]), #scr-form select, #scr-form textarea').forEach(el => {
     if (el.tagName === 'SELECT') el.selectedIndex = 0;
     else el.value = '';
@@ -935,6 +946,11 @@ function resetForm() {
   document.getElementById('gt-region-field').style.display = 'none';
   const gtRegEl = document.getElementById('f-gt-region');
   if (gtRegEl) gtRegEl.value = '';
+  // Hide smart-skip banner nếu có
+  const skipBanner = document.getElementById('photo-skip-banner');
+  if (skipBanner) skipBanner.style.display = 'none';
+  // Restore photo & NIP required state
+  _setPhotoNIPRequired(true);
   setProductType('own');
 }
 
@@ -979,7 +995,13 @@ function handlePhoto(num, input) {
 function updatePhotoProgress() {
   const count = Object.values(state.photoFiles).filter(Boolean).length;
   document.getElementById('photo-progress-bar').style.width = (count/4*100) + '%';
-  document.getElementById('photo-progress-label').textContent = `Ảnh bắt buộc: ${count}/4`;
+  if (state.photoSkipReason) {
+    document.getElementById('photo-progress-label').textContent = count > 0
+      ? 'Ảnh bổ sung: ' + count + '/4 (tuỳ chọn)'
+      : 'Ảnh tuỳ chọn — bỏ qua hoặc chụp để cập nhật';
+  } else {
+    document.getElementById('photo-progress-label').textContent = 'Ảnh bắt buộc: ' + count + '/4';
+  }
 }
 
 function addExtraPhotos(input) {
@@ -1080,12 +1102,87 @@ function onProductChange() {
   if (opt && opt.dataset.json) {
     try {
       const p = JSON.parse(opt.dataset.json);
-      chip.textContent = `🏭 ${p.nsx_nha_phan_phoi||'—'}  🌏 ${p.xuat_xu||'—'}  📦 ${p.quy_cach_mac_dinh||'—'}${p.don_vi||''}`;
+      chip.textContent = '🏭 ' + (p.nsx_nha_phan_phoi||'—') + '  🌏 ' + (p.xuat_xu||'—') + '  📦 ' + (p.quy_cach_mac_dinh||'—') + (p.don_vi||'');
       chip.classList.add('show');
+      // Smart-skip check
+      _checkProductSurveyed(p.ten_san_pham, '');
     } catch(e) { chip.classList.remove('show'); }
   } else {
     chip.classList.remove('show');
+    _setPhotoNIPRequired(true);
+    const banner = document.getElementById('photo-skip-banner');
+    if (banner) banner.style.display = 'none';
   }
+}
+
+// ══════════════════════════════════════════
+// SMART-SKIP: ảnh & NIP không bắt buộc nếu
+// cùng nhân viên đã survey sản phẩm này trước
+// ══════════════════════════════════════════
+function _checkProductSurveyed(productName, brandName) {
+  if (!productName) { _setPhotoNIPRequired(true); return; }
+
+  const myId    = state.user?.ma_nhan_vien || state.user?.ten_hien_thi || '';
+  const surveys = state.mySurveys || [];
+
+  // Match theo tên SP (lowercase, trim) — không phân biệt hoa thường
+  const nameKey = productName.toLowerCase().trim();
+  const found   = surveys.find(s => {
+    const sameUser = (s._ma_nhan_vien || s.ten_nhan_vien || '') === myId
+                  || (s.ten_nhan_vien || '') === (state.user?.ten_hien_thi || '');
+    const sameProd = (s.ten_san_pham || '').toLowerCase().trim() === nameKey;
+    return sameUser && sameProd;
+  });
+
+  const banner  = document.getElementById('photo-skip-banner');
+  const detail  = document.getElementById('photo-skip-detail');
+  const hintTxt = document.getElementById('photo-hint-text');
+
+  if (found) {
+    // Đã survey → skip
+    state.photoSkipReason = found;
+    _setPhotoNIPRequired(false);
+    if (banner) {
+      banner.style.display = 'block';
+      if (detail) detail.textContent = 'Survey gần nhất: ' + (found.ngay_survey || '?') + ' tại ' + (found.ten_diem_ban || '?');
+    }
+    if (hintTxt) hintTxt.style.display = 'none';
+  } else {
+    // Chưa survey → bắt buộc bình thường
+    state.photoSkipReason = null;
+    _setPhotoNIPRequired(true);
+    if (banner) banner.style.display = 'none';
+    if (hintTxt) hintTxt.style.display = 'block';
+  }
+}
+
+// Bật/tắt required cho photo slots và NIP fields
+function _setPhotoNIPRequired(required) {
+  // Photo slots — cập nhật badge "Bắt buộc" / "Tuỳ chọn"
+  PHOTO_SLOTS.forEach(slot => {
+    const slotEl = document.getElementById('photo-slot-' + slot.num);
+    if (!slotEl) return;
+    const badge = slotEl.querySelector('.slot-req, .slot-opt');
+    if (badge) {
+      badge.className = required ? 'slot-req' : 'slot-opt';
+      badge.textContent = required ? 'Bắt buộc' : 'Tuỳ chọn';
+    }
+    slotEl.classList.toggle('required', required);
+  });
+  // NIP fields — chỉ áp dụng cho competitor (own brand NIP không bắt buộc từ đầu)
+  if (state.productType === 'comp') {
+    const nipReqSpans = document.querySelectorAll('#nip-section .nip-field span[style*="color:var(--red)"]');
+    nipReqSpans.forEach(sp => { sp.style.display = required ? '' : 'none'; });
+    const nipSection = document.getElementById('nip-section');
+    if (nipSection) {
+      const title = nipSection.querySelector('.section-title');
+      if (title) title.textContent = required
+        ? '🔬 Thông tin dinh dưỡng (NIP)'
+        : '🔬 Thông tin dinh dưỡng (NIP) — tuỳ chọn';
+    }
+  }
+  // Progress label update
+  updatePhotoProgress();
 }
 
 function setProductType(type) {
@@ -1096,6 +1193,24 @@ function setProductType(type) {
   const compBtn = document.getElementById('type-comp');
   ownBtn.className  = 'type-btn' + (type === 'own'  ? ' active-red'  : '');
   compBtn.className = 'type-btn' + (type === 'comp' ? ' active-blue' : '');
+  // Reset skip state khi đổi loại SP
+  const banner = document.getElementById('photo-skip-banner');
+  if (banner) banner.style.display = 'none';
+  const hintTxt = document.getElementById('photo-hint-text');
+  if (hintTxt) hintTxt.style.display = 'block';
+  _setPhotoNIPRequired(true);
+}
+
+// Debounce check khi user gõ tên SP đối thủ
+let _compNameTimer;
+function _onCompNameInput() {
+  clearTimeout(_compNameTimer);
+  _compNameTimer = setTimeout(function() {
+    const base    = (document.getElementById('f-comp-name').value || '').trim();
+    const flavour = (document.getElementById('f-comp-flavour').value || '').trim();
+    const full    = flavour ? base + ' ' + flavour : base;
+    _checkProductSurveyed(full, document.getElementById('f-comp-brand').value || '');
+  }, 600); // chờ 600ms sau khi user ngừng gõ
 }
 
 function checkBackdate() {
@@ -1183,10 +1298,10 @@ function validateForm() {
 
   if (!ok) { showToast('⚠️ Vui lòng điền đủ thông tin bắt buộc', 'error'); }
 
-  // Photos warning (not blocking)
+  // Photos warning — chỉ bắt buộc khi KHÔNG có skip reason
   const photosCount = Object.values(state.photoFiles).filter(Boolean).length;
-  if (photosCount < 4) {
-    showToast(`📸 Còn thiếu ${4-photosCount} ảnh — sẽ lưu không có ảnh`, 'error');
+  if (!state.photoSkipReason && photosCount < 4) {
+    showToast('📸 Còn thiếu ' + (4-photosCount) + ' ảnh — sẽ lưu không có ảnh', 'error');
     // non-blocking, continue
   }
 
@@ -1216,7 +1331,10 @@ function buildPayload() {
       brandId     = p.thuong_hieu || '';
     }
   } else {
-    productName = document.getElementById('f-comp-name').value.trim();
+    const baseName  = document.getElementById('f-comp-name').value.trim();
+    const flavour   = document.getElementById('f-comp-flavour').value.trim();
+    // Ghép: "Đậu sốt" + "Cà chua" → "Đậu sốt cà chua"
+    productName = flavour ? baseName + ' ' + flavour : baseName;
     productType = document.getElementById('f-comp-type').value.trim();
     brandName   = document.getElementById('f-comp-brand').value.trim();
     qty         = document.getElementById('f-comp-qty').value;
@@ -1246,6 +1364,7 @@ function buildPayload() {
     nsx_nha_phan_phoi:  mfg,
     xuat_xu:            origin,
     vi_tri_ke:          document.getElementById('f-shelf').value,
+    facing:             document.getElementById('f-facing').value,
     ghi_chu:            document.getElementById('f-note').value,
     phuong_thuc_nhap:   'manual',
     han_su_dung:        document.getElementById('f-exp').value,
