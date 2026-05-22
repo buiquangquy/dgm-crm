@@ -215,6 +215,26 @@ tr:hover .tab{opacity:1}
 .status-hint{font-size:11px;color:var(--blue);margin-top:4px;display:none;padding:4px 8px;background:var(--blt);border-radius:var(--r)}
 /* OFFLINE BANNER */
 .offline-banner{display:none;position:fixed;top:52px;left:0;right:0;background:var(--amb);color:#fff;font-size:12px;text-align:center;padding:5px;z-index:500}
+/* ✅ v8: NOTIFICATION PANEL */
+.notif-bell{position:relative;display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:var(--s2);border:.5px solid var(--bd);cursor:pointer;font-size:15px;flex-shrink:0}
+.notif-bell:hover{background:var(--blt)}
+.notif-badge{position:absolute;top:-3px;right:-3px;width:16px;height:16px;background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:50%;display:flex;align-items:center;justify-content:center;display:none}
+.notif-panel{position:fixed;top:60px;right:16px;width:320px;max-height:420px;background:var(--s);border:.5px solid var(--bd2);border-radius:var(--rx);box-shadow:0 8px 32px rgba(0,0,0,.18);z-index:2000;display:none;overflow:hidden;flex-direction:column}
+.notif-panel.open{display:flex}
+.notif-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:.5px solid var(--bd);flex-shrink:0}
+.notif-head-t{font-size:13px;font-weight:600}
+.notif-clear{font-size:11px;color:var(--blue);cursor:pointer;background:none;border:none;padding:0}
+.notif-clear:hover{text-decoration:underline}
+.notif-list{overflow-y:auto;flex:1;max-height:340px}
+.notif-item{display:flex;gap:10px;padding:10px 14px;border-bottom:.5px solid var(--bd);cursor:pointer;transition:background .1s}
+.notif-item:hover{background:var(--s2)}
+.notif-item.unread{background:var(--blt)}
+.notif-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.notif-body{flex:1;min-width:0}
+.notif-title{font-size:12px;font-weight:600;margin-bottom:2px}
+.notif-msg{font-size:11px;color:var(--t2);line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.notif-time{font-size:10px;color:var(--t3);margin-top:2px}
+.notif-empty{font-size:12px;color:var(--t3);text-align:center;padding:24px 16px}
 /* 🔧 FIX B1: Loading overlay để tránh màn hình trắng */
 #loading-overlay{position:fixed;inset:0;background:var(--nvy);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9000;gap:12px}
 #loading-overlay .lo-logo{width:56px;height:56px;background:var(--blue);border-radius:14px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:700}
@@ -634,6 +654,8 @@ function doLogin(){
   state.currentUser=user;
   localStorage.setItem('dgm_uid',uid);
   localStorage.setItem('dgm_em',email);
+  // ✅ v8: Load notifs + start polling khi login thành công
+  _loadNotifs();renderNotifBadge();
   $('login').style.display='none';
   $('app').style.display='flex';
   $('cav').textContent=user.initials||user.name[0];
@@ -643,7 +665,7 @@ function doLogin(){
   if(profileBtn)profileBtn.style.display=isMgr()?'none':'inline-flex';
   const savedPage=localStorage.getItem('dgm_page')||'kanban';
   showPage(savedPage,null);
-  syncAll();
+  syncAll().then(()=>startPolling());
 }
 
 function doLogout(){
@@ -1152,6 +1174,13 @@ async function mvT(id,st){
   if(!t)return;
   const old=t.status;t.status=st;
   addSysCom(t,'Chuyển: '+SL[old]+' → '+SL[st]+' bởi '+(state.currentUser?.name||''));
+  // ✅ v8: Notify PIC khi task chuyển status
+  const picIds=getPicIds(t);
+  picIds.forEach(pid=>{
+    if(pid!==state.currentUser?.id){
+      pushNotif(pid,'🔄 Task cập nhật','"'+t.title+'" → '+SL[st],id);
+    }
+  });
   renderKanban();
   await saveTask(t);
 }
@@ -1170,7 +1199,16 @@ async function postCom(tid){
   const inp=$('ci-'+tid);if(!inp)return;
   const t=state.tasks.find(x=>String(x.id)===String(tid));
   if(!t)return;
-  addCom(t,inp.value);inp.value='';
+  const commentText=inp.value.trim();
+  if(!commentText)return;
+  addCom(t,commentText);inp.value='';
+  // ✅ v8: Notify toàn bộ PIC khi có comment mới
+  const picIds=getPicIds(t);
+  picIds.forEach(pid=>{
+    if(pid!==state.currentUser?.id){
+      pushNotif(pid,'💬 Comment mới',''+state.currentUser.name+': '+commentText.slice(0,60)+(commentText.length>60?'...':''),tid);
+    }
+  });
   openDetail(tid);renderKanban();await saveTask(t);
 }
 async function togSub(tid,sid,done){
@@ -1182,8 +1220,28 @@ async function addSub(tid){
   const inp=$('ns-'+tid);if(!inp||!inp.value.trim())return;
   const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
   if(!Array.isArray(t.subtasks))t.subtasks=[];
-  t.subtasks.push({id:Date.now(),text:inp.value.trim(),done:false});
+  // ✅ v8: subtask có pic_id + deadline, validate deadline <= task deadline
+  const subPicEl=document.getElementById('ns-pic-'+tid);
+  const subDlEl=document.getElementById('ns-dl-'+tid);
+  const subPicId=subPicEl?subPicEl.value:'';
+  const subDl=subDlEl?subDlEl.value:'';
+  // Validate deadline subtask không vượt task chính
+  if(subDl&&t.deadline&&subDl>t.deadline){
+    toast('Deadline subtask không được quá deadline task chính ('+fmtD(t.deadline)+')','warn');
+    return;
+  }
+  t.subtasks.push({id:Date.now(),text:inp.value.trim(),done:false,pic_id:subPicId,deadline:subDl});
+  inp.value='';
+  if(subPicEl)subPicEl.value='';
+  if(subDlEl)subDlEl.value='';
   openDetail(tid);renderKanban();await saveTask(t);
+  // ✅ v8: Gửi thông báo cho PIC được assign subtask
+  if(subPicId){
+    const assignedUser=getUser(subPicId);
+    if(assignedUser&&assignedUser.id!==state.currentUser?.id){
+      pushNotif(subPicId,'📋 Subtask mới','Bạn được assign subtask: "'+inp.value.trim()+'" trong task "'+t.title+'"',tid);
+    }
+  }
 }
 async function delSub(tid,sid){
   const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
@@ -1227,9 +1285,10 @@ function openDeleteConfirm(id){
   const me=state.currentUser;
   const ids=getPicIds(t);
   const hasMgrPic=taskHasMgr(t);
+  // ✅ v8: Manager xóa → không cần xác nhận từ bất kỳ ai
   const isAloneOrMgr=ids.length===0||isMgr()||(ids.length===1&&ids.includes(me.id));
 
-  // Nếu chỉ mình hoặc manager → xác nhận đơn giản
+  // Nếu chỉ mình hoặc manager → xác nhận đơn giản 1 bước
   if(isAloneOrMgr||ids.length<=1){
     $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" onclick="event.stopPropagation()">
 <div class="mh"><div class="mti" style="color:var(--red)">🗑 Xóa task</div><button class="mcl" onclick="CM()">×</button></div>
@@ -1284,7 +1343,7 @@ async function confirmDelete(tid,uid){
   let canDelete=false;
 
   if(isMgr()){
-    canDelete=true; // Manager luôn có thể xóa
+    canDelete=true; // ✅ v8: Manager xóa không cần xác nhận từ ai
   } else if(hasMgrPic){
     // Có manager trong PIC → chỉ cần manager xác nhận
     canDelete=t.delete_confirmations.some(id=>{const u=getUser(id);return u&&u.role==='manager';});
@@ -1403,16 +1462,41 @@ ${steps.length?`<div class="ds"><div class="dst">Flow / Bước hiện tại</di
 ${sp?`<div class="ds"><div class="dst">Tiến độ subtasks — ${sp.done}/${sp.total} (${sp.pct}%)</div>
 <div class="spb" style="height:6px"><div class="spf" style="width:${sp.pct}%"></div></div></div>`:''}
 ${subs.length?`<div class="ds"><div class="dst">Subtasks</div>
-<div>${subs.map(s=>`<div class="sui">
+<div>${subs.map(s=>{
+  const subPicUser=s.pic_id?getUser(s.pic_id):null;
+  const subDlDays=s.deadline?daysFrom(s.deadline):null;
+  const subOv=s.deadline&&!s.done&&subDlDays!==null&&subDlDays<0;
+  return`<div class="sui">
   <input type="checkbox" ${s.done?'checked':''} onchange="togSub('${t.id}','${s.id}',this.checked)">
-  <span class="sut ${s.done?'done':''}">${s.text}</span>
+  <div style="flex:1;min-width:0">
+    <span class="sut ${s.done?'done':''}">${s.text}</span>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px">
+      ${subPicUser?`<span style="font-size:10px;color:var(--bdk);background:var(--blt);padding:1px 5px;border-radius:5px">👤 ${subPicUser.name}</span>`:''}
+      ${s.deadline?`<span style="font-size:10px;color:${subOv?'var(--red)':'var(--t3)'};background:${subOv?'var(--rlt)':'var(--s2)'};padding:1px 5px;border-radius:5px">${subOv?'⚠':''} 📅 ${fmtD(s.deadline)}</span>`:''}
+    </div>
+  </div>
   <button class="sud" onclick="delSub('${t.id}','${s.id}')">×</button>
-</div>`).join('')}</div>
-<div class="asr"><input id="ns-${t.id}" class="fi" style="font-size:12px;padding:5px 8px" placeholder="Thêm subtask...">
-<button class="btn btn-sm" onclick="addSub('${t.id}')">+ Thêm</button></div></div>`:
+</div>`;
+}).join('')}</div>
+<div class="asr" style="flex-wrap:wrap;gap:4px">
+  <input id="ns-${t.id}" class="fi" style="font-size:12px;padding:5px 8px;flex:2;min-width:120px" placeholder="Thêm subtask...">
+  <select id="ns-pic-${t.id}" class="fi" style="font-size:11px;padding:4px 6px;flex:1;min-width:90px">
+    <option value="">👤 PIC</option>
+    ${aUsers().map(u=>`<option value="${u.id}">${u.name}</option>`).join('')}
+  </select>
+  <input type="date" id="ns-dl-${t.id}" class="fi" style="font-size:11px;padding:4px 6px;flex:1;min-width:110px" ${t.deadline?'max="'+t.deadline+'"':''} title="Deadline subtask">
+  <button class="btn btn-sm" onclick="addSub('${t.id}')">+ Thêm</button>
+</div></div>`:
 `<div class="ds"><div class="dst">Subtasks</div>
-<div class="asr"><input id="ns-${t.id}" class="fi" style="font-size:12px;padding:5px 8px" placeholder="Thêm subtask...">
-<button class="btn btn-sm" onclick="addSub('${t.id}')">+ Thêm</button></div></div>`}
+<div class="asr" style="flex-wrap:wrap;gap:4px">
+  <input id="ns-${t.id}" class="fi" style="font-size:12px;padding:5px 8px;flex:2;min-width:120px" placeholder="Thêm subtask...">
+  <select id="ns-pic-${t.id}" class="fi" style="font-size:11px;padding:4px 6px;flex:1;min-width:90px">
+    <option value="">👤 PIC</option>
+    ${aUsers().map(u=>`<option value="${u.id}">${u.name}</option>`).join('')}
+  </select>
+  <input type="date" id="ns-dl-${t.id}" class="fi" style="font-size:11px;padding:4px 6px;flex:1;min-width:110px" ${t.deadline?'max="'+t.deadline+'"':''} title="Deadline subtask">
+  <button class="btn btn-sm" onclick="addSub('${t.id}')">+ Thêm</button>
+</div></div>`}
 ${atch.length?`<div class="ds"><div class="dst">Đính kèm</div>
 <div class="atch">${atch.map(a=>`<div class="ati">
   <span>📎</span>
@@ -1454,7 +1538,17 @@ function openApprove(id){
 async function approveTask(id,st){
   const t=state.tasks.find(x=>String(x.id)===String(id));if(!t)return;
   const old=t.status;t.status=st;
-  addSysCom(t,(st==='done'?'✅ Đã duyệt hoàn thành':'❌ Đánh dấu không thành công')+' bởi '+state.currentUser.name);
+  // ✅ v8: Manager duyệt → clear hết done_confirmations, bypass toàn bộ PIC
+  t.done_confirmations=[];
+  addSysCom(t,(st==='done'?'✅ Manager đã duyệt hoàn thành — tất cả PIC không cần xác nhận thêm':'❌ Đánh dấu không thành công')+' bởi '+state.currentUser.name);
+  // ✅ v8: Notify tất cả PIC
+  const picIds=getPicIds(t);
+  picIds.forEach(pid=>{
+    if(pid!==state.currentUser?.id){
+      pushNotif(pid,st==='done'?'✅ Task hoàn thành':'❌ Task không thành công',
+        (st==='done'?'Manager đã duyệt hoàn thành task: ':'Task bị đánh dấu không thành công: ')+'"'+t.title+'"',id);
+    }
+  });
   CM();renderKanban();await saveTask(t);
   toast(st==='done'?'Đã duyệt ✓':'Đã đánh dấu không thành công');
 }
@@ -1563,6 +1657,11 @@ async function saveTaskForm(editId){
     const m=onc.match(/'([^']+)'/);
     return m?m[1]:'';
   }).filter(Boolean);
+  // ✅ v8: Auto-add người tạo task vào PIC nếu chưa có
+  const creatorId=state.currentUser?.id;
+  if(creatorId&&!selPics.includes(creatorId)&&!editId){
+    selPics.unshift(creatorId);
+  }
   const newStatus=document.getElementById('tf-status')?.value||'todo';
   const existingTask=editId?state.tasks.find(x=>String(x.id)===String(editId)):null;
   const task={
@@ -1989,6 +2088,159 @@ async function saveFlowForm(editId){
   await saveMaster('Flows',flow);
 }
 
+// ============================================================
+// ✅ v8: NOTIFICATION SYSTEM
+// ============================================================
+let _notifs=[]; // {id, toUserId, title, msg, taskId, time, read}
+
+function pushNotif(toUserId, title, msg, taskId){
+  if(!toUserId)return;
+  const me=state.currentUser;
+  // Chỉ push nếu người nhận là currentUser (client-side)
+  if(me&&me.id===toUserId){
+    const notif={
+      id:Date.now()+'_'+Math.random().toString(36).slice(2),
+      toUserId,title,msg,taskId,
+      time:new Date().toISOString(),
+      read:false
+    };
+    _notifs.unshift(notif);
+    if(_notifs.length>50)_notifs=_notifs.slice(0,50);
+    renderNotifBadge();
+    // Toast nhỏ
+    toast(title+': '+msg.slice(0,50));
+    // Lưu vào localStorage per user
+    _saveNotifs();
+  }
+}
+
+function _notifKey(){return'dgm_notifs_'+(state.currentUser?.id||'anon');}
+function _saveNotifs(){
+  try{localStorage.setItem(_notifKey(),JSON.stringify(_notifs));}catch(e){}
+}
+function _loadNotifs(){
+  try{
+    const raw=localStorage.getItem(_notifKey());
+    if(raw)_notifs=JSON.parse(raw)||[];
+  }catch(e){_notifs=[];}
+}
+
+function renderNotifBadge(){
+  const unread=_notifs.filter(n=>!n.read).length;
+  const badge=document.getElementById('notif-badge');
+  if(!badge)return;
+  if(unread>0){badge.textContent=unread>99?'99+':unread;badge.style.display='flex';}
+  else{badge.style.display='none';}
+}
+
+function renderNotifPanel(){
+  const list=document.getElementById('notif-list');
+  if(!list)return;
+  if(!_notifs.length){list.innerHTML='<div class="notif-empty">Chưa có thông báo</div>';return;}
+  const icons={
+    '✅':'✅','💬':'💬','🔄':'🔄','❌':'❌','📋':'📋','🗑':'🗑','⏳':'⏳'
+  };
+  list.innerHTML=_notifs.map(n=>{
+    const iconKey=Object.keys(icons).find(k=>n.title.startsWith(k));
+    const icon=iconKey||'🔔';
+    const ago=timeAgo(n.time);
+    return`<div class="notif-item ${n.read?'':'unread'}" onclick="clickNotif('${n.id}','${n.taskId||''}')">
+      <div class="notif-icon">${icon}</div>
+      <div class="notif-body">
+        <div class="notif-title">${n.title}</div>
+        <div class="notif-msg" title="${n.msg}">${n.msg}</div>
+        <div class="notif-time">${ago}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function clickNotif(nid, taskId){
+  const n=_notifs.find(x=>x.id===nid);
+  if(n)n.read=true;
+  _saveNotifs();
+  renderNotifBadge();
+  renderNotifPanel();
+  toggleNotifPanel();
+  if(taskId)openDetail(taskId);
+}
+
+function toggleNotifPanel(){
+  const panel=document.getElementById('notif-panel');
+  if(!panel)return;
+  const isOpen=panel.classList.contains('open');
+  if(!isOpen){
+    renderNotifPanel();
+    // Mark all as read after 2s
+    setTimeout(()=>{
+      _notifs.forEach(n=>n.read=true);
+      _saveNotifs();
+      renderNotifBadge();
+    },2000);
+  }
+  panel.classList.toggle('open',!isOpen);
+  // Close when clicking outside
+  if(!isOpen){
+    setTimeout(()=>{
+      document.addEventListener('click',_closeNotifOutside,{once:true});
+    },100);
+  }
+}
+function _closeNotifOutside(e){
+  const panel=document.getElementById('notif-panel');
+  const bell=document.getElementById('notif-bell');
+  if(panel&&!panel.contains(e.target)&&!bell?.contains(e.target)){
+    panel.classList.remove('open');
+  }
+}
+function clearAllNotifs(){
+  _notifs=[];_saveNotifs();
+  renderNotifBadge();renderNotifPanel();
+}
+
+function timeAgo(iso){
+  const diff=Math.floor((Date.now()-new Date(iso))/1000);
+  if(diff<60)return'Vừa xong';
+  if(diff<3600)return Math.floor(diff/60)+' phút trước';
+  if(diff<86400)return Math.floor(diff/3600)+' giờ trước';
+  return Math.floor(diff/86400)+' ngày trước';
+}
+
+// ✅ v8: Polling 45s — so sánh updated_at để detect thay đổi từ người khác
+let _lastTaskSnapshot={};
+function _snapshotTasks(){
+  const snap={};
+  state.tasks.forEach(t=>snap[t.id]=t.updated_at||t.created_at||'');
+  return snap;
+}
+function _checkNewUpdates(prevSnap){
+  const me=state.currentUser;
+  if(!me)return;
+  state.tasks.forEach(t=>{
+    const picIds=getPicIds(t);
+    const iAmPic=picIds.includes(me.id)||isMgr();
+    if(!iAmPic)return;
+    const prev=prevSnap[t.id];
+    const cur=t.updated_at||t.created_at||'';
+    if(prev&&cur&&cur>prev){
+      // Task được cập nhật bởi người khác
+      pushNotif(me.id,'🔄 Task được cập nhật','"'+t.title+'" vừa có thay đổi mới',t.id);
+    }
+  });
+}
+
+let _pollInterval=null;
+function startPolling(){
+  if(_pollInterval)clearInterval(_pollInterval);
+  _lastTaskSnapshot=_snapshotTasks();
+  _pollInterval=setInterval(async()=>{
+    if(!state.currentUser||document.hidden)return;
+    const prevSnap=_snapshotTasks();
+    await syncAll();
+    _checkNewUpdates(prevSnap);
+  },45000); // 45 giây
+}
+
 // ---- INIT ----
 document.addEventListener('DOMContentLoaded',()=>{
   // 🔧 FIX B1: Load cache trước để có data ngay lập tức (tránh màn hình trắng)
@@ -2023,8 +2275,10 @@ document.addEventListener('DOMContentLoaded',()=>{
       const profileBtn=document.getElementById('my-profile-btn');
       if(profileBtn)profileBtn.style.display='none';
       showPage('kanban',null);
+      // ✅ v8: Load notifs + start polling
+      _loadNotifs();renderNotifBadge();
       // syncAll sẽ gọi hideLoading() khi xong
-      syncAll();
+      syncAll().then(()=>startPolling());
     } else {
       // 🔧 FIX B1: Sales phải login lại — hiện form login, ẩn loading
       hideLoading();
