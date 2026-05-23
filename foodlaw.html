@@ -1704,7 +1704,7 @@ async function analyzeLabel() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents: [{ role: 'user', parts }],
-              generationConfig: { temperature: 0.15, topP: 0.8, maxOutputTokens: 6000 }
+              generationConfig: { temperature: 0.15, topP: 0.8, maxOutputTokens: 16384 }
             })
           });
           const d = await res.json();
@@ -1903,7 +1903,8 @@ function buildCombinedPrompt(modesArr, images) {
     '3. Use "pass", "fail", or "check" for status fields.\n' +
     '4. For compliance_checks/mandatory_fields: examine the actual label image carefully.\n' +
     '5. For analysis_vi: write 2-3 sentences in Vietnamese summarizing findings.\n' +
-    '6. For analysis_en: write 2-3 sentences in English summarizing findings.\n\n' +
+    '6. For analysis_en: write 2-3 sentences in English summarizing findings.\n' +
+    '7. IMPORTANT: Keep each note_vi/note_en field under 80 characters. Keep analysis fields under 200 characters. Return COMPLETE valid JSON — never truncate mid-object.\n\n' +
     'Return this exact JSON structure (fill all empty strings with real content):\n' +
     schemaBlock;
 }
