@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
-<title>DGM Survey v12</title>
+<title>DGM Survey v13</title>
 <style>
 :root {
   --red: #C8102E;
@@ -253,6 +253,45 @@ input[type=file] { display: none; }
 /* Product info chip */
 .product-info-chip { background: rgba(27,58,87,0.06); border-radius: 8px; padding: 8px 12px; font-size: 12px; color: var(--navy); display: none; }
 .product-info-chip.show { display: block; }
+
+/* ── OWN BRAND BULK CARDS ── */
+.own-product-card {
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  transition: border-color 0.2s;
+}
+.own-product-card.has-data { border-color: var(--green); }
+.own-product-card.is-inactive { border-color: #d1d5db; opacity: 0.7; }
+.opc-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; background: #f9fafb; cursor: pointer;
+}
+.opc-name { font-size: 13px; font-weight: 700; color: var(--navy); flex: 1; }
+.opc-spec { font-size: 11px; color: var(--gray); flex-shrink: 0; }
+.opc-status-badge { font-size: 11px; font-weight: 600; border-radius: 6px; padding: 2px 8px; flex-shrink: 0; }
+.opc-status-badge.green { background: rgba(16,185,129,0.12); color: #065f46; }
+.opc-status-badge.gray  { background: rgba(107,114,128,0.1);  color: var(--gray); }
+.opc-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 8px; }
+.opc-price-row { display: grid; grid-template-columns: 1fr 1fr 80px; gap: 8px; align-items: end; }
+.opc-status-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.opc-status-btn {
+  flex: 1; min-width: 0; border: 1.5px solid var(--border); background: white;
+  border-radius: 8px; padding: 7px 4px; font-size: 11px; font-weight: 600;
+  cursor: pointer; text-align: center; color: var(--gray); transition: all 0.15s;
+}
+.opc-status-btn:active { opacity: 0.75; }
+.opc-status-btn.active-orange { border-color: var(--orange); background: rgba(245,158,11,0.08); color: #92400e; }
+.opc-status-btn.active-red    { border-color: var(--red);    background: rgba(200,16,46,0.07);  color: var(--red); }
+.opc-status-btn.active-gray   { border-color: #9ca3af;       background: rgba(107,114,128,0.08); color: #4b5563; }
+.own-brand-summary {
+  background: rgba(27,58,87,0.05); border-radius: 8px; padding: 10px 12px;
+  font-size: 12px; color: var(--navy); display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 8px;
+}
+.own-brand-summary strong { color: var(--red); }
 </style>
 </head>
 <body>
@@ -396,13 +435,11 @@ input[type=file] { display: none; }
           <div class="type-btn" id="type-comp" onclick="setProductType('comp')">🔵 Đối thủ<br><small style="font-weight:400;opacity:0.7;">Brand khác</small></div>
         </div>
 
-        <!-- Own brand fields -->
+        <!-- Own brand fields — bulk list mode -->
         <div id="own-fields">
-          <div class="field-label">Sản phẩm <span class="req">*</span></div>
-          <select id="f-product" onchange="onProductChange()">
-            <option value="">-- Chọn sản phẩm --</option>
-          </select>
-          <div class="product-info-chip" id="product-chip"></div>
+          <div id="own-brand-list-wrap">
+            <!-- product cards injected by JS -->
+          </div>
         </div>
 
         <!-- Competitor fields -->
@@ -452,8 +489,9 @@ input[type=file] { display: none; }
       </div>
     </div>
 
-    <!-- Giá -->
-    <div class="section-card">
+    <!-- Giá / NIP / Ảnh — chỉ hiện cho đối thủ; own brand dùng bulk card riêng -->
+    <div id="comp-only-sections">
+    <!-- Giá -->    <div class="section-card">
       <div class="section-title">💰 Giá survey (đã bao gồm VAT)</div>
       <div class="section-body">
         <div>
@@ -568,6 +606,8 @@ input[type=file] { display: none; }
         </div>
       </div>
     </div>
+
+    </div><!-- /comp-only-sections -->
 
     <!-- Ghi chú -->
     <div class="section-card">
@@ -878,58 +918,251 @@ function startSurvey(channel) {
 }
 
 function populateProducts() {
-  const sel = document.getElementById('f-product');
-  sel.innerHTML = '<option value="">-- Chọn sản phẩm --</option>';
+  // For own-brand: render bulk cards (called after outlet is chosen, or on load)
+  renderOwnBrandCards();
+}
+
+// ════════════════════════════════════════════
+// OWN BRAND BULK MODE
+// ════════════════════════════════════════════
+// State for each product row: { gia, status, facing }
+// status: '' | 'chua_kinh_doanh' | 'het_hang' | 'khoa_ma'
+let ownBrandInputs = {}; // keyed by ma_san_pham
+
+function renderOwnBrandCards() {
+  const wrap = document.getElementById('own-brand-list-wrap');
+  if (!wrap) return;
 
   const allProducts = state.masterData?.san_pham || [];
   const ownBrandIds = state.masterData?.own_brand_ids || ['AB','AN','DU'];
 
-  // Lọc own brand: ưu tiên loai_thuong_hieu, fallback kiểm tra thuong_hieu code
   const products = allProducts.filter(p => {
+    if (p.trang_thai && p.trang_thai.toLowerCase() !== 'active') return false;
     const loai = (p.loai_thuong_hieu || '').toLowerCase().trim();
     const brand = (p.thuong_hieu || '').trim();
-    // Nếu có loai_thuong_hieu rõ ràng → dùng nó
     if (loai === 'own_brand') return true;
     if (loai === 'competitor') return false;
-    // Nếu loai_thuong_hieu trống → fallback check brand code (AB, AN, DU)
-    if (ownBrandIds.includes(brand)) return true;
-    // Nếu brand name chứa "Ayam" hoặc "Alce" hoặc "Duchef" → own brand
-    const brandLower = brand.toLowerCase();
-    if (brandLower.includes('ayam') || brandLower.includes('alce') || brandLower.includes('duchef')) return true;
-    return false;
+    return ownBrandIds.includes(brand);
   });
 
   if (products.length === 0) {
-    const opt = document.createElement('option');
-    opt.disabled = true;
-    // Thông báo rõ hơn: có bao nhiêu sp total vs own brand
-    const totalCount = allProducts.length;
-    opt.textContent = totalCount > 0
-      ? `— Có ${totalCount} SP nhưng không nhận diện được own brand (kiểm tra cột thuong_hieu = AB/AN/DU) —`
-      : '— Chưa có sản phẩm trong tab Products —';
-    sel.appendChild(opt);
+    wrap.innerHTML = `<div style="padding:16px;color:var(--gray);font-size:13px;text-align:center;">Chưa có sản phẩm own brand Active</div>`;
     return;
   }
 
+  // Reset inputs
+  ownBrandInputs = {};
+  products.forEach(p => {
+    ownBrandInputs[p.ma_san_pham] = { gia: '', status: '', facing: '', product: p };
+  });
+
   // Group by thuong_hieu
-  const brands = {};
+  const groups = {};
   products.forEach(p => {
     const b = p.thuong_hieu || 'Khác';
-    if (!brands[b]) brands[b] = [];
-    brands[b].push(p);
+    if (!groups[b]) groups[b] = [];
+    groups[b].push(p);
   });
-  Object.entries(brands).forEach(([brand, prods]) => {
-    const grp = document.createElement('optgroup');
-    grp.label = brand;
+
+  let html = `<div class="own-brand-summary">
+    <span>📋 ${products.length} sản phẩm active</span>
+    <strong id="obl-filled-count">0 đã nhập</strong>
+  </div>`;
+
+  Object.entries(groups).forEach(([brand, prods]) => {
+    html += `<div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;padding:6px 0 4px;">${brand}</div>`;
     prods.forEach(p => {
-      const opt = document.createElement('option');
-      opt.value = p.ma_san_pham;
-      opt.textContent = p.ten_san_pham + (p.quy_cach_mac_dinh ? ` (${p.quy_cach_mac_dinh}${p.don_vi||''})` : '');
-      opt.dataset.json = JSON.stringify(p);
-      grp.appendChild(opt);
+      const id = p.ma_san_pham;
+      const spec = (p.quy_cach_mac_dinh ? p.quy_cach_mac_dinh + (p.don_vi||'') : '') + (p.bao_bi ? ' · ' + p.bao_bi : '');
+      html += `
+      <div class="own-product-card" id="opc-${id}">
+        <div class="opc-header" onclick="toggleOpcBody('${id}')">
+          <div>
+            <div class="opc-name">${p.ten_san_pham}</div>
+            ${spec ? `<div style="font-size:11px;color:var(--gray);">${spec}</div>` : ''}
+          </div>
+          <span class="opc-status-badge gray" id="opc-badge-${id}">Chưa nhập</span>
+          <span style="color:var(--gray);font-size:16px;" id="opc-chevron-${id}">›</span>
+        </div>
+        <div class="opc-body" id="opc-body-${id}" style="display:none;">
+          <div class="opc-price-row">
+            <div>
+              <div class="field-label">Giá NTD (đ) <span style="font-size:10px;color:#9ca3af;">/lon</span></div>
+              <input type="number" id="opc-gia-${id}" placeholder="0" min="0"
+                oninput="onOpcGia('${id}',this.value)"
+                onclick="if(this.value===''){}">
+            </div>
+            <div>
+              <div class="field-label">Đ.vị tính giá</div>
+              <select id="opc-unit-${id}" onchange="onOpcUnit('${id}',this.value)">
+                <option value="lon">lon</option>
+                <option value="chai">chai</option>
+                <option value="bịch">bịch</option>
+                <option value="gói">gói</option>
+                <option value="hộp">hộp</option>
+              </select>
+            </div>
+            <div>
+              <div class="field-label">Facing</div>
+              <input type="number" id="opc-facing-${id}" placeholder="0" min="0"
+                oninput="onOpcFacing('${id}',this.value)">
+            </div>
+          </div>
+          <div>
+            <div class="field-label" style="margin-bottom:5px;">Trạng thái đặc biệt</div>
+            <div class="opc-status-row">
+              <button class="opc-status-btn" id="opc-st-chua-${id}"
+                onclick="setOpcStatus('${id}','chua_kinh_doanh')">🚫 Chưa KD</button>
+              <button class="opc-status-btn" id="opc-st-het-${id}"
+                onclick="setOpcStatus('${id}','het_hang')">📦 Hết hàng</button>
+              <button class="opc-status-btn" id="opc-st-khoa-${id}"
+                onclick="setOpcStatus('${id}','khoa_ma')">🔒 Khóa mã</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
     });
-    sel.appendChild(grp);
   });
+
+  wrap.innerHTML = html;
+}
+
+function toggleOpcBody(id) {
+  const body = document.getElementById('opc-body-' + id);
+  const chev = document.getElementById('opc-chevron-' + id);
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  chev.textContent = isOpen ? '›' : '⌄';
+  if (!isOpen) {
+    // Focus price input
+    setTimeout(() => { const inp = document.getElementById('opc-gia-' + id); if (inp) inp.focus(); }, 50);
+  }
+}
+
+function onOpcGia(id, val) {
+  ownBrandInputs[id].gia = val;
+  if (val && val > 0) {
+    // Clear any special status when price entered
+    if (ownBrandInputs[id].status) {
+      setOpcStatus(id, ''); // deselect
+    }
+    ownBrandInputs[id].status = '';
+    _clearOpcStatusBtns(id);
+  }
+  _updateOpcCard(id);
+}
+
+function onOpcUnit(id, val) {
+  ownBrandInputs[id].unit = val;
+}
+
+function onOpcFacing(id, val) {
+  ownBrandInputs[id].facing = val;
+}
+
+function setOpcStatus(id, status) {
+  const cur = ownBrandInputs[id].status;
+  // Toggle off if same
+  const newStatus = cur === status ? '' : status;
+  ownBrandInputs[id].status = newStatus;
+
+  if (newStatus) {
+    // Clear price when status selected
+    const inp = document.getElementById('opc-gia-' + id);
+    if (inp) inp.value = '';
+    ownBrandInputs[id].gia = '';
+  }
+
+  _clearOpcStatusBtns(id);
+  if (newStatus) {
+    const btnMap = { 'chua_kinh_doanh': 'chua', 'het_hang': 'het', 'khoa_ma': 'khoa' };
+    const btn = document.getElementById('opc-st-' + btnMap[newStatus] + '-' + id);
+    if (btn) btn.className = 'opc-status-btn ' + _opcStatusClass(newStatus);
+  }
+  _updateOpcCard(id);
+}
+
+function _clearOpcStatusBtns(id) {
+  ['chua','het','khoa'].forEach(k => {
+    const b = document.getElementById('opc-st-' + k + '-' + id);
+    if (b) b.className = 'opc-status-btn';
+  });
+}
+
+function _opcStatusClass(status) {
+  if (status === 'het_hang') return 'active-orange';
+  if (status === 'khoa_ma')  return 'active-red';
+  if (status === 'chua_kinh_doanh') return 'active-gray';
+  return '';
+}
+
+function _updateOpcCard(id) {
+  const inp  = ownBrandInputs[id];
+  const card = document.getElementById('opc-' + id);
+  const badge = document.getElementById('opc-badge-' + id);
+  if (!card || !badge) return;
+
+  const hasGia    = inp.gia && Number(inp.gia) > 0;
+  const hasStatus = !!inp.status;
+  const hasData   = hasGia || hasStatus;
+
+  card.classList.toggle('has-data', hasData);
+
+  if (hasGia) {
+    badge.className = 'opc-status-badge green';
+    badge.textContent = '💰 ' + Number(inp.gia).toLocaleString('vi') + 'đ';
+  } else if (inp.status === 'chua_kinh_doanh') {
+    badge.className = 'opc-status-badge gray';
+    badge.textContent = '🚫 Chưa KD';
+  } else if (inp.status === 'het_hang') {
+    badge.className = 'opc-status-badge'; badge.style.background='rgba(245,158,11,0.12)'; badge.style.color='#92400e';
+    badge.textContent = '📦 Hết hàng';
+  } else if (inp.status === 'khoa_ma') {
+    badge.className = 'opc-status-badge'; badge.style.background='rgba(200,16,46,0.08)'; badge.style.color='var(--red)';
+    badge.textContent = '🔒 Khóa mã';
+  } else {
+    badge.className = 'opc-status-badge gray';
+    badge.style.background = ''; badge.style.color = '';
+    badge.textContent = 'Chưa nhập';
+  }
+
+  // Update summary count
+  const filled = Object.values(ownBrandInputs).filter(x => x.gia || x.status).length;
+  const summary = document.getElementById('obl-filled-count');
+  if (summary) summary.textContent = filled + ' đã nhập';
+}
+
+function _getOwnBrandRecords(baseFields) {
+  // Returns array of records for all filled own-brand inputs
+  const records = [];
+  Object.entries(ownBrandInputs).forEach(([id, inp]) => {
+    if (!inp.gia && !inp.status) return; // skip empty
+    const p = inp.product;
+    const unitEl = document.getElementById('opc-unit-' + id);
+    const unit = unitEl ? unitEl.value : (p.don_vi || 'lon');
+    records.push({
+      ...baseFields,
+      ten_san_pham:     p.ten_san_pham,
+      phan_loai:        'own_brand',
+      loai_san_pham:    p.nhom_san_pham || '',
+      ten_thuong_hieu:  p.thuong_hieu || '',
+      quy_cach:         p.quy_cach_mac_dinh || '',
+      don_vi:           p.don_vi || '',
+      bao_bi:           p.bao_bi || '',
+      loai_gia:         'Giá NTD',
+      don_vi_tinh_gia:  unit,
+      gia:              inp.status ? '' : (inp.gia || ''),
+      trang_thai_sp:    inp.status || '',  // 'chua_kinh_doanh' | 'het_hang' | 'khoa_ma' | ''
+      vi_tri_ke:        '',
+      facing:           inp.facing || '',
+      nsx_nha_phan_phoi: p.nsx_nha_phan_phoi || '',
+      xuat_xu:          p.xuat_xu || '',
+      phuong_thuc_nhap: 'bulk_own',
+      _ma_san_pham:     p.ma_san_pham || '',
+      _ma_thuong_hieu:  p.thuong_hieu || '',
+    });
+  });
+  return records;
 }
 
 function resetForm() {
@@ -951,6 +1184,10 @@ function resetForm() {
   if (skipBanner) skipBanner.style.display = 'none';
   // Restore photo & NIP required state
   _setPhotoNIPRequired(true);
+  // Reset own-brand bulk inputs
+  ownBrandInputs = {};
+  const oblWrap = document.getElementById('own-brand-list-wrap');
+  if (oblWrap) oblWrap.innerHTML = '';
   setProductType('own');
 }
 
@@ -1189,6 +1426,11 @@ function setProductType(type) {
   state.productType = type;
   document.getElementById('own-fields').style.display  = type === 'own'  ? 'block' : 'none';
   document.getElementById('comp-fields').style.display = type === 'comp' ? 'block' : 'none';
+
+  // Comp-only sections (price, shelf, NIP, photos) only for competitor
+  const compSections = document.getElementById('comp-only-sections');
+  if (compSections) compSections.style.display = type === 'comp' ? 'block' : 'none';
+
   const ownBtn  = document.getElementById('type-own');
   const compBtn = document.getElementById('type-comp');
   ownBtn.className  = 'type-btn' + (type === 'own'  ? ' active-red'  : '');
@@ -1227,145 +1469,80 @@ function checkBackdate() {
 async function submitForm() {
   if (!validateForm()) return;
 
-  showOverlay('Đang lưu survey...', 'Đang gửi dữ liệu lên Google Sheets...');
-
-  try {
-    const payload = buildPayload();
-    const result  = await apiPost({ action: 'submitSurvey', data: payload });
-
-    hideOverlay();
-    if (result.error) { showToast('❌ Lỗi: ' + result.error, 'error'); return; }
-
-    state.lastSurveyId = result.ma_survey || '';
-    document.getElementById('success-id').textContent = 'Mã: ' + state.lastSurveyId;
-    state.mySurveys.unshift({ ...payload, ma_survey: state.lastSurveyId });
-    loadDashboard();
-    goTo('scr-success');
-  } catch(e) {
-    hideOverlay();
-    showToast('❌ Lỗi kết nối: ' + e.message, 'error');
-  }
-}
-
-function validateForm() {
-  let ok = true;
-  const required = [
-    { id:'f-date',       label:'Ngày survey' },
-    { id:'f-price',      label:'Giá' },
-    { id:'f-price-unit', label:'Đơn vị tính giá' },
-    { id:'f-price-type', label:'Loại giá' },
-  ];
-
-  // GT: Validate region trước
-  if (state.channel === 'GT') {
-    const regionVal = document.getElementById('f-gt-region')?.value || '';
-    if (!regionVal) {
-      showToast('⚠️ Vui lòng chọn khu vực GT', 'error');
-      return false;
-    }
-  }
-
-  // Outlet
-  const outletVal = document.getElementById('f-outlet').value;
-  const customVal = document.getElementById('f-outlet-custom').value.trim();
-  if (!outletVal || (outletVal === '__custom__' && !customVal)) {
-    showToast('⚠️ Vui lòng chọn điểm bán', 'error');
-    return false;
-  }
-
-  // Product
-  if (state.productType === 'own') {
-    const sel = document.getElementById('f-product').value;
-    if (!sel) { showToast('⚠️ Vui lòng chọn sản phẩm', 'error'); return false; }
-  } else {
-    if (!document.getElementById('f-comp-name').value.trim()) {
-      showToast('⚠️ Vui lòng nhập tên sản phẩm', 'error'); return false;
-    }
-    if (!document.getElementById('f-comp-brand').value.trim()) {
-      showToast('⚠️ Vui lòng nhập thương hiệu', 'error'); return false;
-    }
-  }
-
-  required.forEach(r => {
-    const el = document.getElementById(r.id);
-    if (!el) return;
-    if (!el.value || el.value.trim() === '') {
-      el.classList.add('error');
-      el.addEventListener('input', () => el.classList.remove('error'), { once:true });
-      ok = false;
-    }
-  });
-
-  if (!ok) { showToast('⚠️ Vui lòng điền đủ thông tin bắt buộc', 'error'); }
-
-  // Photos warning — chỉ bắt buộc khi KHÔNG có skip reason
-  const photosCount = Object.values(state.photoFiles).filter(Boolean).length;
-  if (!state.photoSkipReason && photosCount < 4) {
-    showToast('📸 Còn thiếu ' + (4-photosCount) + ' ảnh — sẽ lưu không có ảnh', 'error');
-    // non-blocking, continue
-  }
-
-  return ok;
-}
-
-function buildPayload() {
   const outletVal  = document.getElementById('f-outlet').value;
   const outletName = outletVal === '__custom__'
     ? document.getElementById('f-outlet-custom').value.trim()
     : outletVal;
 
-  let productName='', productType='', brandName='', qty='', unit='', mfg='', origin='', brandId='', productId='';
+  const baseFields = {
+    ngay_survey:      document.getElementById('f-date').value,
+    ten_nhan_vien:    state.user?.ten_hien_thi || state.user?.ho_ten || '',
+    _ma_nhan_vien:    state.user?.ma_nhan_vien || '',
+    kenh:             state.channel,
+    ten_diem_ban:     outletName,
+    loai_diem_ban_gt: document.getElementById('f-gt-type')?.value || '',
+    gt_region:        state.channel === 'GT' ? (document.getElementById('f-gt-region')?.value || '') : '',
+    ghi_chu:          document.getElementById('f-note').value,
+  };
+
   if (state.productType === 'own') {
-    const sel = document.getElementById('f-product');
-    const opt = sel.options[sel.selectedIndex];
-    if (opt && opt.dataset.json) {
-      const p = JSON.parse(opt.dataset.json);
-      productName = p.ten_san_pham;
-      productType = p.nhom_san_pham || '';
-      brandName   = p.thuong_hieu;
-      qty         = p.quy_cach_mac_dinh || '';
-      unit        = p.don_vi || '';
-      mfg         = p.nsx_nha_phan_phoi || '';
-      origin      = p.xuat_xu || '';
-      productId   = p.ma_san_pham || '';
-      brandId     = p.thuong_hieu || '';
+    // ── BATCH submit own brand ──
+    const records = _getOwnBrandRecords(baseFields);
+    showOverlay('Đang lưu survey...', 'Gửi ' + records.length + ' sản phẩm lên Google Sheets...');
+    try {
+      const result = await apiPost({ action: 'submitBatchSurvey', data: records });
+      hideOverlay();
+      if (result.error) { showToast('❌ Lỗi: ' + result.error, 'error'); return; }
+      const count = result.count || records.length;
+      state.lastSurveyId = result.ma_survey_first || '';
+      document.getElementById('success-id').textContent = '✅ Đã lưu ' + count + ' sản phẩm';
+      records.forEach(r => state.mySurveys.unshift({ ...r, phan_loai: 'own_brand' }));
+      loadDashboard();
+      goTo('scr-success');
+    } catch(e) {
+      hideOverlay();
+      showToast('❌ Lỗi kết nối: ' + e.message, 'error');
     }
   } else {
-    const baseName  = document.getElementById('f-comp-name').value.trim();
-    const flavour   = document.getElementById('f-comp-flavour').value.trim();
-    // Ghép: "Đậu sốt" + "Cà chua" → "Đậu sốt cà chua"
-    productName = flavour ? baseName + ' ' + flavour : baseName;
-    productType = document.getElementById('f-comp-type').value.trim();
-    brandName   = document.getElementById('f-comp-brand').value.trim();
-    qty         = document.getElementById('f-comp-qty').value;
-    unit        = document.getElementById('f-comp-unit').value;
-    mfg         = document.getElementById('f-comp-mfg').value.trim();
-    origin      = document.getElementById('f-comp-origin').value.trim();
+    // ── SINGLE submit competitor ──
+    showOverlay('Đang lưu survey...', 'Đang gửi dữ liệu lên Google Sheets...');
+    try {
+      const payload = buildCompPayload(baseFields);
+      const result  = await apiPost({ action: 'submitSurvey', data: payload });
+      hideOverlay();
+      if (result.error) { showToast('❌ Lỗi: ' + result.error, 'error'); return; }
+      state.lastSurveyId = result.ma_survey || '';
+      document.getElementById('success-id').textContent = 'Mã: ' + state.lastSurveyId;
+      state.mySurveys.unshift({ ...payload, ma_survey: state.lastSurveyId });
+      loadDashboard();
+      goTo('scr-success');
+    } catch(e) {
+      hideOverlay();
+      showToast('❌ Lỗi kết nối: ' + e.message, 'error');
+    }
   }
+}
 
+function buildCompPayload(baseFields) {
+  const baseName    = document.getElementById('f-comp-name').value.trim();
+  const flavour     = document.getElementById('f-comp-flavour').value.trim();
+  const productName = flavour ? baseName + ' ' + flavour : baseName;
   return {
-    ngay_survey:        document.getElementById('f-date').value,
-    ten_nhan_vien:      state.user?.ten_hien_thi || state.user?.ho_ten || '',
-    _ma_nhan_vien:      state.user?.ma_nhan_vien || '',
-    kenh:               state.channel,
-    ten_diem_ban:       outletName,
-    loai_diem_ban_gt:   document.getElementById('f-gt-type')?.value || '',
-    gt_region:          state.channel === 'GT' ? (document.getElementById('f-gt-region')?.value || '') : '',
+    ...baseFields,
     ten_san_pham:       productName,
-    phan_loai:          state.productType === 'own' ? 'own_brand' : 'competitor',
-    loai_san_pham:      productType,
-    ten_thuong_hieu:    brandName,
-    quy_cach:           qty,
-    don_vi:             unit,
+    phan_loai:          'competitor',
+    loai_san_pham:      document.getElementById('f-comp-type').value.trim(),
+    ten_thuong_hieu:    document.getElementById('f-comp-brand').value.trim(),
+    quy_cach:           document.getElementById('f-comp-qty').value,
+    don_vi:             document.getElementById('f-comp-unit').value,
     bao_bi:             '',
+    nsx_nha_phan_phoi:  document.getElementById('f-comp-mfg').value.trim(),
+    xuat_xu:            document.getElementById('f-comp-origin').value.trim(),
     loai_gia:           document.getElementById('f-price-type').value,
     don_vi_tinh_gia:    document.getElementById('f-price-unit').value,
     gia:                document.getElementById('f-price').value,
-    nsx_nha_phan_phoi:  mfg,
-    xuat_xu:            origin,
     vi_tri_ke:          document.getElementById('f-shelf').value,
     facing:             document.getElementById('f-facing').value,
-    ghi_chu:            document.getElementById('f-note').value,
     phuong_thuc_nhap:   'manual',
     han_su_dung:        document.getElementById('f-exp').value,
     ngay_sx:            document.getElementById('f-mfgdate').value,
@@ -1383,10 +1560,13 @@ function buildPayload() {
     so_anh_da_chup:     Object.values(state.photoFiles).filter(Boolean).length,
     so_anh_bo_sung:     state.extraFiles.length,
     link_anh:           '',
-    _ma_san_pham:       productId,
-    _ma_thuong_hieu:    brandId,
+    _ma_san_pham:       '',
+    _ma_thuong_hieu:    '',
   };
 }
+
+// Legacy alias
+function buildPayload() { return buildCompPayload({}); }
 
 function newSurvey() {
   resetForm();
