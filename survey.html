@@ -1463,6 +1463,52 @@ function checkBackdate() {
   document.getElementById('form-date-chip').textContent = state.channel + ' · ' + val;
 }
 
+function validateForm() {
+  // Common: date + outlet
+  const dateVal = document.getElementById('f-date').value;
+  if (!dateVal) { showToast('⚠️ Vui lòng chọn ngày survey', 'error'); return false; }
+
+  if (state.channel === 'GT') {
+    const regionVal = document.getElementById('f-gt-region')?.value || '';
+    if (!regionVal) { showToast('⚠️ Vui lòng chọn khu vực GT', 'error'); return false; }
+  }
+
+  const outletVal  = document.getElementById('f-outlet').value;
+  const customVal  = document.getElementById('f-outlet-custom').value.trim();
+  if (!outletVal || (outletVal === '__custom__' && !customVal)) {
+    showToast('⚠️ Vui lòng chọn điểm bán', 'error'); return false;
+  }
+
+  if (state.productType === 'own') {
+    const filled = Object.values(ownBrandInputs).filter(x => x.gia || x.status);
+    if (filled.length === 0) {
+      showToast('⚠️ Nhập ít nhất 1 sản phẩm (giá hoặc trạng thái)', 'error');
+      return false;
+    }
+    return true;
+  }
+
+  // Competitor mode
+  if (!document.getElementById('f-comp-name').value.trim()) {
+    showToast('⚠️ Vui lòng nhập tên sản phẩm', 'error'); return false;
+  }
+  if (!document.getElementById('f-comp-brand').value.trim()) {
+    showToast('⚠️ Vui lòng nhập thương hiệu', 'error'); return false;
+  }
+  if (!document.getElementById('f-price').value) {
+    const el = document.getElementById('f-price');
+    el.classList.add('error');
+    el.addEventListener('input', () => el.classList.remove('error'), { once: true });
+    showToast('⚠️ Vui lòng nhập giá', 'error'); return false;
+  }
+
+  const photosCount = Object.values(state.photoFiles).filter(Boolean).length;
+  if (!state.photoSkipReason && photosCount < 4) {
+    showToast('📸 Còn thiếu ' + (4 - photosCount) + ' ảnh — sẽ lưu không có ảnh', 'error');
+  }
+  return true;
+}
+
 // ════════════════════════════════════════════
 // SUBMIT
 // ════════════════════════════════════════════
