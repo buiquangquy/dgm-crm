@@ -42,7 +42,8 @@ body::before{content:'';position:fixed;inset:0;background:
 
 /* ── HEADER ── */
 header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px;backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
-.logo{display:flex;align-items:center;gap:10px}
+.logo{display:flex;align-items:center;gap:10px;transition:opacity .15s}
+.logo:hover{opacity:.8}
 .logo-mark{width:36px;height:36px;background:var(--gold);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Serif',serif;font-weight:600;font-size:14px;color:var(--navy);letter-spacing:-.5px}
 .logo-text{font-family:'IBM Plex Serif',serif}
 .logo-text .brand{font-size:16px;font-weight:600;color:var(--text);letter-spacing:.5px}
@@ -334,13 +335,26 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
 
 <!-- ── HEADER ── -->
 <header>
-  <div class="logo">
+  <div class="logo" onclick="goHome()" style="cursor:pointer" title="Về trang chủ / Home">
     <div class="logo-mark">DGM</div>
     <div class="logo-text">
       <div class="brand">Food Law Intelligence</div>
       <div class="sub">Compliance Research System</div>
     </div>
   </div>
+
+  <!-- EN/VI Language Toggle -->
+  <div style="display:flex;align-items:center;gap:4px;margin-left:16px;background:var(--navy3);border:1px solid var(--border);border-radius:20px;padding:3px;flex-shrink:0">
+    <button id="langBtnVI" onclick="setAppLang('vi')"
+      style="padding:3px 10px;border-radius:16px;font-size:11px;font-weight:600;border:none;cursor:pointer;transition:all .2s;background:var(--gold);color:var(--navy);letter-spacing:.5px">
+      🇻🇳 VI
+    </button>
+    <button id="langBtnEN" onclick="setAppLang('en')"
+      style="padding:3px 10px;border-radius:16px;font-size:11px;font-weight:600;border:none;cursor:pointer;transition:all .2s;background:transparent;color:var(--text3);letter-spacing:.5px">
+      🇬🇧 EN
+    </button>
+  </div>
+
   <div class="header-center"></div>
   <div class="header-actions">
     <span id="modeKeyword" class="mode-badge active" onclick="setMode('keyword')">🔍 Tra cứu</span>
@@ -726,7 +740,7 @@ let state = {
   history: [], bookmarks: [], queryCount: 0,
   currentIntent: '', currentQuery: '', currentFolder: 'all',
   activeTab: 'text', currentMode: 'keyword', selectedSKU: null,
-  uploadedImage: null, defaultLang: 'bilingual'
+  uploadedImage: null, defaultLang: 'bilingual', appLang: 'vi'
 };
 
 // ══════════════════════════════════════════════════════════
@@ -770,6 +784,7 @@ function loadState() {
       state.bookmarks = s.bookmarks || [];
       state.queryCount = s.queryCount || 0;
       state.defaultLang = s.defaultLang || 'bilingual';
+      state.appLang = s.appLang || 'vi';
     }
   } catch(e) {}
 }
@@ -779,13 +794,151 @@ function saveState() {
     apiKey: state.apiKey, folderIds: state.folderIds,
     gasWebAppUrl: state.gasWebAppUrl,
     history: state.history.slice(0,50), bookmarks: state.bookmarks.slice(0,30),
-    queryCount: state.queryCount, defaultLang: state.defaultLang
+    queryCount: state.queryCount, defaultLang: state.defaultLang,
+    appLang: state.appLang
   }));
 }
 
 // ══════════════════════════════════════════════════════════
-// UI HELPERS
+// HOME + LANGUAGE TOGGLE
 // ══════════════════════════════════════════════════════════
+function goHome() {
+  // Reset to keyword mode
+  setMode('keyword');
+  switchTab('text');
+  // Clear search
+  const si = document.getElementById('searchInput');
+  if (si) si.value = '';
+  chips = [];
+  renderChips();
+  // Hide results, show empty state
+  document.getElementById('intentConfirm').style.display = 'none';
+  document.getElementById('intentConfirm').classList.remove('visible');
+  document.getElementById('resultsGrid').style.display = 'none';
+  document.getElementById('emptyState').style.display = 'flex';
+  document.getElementById('resultsContainer').style.display = 'flex';
+  // Reset folder filter
+  filterFolder('all');
+  // Scroll to top
+  document.querySelector('.results-area')?.scrollTo(0, 0);
+}
+
+// App-level language: 'vi' | 'en'
+// Controls: UI labels, AI prompt language, default display
+const LANG_LABELS = {
+  vi: {
+    search_placeholder: 'Nhập từ khoá... vd: nhãn phụ cá ngừ NK · histamine test report · organic claim điều kiện...',
+    mode_keyword: '🔍 Tra cứu',
+    mode_sku: '📋 Checklist SKU',
+    db_folders: 'Database Folders',
+    history_title: 'Lịch sử tra cứu',
+    bookmarks_title: 'Bookmarks',
+    updates_title: 'Cảnh báo / Updates',
+    stats_title: 'Thống kê / Stats',
+    stats_queries: 'Tra cứu hôm nay',
+    stats_bookmarks: 'Bookmarks',
+    empty_title: 'DGM Food Law Intelligence',
+    empty_sub: 'Hệ thống tra cứu pháp luật an toàn thực phẩm thông minh · Nhập từ khoá hoặc upload ảnh tem nhãn để bắt đầu',
+    reload_db: '🔄 Reload Drive DB',
+    tab_text: '💬 Từ khoá / Câu hỏi',
+    tab_image: '📷 Upload ảnh nhãn',
+  },
+  en: {
+    search_placeholder: 'Search regulations... e.g. sub-label tuna import · histamine test report · organic claim conditions...',
+    mode_keyword: '🔍 Search',
+    mode_sku: '📋 SKU Checklist',
+    db_folders: 'Database Folders',
+    history_title: 'Search History',
+    bookmarks_title: 'Bookmarks',
+    updates_title: 'Alerts / Updates',
+    stats_title: 'Statistics',
+    stats_queries: 'Queries today',
+    stats_bookmarks: 'Bookmarks',
+    empty_title: 'DGM Food Law Intelligence',
+    empty_sub: 'Smart food safety compliance research system · Enter keywords or upload a label image to get started',
+    reload_db: '🔄 Reload Drive DB',
+    tab_text: '💬 Keywords / Question',
+    tab_image: '📷 Upload label image',
+  }
+};
+
+function setAppLang(lang) {
+  state.appLang = lang;
+  // Also sync defaultLang for AI output
+  state.defaultLang = lang === 'en' ? 'en' : 'bilingual';
+  saveState();
+  applyAppLang();
+}
+
+function applyAppLang() {
+  const lang = state.appLang || 'vi';
+  const L = LANG_LABELS[lang];
+
+  // Language toggle buttons
+  const btnVI = document.getElementById('langBtnVI');
+  const btnEN = document.getElementById('langBtnEN');
+  if (btnVI && btnEN) {
+    if (lang === 'vi') {
+      btnVI.style.background = 'var(--gold)'; btnVI.style.color = 'var(--navy)';
+      btnEN.style.background = 'transparent'; btnEN.style.color = 'var(--text3)';
+    } else {
+      btnEN.style.background = 'var(--gold)'; btnEN.style.color = 'var(--navy)';
+      btnVI.style.background = 'transparent'; btnVI.style.color = 'var(--text3)';
+    }
+  }
+
+  // Search placeholder
+  const si = document.getElementById('searchInput');
+  if (si) si.placeholder = L.search_placeholder;
+
+  // Mode badges
+  const mk = document.getElementById('modeKeyword');
+  const ms = document.getElementById('modeSKU');
+  if (mk) mk.textContent = L.mode_keyword;
+  if (ms) ms.textContent = L.mode_sku;
+
+  // Tabs
+  const tt = document.getElementById('tabText');
+  const ti = document.getElementById('tabImage');
+  if (tt) tt.textContent = L.tab_text;
+  if (ti) ti.textContent = L.tab_image;
+
+  // Sidebar titles
+  document.querySelectorAll('.sidebar-title').forEach((el, i) => {
+    const titles = [L.db_folders, L.history_title, L.bookmarks_title, L.updates_title, L.stats_title];
+    // match by content to avoid index fragility
+    const t = el.textContent.trim();
+    if (t === 'Database Folders' || t === 'Database Folders') el.textContent = L.db_folders;
+    if (t === 'Lịch sử tra cứu' || t === 'Search History') el.textContent = L.history_title;
+    if (t === 'Bookmarks') el.textContent = L.bookmarks_title;
+    if (t === 'Cảnh báo / Updates' || t === 'Alerts / Updates') el.textContent = L.updates_title;
+    if (t === 'Thống kê / Stats' || t === 'Statistics') el.textContent = L.stats_title;
+  });
+
+  // Stats labels
+  document.querySelectorAll('.sidebar-right .sidebar-section').forEach(sec => {
+    const divs = sec.querySelectorAll('div[style*="font-size:10px"]');
+    divs.forEach(d => {
+      if (d.textContent.includes('Tra cứu') || d.textContent.includes('Queries')) d.textContent = L.stats_queries;
+      if (d.textContent.includes('Bookmarks')) d.textContent = L.stats_bookmarks;
+    });
+  });
+
+  // Empty state
+  const et = document.getElementById('emptyState');
+  if (et) {
+    const title = et.querySelector('.empty-title');
+    const sub   = et.querySelector('.empty-sub');
+    if (title) title.textContent = L.empty_title;
+    if (sub)   sub.textContent   = L.empty_sub;
+  }
+
+  // Reload DB button
+  const reloadBtn = document.querySelector('[onclick="reloadDriveIndex()"]');
+  if (reloadBtn) reloadBtn.textContent = L.reload_db;
+}
+
+
 function setLoading(on) {
   document.getElementById('loadingBar').classList.toggle('visible', on);
 }
@@ -1027,9 +1180,11 @@ async function doSearch() {
 
   try {
     // Step 1: Parse intent
+    const isEN = state.appLang === 'en';
     const intentPrompt = `Bạn là trợ lý tra cứu pháp luật an toàn thực phẩm Việt Nam cho công ty DGM (nhập khẩu, phân phối thực phẩm: Ayam Brand, Alce Nero, Duchef).
 
 Người dùng gõ: "${raw}"
+Ngôn ngữ giao diện người dùng: ${isEN ? 'English — hãy ưu tiên trả lời bằng tiếng Anh khi có thể, phần tiếng Việt chỉ dùng cho trích dẫn nguyên văn văn bản pháp luật.' : 'Tiếng Việt'}
 
 Hãy:
 1. Phân tích ý định thực sự (họ muốn biết gì?)
@@ -1100,7 +1255,11 @@ async function confirmIntent() {
     }
     // ─────────────────────────────────────────────────────────────────────
 
+    const isEN = state.appLang === 'en';
     const isDriveMode = driveContentCtx.length > 0;
+    const langInstruction = isEN
+      ? '\n🌐 LANGUAGE: Respond primarily in ENGLISH. Use Vietnamese ONLY for direct legal text quotes (trích dẫn nguyên văn) that cannot be translated without losing legal meaning. All analysis, risks, actions must be in English.'
+      : '\n🌐 NGÔN NGỮ: Trả lời song ngữ Việt-Anh. Ưu tiên tiếng Việt cho phân tích, tiếng Anh cho bản dịch đi kèm.';
     const sourceNote = isDriveMode
       ? `\n⚡ QUAN TRỌNG: Bạn có nội dung thực tế từ ${driveFilesFound.length} file trong Google Drive DGM.\nHãy ưu tiên trích dẫn CHÍNH XÁC từ tài liệu này thay vì kiến thức tổng quát.\nGhi rõ khi trích dẫn: "[Từ file: tên_file]"`
       : '\n📚 Drive DB chưa kết nối — sử dụng kiến thức pháp lý Việt Nam từ training data.';
@@ -1108,6 +1267,7 @@ async function confirmIntent() {
     const resPrompt = `Bạn là chuyên gia tư vấn pháp lý an toàn thực phẩm Việt Nam cho DGM Vietnam (công ty nhập khẩu, sản xuất và phân phối thực phẩm: Ayam Brand từ Malaysia/Thailand, Alce Nero từ Italy, Duchef).
 
 ⚠️ QUAN TRỌNG: Trả về JSON hợp lệ và ĐẦY ĐỦ. Giới hạn mỗi trường text tối đa 300 ký tự. KHÔNG được cắt giữa chừng.
+${langInstruction}
 
 Câu hỏi: ${intent.intent_vi}
 (${intent.intent_en})
@@ -2596,6 +2756,8 @@ loadState();
 updateStatus();
 renderHistory();
 renderBookmarks();
+// Apply saved language
+applyAppLang();
 // Clear search input on load (prevent browser autofill showing email)
 setTimeout(() => {
   const si = document.getElementById('searchInput');
