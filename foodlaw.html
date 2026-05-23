@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DGM · Food Law Intelligence</title>
+<title>Food Law Intelligence · QB</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,300;0,400;0,600;1,300&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -336,7 +336,27 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
 <!-- ── HEADER ── -->
 <header>
   <div class="logo" onclick="goHome()" style="cursor:pointer" title="Về trang chủ / Home">
-    <div class="logo-mark">DGM</div>
+    <div class="logo-mark" style="background:transparent;padding:0;overflow:visible">
+  <svg width="36" height="36" viewBox="0 0 36 36" style="display:block">
+    <rect width="36" height="36" rx="8" fill="#c9a84c"/>
+    <!-- Q circle -->
+    <circle cx="17" cy="17" r="9.5" fill="none" stroke="white" stroke-width="3"/>
+    <!-- Q tail (bottom-right, doubles as scales base) -->
+    <line x1="24" y1="23" x2="30" y2="30" stroke="white" stroke-width="3" stroke-linecap="round"/>
+    <!-- Scales beam -->
+    <line x1="17" y1="10" x2="17" y2="19" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
+    <!-- Scales arm -->
+    <line x1="10" y1="13" x2="24" y2="13" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
+    <!-- Left pan -->
+    <line x1="11.5" y1="13" x2="10" y2="18" stroke="white" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M7.5 18 Q10 15.5 12.5 18" fill="none" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
+    <!-- Right pan -->
+    <line x1="22.5" y1="13" x2="24" y2="18" stroke="white" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M21.5 18 Q24 15.5 26.5 18" fill="none" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
+    <!-- QB text -->
+    <text x="17" y="26.5" font-family="Georgia,serif" font-size="6" font-weight="700" fill="white" text-anchor="middle" letter-spacing="1.5">QB</text>
+  </svg>
+</div>
     <div class="logo-text">
       <div class="brand">Food Law Intelligence</div>
       <div class="sub">Compliance Research System</div>
@@ -557,7 +577,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
     <div id="resultsContainer" class="results-area scrollbar-style" style="display:flex;flex-direction:column;overflow-y:auto">
       <div class="empty-state" id="emptyState">
         <div class="empty-icon">⚖️</div>
-        <div class="empty-title">DGM Food Law Intelligence</div>
+        <div class="empty-title">Food Law Intelligence</div>
         <div class="empty-sub">Hệ thống tra cứu pháp luật an toàn thực phẩm thông minh · Nhập từ khoá hoặc upload ảnh tem nhãn để bắt đầu</div>
         <div class="empty-examples">
           <button class="example-btn" onclick="quickSearch('nhãn phụ cá ngừ nhập khẩu quy định bắt buộc')">Nhãn phụ cá ngừ NK</button>
@@ -628,8 +648,8 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
       <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#686460;margin-bottom:8px;font-weight:500">About</div>
       <div style="font-size:11px;line-height:1.7;color:#686460">
         <div style="margin-bottom:6px">&#x1F41F; <strong style="color:#a8a49a;font-weight:500">Created by Quy Bui</strong></div>
-        <div style="font-style:italic;color:#686460;margin-bottom:4px;font-size:11px">Sinh ra từ nỗi đau của hàng trăm trang nghị định — và một tách cà phê nguội lạnh lúc 11 giờ đêm. Vì đọc văn bản pháp luật không nên là hình phạt. Được xây bởi người làm sales, không phải luật sư — nên đọc xong vẫn nhớ hỏi thêm chuyên gia nhé. ☕</div>
-        <div style="font-style:italic;color:#555;margin-bottom:8px;font-size:10px">Born from the pain of hundreds of regulatory decrees — and one very cold cup of coffee at 11pm. Because reading legal documents shouldn't feel like punishment. Built by a sales guy, not a lawyer — so always double-check with a real one.</div>
+        <div style="font-style:italic;color:#686460;margin-bottom:4px;font-size:11px">Sinh ra từ 1 người nghiện Americano đá, không đường. Lười đọc, chỉ thích đi đá banh. Đọc 10 hiểu 1.5. Đọc luật 5 phút sẽ dẫn đến tình trạng "trống rỗng". Hy vọng sẽ giúp mọi người ít bị rơi vào tình trạng đó hơn. Đây chỉ là tham khảo — bạn vẫn cần đọc hoặc tìm chuyên gia để có kết quả đúng nhất. Chúc các bạn có những ngày làm việc đầy năng lượng! ⚽☕</div>
+        <div style="font-style:italic;color:#555;margin-bottom:8px;font-size:10px">Born from an iced Americano addiction, no sugar. Too lazy to read, much prefer playing football. Read 10 pages, understand 1.5. Five minutes of food law = instant "middle of nowhere" stare. Hope this saves you from that same blank look. For reference only — you still need to read or consult experts for the most accurate results. Wishing you energetic workdays ahead!</div>
         <a href="mailto:quangquy.bui@gmail.com" style="display:inline-flex;align-items:center;gap:5px;font-size:10px;color:#c9a84c;text-decoration:none;font-family:'IBM Plex Mono',monospace">&#x1F4E7; quangquy.bui@gmail.com</a>
       </div>
     </div>
@@ -837,7 +857,7 @@ const LANG_LABELS = {
     stats_title: 'Thống kê / Stats',
     stats_queries: 'Tra cứu hôm nay',
     stats_bookmarks: 'Bookmarks',
-    empty_title: 'DGM Food Law Intelligence',
+    empty_title: 'Food Law Intelligence',
     empty_sub: 'Hệ thống tra cứu pháp luật an toàn thực phẩm thông minh · Nhập từ khoá hoặc upload ảnh tem nhãn để bắt đầu',
     reload_db: '🔄 Reload Drive DB',
     tab_text: '💬 Từ khoá / Câu hỏi',
@@ -854,7 +874,7 @@ const LANG_LABELS = {
     stats_title: 'Statistics',
     stats_queries: 'Queries today',
     stats_bookmarks: 'Bookmarks',
-    empty_title: 'DGM Food Law Intelligence',
+    empty_title: 'Food Law Intelligence',
     empty_sub: 'Smart food safety compliance research system · Enter keywords or upload a label image to get started',
     reload_db: '🔄 Reload Drive DB',
     tab_text: '💬 Keywords / Question',
@@ -1181,7 +1201,7 @@ async function doSearch() {
   try {
     // Step 1: Parse intent
     const isEN = state.appLang === 'en';
-    const intentPrompt = `Bạn là trợ lý tra cứu pháp luật an toàn thực phẩm Việt Nam cho công ty DGM (nhập khẩu, phân phối thực phẩm: Ayam Brand, Alce Nero, Duchef).
+    const intentPrompt = `Bạn là trợ lý tra cứu pháp luật an toàn thực phẩm Việt Nam. Hỗ trợ doanh nghiệp sản xuất, nhập khẩu và phân phối thực phẩm tuân thủ quy định pháp luật hiện hành.
 
 Người dùng gõ: "${raw}"
 Ngôn ngữ giao diện người dùng: ${isEN ? 'English — hãy ưu tiên trả lời bằng tiếng Anh khi có thể, phần tiếng Việt chỉ dùng cho trích dẫn nguyên văn văn bản pháp luật.' : 'Tiếng Việt'}
@@ -1261,10 +1281,10 @@ async function confirmIntent() {
       ? '\n🌐 LANGUAGE: Respond primarily in ENGLISH. Use Vietnamese ONLY for direct legal text quotes (trích dẫn nguyên văn) that cannot be translated without losing legal meaning. All analysis, risks, actions must be in English.'
       : '\n🌐 NGÔN NGỮ: Trả lời song ngữ Việt-Anh. Ưu tiên tiếng Việt cho phân tích, tiếng Anh cho bản dịch đi kèm.';
     const sourceNote = isDriveMode
-      ? `\n⚡ QUAN TRỌNG: Bạn có nội dung thực tế từ ${driveFilesFound.length} file trong Google Drive DGM.\nHãy ưu tiên trích dẫn CHÍNH XÁC từ tài liệu này thay vì kiến thức tổng quát.\nGhi rõ khi trích dẫn: "[Từ file: tên_file]"`
+      ? `\n⚡ QUAN TRỌNG: Bạn có nội dung thực tế từ ${driveFilesFound.length} file trong cơ sở dữ liệu pháp luật.\nHãy ưu tiên trích dẫn CHÍNH XÁC từ tài liệu này thay vì kiến thức tổng quát.\nGhi rõ khi trích dẫn: "[Từ file: tên_file]"`
       : '\n📚 Drive DB chưa kết nối — sử dụng kiến thức pháp lý Việt Nam từ training data.';
 
-    const resPrompt = `Bạn là chuyên gia tư vấn pháp lý an toàn thực phẩm Việt Nam cho DGM Vietnam (công ty nhập khẩu, sản xuất và phân phối thực phẩm: Ayam Brand từ Malaysia/Thailand, Alce Nero từ Italy, Duchef).
+    const resPrompt = `Bạn là chuyên gia tư vấn pháp lý an toàn thực phẩm Việt Nam. Hỗ trợ các doanh nghiệp sản xuất, nhập khẩu và phân phối thực phẩm tuân thủ quy định pháp luật. Phân tích khách quan, không gắn với bất kỳ thương hiệu hay công ty cụ thể nào.
 
 ⚠️ QUAN TRỌNG: Trả về JSON hợp lệ và ĐẦY ĐỦ. Giới hạn mỗi trường text tối đa 300 ký tự. KHÔNG được cắt giữa chừng.
 ${langInstruction}
@@ -1436,7 +1456,7 @@ function buildDriveContext(files) {
   if (!files || files.length === 0) return '';
 
   let ctx = '\n\n═══ NỘI DUNG THỰC TẾ TỪ DRIVE DATABASE ═══\n';
-  ctx += `(${files.length} văn bản liên quan được tìm thấy trong Google Drive của DGM)\n\n`;
+  ctx += `(${files.length} văn bản liên quan được tìm thấy trong cơ sở dữ liệu pháp luật)\n\n`;
 
   files.forEach((f, i) => {
     ctx += `── [${i+1}] ${f.name} [Folder ${f.folder}: ${f.folder_name_vi}]\n`;
@@ -1460,7 +1480,7 @@ function buildDriveContext(files) {
 function buildFolderContext(folders) {
   // 1. Try to use real Drive index
   if (driveIndexStatus === 'ok' && driveIndex) {
-    let ctx = 'Cơ sở dữ liệu pháp luật DGM — Kết nối trực tiếp Google Drive:\n';
+    let ctx = 'Cơ sở dữ liệu pháp luật — Kết nối trực tiếp Google Drive:\n';
     Object.entries(driveIndex.folders).forEach(([key, folder]) => {
       if (folder.file_count > 0) {
         const files = (driveIndex.files || [])
@@ -1476,7 +1496,7 @@ function buildFolderContext(folders) {
   }
 
   // 2. Fallback: static knowledge base
-  return `Cơ sở dữ liệu pháp luật DGM bao gồm:
+  return `Cơ sở dữ liệu pháp luật bao gồm:
 Folder A (Luật nền tảng): Luật ATTP 55/2010/QH12, VB HN 61/VBHN-VPQH 2025
 Folder B (Nghị định): NĐ 15/2018, NĐ 46/2026 (tạm ngưng), NĐ 115/2018, NĐ 124/2021, NĐ 09/2016, NĐ 37/2026 (ghi nhãn), NĐ 43/2017 (hết HLực), NĐ 111/2021 (hết HLực)
 Folder C (Nghị quyết): NQ 66.13/2026 (tạm ngưng), NQ 15/2026 (tạm ngưng NĐ 46)
@@ -1628,7 +1648,7 @@ function openCitation(index) {
 
   document.getElementById('popupTitle').textContent = c.doc_name_vi;
   document.getElementById('popupClause').textContent = c.article + ' | ' + c.doc_id;
-  document.getElementById('popupSource').textContent = 'Source: ' + c.doc_id + ' · Folder ' + (c.folder||'') + ' · DGM Food Law Database 2026';
+  document.getElementById('popupSource').textContent = 'Source: ' + c.doc_id + ' · Folder ' + (c.folder||'') + ' · Food Law Database 2026';
   document.getElementById('popupTextVI').innerHTML = `
     <p><strong>${c.article}</strong> — ${c.doc_name_vi}</p>
     <br>
@@ -1832,7 +1852,60 @@ async function analyzeLabel() {
     // Giảm số API calls từ N xuống còn 1 → tránh rate limit & high demand error
     document.getElementById('statusText').textContent = `🔍 Đang phân tích ${modesArr.length} nội dung... vui lòng chờ`;
 
-    const combinedPrompt = buildCombinedPrompt(modesArr, uploadedImages);
+    // ── AUTO-DETECT PRODUCT TYPE ─────────────────────────────────────────────
+    // Quick pre-scan to detect: domestic VN / imported / OEM before full analysis
+    document.getElementById('statusText').textContent = '🔍 Đang nhận diện loại sản phẩm...';
+    let productTypeCtx = '';
+    try {
+      const detectParts = [];
+      uploadedImages.slice(0,2).forEach(img => {
+        detectParts.push({ inlineData: { mimeType: img.mimeType, data: img.data } });
+      });
+      detectParts.push({ text: `Examine this food product label carefully. Identify the product type by looking for these signals:
+- Language on label (Vietnamese only / bilingual / English only)
+- "Sản xuất tại Việt Nam" or "Made in Vietnam" → DOMESTIC
+- "Nhập khẩu bởi" / "Importer" / foreign country of origin → IMPORTED
+- "Gia công tại" / OEM manufacturer outside VN with VN brand → OEM_IMPORT
+- Barcode prefix: 893 = Vietnam registered
+- Presence of Vietnamese importer/distributor info
+
+Return ONLY a JSON object with no markdown:
+{"product_type":"DOMESTIC|IMPORTED|OEM_IMPORT|UNKNOWN","country_of_manufacture":"","evidence":"brief reason max 60 chars","has_vn_importer_required":true|false}` });
+
+      const detectResp = await fetch(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + state.apiKey,
+        { method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ contents:[{role:'user', parts: detectParts}], generationConfig:{temperature:0.1, maxOutputTokens:200} }) }
+      );
+      const detectData = await detectResp.json();
+      const detectRaw = detectData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const detectResult = safeParseJSON(detectRaw);
+      if (detectResult && detectResult.product_type) {
+        const pt = detectResult.product_type;
+        const ptLabel = pt === 'DOMESTIC' ? '🇻🇳 Sản phẩm nội địa' :
+                        pt === 'IMPORTED' ? '📦 Sản phẩm nhập khẩu' :
+                        pt === 'OEM_IMPORT' ? '🏭 Sản phẩm gia công nước ngoài' : '❓ Chưa xác định';
+        productTypeCtx = `\n\n⚡ PRODUCT TYPE DETECTED: ${pt} (${ptLabel})
+Evidence: ${detectResult.evidence || ''}
+Country of manufacture: ${detectResult.country_of_manufacture || 'Unknown'}
+Vietnamese importer info required on label: ${detectResult.has_vn_importer_required ? 'YES' : 'NO'}
+
+CRITICAL COMPLIANCE RULE BASED ON PRODUCT TYPE:
+${pt === 'DOMESTIC'
+  ? '→ This is a DOMESTIC Vietnamese product. DO NOT flag missing importer/distributor info as a violation — domestic products do NOT require importer info on label. Instead check for: manufacturer name & address in VN, product registration number, factory license.'
+  : pt === 'IMPORTED'
+  ? '→ This is an IMPORTED product. Vietnamese sub-label MUST include: importer/distributor name & address in VN (per NĐ 37/2026 Điều 37). Flag as FAIL if missing.'
+  : pt === 'OEM_IMPORT'
+  ? '→ This is an OEM/contract-manufactured product imported to VN. Treat as imported — Vietnamese importer info is required on label.'
+  : '→ Product type unclear. Apply imported product rules as a conservative default.'}`;
+        document.getElementById('statusText').textContent = `${ptLabel} · Đang phân tích chi tiết...`;
+      }
+    } catch(detectErr) {
+      console.warn('Product type detection failed:', detectErr.message);
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
+    const combinedPrompt = buildCombinedPrompt(modesArr, uploadedImages, productTypeCtx);
 
     // Build image parts (all images)
     const parts = [];
@@ -1971,7 +2044,8 @@ async function analyzeLabel() {
 }
 
 // ── COMBINED PROMPT BUILDER — 1 call cho tất cả modes ──────────────────────
-function buildCombinedPrompt(modesArr, images) {
+function buildCombinedPrompt(modesArr, images, productTypeCtx) {
+  productTypeCtx = productTypeCtx || '';
   var imgCount = images.length;
 
   // Mode-specific JSON schemas — plain strings, no nesting
@@ -2053,8 +2127,8 @@ function buildCombinedPrompt(modesArr, images) {
 
   var modeList = modesArr.join(', ');
 
-  return 'You are a Vietnamese food label compliance expert for DGM Vietnam (importer/distributor of Ayam Brand from Malaysia/Thailand, Alce Nero from Italy, Duchef).\n\n' +
-    imgDesc + '\n\n' +
+  return 'You are a Vietnamese food label compliance expert. You help manufacturers, importers, and distributors ensure their products comply with Vietnamese food safety regulations.\n\n' +
+    imgDesc + productTypeCtx + '\n\n' +
     'Analyze the label image(s) for these aspect(s): ' + modeList + '.\n\n' +
     'Vietnamese food law context:\n' +
     '- ND 37/2026/ND-CP: Labelling decree (23/01/2026). Mandatory on Vietnamese sub-label: product name in Vietnamese, ingredients, net weight, country of origin, MFG/EXP dates, importer/distributor in VN, storage instructions, NIP.\n' +
@@ -2320,7 +2394,7 @@ function openCitationDirect(c) {
   if (typeof c === 'string') { try { c = JSON.parse(c); } catch(e) { return; } }
   document.getElementById('popupTitle').textContent = c.doc_name_vi || c.doc_id;
   document.getElementById('popupClause').textContent = (c.article||'') + ' | ' + (c.doc_id||'');
-  document.getElementById('popupSource').textContent = 'Source: ' + (c.doc_id||'') + ' · Folder ' + (c.folder||'') + ' · DGM Food Law Database 2026';
+  document.getElementById('popupSource').textContent = 'Source: ' + (c.doc_id||'') + ' · Folder ' + (c.folder||'') + ' · Food Law Database 2026';
   var relevanceVI = c.relevance ? '<br><div class="highlight"><strong>Li&#xEA;n quan:</strong> ' + c.relevance + '</div>' : '';
   document.getElementById('popupTextVI').innerHTML = '<p><strong>' + (c.article||'') + '</strong> &#x2014; ' + (c.doc_name_vi||'') + '</p><br><p>' + (c.content_vi||'Xem file g&#x1ED1;c trong folder ' + (c.folder||'')) + '</p>' + relevanceVI;
   document.getElementById('popupTextEN').innerHTML = `<p><strong>${c.article_en||c.article||''}</strong> — ${c.doc_name_en||''}</p><br><p>${c.content_en||'See original file in folder ' + (c.folder||'')}</p>`;
@@ -2593,7 +2667,7 @@ function exportChecklist() {
   csv += rows.map(r => r.map(c => `"${(c+'').replace(/"/g,'""')}"`).join(',')).join('\n');
   const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = `DGM_Checklist_${selectedSKUKey}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = `QB_Checklist_${selectedSKUKey}_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
 }
 
@@ -2655,7 +2729,7 @@ function toggleBookmarks() {
 function exportReport() {
   if (!window._currentResult) { alert('Chưa có kết quả để xuất'); return; }
   const r = window._currentResult;
-  let md = `# DGM Food Law Intelligence Report\n`;
+  let md = `# Food Law Intelligence Report\n`;
   md += `**Date:** ${new Date().toLocaleDateString('vi-VN')}\n`;
   md += `**Query:** ${state.currentQuery || 'N/A'}\n\n`;
   md += `## Trích dẫn pháp lý / Legal Citations\n\n`;
@@ -2669,11 +2743,11 @@ function exportReport() {
   (r.risks||[]).forEach(r2 => { md += `- **[${r2.level.toUpperCase()}]** ${r2.title_vi}: ${r2.desc_vi}\n`; });
   md += `\n## Hành động / Actions\n\n`;
   (r.actions||[]).forEach((a,i) => { md += `${a.priority||i+1}. ${a.action_vi}\n   *${a.action_en}*\n`; });
-  md += `\n---\n*Generated by DGM Food Law Intelligence System*`;
+  md += `\n---\n*Generated by Food Law Intelligence · QB*`;
 
   const blob = new Blob([md], {type:'text/markdown'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = `DGM_FoodLaw_Report_${new Date().toISOString().slice(0,10)}.md`;
+  a.download = `QB_FoodLaw_Report_${new Date().toISOString().slice(0,10)}.md`;
   a.click();
 }
 
@@ -2781,7 +2855,20 @@ if (state.gasWebAppUrl) {
     <!-- STEP 1: Guide -->
     <div id="obStep1">
       <div class="ob-header">
-        <div class="ob-logo-mark">DGM</div>
+        <div class="ob-logo-mark" style="background:transparent;border:none">
+  <svg width="48" height="48" viewBox="0 0 48 48" style="display:block">
+    <rect width="48" height="48" rx="12" fill="#c9a84c"/>
+    <circle cx="23" cy="22" r="13" fill="none" stroke="white" stroke-width="4"/>
+    <line x1="32" y1="31" x2="41" y2="41" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    <line x1="23" y1="12" x2="23" y2="25" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    <line x1="13" y1="17" x2="33" y2="17" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    <line x1="15" y1="17" x2="13" y2="24" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M10 24 Q13 21 16 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    <line x1="31" y1="17" x2="33" y2="24" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M30 24 Q33 21 36 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    <text x="23" y="35" font-family="Georgia,serif" font-size="8" font-weight="700" fill="white" text-anchor="middle" letter-spacing="2">QB</text>
+  </svg>
+</div>
         <div class="ob-title">Ch&#xE0;o m&#x1EEB;ng! &middot; Welcome</div>
         <div class="ob-sub">&#x110;&#x1EC3; s&#x1EED; d&#x1EE5;ng app, b&#x1EA1;n c&#x1EA7;n 1 Gemini API key mi&#x1EC5;n ph&#xED; t&#x1EEB; Google.</div>
         <div class="ob-sub" style="font-style:italic;margin-bottom:16px">You need a free Gemini API key from Google to get started.</div>
