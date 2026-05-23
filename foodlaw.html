@@ -1,0 +1,2643 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DGM · Food Law Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,300;0,400;0,600;1,300&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0d1b2a;
+  --navy2: #162032;
+  --navy3: #1e2d40;
+  --navy4: #243347;
+  --gold: #c9a84c;
+  --gold2: #e8c96a;
+  --gold3: #f0d98a;
+  --red: #e05252;
+  --amber: #e09a38;
+  --green: #4caf82;
+  --blue: #4a9fd4;
+  --text: #e8e4da;
+  --text2: #a8a49a;
+  --text3: #686460;
+  --border: rgba(201,168,76,0.15);
+  --border2: rgba(201,168,76,0.08);
+  --card: rgba(22,32,50,0.8);
+  --radius: 8px;
+  --radius2: 12px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--navy);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* ── BACKGROUND TEXTURE ── */
+body::before{content:'';position:fixed;inset:0;background:
+  radial-gradient(ellipse 80% 60% at 20% 10%,rgba(201,168,76,0.04) 0%,transparent 60%),
+  radial-gradient(ellipse 60% 80% at 80% 90%,rgba(74,159,212,0.03) 0%,transparent 60%);pointer-events:none;z-index:0}
+
+/* ── LAYOUT ── */
+.app{position:relative;z-index:1;display:grid;grid-template-rows:auto 1fr;min-height:100vh}
+.main-layout{display:grid;grid-template-columns:260px 1fr 280px;min-height:calc(100vh - 72px)}
+
+/* ── HEADER ── */
+header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px;backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:36px;height:36px;background:var(--gold);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Serif',serif;font-weight:600;font-size:14px;color:var(--navy);letter-spacing:-.5px}
+.logo-text{font-family:'IBM Plex Serif',serif}
+.logo-text .brand{font-size:16px;font-weight:600;color:var(--text);letter-spacing:.5px}
+.logo-text .sub{font-size:10px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;font-family:'IBM Plex Sans',sans-serif;font-weight:500}
+.header-center{flex:1;max-width:560px;margin:0 auto}
+.header-actions{display:flex;align-items:center;gap:8px}
+.btn-icon{width:36px;height:36px;border:1px solid var(--border);border-radius:var(--radius);background:transparent;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;font-size:16px}
+.btn-icon:hover{border-color:var(--gold);color:var(--gold)}
+.mode-badge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:.5px;cursor:pointer;border:1px solid;transition:all .2s}
+.mode-badge.active{background:var(--gold);color:var(--navy);border-color:var(--gold)}
+.mode-badge.inactive{background:transparent;color:var(--text2);border-color:var(--border)}
+
+/* ── SIDEBAR LEFT ── */
+.sidebar-left{background:var(--navy2);border-right:1px solid var(--border2);display:flex;flex-direction:column;overflow:hidden}
+.sidebar-section{padding:16px;border-bottom:1px solid var(--border2)}
+.sidebar-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px;font-weight:500}
+.folder-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius);cursor:pointer;transition:all .15s;margin-bottom:2px}
+.folder-item:hover{background:var(--border2)}
+.folder-item.active{background:rgba(201,168,76,0.1);border-left:2px solid var(--gold)}
+.folder-badge{width:22px;height:22px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;font-family:'IBM Plex Mono',monospace;flex-shrink:0}
+.badge-a{background:rgba(76,175,130,0.2);color:var(--green)}
+.badge-b{background:rgba(74,159,212,0.2);color:var(--blue)}
+.badge-c{background:rgba(201,168,76,0.2);color:var(--gold)}
+.badge-d{background:rgba(224,154,56,0.2);color:var(--amber)}
+.badge-e{background:rgba(224,82,82,0.2);color:var(--red)}
+.badge-f{background:rgba(160,120,200,0.2);color:#a078c8}
+.folder-name{font-size:12px;color:var(--text2);font-weight:400;line-height:1.3}
+.folder-count{font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace}
+
+/* History */
+.history-list{flex:1;overflow-y:auto;padding:8px}
+.history-item{padding:8px 10px;border-radius:var(--radius);cursor:pointer;transition:all .15s;margin-bottom:4px;border:1px solid transparent}
+.history-item:hover{background:var(--border2);border-color:var(--border2)}
+.history-q{font-size:12px;color:var(--text2);line-height:1.4;margin-bottom:3px}
+.history-meta{display:flex;gap:6px;align-items:center}
+.history-time{font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace}
+.risk-dot{width:6px;height:6px;border-radius:50%}
+.risk-red{background:var(--red)}
+.risk-amber{background:var(--amber)}
+.risk-green{background:var(--green)}
+
+/* ── MAIN CONTENT ── */
+.main-content{display:flex;flex-direction:column;overflow:hidden}
+
+/* Search area */
+.search-area{padding:24px 24px 0;border-bottom:1px solid var(--border2)}
+.search-mode-tabs{display:flex;gap:2px;margin-bottom:16px;background:var(--navy3);border-radius:var(--radius);padding:3px;width:fit-content}
+.tab{padding:6px 16px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;border:none;background:transparent;color:var(--text3)}
+.tab.active{background:var(--navy);color:var(--gold);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.search-box{position:relative;margin-bottom:0}
+.search-input{width:100%;padding:14px 50px 14px 16px;background:var(--navy3);border:1px solid var(--border);border-radius:var(--radius2);color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:14px;outline:none;transition:all .2s}
+.search-input:focus{border-color:var(--gold);box-shadow:0 0 0 2px rgba(201,168,76,.1)}
+.search-input::placeholder{color:var(--text3)}
+.search-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:var(--gold);border:none;border-radius:6px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--navy);font-size:16px;transition:all .2s}
+.search-btn:hover{background:var(--gold2)}
+.keyword-chips{display:flex;flex-wrap:wrap;gap:6px;padding:12px 0;min-height:44px}
+.chip{padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid var(--border);color:var(--text2);transition:all .15s;display:flex;align-items:center;gap:4px}
+.chip:hover{border-color:var(--gold);color:var(--gold)}
+.chip.active{background:rgba(201,168,76,.12);border-color:var(--gold);color:var(--gold2)}
+.chip-remove{font-size:14px;opacity:.6;line-height:1}
+
+/* Image upload */
+.upload-area{margin:16px 24px;border:2px dashed var(--border);border-radius:var(--radius2);padding:32px;text-align:center;cursor:pointer;transition:all .2s;display:none}
+.upload-area.visible{display:block}
+.upload-area:hover{border-color:var(--gold);background:rgba(201,168,76,.03)}
+.upload-area.dragover{border-color:var(--gold2);background:rgba(201,168,76,.06)}
+.upload-icon{font-size:32px;margin-bottom:8px}
+.upload-title{font-size:14px;color:var(--text);margin-bottom:4px}
+.upload-sub{font-size:12px;color:var(--text3)}
+.upload-preview{margin-top:12px;display:none}
+.upload-preview img{max-width:100%;max-height:200px;border-radius:var(--radius);border:1px solid var(--border)}
+
+/* Intent confirm */
+.intent-confirm{margin:0 24px 16px;background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:var(--radius2);padding:16px;display:none}
+.intent-confirm.visible{display:block}
+.intent-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.intent-text{font-size:13px;color:var(--text);font-family:'IBM Plex Serif',serif;font-style:italic;margin-bottom:12px;line-height:1.5}
+.intent-actions{display:flex;gap:8px}
+.btn-confirm{padding:7px 16px;background:var(--gold);color:var(--navy);border:none;border-radius:var(--radius);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-confirm:hover{background:var(--gold2)}
+.btn-refine{padding:7px 16px;background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;cursor:pointer;transition:all .2s}
+.btn-refine:hover{border-color:var(--gold);color:var(--gold)}
+
+/* Results */
+.results-area{flex:1;overflow-y:auto;padding:16px 24px}
+.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.result-card{background:var(--card);border:1px solid var(--border2);border-radius:var(--radius2);overflow:hidden;transition:border-color .2s}
+.result-card:hover{border-color:var(--border)}
+.card-header{padding:12px 16px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);font-weight:500}
+.card-body{padding:16px}
+.citation-item{padding:10px 12px;border-radius:var(--radius);border:1px solid var(--border2);margin-bottom:8px;cursor:pointer;transition:all .2s}
+.citation-item:hover{background:rgba(201,168,76,.05);border-color:rgba(201,168,76,.3)}
+.citation-doc{font-size:11px;color:var(--gold);font-family:'IBM Plex Mono',monospace;margin-bottom:4px}
+.citation-clause{font-size:13px;color:var(--text);line-height:1.4;margin-bottom:4px}
+.citation-clause-en{font-size:11px;color:var(--text3);line-height:1.4;font-style:italic}
+.citation-ref{font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-top:4px}
+
+/* Risk panel */
+.risk-panel{background:var(--card);border:1px solid var(--border2);border-radius:var(--radius2);overflow:hidden}
+.risk-item{padding:12px 16px;border-bottom:1px solid var(--border2);display:flex;gap:12px;align-items:flex-start}
+.risk-item:last-child{border-bottom:none}
+.risk-indicator{width:4px;border-radius:2px;flex-shrink:0;align-self:stretch;min-height:24px}
+.risk-high{background:var(--red)}
+.risk-medium{background:var(--amber)}
+.risk-low{background:var(--green)}
+.risk-content .risk-title{font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px}
+.risk-content .risk-desc{font-size:11px;color:var(--text3);line-height:1.4}
+.risk-badge{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;margin-left:auto;white-space:nowrap;align-self:flex-start;margin-top:2px}
+.risk-badge-high{background:rgba(224,82,82,.15);color:var(--red)}
+.risk-badge-medium{background:rgba(224,154,56,.15);color:var(--amber)}
+.risk-badge-low{background:rgba(76,175,130,.15);color:var(--green)}
+
+/* AI Analysis */
+.ai-analysis{font-size:13px;line-height:1.7;color:var(--text2)}
+.ai-analysis p{margin-bottom:10px}
+.ai-analysis strong{color:var(--text);font-weight:500}
+.ai-analysis .highlight{background:rgba(201,168,76,.1);border-left:2px solid var(--gold);padding:8px 12px;border-radius:0 var(--radius) var(--radius) 0;margin:10px 0;font-size:12px;color:var(--text)}
+.ai-analysis .action{background:rgba(224,82,82,.08);border-left:2px solid var(--red);padding:8px 12px;border-radius:0 var(--radius) var(--radius) 0;margin:10px 0;font-size:12px;color:var(--text)}
+
+/* SKU Checklist mode */
+.sku-panel{padding:16px 24px;display:none}
+.sku-panel.visible{display:block}
+.sku-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.sku-card{padding:12px;background:var(--navy3);border:1px solid var(--border2);border-radius:var(--radius2);cursor:pointer;transition:all .2s;text-align:center}
+.sku-card:hover{border-color:var(--border)}
+.sku-card.active{background:rgba(201,168,76,.1);border-color:var(--gold)}
+.sku-icon{font-size:24px;margin-bottom:6px}
+.sku-name{font-size:11px;color:var(--text2);font-weight:500}
+.checklist-table{width:100%;border-collapse:collapse}
+.checklist-table th{padding:10px 12px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border2);font-weight:500}
+.checklist-table td{padding:10px 12px;border-bottom:1px solid var(--border2);font-size:12px;vertical-align:top}
+.check-select{background:var(--navy3);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);padding:4px 8px;font-size:11px;outline:none;cursor:pointer}
+.check-select option{background:var(--navy2)}
+.check-note{background:var(--navy3);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);padding:4px 8px;font-size:11px;width:100%;outline:none;resize:none}
+
+/* ── SIDEBAR RIGHT ── */
+.sidebar-right{background:var(--navy2);border-left:1px solid var(--border2);overflow-y:auto}
+.sidebar-right .sidebar-section{padding:16px}
+
+/* Document popup */
+.popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.popup-overlay.visible{display:flex}
+.popup-modal{background:var(--navy2);border:1px solid var(--border);border-radius:var(--radius2);width:min(700px,90vw);max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
+.popup-header{padding:16px 20px;border-bottom:1px solid var(--border2);display:flex;justify-content:space-between;align-items:flex-start}
+.popup-title{font-family:'IBM Plex Serif',serif;font-size:15px;color:var(--text);margin-bottom:4px}
+.popup-clause{font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--gold)}
+.popup-close{background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:20px;padding:0;line-height:1;transition:color .2s}
+.popup-close:hover{color:var(--text)}
+.popup-body{padding:20px;overflow-y:auto;flex:1}
+.popup-lang-toggle{display:flex;gap:6px;margin-bottom:16px}
+.lang-btn{padding:4px 12px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid;transition:all .2s}
+.lang-btn.active{background:var(--gold);color:var(--navy);border-color:var(--gold)}
+.lang-btn.inactive{background:transparent;color:var(--text3);border-color:var(--border2)}
+.popup-text-vi{font-size:13px;line-height:1.8;color:var(--text2);font-family:'IBM Plex Serif',serif}
+.popup-text-en{font-size:13px;line-height:1.8;color:var(--text2);font-style:italic;display:none}
+.popup-text-vi strong,.popup-text-en strong{color:var(--gold);font-weight:600}
+.popup-source{padding:12px 20px;border-top:1px solid var(--border2);font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace}
+
+/* Settings panel */
+.settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center}
+.settings-overlay.visible{display:flex}
+.settings-modal{background:var(--navy2);border:1px solid var(--border);border-radius:var(--radius2);width:min(540px,90vw);max-height:80vh;overflow-y:auto}
+.settings-header{padding:20px 24px 16px;border-bottom:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center}
+.settings-title{font-family:'IBM Plex Serif',serif;font-size:18px;color:var(--text)}
+.settings-body{padding:20px 24px}
+.setting-group{margin-bottom:20px}
+.setting-label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;font-weight:500}
+.setting-input{width:100%;padding:10px 12px;background:var(--navy3);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none;transition:border-color .2s}
+.setting-input:focus{border-color:var(--gold)}
+.setting-desc{font-size:11px;color:var(--text3);margin-top:4px;line-height:1.5}
+.setting-row{display:grid;grid-template-columns:40px 1fr;gap:8px;margin-bottom:8px;align-items:center}
+.setting-folder-badge{font-size:10px;font-weight:600;width:28px;height:28px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace}
+.btn-save{padding:10px 24px;background:var(--gold);color:var(--navy);border:none;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;width:100%;margin-top:8px}
+.btn-save:hover{background:var(--gold2)}
+
+/* Loading states */
+.loading-bar{height:2px;background:var(--border2);border-radius:1px;overflow:hidden;margin:8px 24px 0}
+.loading-progress{height:100%;background:linear-gradient(90deg,transparent,var(--gold),transparent);width:30%;animation:loading-anim 1.5s ease-in-out infinite;display:none}
+.loading-progress.visible{display:block}
+@keyframes loading-anim{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}
+
+/* Empty state */
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px;text-align:center;color:var(--text3)}
+.empty-icon{font-size:48px;margin-bottom:16px;opacity:.4}
+.empty-title{font-family:'IBM Plex Serif',serif;font-size:20px;color:var(--text2);margin-bottom:8px}
+.empty-sub{font-size:13px;line-height:1.6;max-width:320px}
+.empty-examples{margin-top:24px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.example-btn{padding:7px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--text3);cursor:pointer;transition:all .2s;background:transparent}
+.example-btn:hover{border-color:var(--gold);color:var(--gold2)}
+
+/* Utility */
+.section-divider{height:1px;background:var(--border2);margin:12px 0}
+.status-bar{padding:6px 24px;background:rgba(13,27,42,.6);border-top:1px solid var(--border2);font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;display:flex;gap:16px;align-items:center}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.status-dot.error{background:var(--red)}
+.export-btn{padding:7px 14px;border:1px solid var(--gold);border-radius:var(--radius);font-size:11px;color:var(--gold);cursor:pointer;background:transparent;transition:all .2s;font-weight:500}
+.export-btn:hover{background:rgba(201,168,76,.1)}
+.scrollbar-style::-webkit-scrollbar{width:4px}
+.scrollbar-style::-webkit-scrollbar-track{background:transparent}
+.scrollbar-style::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* Bookmark */
+.bookmark-item{padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border2);margin-bottom:6px;cursor:pointer;transition:all .15s}
+.bookmark-item:hover{background:var(--border2)}
+.bookmark-q{font-size:11px;color:var(--text2);margin-bottom:3px;line-height:1.4}
+.bookmark-tags{display:flex;gap:4px;flex-wrap:wrap}
+.bookmark-tag{padding:2px 6px;background:rgba(201,168,76,.1);border-radius:20px;font-size:9px;color:var(--gold);letter-spacing:.5px}
+
+/* Responsive tweaks */
+@media(max-width:1024px){
+  .main-layout{grid-template-columns:200px 1fr}
+  .sidebar-right{display:none}
+}
+@media(max-width:768px){
+  .main-layout{grid-template-columns:1fr}
+  .sidebar-left{display:none}
+  .results-grid{grid-template-columns:1fr}
+}
+
+/* Animations */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .3s ease forwards}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin 1s linear infinite}
+
+/* ── ONBOARDING POPUP ── */
+.ob-overlay{position:fixed;inset:0;background:rgba(8,16,28,0.93);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.ob-modal{background:#162032;border:1px solid rgba(201,168,76,0.25);border-radius:16px;width:min(520px,92vw);overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,0.6)}
+.ob-header{padding:28px 32px 0;text-align:center}
+.ob-logo-mark{width:48px;height:48px;background:#c9a84c;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Serif',serif;font-weight:600;font-size:18px;color:#0d1b2a;margin:0 auto 16px}
+.ob-title{font-family:'IBM Plex Serif',serif;font-size:20px;color:#e8e4da;margin-bottom:6px}
+.ob-sub{font-size:13px;color:#686460;line-height:1.5;margin-bottom:4px}
+.ob-steps{padding:24px 32px}
+.ob-step{display:flex;gap:14px;margin-bottom:18px;align-items:flex-start}
+.ob-step-num{width:28px;height:28px;border-radius:50%;background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.3);color:#c9a84c;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'IBM Plex Mono',monospace;margin-top:1px}
+.ob-step-title{font-size:13px;font-weight:500;color:#e8e4da;margin-bottom:3px}
+.ob-step-desc{font-size:12px;color:#a8a49a;line-height:1.5}
+.ob-step-desc a{color:#c9a84c;text-decoration:none}
+.ob-step-desc a:hover{text-decoration:underline}
+.ob-step-code{display:inline-block;background:#0d1b2a;border:1px solid rgba(201,168,76,0.15);border-radius:4px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#e8c96a;margin-top:4px}
+.ob-divider{height:1px;background:rgba(201,168,76,0.08);margin:0 32px 24px}
+.ob-footer{padding:0 32px 28px}
+.ob-btn-primary{width:100%;padding:13px;background:#c9a84c;color:#0d1b2a;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;font-family:'IBM Plex Sans',sans-serif;letter-spacing:.2px}
+.ob-btn-primary:hover{background:#e8c96a;transform:translateY(-1px)}
+.ob-btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.ob-key-wrap{position:relative;margin-bottom:10px}
+.ob-key-input{width:100%;padding:12px 46px 12px 14px;background:#0d1b2a;border:1px solid rgba(201,168,76,0.2);border-radius:10px;color:#e8e4da;font-family:'IBM Plex Mono',monospace;font-size:13px;outline:none;transition:border-color .2s}
+.ob-key-input:focus{border-color:#c9a84c;box-shadow:0 0 0 2px rgba(201,168,76,0.1)}
+.ob-key-input::placeholder{color:#686460;font-family:'IBM Plex Sans',sans-serif;font-size:13px}
+.ob-eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#686460;cursor:pointer;font-size:16px;padding:4px;line-height:1}
+.ob-test-msg{font-size:12px;text-align:center;min-height:20px;margin-bottom:10px;padding:0 4px;line-height:1.4}
+.ob-test-ok{color:#4caf82}
+.ob-test-err{color:#e05252}
+.ob-test-loading{color:#c9a84c}
+.ob-back-btn{background:none;border:none;color:#686460;font-size:12px;cursor:pointer;padding:8px;width:100%;text-align:center;transition:color .2s}
+.ob-back-btn:hover{color:#a8a49a}
+@keyframes ob-in{from{opacity:0;transform:scale(.96) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.ob-modal{animation:ob-in .25s ease forwards}
+
+/* ── IMAGE ANALYSIS v2 ── */
+.img-thumb{position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:2px solid var(--border2);flex-shrink:0;transition:border-color .2s;cursor:default}
+.img-thumb img{width:100%;height:100%;object-fit:cover}
+.img-thumb .thumb-label{position:absolute;bottom:0;left:0;right:0;background:rgba(13,27,42,.75);font-size:9px;color:var(--gold);padding:2px 4px;text-align:center;font-family:'IBM Plex Mono',monospace;backdrop-filter:blur(4px)}
+.img-thumb .thumb-remove{position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:rgba(224,82,82,.85);border:none;color:#fff;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0}
+.img-thumb.primary{border-color:var(--gold)}
+.img-thumb.secondary{border-color:var(--blue)}
+.mode-card{padding:8px 10px;border-radius:8px;border:1px solid var(--border2);cursor:pointer;transition:all .15s;display:flex;align-items:flex-start;gap:8px;background:var(--navy3)}
+.mode-card:hover{border-color:rgba(201,168,76,.4);background:rgba(201,168,76,.04)}
+.mode-card.selected{border-color:var(--gold);background:rgba(201,168,76,.1)}
+.mode-card .mc-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.mode-card .mc-body{}
+.mode-card .mc-title{font-size:11px;font-weight:500;color:var(--text);margin-bottom:2px}
+.mode-card .mc-sub{font-size:10px;color:var(--text3);line-height:1.3}
+.mode-card.selected .mc-title{color:var(--gold2)}
+.preset-btn{padding:4px 10px;border:1px solid var(--border2);border-radius:20px;background:transparent;color:var(--text3);font-size:10px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.preset-btn:hover{border-color:var(--gold);color:var(--gold)}
+/* Result tabs for multi-mode output */
+.result-mode-tabs{display:flex;gap:4px;padding:12px 24px 0;flex-wrap:wrap;border-bottom:1px solid var(--border2)}
+.result-mode-tab{padding:6px 14px;border-radius:6px 6px 0 0;font-size:11px;cursor:pointer;border:1px solid transparent;border-bottom:none;color:var(--text3);transition:all .15s}
+.result-mode-tab.active{background:var(--navy3);border-color:var(--border2);color:var(--gold);font-weight:500}
+.result-mode-tab:hover:not(.active){color:var(--text2)}
+.mode-results-panel{display:none}
+.mode-results-panel.active{display:block}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="logo">
+    <div class="logo-mark">DGM</div>
+    <div class="logo-text">
+      <div class="brand">Food Law Intelligence</div>
+      <div class="sub">Compliance Research System</div>
+    </div>
+  </div>
+  <div class="header-center"></div>
+  <div class="header-actions">
+    <span id="modeKeyword" class="mode-badge active" onclick="setMode('keyword')">🔍 Tra cứu</span>
+    <span id="modeSKU" class="mode-badge inactive" onclick="setMode('sku')">📋 Checklist SKU</span>
+    <button class="btn-icon" title="Bookmark" onclick="toggleBookmarks()">🔖</button>
+    <button class="btn-icon" title="Export" onclick="exportReport()">⬇️</button>
+    <button class="btn-icon" title="Cài đặt" onclick="openSettings()">⚙️</button>
+  </div>
+</header>
+
+<!-- ── MAIN LAYOUT ── -->
+<div class="main-layout">
+
+  <!-- SIDEBAR LEFT -->
+  <aside class="sidebar-left scrollbar-style">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Database Folders</div>
+      <div id="folderList">
+        <div class="folder-item" onclick="filterFolder('all')" id="f-all" style="background:rgba(201,168,76,.1);border-left:2px solid var(--gold)">
+          <div class="folder-badge" style="background:rgba(201,168,76,.2);color:var(--gold)">∑</div>
+          <div style="flex:1"><div class="folder-name">Tất cả văn bản</div></div>
+        </div>
+        <div class="folder-item" onclick="filterFolder('A')" id="f-A">
+          <div class="folder-badge badge-a">A</div>
+          <div style="flex:1"><div class="folder-name">Luật nền tảng</div><div class="folder-count">4 files</div></div>
+        </div>
+        <div class="folder-item" onclick="filterFolder('B')" id="f-B">
+          <div class="folder-badge badge-b">B</div>
+          <div style="flex:1"><div class="folder-name">Nghị định chính</div><div class="folder-count">8 files</div></div>
+        </div>
+        <div class="folder-item" onclick="filterFolder('C')" id="f-C">
+          <div class="folder-badge badge-c">C</div>
+          <div style="flex:1"><div class="folder-name">Nghị quyết</div><div class="folder-count">3 files</div></div>
+        </div>
+        <div class="folder-item" onclick="filterFolder('D')" id="f-D">
+          <div class="folder-badge badge-d">D</div>
+          <div style="flex:1"><div class="folder-name">Ghi nhãn hàng hóa</div><div class="folder-count">6 files</div></div>
+        </div>
+        <div class="folder-item" onclick="filterFolder('E')" id="f-E">
+          <div class="folder-badge badge-e">E</div>
+          <div style="flex:1"><div class="folder-name">Kiểm nghiệm / Test</div><div class="folder-count">10 files</div></div>
+        </div>
+        <div class="folder-item" onclick="filterFolder('F')" id="f-F">
+          <div class="folder-badge badge-f">F</div>
+          <div style="flex:1"><div class="folder-name">Claim / QC nhãn</div><div class="folder-count">5 files</div></div>
+        </div>
+        <div class="folder-item" onclick="filterFolder('Other')" id="f-Other">
+          <div class="folder-badge" style="background:rgba(160,200,160,0.2);color:#80c880">＋</div>
+          <div style="flex:1"><div class="folder-name">Văn bản mới</div><div class="folder-count">0 files</div></div>
+        </div>
+        <div style="padding:6px 10px;margin-top:4px">
+          <button onclick="reloadDriveIndex()" style="width:100%;padding:6px 10px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.25);border-radius:6px;color:var(--gold);font-size:10px;font-weight:500;cursor:pointer;letter-spacing:.5px;transition:all .2s" onmouseover="this.style.background='rgba(201,168,76,0.2)'" onmouseout="this.style.background='rgba(201,168,76,0.1)'">
+            🔄 Reload Drive DB
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+      <div class="sidebar-title">Lịch sử tra cứu</div>
+      <div id="historyList" class="history-list scrollbar-style" style="flex:1;overflow-y:auto">
+        <div style="font-size:11px;color:var(--text3);text-align:center;padding:16px">Chưa có lịch sử</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- Search tabs -->
+    <div class="search-area">
+      <div class="search-mode-tabs">
+        <button class="tab active" id="tabText" onclick="switchTab('text')">💬 Từ khoá / Câu hỏi</button>
+        <button class="tab" id="tabImage" onclick="switchTab('image')">📷 Upload ảnh nhãn</button>
+      </div>
+
+      <!-- Text search -->
+      <div id="textSearchPanel">
+        <div class="search-box">
+          <input type="text" id="searchInput" class="search-input"
+            placeholder="Nhập từ khoá... vd: nhãn phụ cá ngừ NK · histamine test report · organic claim điều kiện..."
+            onkeydown="if(event.key==='Enter')doSearch()"
+            oninput="updateChips()">
+          <button class="search-btn" onclick="doSearch()">→</button>
+        </div>
+        <div id="chipContainer" class="keyword-chips"></div>
+      </div>
+
+      <!-- Image upload — v2: multi-image + analysis mode selector -->
+      <div id="imagePanel" style="display:none">
+
+        <!-- Drop zone -->
+        <div id="uploadArea"
+          style="border:2px dashed rgba(201,168,76,0.25);border-radius:12px;padding:20px 16px 14px;text-align:center;cursor:pointer;transition:all .2s;background:rgba(201,168,76,0.02)"
+          ondragover="event.preventDefault();this.style.borderColor='#c9a84c';this.style.background='rgba(201,168,76,0.06)'"
+          ondragleave="this.style.borderColor='rgba(201,168,76,0.25)';this.style.background='rgba(201,168,76,0.02)'"
+          ondrop="handleDropMulti(event)"
+          onclick="document.getElementById('fileInput').click()">
+          <div style="font-size:28px;margin-bottom:6px">📸</div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:3px">Kéo thả hoặc click để chọn ảnh nhãn</div>
+          <div style="font-size:11px;color:var(--text3)">JPG · PNG · WebP &nbsp;·&nbsp; Tối đa 5 ảnh &nbsp;·&nbsp; Max 15MB/ảnh</div>
+        </div>
+        <input type="file" id="fileInput" accept="image/jpeg,image/png,image/gif,image/webp" multiple style="display:none" onchange="handleFileSelectMulti(event)">
+
+        <!-- Image thumbnails row -->
+        <div id="imgThumbRow" style="display:none;gap:8px;margin-top:10px;flex-wrap:wrap"></div>
+
+        <!-- Analysis mode selector -->
+        <div id="modeSelector" style="display:none;margin-top:12px">
+          <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;font-weight:500">
+            Chọn nội dung phân tích &nbsp;·&nbsp; Select analysis mode
+            <span style="color:var(--gold);margin-left:6px;font-size:9px">(chọn nhiều / multi-select)</span>
+          </div>
+          <div id="analysisModesGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+            <!-- mode cards injected by JS -->
+          </div>
+
+          <!-- Preset buttons -->
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+            <span style="font-size:10px;color:var(--text3);align-self:center;white-space:nowrap">Bộ nhanh:</span>
+            <button class="preset-btn" onclick="applyPreset('import')">📦 Kiểm tra NK mới</button>
+            <button class="preset-btn" onclick="applyPreset('compare')">🔄 So sánh 2 nhãn</button>
+            <button class="preset-btn" onclick="applyPreset('full')">🔍 Toàn bộ</button>
+          </div>
+
+          <!-- Compare notice -->
+          <div id="compareNotice" style="display:none;background:rgba(74,159,212,0.08);border:1px solid rgba(74,159,212,0.2);border-radius:8px;padding:8px 12px;font-size:11px;color:var(--blue);margin-bottom:10px">
+            ℹ️ <strong>Chế độ so sánh:</strong> Ảnh 1 = nhãn gốc (original) · Ảnh 2 = nhãn phụ VN hoặc version mới. Có thể upload tới 2 ảnh.
+          </div>
+
+          <!-- Action buttons -->
+          <div style="display:flex;gap:8px">
+            <button class="btn-confirm" onclick="analyzeLabel()" id="analyzeBtn">🔍 Phân tích · Analyze</button>
+            <button class="btn-refine" onclick="clearUploadAll()">✕ Xoá tất cả</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Loading bar -->
+    <div class="loading-bar"><div class="loading-progress" id="loadingBar"></div></div>
+
+    <!-- Intent confirm -->
+    <div id="intentConfirm" class="intent-confirm">
+      <div class="intent-label">AI · Xác nhận ý định / Intent confirmation</div>
+      <div id="intentText" class="intent-text"></div>
+      <div class="intent-actions">
+        <button class="btn-confirm" onclick="confirmIntent()">✓ Đúng, tiếp tục / Correct, proceed</button>
+        <button class="btn-refine" onclick="refineIntent()">✎ Chỉnh sửa / Refine</button>
+      </div>
+    </div>
+
+    <!-- SKU Checklist mode -->
+    <div id="skuPanel" class="sku-panel">
+      <div style="margin-bottom:16px">
+        <div class="sidebar-title" style="margin-bottom:12px">Chọn nhóm sản phẩm / Select product group</div>
+        <div class="sku-grid">
+          <div class="sku-card" onclick="selectSKU('tuna')" id="sku-tuna"><div class="sku-icon">🐟</div><div class="sku-name">Cá ngừ hộp</div></div>
+          <div class="sku-card" onclick="selectSKU('mackerel')" id="sku-mackerel"><div class="sku-icon">🐠</div><div class="sku-name">Cá thu hộp</div></div>
+          <div class="sku-card" onclick="selectSKU('sardine')" id="sku-sardine"><div class="sku-icon">🐟</div><div class="sku-name">Cá trích/Sardine</div></div>
+          <div class="sku-card" onclick="selectSKU('beans')" id="sku-beans"><div class="sku-icon">🫘</div><div class="sku-name">Đậu sốt cà</div></div>
+          <div class="sku-card" onclick="selectSKU('chickpea')" id="sku-chickpea"><div class="sku-icon">🫘</div><div class="sku-name">Đậu gà / Đậu đỏ</div></div>
+          <div class="sku-card" onclick="selectSKU('tomato')" id="sku-tomato"><div class="sku-icon">🍅</div><div class="sku-name">Puree cà chua</div></div>
+          <div class="sku-card" onclick="selectSKU('corn')" id="sku-corn"><div class="sku-icon">🌽</div><div class="sku-name">Bắp hộp</div></div>
+          <div class="sku-card" onclick="selectSKU('pasta')" id="sku-pasta"><div class="sku-icon">🍝</div><div class="sku-name">Mì / Nui / Sốt</div></div>
+          <div class="sku-card" onclick="selectSKU('soysauce')" id="sku-soysauce"><div class="sku-icon">🫙</div><div class="sku-name">Nước tương</div></div>
+          <div class="sku-card" onclick="selectSKU('chilli')" id="sku-chilli"><div class="sku-icon">🌶️</div><div class="sku-name">Tương ớt</div></div>
+          <div class="sku-card" onclick="selectSKU('seasoning')" id="sku-seasoning"><div class="sku-icon">🧂</div><div class="sku-name">Hạt nêm / Gia vị</div></div>
+          <div class="sku-card" onclick="selectSKU('coconut')" id="sku-coconut"><div class="sku-icon">🥥</div><div class="sku-name">Nước dừa / Dầu dừa</div></div>
+        </div>
+      </div>
+      <div id="checklistArea" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div id="skuTitle" style="font-family:'IBM Plex Serif',serif;font-size:16px;color:var(--text)"></div>
+          <div style="display:flex;gap:8px">
+            <button class="export-btn" onclick="runSKUAnalysis()">🤖 AI Phân tích</button>
+            <button class="export-btn" onclick="exportChecklist()">⬇️ Xuất báo cáo</button>
+          </div>
+        </div>
+        <table class="checklist-table" id="checklistTable">
+          <thead><tr>
+            <th style="width:32px">#</th>
+            <th>Hạng mục kiểm tra / Check item</th>
+            <th style="width:110px">Văn bản áp dụng</th>
+            <th style="width:90px">Kết quả / Result</th>
+            <th>Ghi chú / Notes</th>
+          </tr></thead>
+          <tbody id="checklistBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Results / Empty state -->
+    <div id="resultsContainer" class="results-area scrollbar-style" style="display:flex;flex-direction:column;overflow-y:auto">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">⚖️</div>
+        <div class="empty-title">DGM Food Law Intelligence</div>
+        <div class="empty-sub">Hệ thống tra cứu pháp luật an toàn thực phẩm thông minh · Nhập từ khoá hoặc upload ảnh tem nhãn để bắt đầu</div>
+        <div class="empty-examples">
+          <button class="example-btn" onclick="quickSearch('nhãn phụ cá ngừ nhập khẩu quy định bắt buộc')">Nhãn phụ cá ngừ NK</button>
+          <button class="example-btn" onclick="quickSearch('histamine giới hạn test report cá thu')">Histamine test report</button>
+          <button class="example-btn" onclick="quickSearch('organic claim alce nero điều kiện hợp lệ')">Organic claim điều kiện</button>
+          <button class="example-btn" onclick="quickSearch('HSCB gia hạn deadline 2027 quy trình')">HSCB gia hạn 2027</button>
+          <button class="example-btn" onclick="quickSearch('hàng xuất khẩu lỗi bán nội địa quy định')">Hàng XK lỗi bán nội địa</button>
+          <button class="example-btn" onclick="quickSearch('3-MCPD nước tương giới hạn Việt Nam')">3-MCPD nước tương</button>
+        </div>
+      </div>
+
+      <div id="resultsGrid" class="results-grid" style="display:none"></div>
+    </div>
+
+    <!-- Status bar -->
+    <div class="status-bar">
+      <span id="apiStatus"><span class="status-dot error" id="statusDot"></span> <span id="statusText">Chưa cấu hình API key</span></span>
+      <span>|</span>
+      <span id="dbStatus">Database: 6 folders · Excel Law DB</span>
+      <span>|</span>
+      <span id="queryCount">0 queries hôm nay</span>
+    </div>
+  </main>
+
+  <!-- SIDEBAR RIGHT -->
+  <aside class="sidebar-right scrollbar-style">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Bookmarks</div>
+      <div id="bookmarkList">
+        <div style="font-size:11px;color:var(--text3);text-align:center;padding:16px">Chưa có bookmark</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Cảnh báo / Updates</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.5">
+        <div style="padding:8px 0;border-bottom:1px solid var(--border2)">
+          <div style="font-size:10px;color:var(--red);font-family:'IBM Plex Mono',monospace;margin-bottom:3px">⚠️ DEADLINE</div>
+          <div>HSCB gia hạn trước <strong>27/01/2027</strong></div>
+        </div>
+        <div style="padding:8px 0;border-bottom:1px solid var(--border2)">
+          <div style="font-size:10px;color:var(--amber);font-family:'IBM Plex Mono',monospace;margin-bottom:3px">📋 HIỆU LỰC</div>
+          <div>NIP bắt buộc 100% SKU từ <strong>01/01/2026</strong></div>
+        </div>
+        <div style="padding:8px 0">
+          <div style="font-size:10px;color:var(--blue);font-family:'IBM Plex Mono',monospace;margin-bottom:3px">🔄 TẠM NGƯNG</div>
+          <div>NĐ 46/2026 + NQ 66.13 đang tạm ngưng (NQ 15/2026)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Thống kê / Stats</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:var(--navy3);border-radius:var(--radius);padding:10px;text-align:center">
+          <div style="font-size:20px;font-weight:600;font-family:'IBM Plex Mono',monospace;color:var(--gold)" id="stat-queries">0</div>
+          <div style="font-size:10px;color:var(--text3)">Tra cứu hôm nay</div>
+        </div>
+        <div style="background:var(--navy3);border-radius:var(--radius);padding:10px;text-align:center">
+          <div style="font-size:20px;font-weight:600;font-family:'IBM Plex Mono',monospace;color:var(--green)" id="stat-bookmarks">0</div>
+          <div style="font-size:10px;color:var(--text3)">Bookmarks</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CREDIT BLOCK -->
+    <div style="padding:14px 16px;border-top:1px solid rgba(201,168,76,0.08);flex-shrink:0">
+      <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#686460;margin-bottom:8px;font-weight:500">About</div>
+      <div style="font-size:11px;line-height:1.7;color:#686460">
+        <div style="margin-bottom:6px">&#x1F41F; <strong style="color:#a8a49a;font-weight:500">Created by Quy Bui</strong></div>
+        <div style="font-style:italic;color:#686460;margin-bottom:4px;font-size:11px">Sinh ra t&#x1EEB; n&#x1ED7;i &#x111;au c&#x1EE7;a h&#xE0;ng tr&#x103;m trang ngh&#x1ECB; &#x111;&#x1ECB;nh.</div>
+        <div style="font-style:italic;color:#686460;margin-bottom:8px;font-size:10px">Born from the pain of reading hundreds of regulatory decrees. May it save you from the same fate.</div>
+        <a href="mailto:quangquy.bui@gmail.com" style="display:inline-flex;align-items:center;gap:5px;font-size:10px;color:#c9a84c;text-decoration:none;font-family:'IBM Plex Mono',monospace">&#x1F4E7; quangquy.bui@gmail.com</a>
+      </div>
+    </div>
+  </aside>
+</div>
+</div>
+
+<!-- ── DOCUMENT POPUP ── -->
+<div id="popupOverlay" class="popup-overlay" onclick="if(event.target===this)closePopup()">
+  <div class="popup-modal">
+    <div class="popup-header">
+      <div>
+        <div class="popup-title" id="popupTitle"></div>
+        <div class="popup-clause" id="popupClause"></div>
+      </div>
+      <button class="popup-close" onclick="closePopup()">✕</button>
+    </div>
+    <div class="popup-body">
+      <div class="popup-lang-toggle">
+        <button class="lang-btn active" id="btnVI" onclick="switchLang('vi')">🇻🇳 Tiếng Việt</button>
+        <button class="lang-btn inactive" id="btnEN" onclick="switchLang('en')">🇬🇧 English</button>
+      </div>
+      <div id="popupLoading" style="text-align:center;padding:20px;color:var(--text3);display:none">
+        <div style="font-size:20px;margin-bottom:8px">⏳</div>Đang tải nội dung...
+      </div>
+      <div class="popup-text-vi" id="popupTextVI"></div>
+      <div class="popup-text-en" id="popupTextEN"></div>
+    </div>
+    <div class="popup-source" id="popupSource"></div>
+  </div>
+</div>
+
+<!-- ── SETTINGS ── -->
+<div id="settingsOverlay" class="settings-overlay" onclick="if(event.target===this)closeSettings()">
+  <div class="settings-modal">
+    <div class="settings-header">
+      <div class="settings-title">⚙️ Cài đặt hệ thống</div>
+      <button class="popup-close" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="settings-body">
+      <div class="setting-group">
+        <div class="setting-label">🔗 Google Apps Script Web App URL</div>
+        <input type="text" id="gasWebAppUrlInput" class="setting-input" placeholder="https://script.google.com/macros/s/AKfy.../exec">
+        <div class="setting-desc">
+          Sau khi deploy GAS (xem file <strong style="color:var(--gold)">DGM_DriveIndexer_GAS.js</strong>) → copy URL → dán vào đây.<br>
+          <em>After deploying the GAS script, paste the Web App URL here.</em>
+        </div>
+        <button class="btn-save" style="margin-top:8px;width:auto;padding:7px 16px;font-size:12px" onclick="reloadDriveIndex()">🔄 Test & Tải Drive Index</button>
+      </div>
+
+      <div class="setting-group">
+        <div class="setting-label">Gemini API Key</div>
+        <input type="password" id="apiKeyInput" class="setting-input" placeholder="AIza...">
+        <div class="setting-desc">Lấy tại <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--gold)">Google AI Studio</a> · Miễn phí với Gemini 2.5 Flash</div>
+      </div>
+
+      <div class="setting-group">
+        <div class="setting-label">Google Drive Folder IDs (A–F)</div>
+        <div class="setting-desc" style="margin-bottom:10px">Mở folder trong Drive → copy ID từ URL: drive.google.com/drive/folders/<strong style="color:var(--gold)">FOLDER_ID</strong></div>
+        <div class="setting-row">
+          <div class="setting-folder-badge badge-a">A</div>
+          <input type="text" id="folderId-A" class="setting-input" placeholder="Folder ID - Luật nền tảng">
+        </div>
+        <div class="setting-row">
+          <div class="setting-folder-badge badge-b">B</div>
+          <input type="text" id="folderId-B" class="setting-input" placeholder="Folder ID - Nghị định chính">
+        </div>
+        <div class="setting-row">
+          <div class="setting-folder-badge badge-c">C</div>
+          <input type="text" id="folderId-C" class="setting-input" placeholder="Folder ID - Nghị quyết">
+        </div>
+        <div class="setting-row">
+          <div class="setting-folder-badge badge-d">D</div>
+          <input type="text" id="folderId-D" class="setting-input" placeholder="Folder ID - Ghi nhãn hàng hóa">
+        </div>
+        <div class="setting-row">
+          <div class="setting-folder-badge badge-e">E</div>
+          <input type="text" id="folderId-E" class="setting-input" placeholder="Folder ID - Kiểm nghiệm/Test report">
+        </div>
+        <div class="setting-row">
+          <div class="setting-folder-badge badge-f">F</div>
+          <input type="text" id="folderId-F" class="setting-input" placeholder="Folder ID - Claim/Quảng cáo nhãn">
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <div class="setting-label">Ngôn ngữ xuất kết quả mặc định</div>
+        <select id="defaultLang" class="setting-input" style="font-family:'IBM Plex Sans',sans-serif">
+          <option value="bilingual">Song ngữ (Việt + English)</option>
+          <option value="vi">Tiếng Việt</option>
+          <option value="en">English only</option>
+        </select>
+      </div>
+
+      <button class="btn-save" onclick="saveSettings()">💾 Lưu cài đặt</button>
+      <div id="saveMsg" style="text-align:center;font-size:12px;color:var(--green);margin-top:8px;display:none">✓ Đã lưu thành công!</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+let state = {
+  apiKey: '', folderIds: {A:'',B:'',C:'',D:'',E:'',F:''},
+  gasWebAppUrl: '',  // Google Apps Script Web App URL
+  history: [], bookmarks: [], queryCount: 0,
+  currentIntent: '', currentQuery: '', currentFolder: 'all',
+  activeTab: 'text', currentMode: 'keyword', selectedSKU: null,
+  uploadedImage: null, defaultLang: 'bilingual'
+};
+
+// ══════════════════════════════════════════════════════════
+// DRIVE INDEX (loaded from GAS)
+// ══════════════════════════════════════════════════════════
+let driveIndex = null;          // Full JSON index from GAS
+let driveIndexStatus = 'none';  // none | loading | ok | error
+let driveIndexError  = '';
+
+// Pre-set folder IDs (hardcoded so user doesn't need to configure)
+const DRIVE_FOLDER_IDS = {
+  A: '1WN5en7c9kLAjnDEb1vh2YwTxNGQ_BGiV',
+  B: '1mCDLx9JlJDTrrSfAa-pSBeTlWYEtyHVQ',
+  C: '13snHjHSO_cBt-5Qi3JjcJX8gJEMupbRp',
+  D: '1dUIZk0TuPW486JT14nB4aOJ4Un5eyMFd',
+  E: '1uZ-vezXoE6V5_Ewbgzmdly4CQwfbfmlG',
+  F: '1gQQJFbXyeRL0_gBfBLEGybtm62fXhGau',
+  Other: '1dmwUW1LJtYlcfK3lhKYzDxPUCpVu9AQp'
+};
+
+const FOLDER_META = {
+  A: { name_vi: 'Luật nền tảng',           name_en: 'Foundation Laws' },
+  B: { name_vi: 'Nghị định chính',          name_en: 'Decrees' },
+  C: { name_vi: 'Nghị quyết',               name_en: 'Resolutions' },
+  D: { name_vi: 'Ghi nhãn hàng hóa',        name_en: 'Labelling' },
+  E: { name_vi: 'Kiểm nghiệm / QCVN',       name_en: 'Testing / QCVN' },
+  F: { name_vi: 'Claim / QC nhãn',          name_en: 'Claims & Ads' },
+  Other: { name_vi: 'Văn bản mới',          name_en: 'New / Updates' }
+};
+
+// Load from localStorage
+function loadState() {
+  try {
+    const saved = localStorage.getItem('dgm_foodlaw_state');
+    if (saved) {
+      const s = JSON.parse(saved);
+      state.apiKey = s.apiKey || '';
+      state.folderIds = s.folderIds || {A:'',B:'',C:'',D:'',E:'',F:''};
+      state.gasWebAppUrl = s.gasWebAppUrl || '';
+      state.history = s.history || [];
+      state.bookmarks = s.bookmarks || [];
+      state.queryCount = s.queryCount || 0;
+      state.defaultLang = s.defaultLang || 'bilingual';
+    }
+  } catch(e) {}
+}
+
+function saveState() {
+  localStorage.setItem('dgm_foodlaw_state', JSON.stringify({
+    apiKey: state.apiKey, folderIds: state.folderIds,
+    gasWebAppUrl: state.gasWebAppUrl,
+    history: state.history.slice(0,50), bookmarks: state.bookmarks.slice(0,30),
+    queryCount: state.queryCount, defaultLang: state.defaultLang
+  }));
+}
+
+// ══════════════════════════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════════════════════════
+function setLoading(on) {
+  document.getElementById('loadingBar').classList.toggle('visible', on);
+}
+function setMode(mode) {
+  state.currentMode = mode;
+  document.getElementById('modeKeyword').classList.toggle('active', mode==='keyword');
+  document.getElementById('modeKeyword').classList.toggle('inactive', mode!=='keyword');
+  document.getElementById('modeSKU').classList.toggle('active', mode==='sku');
+  document.getElementById('modeSKU').classList.toggle('inactive', mode!=='sku');
+  document.getElementById('skuPanel').classList.toggle('visible', mode==='sku');
+  document.getElementById('skuPanel').style.display = mode==='sku' ? 'block' : 'none';
+  document.getElementById('resultsContainer').style.display = mode==='sku' ? 'none' : 'flex';
+  document.querySelector('.search-area').style.display = mode==='sku' ? 'none' : '';
+  document.getElementById('intentConfirm').style.display = 'none';
+}
+function switchTab(tab) {
+  state.activeTab = tab;
+  document.getElementById('tabText').classList.toggle('active', tab==='text');
+  document.getElementById('tabImage').classList.toggle('active', tab==='image');
+  document.getElementById('tabText').classList.toggle('inactive', tab!=='text');
+  document.getElementById('tabImage').classList.toggle('inactive', tab!=='image');
+  document.getElementById('textSearchPanel').style.display = tab==='text' ? '' : 'none';
+  document.getElementById('imagePanel').style.display = tab==='image' ? '' : 'none';
+}
+function openSettings() { document.getElementById('settingsOverlay').classList.add('visible'); loadSettingsUI(); }
+function closeSettings() { document.getElementById('settingsOverlay').classList.remove('visible'); }
+function openPopup() { document.getElementById('popupOverlay').classList.add('visible'); }
+function closePopup() { document.getElementById('popupOverlay').classList.remove('visible'); }
+
+function filterFolder(id) {
+  state.currentFolder = id;
+  document.querySelectorAll('.folder-item').forEach(el => {
+    el.style.background = ''; el.style.borderLeft = '';
+  });
+  const el = document.getElementById('f-' + id);
+  if (el) { el.style.background = 'rgba(201,168,76,.1)'; el.style.borderLeft = '2px solid var(--gold)'; }
+}
+
+function updateStatus() {
+  const hasKey = !!state.apiKey;
+  document.getElementById('statusDot').classList.toggle('error', !hasKey);
+  document.getElementById('statusText').textContent = hasKey ? 'Gemini 2.5 Flash · Sẵn sàng' : 'Chưa cấu hình API key – Vào ⚙️ để thiết lập';
+  document.getElementById('queryCount').textContent = state.queryCount + ' queries hôm nay';
+  document.getElementById('stat-queries').textContent = state.queryCount;
+  document.getElementById('stat-bookmarks').textContent = state.bookmarks.length;
+
+  // Update DB status
+  const dbEl = document.getElementById('dbStatus');
+  if (dbEl) {
+    if (driveIndexStatus === 'ok' && driveIndex) {
+      const total = driveIndex.meta?.total_files || 0;
+      const folders = driveIndex.meta?.total_folders || 0;
+      dbEl.textContent = `✅ Drive DB: ${total} files · ${folders} folders · Live`;
+    } else if (driveIndexStatus === 'loading') {
+      dbEl.textContent = '⏳ Đang tải Drive DB...';
+    } else if (driveIndexStatus === 'error') {
+      dbEl.textContent = '⚠️ Drive DB: ' + (driveIndexError || 'lỗi kết nối') + ' · Dùng knowledge tĩnh';
+    } else {
+      const hasGasUrl = !!state.gasWebAppUrl;
+      dbEl.textContent = hasGasUrl ? '🔄 Drive DB: chưa tải · Nhấn nút Reload' : '📚 Static DB · Chưa cấu hình GAS URL';
+    }
+  }
+  updateFolderCounts();
+}
+
+function loadSettingsUI() {
+  document.getElementById('apiKeyInput').value = state.apiKey;
+  ['A','B','C','D','E','F'].forEach(f => {
+    const el = document.getElementById('folderId-'+f);
+    if(el) el.value = state.folderIds[f] || '';
+  });
+  document.getElementById('defaultLang').value = state.defaultLang;
+  const gasEl = document.getElementById('gasWebAppUrlInput');
+  if (gasEl) gasEl.value = state.gasWebAppUrl || '';
+}
+
+function saveSettings() {
+  state.apiKey = document.getElementById('apiKeyInput').value.trim();
+  ['A','B','C','D','E','F'].forEach(f => {
+    const el = document.getElementById('folderId-'+f);
+    if(el) state.folderIds[f] = el.value.trim();
+  });
+  state.defaultLang = document.getElementById('defaultLang').value;
+  const gasEl = document.getElementById('gasWebAppUrlInput');
+  if (gasEl) {
+    const newGasUrl = gasEl.value.trim();
+    const urlChanged = newGasUrl !== state.gasWebAppUrl;
+    state.gasWebAppUrl = newGasUrl;
+    if (urlChanged && newGasUrl) {
+      // Trigger reload on URL change
+      driveIndex = null;
+      driveIndexStatus = 'none';
+    }
+  }
+  saveState(); updateStatus();
+  const msg = document.getElementById('saveMsg');
+  msg.style.display = 'block';
+  setTimeout(() => {
+    msg.style.display = 'none';
+    closeSettings();
+    // Auto-load index after saving if GAS URL is set
+    if (state.gasWebAppUrl && driveIndexStatus === 'none') {
+      loadDriveIndex();
+    }
+  }, 1500);
+}
+
+// ══════════════════════════════════════════════════════════
+// KEYWORD CHIPS
+// ══════════════════════════════════════════════════════════
+let chips = [];
+function updateChips() {
+  const val = document.getElementById('searchInput').value;
+  const words = val.trim().split(/\s+/).filter(w => w.length > 1);
+  chips = [...new Set(words)];
+  renderChips();
+}
+function renderChips() {
+  const c = document.getElementById('chipContainer');
+  c.innerHTML = chips.map((w,i) =>
+    `<span class="chip active">${w}<span class="chip-remove" onclick="removeChip(${i})">×</span></span>`
+  ).join('');
+}
+function removeChip(i) {
+  chips.splice(i,1);
+  document.getElementById('searchInput').value = chips.join(' ');
+  renderChips();
+}
+
+// ══════════════════════════════════════════════════════════
+// JSON PARSE HELPER — robust against mixed content
+// ══════════════════════════════════════════════════════════
+function safeParseJSON(raw) {
+  if (!raw) return null;
+  // 1. Strip markdown fences
+  let cleaned = raw.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+  // 2. Try direct parse first
+  try { return JSON.parse(cleaned); } catch(e) {}
+  // 3. Extract first { ... } or [ ... ] block
+  const objMatch = cleaned.match(/\{[\s\S]*\}/);
+  if (objMatch) { try { return JSON.parse(objMatch[0]); } catch(e) {} }
+  const arrMatch = cleaned.match(/\[[\s\S]*\]/);
+  if (arrMatch) { try { return JSON.parse(arrMatch[0]); } catch(e) {} }
+  // 4. Try removing control chars and retry
+  try { return JSON.parse(cleaned.replace(/[\u0000-\u001F\u007F]/g, ' ')); } catch(e) {}
+  console.error('safeParseJSON failed on:', cleaned.slice(0, 300));
+  return null;
+}
+
+// ══════════════════════════════════════════════════════════
+// GEMINI API
+// ══════════════════════════════════════════════════════════
+async function callGemini(prompt, systemPrompt='', imageData=null) {
+  if (!state.apiKey) {
+    openSettings();
+    throw new Error('Vui lòng cấu hình Gemini API key');
+  }
+  // Try 2.5-flash, fallback to 1.5-flash on overload
+  const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-1.5-flash'];
+  let lastGeminiErr = '';
+  for (let mi = 0; mi < GEMINI_MODELS.length; mi++) {
+    const model = GEMINI_MODELS[mi];
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + state.apiKey;
+
+    const parts = [];
+    if (imageData) {
+      parts.push({ inlineData: { mimeType: imageData.mimeType, data: imageData.data } });
+    }
+    parts.push({ text: systemPrompt ? systemPrompt + '\n\n' + prompt : prompt });
+
+    const genConfig = { temperature: 0.2, topP: 0.8, maxOutputTokens: 8192 };
+    if (!imageData) { genConfig.responseMimeType = 'application/json'; }
+
+    const body = { contents: [{ role: 'user', parts }], generationConfig: genConfig };
+
+    const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const data = await res.json();
+    if (data.error) {
+      const errMsg = data.error.message || '';
+      const isOverload = errMsg.includes('high demand') || errMsg.includes('overloaded') ||
+                         errMsg.includes('UNAVAILABLE') || errMsg.includes('quota') ||
+                         res.status === 429 || res.status === 503;
+      if (isOverload && mi < GEMINI_MODELS.length - 1) {
+        lastGeminiErr = errMsg;
+        await new Promise(r => setTimeout(r, 1500));
+        continue;
+      }
+      throw new Error(errMsg);
+    }
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
+  throw new Error(lastGeminiErr || 'All Gemini models unavailable. Please retry.');
+}
+
+// ══════════════════════════════════════════════════════════
+// SEARCH FLOW
+// ══════════════════════════════════════════════════════════
+function quickSearch(q) {
+  document.getElementById('searchInput').value = q;
+  updateChips();
+  doSearch();
+}
+
+async function doSearch() {
+  const raw = document.getElementById('searchInput').value.trim();
+  if (!raw) return;
+  if (!state.apiKey) { openSettings(); return; }
+
+  setLoading(true);
+  document.getElementById('intentConfirm').classList.remove('visible');
+  document.getElementById('intentConfirm').style.display = 'none';
+
+  try {
+    // Step 1: Parse intent
+    const intentPrompt = `Bạn là trợ lý tra cứu pháp luật an toàn thực phẩm Việt Nam cho công ty DGM (nhập khẩu, phân phối thực phẩm: Ayam Brand, Alce Nero, Duchef).
+
+Người dùng gõ: "${raw}"
+
+Hãy:
+1. Phân tích ý định thực sự (họ muốn biết gì?)
+2. Tái diễn đạt thành câu hỏi pháp lý rõ ràng (song ngữ Việt-Anh)
+3. Xác định folder liên quan: A=Luật nền tảng, B=Nghị định, C=Nghị quyết, D=Ghi nhãn, E=Kiểm nghiệm/test, F=Claim/Quảng cáo
+4. Liệt kê văn bản pháp luật có thể liên quan
+
+Trả về JSON:
+{
+  "intent_vi": "Câu hỏi tiếng Việt rõ ràng",
+  "intent_en": "Clear English question",
+  "folders": ["D","E"],
+  "related_docs": ["NĐ 37/2026","TT 29/2023"],
+  "keywords": ["nhãn phụ","cá ngừ","nhập khẩu"]
+}`;
+
+    const intentRaw = await callGemini(intentPrompt);
+    const intentJSON = safeParseJSON(intentRaw);
+    if (!intentJSON) throw new Error('Không parse được ý định. Vui lòng thử lại.');
+
+    state.currentIntent = intentJSON;
+    state.currentQuery = raw;
+
+    document.getElementById('intentText').innerHTML =
+      `<strong>🇻🇳</strong> ${intentJSON.intent_vi}<br><br><strong>🇬🇧</strong> <em>${intentJSON.intent_en}</em>`;
+    document.getElementById('intentConfirm').style.display = 'block';
+    document.getElementById('intentConfirm').classList.add('visible');
+
+  } catch(e) {
+    alert('Lỗi: ' + e.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+function refineIntent() {
+  document.getElementById('intentConfirm').style.display = 'none';
+  document.getElementById('intentConfirm').classList.remove('visible');
+  document.getElementById('searchInput').focus();
+}
+
+async function confirmIntent() {
+  document.getElementById('intentConfirm').style.display = 'none';
+  document.getElementById('intentConfirm').classList.remove('visible');
+  setLoading(true);
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('resultsGrid').style.display = 'none';
+
+  try {
+    const intent = state.currentIntent;
+    const folderCtx = buildFolderContext(intent.folders);
+
+    // ── REAL DRIVE CONTENT INJECTION ────────────────────────────────────
+    let driveContentCtx = '';
+    let driveFilesFound = [];
+    if (driveIndexStatus === 'ok' && driveIndex) {
+      document.getElementById('statusText').textContent = '🔍 Tìm văn bản trong Drive DB...';
+      const searchKeywords = [
+        ...(intent.keywords || []),
+        ...(intent.related_docs || []),
+        ...(chips || [])
+      ];
+      driveFilesFound = searchDriveIndex(searchKeywords, intent.folders);
+      if (driveFilesFound.length > 0) {
+        driveContentCtx = buildDriveContext(driveFilesFound);
+        document.getElementById('statusText').textContent = `📄 Tìm thấy ${driveFilesFound.length} văn bản · Đang phân tích...`;
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────
+
+    const isDriveMode = driveContentCtx.length > 0;
+    const sourceNote = isDriveMode
+      ? `\n⚡ QUAN TRỌNG: Bạn có nội dung thực tế từ ${driveFilesFound.length} file trong Google Drive DGM.\nHãy ưu tiên trích dẫn CHÍNH XÁC từ tài liệu này thay vì kiến thức tổng quát.\nGhi rõ khi trích dẫn: "[Từ file: tên_file]"`
+      : '\n📚 Drive DB chưa kết nối — sử dụng kiến thức pháp lý Việt Nam từ training data.';
+
+    const resPrompt = `Bạn là chuyên gia tư vấn pháp lý an toàn thực phẩm Việt Nam cho DGM Vietnam (công ty nhập khẩu, sản xuất và phân phối thực phẩm: Ayam Brand từ Malaysia/Thailand, Alce Nero từ Italy, Duchef).
+
+Câu hỏi: ${intent.intent_vi}
+(${intent.intent_en})
+
+Văn bản liên quan trong database: ${(intent.related_docs||[]).join(', ')}
+Folder tra cứu: ${(intent.folders||[]).join(', ')}
+${sourceNote}
+
+${folderCtx}
+${driveContentCtx}
+
+Hãy trả về phân tích toàn diện dạng JSON:
+{
+  "citations": [
+    {
+      "doc_id": "NĐ 37/2026/NĐ-CP",
+      "doc_name_vi": "Nghị định 37/2026 về ghi nhãn hàng hóa",
+      "doc_name_en": "Decree 37/2026 on goods labelling",
+      "article": "Điều 37, Khoản 4",
+      "article_en": "Article 37, Clause 4",
+      "content_vi": "Nội dung điều khoản tiếng Việt (trích dẫn CHÍNH XÁC từ file nếu có)",
+      "content_en": "English translation/summary of the clause",
+      "relevance": "Tại sao điều khoản này liên quan",
+      "folder": "D",
+      "source_file": "Tên file nguồn nếu trích từ Drive (hoặc để trống)"
+    }
+  ],
+  "analysis_vi": "Phân tích tổng hợp bằng tiếng Việt (3-4 đoạn, ghi rõ nguồn nếu từ Drive)",
+  "analysis_en": "Comprehensive analysis in English (3-4 paragraphs)",
+  "risks": [
+    {
+      "level": "high",
+      "title_vi": "Tên rủi ro",
+      "title_en": "Risk name",
+      "desc_vi": "Mô tả rủi ro",
+      "desc_en": "Risk description"
+    }
+  ],
+  "actions": [
+    {
+      "priority": 1,
+      "action_vi": "Hành động cần làm",
+      "action_en": "Action required",
+      "deadline": "Thời hạn nếu có"
+    }
+  ],
+  "summary_vi": "Tóm tắt 1 câu",
+  "summary_en": "One sentence summary",
+  "drive_files_used": ${JSON.stringify(driveFilesFound.map(f => f.name))}
+}`;
+
+    const resRaw = await callGemini(resPrompt);
+    const result = safeParseJSON(resRaw);
+    if (!result) throw new Error('Không thể parse kết quả từ AI. Vui lòng thử lại.');
+
+    result._driveFilesFound = driveFilesFound;
+    result._isDriveMode = isDriveMode;
+
+    renderResults(result, intent);
+    addToHistory(intent.intent_vi, result);
+    state.queryCount++;
+    saveState(); updateStatus();
+
+  } catch(e) {
+    document.getElementById('emptyState').style.display = 'flex';
+    alert('Lỗi phân tích: ' + e.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// DRIVE INDEX LOADER
+// ══════════════════════════════════════════════════════════
+async function loadDriveIndex(forceRebuild) {
+  if (!state.gasWebAppUrl) return;
+  driveIndexStatus = 'loading';
+  updateStatus();
+
+  try {
+    const url = state.gasWebAppUrl + (forceRebuild ? '?rebuild=true' : '?action=index');
+    const resp = await fetch(url, { mode: 'cors' });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const json = await resp.json();
+    if (!json.success) throw new Error(json.error || 'GAS returned error');
+    driveIndex = json.data;
+    driveIndexStatus = 'ok';
+    driveIndexError = '';
+    updateFolderCounts();
+    updateStatus();
+    console.log('[DGM Drive] Index loaded:', driveIndex.meta);
+  } catch (err) {
+    driveIndexStatus = 'error';
+    driveIndexError = err.message;
+    updateStatus();
+    console.warn('[DGM Drive] Index load failed:', err.message);
+  }
+}
+
+async function reloadDriveIndex() {
+  if (!state.gasWebAppUrl) {
+    alert('Chưa cấu hình GAS Web App URL. Vào ⚙️ Settings → GAS Web App URL để nhập.');
+    openSettings();
+    return;
+  }
+  driveIndex = null;
+  driveIndexStatus = 'loading';
+  updateStatus();
+  await loadDriveIndex(true);
+  alert(driveIndexStatus === 'ok'
+    ? `✅ Đã tải lại DB: ${driveIndex.meta.total_files} files trong ${driveIndex.meta.total_folders} folders`
+    : `❌ Lỗi: ${driveIndexError}`
+  );
+}
+
+function updateFolderCounts() {
+  if (!driveIndex || !driveIndex.folders) return;
+  Object.entries(driveIndex.folders).forEach(([key, folder]) => {
+    const countEl = document.querySelector(`#f-${key} .folder-count`);
+    if (countEl) {
+      countEl.textContent = (folder.file_count || 0) + ' files' + (folder.error ? ' ⚠️' : '');
+    }
+  });
+  // Update "Other" if present
+  if (driveIndex.folders.Other) {
+    const otherEl = document.querySelector('#f-Other .folder-count');
+    if (otherEl) {
+      otherEl.textContent = (driveIndex.folders.Other.file_count || 0) + ' files';
+    }
+  }
+}
+
+// Search the Drive index for files matching keywords
+function searchDriveIndex(keywords, folders) {
+  if (!driveIndex || !driveIndex.files) return [];
+  const terms = keywords.map(k => k.toLowerCase());
+  let files = driveIndex.files;
+
+  // Filter by folder if specified
+  if (folders && folders.length > 0 && !folders.includes('all')) {
+    files = files.filter(f => folders.includes(f.folder));
+  }
+
+  // Score files
+  const scored = files.map(file => {
+    if (!file.extract_ok) return { ...file, score: 0 };
+    let score = 0;
+    const nameLower = (file.name || '').toLowerCase();
+    const summaryLower = (file.summary || '').toLowerCase();
+    const kwStr = (file.keywords || []).join(' ').toLowerCase();
+
+    terms.forEach(t => {
+      if (nameLower.includes(t))    score += 15;
+      if (kwStr.includes(t))        score += 8;
+      if (summaryLower.includes(t)) score += 3;
+    });
+    return { ...file, score };
+  }).filter(f => f.score > 0);
+
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, 8); // top 8 most relevant files
+}
+
+// Build context string from Drive index for AI prompt
+function buildDriveContext(files) {
+  if (!files || files.length === 0) return '';
+
+  let ctx = '\n\n═══ NỘI DUNG THỰC TẾ TỪ DRIVE DATABASE ═══\n';
+  ctx += `(${files.length} văn bản liên quan được tìm thấy trong Google Drive của DGM)\n\n`;
+
+  files.forEach((f, i) => {
+    ctx += `── [${i+1}] ${f.name} [Folder ${f.folder}: ${f.folder_name_vi}]\n`;
+    if (f.doc_type && f.doc_number) {
+      ctx += `    Loại: ${f.doc_type} ${f.doc_number}${f.doc_year ? '/' + f.doc_year : ''}\n`;
+    }
+    if (f.keywords && f.keywords.length > 0) {
+      ctx += `    Keywords: ${f.keywords.slice(0,10).join(', ')}\n`;
+    }
+    if (f.summary) {
+      // Send first 1500 chars of the actual document text
+      const excerpt = f.summary.slice(0, 1500).replace(/\n{3,}/g, '\n\n');
+      ctx += `    Nội dung (trích):\n${excerpt}\n`;
+    }
+    ctx += '\n';
+  });
+  ctx += '═══ HẾT NỘI DUNG DRIVE ═══\n';
+  return ctx;
+}
+
+function buildFolderContext(folders) {
+  // 1. Try to use real Drive index
+  if (driveIndexStatus === 'ok' && driveIndex) {
+    let ctx = 'Cơ sở dữ liệu pháp luật DGM — Kết nối trực tiếp Google Drive:\n';
+    Object.entries(driveIndex.folders).forEach(([key, folder]) => {
+      if (folder.file_count > 0) {
+        const files = (driveIndex.files || [])
+          .filter(f => f.folder === key)
+          .map(f => f.name.replace(/\.[^.]+$/, '')) // strip extension
+          .slice(0, 10)
+          .join(', ');
+        ctx += `Folder ${key} (${folder.name_vi}): ${folder.file_count} files — ${files}\n`;
+      }
+    });
+    ctx += '\nLưu ý: AI sẽ được cung cấp nội dung thực tế từ các file phù hợp nhất.';
+    return ctx;
+  }
+
+  // 2. Fallback: static knowledge base
+  return `Cơ sở dữ liệu pháp luật DGM bao gồm:
+Folder A (Luật nền tảng): Luật ATTP 55/2010/QH12, VB HN 61/VBHN-VPQH 2025
+Folder B (Nghị định): NĐ 15/2018, NĐ 46/2026 (tạm ngưng), NĐ 115/2018, NĐ 124/2021, NĐ 09/2016, NĐ 37/2026 (ghi nhãn), NĐ 43/2017 (hết HLực), NĐ 111/2021 (hết HLực)
+Folder C (Nghị quyết): NQ 66.13/2026 (tạm ngưng), NQ 15/2026 (tạm ngưng NĐ 46)
+Folder D (Ghi nhãn): NĐ 37/2026, TT 29/2023/TT-BYT (NIP bắt buộc 01/01/2026), TT 18/2022 (organic VN)
+Folder E (Kiểm nghiệm): QCVN 8-1:2011, QCVN 8-2:2011, QCVN 8-3:2012, TT 24/2019 (phụ gia), TCVN 6388:2006 (cá ngừ), TCVN 6391:2008 (cá hộp), TCVN 5305:2008 (cà chua), TCVN 12040:2017 (pasta), TCVN 7397:2014 (tương ớt), QĐ 46/2007
+Folder F (Claim/QC): CAC/GL 23-1997, CXS 118-1979 (gluten-free), CAC/GL 32-1999 (organic), CAC/GL 24-1997 (halal), NĐ 15/2018 Đ27-29, NĐ 181/2013`;
+}
+
+// ══════════════════════════════════════════════════════════
+// RENDER RESULTS
+// ══════════════════════════════════════════════════════════
+function renderResults(result, intent) {
+  const grid = document.getElementById('resultsGrid');
+  grid.innerHTML = '';
+  grid.style.display = 'grid';
+
+  const isDriveMode = result._isDriveMode;
+  const driveFiles  = result._driveFilesFound || [];
+
+  // Drive source banner
+  if (isDriveMode && driveFiles.length > 0) {
+    const banner = document.createElement('div');
+    banner.style.cssText = 'grid-column:1/-1;background:rgba(76,175,130,0.08);border:1px solid rgba(76,175,130,0.25);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--green);display:flex;align-items:center;gap:8px;flex-wrap:wrap';
+    banner.innerHTML = `<strong>✅ Drive DB · Nội dung thật</strong> &nbsp;|&nbsp; Đọc từ ${driveFiles.length} file: &nbsp;`
+      + driveFiles.map(f => `<span style="background:rgba(76,175,130,0.15);padding:2px 7px;border-radius:10px;font-family:'IBM Plex Mono',monospace;font-size:10px">${f.name.replace(/\.[^.]+$/, '').substring(0,30)}</span>`).join(' ');
+    grid.appendChild(banner);
+  } else if (!isDriveMode) {
+    const banner = document.createElement('div');
+    banner.style.cssText = 'grid-column:1/-1;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);border-radius:8px;padding:8px 14px;font-size:11px;color:var(--text3)';
+    banner.innerHTML = '📚 <strong>Static mode</strong> — Chưa kết nối Drive DB. Vào ⚙️ → nhập GAS URL để dùng nội dung thật từ file.';
+    grid.appendChild(banner);
+  }
+
+  // Card 1: Citations
+  const citCard = document.createElement('div');
+  citCard.className = 'result-card fade-in';
+  citCard.innerHTML = `
+    <div class="card-header">
+      <div class="card-title">📑 Trích dẫn điều khoản / Legal Citations (${(result.citations||[]).length})</div>
+      <button class="export-btn" style="font-size:10px;padding:3px 8px" onclick="bookmarkResult()">🔖</button>
+    </div>
+    <div class="card-body">
+      ${(result.citations||[]).map((c,i) => `
+        <div class="citation-item" onclick="openCitation(${i})" data-index="${i}">
+          <div class="citation-doc">${c.folder ? `[${c.folder}]` : ''} ${c.doc_id}${c.source_file ? ` <span style="color:var(--green);font-size:9px">· 📄 ${c.source_file}</span>` : ''}</div>
+          <div class="citation-clause">${c.article} — ${c.doc_name_vi}</div>
+          <div class="citation-clause-en">${c.article_en} — ${c.doc_name_en}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:4px;line-height:1.4">${c.content_vi ? c.content_vi.substring(0,150)+'...' : ''}</div>
+          <div class="citation-ref">→ Click để xem nguyên văn / Click to view full text</div>
+        </div>
+      `).join('')}
+    </div>`;
+  grid.appendChild(citCard);
+
+  // Card 2: AI Analysis
+  const aiCard = document.createElement('div');
+  aiCard.className = 'result-card fade-in';
+  aiCard.style.animationDelay = '.1s';
+  aiCard.innerHTML = `
+    <div class="card-header">
+      <div class="card-title">🤖 Phân tích AI / AI Analysis</div>
+      <div style="display:flex;gap:4px">
+        <button class="lang-btn ${state.defaultLang!=='en'?'active':'inactive'}" id="analysisVI" onclick="toggleAnalysisLang('vi')" style="padding:2px 8px;font-size:10px">VI</button>
+        <button class="lang-btn ${state.defaultLang==='en'?'active':'inactive'}" id="analysisEN" onclick="toggleAnalysisLang('en')" style="padding:2px 8px;font-size:10px">EN</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="analysisTextVI" class="ai-analysis">${formatAnalysis(result.analysis_vi||'')}</div>
+      <div id="analysisTextEN" class="ai-analysis" style="display:none">${formatAnalysis(result.analysis_en||'')}</div>
+    </div>`;
+  grid.appendChild(aiCard);
+
+  // Card 3: Risk Panel
+  const riskCard = document.createElement('div');
+  riskCard.className = 'result-card fade-in';
+  riskCard.style.animationDelay = '.15s';
+  riskCard.innerHTML = `
+    <div class="card-header"><div class="card-title">⚠️ Đánh giá rủi ro / Risk Assessment</div></div>
+    <div class="risk-panel">
+      ${(result.risks||[]).map(r => `
+        <div class="risk-item">
+          <div class="risk-indicator risk-${r.level}"></div>
+          <div class="risk-content">
+            <div class="risk-title">${r.title_vi}</div>
+            <div class="risk-desc">${r.title_en}</div>
+            <div class="risk-desc" style="margin-top:3px">${r.desc_vi}</div>
+          </div>
+          <div class="risk-badge risk-badge-${r.level}">${r.level==='high'?'🔴 Cao':r.level==='medium'?'🟡 TB':'🟢 Thấp'}</div>
+        </div>
+      `).join('')}
+    </div>`;
+  grid.appendChild(riskCard);
+
+  // Card 4: Action Items
+  const actionCard = document.createElement('div');
+  actionCard.className = 'result-card fade-in';
+  actionCard.style.animationDelay = '.2s';
+  actionCard.innerHTML = `
+    <div class="card-header"><div class="card-title">✅ Hành động cần làm / Action Items</div></div>
+    <div class="card-body">
+      ${(result.actions||[]).map((a,i) => `
+        <div style="padding:10px 12px;border-radius:var(--radius);border:1px solid var(--border2);margin-bottom:8px">
+          <div style="display:flex;align-items:flex-start;gap:8px">
+            <div style="width:20px;height:20px;border-radius:50%;background:rgba(201,168,76,.2);color:var(--gold);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">${a.priority||i+1}</div>
+            <div style="flex:1">
+              <div style="font-size:12px;color:var(--text);margin-bottom:3px">${a.action_vi}</div>
+              <div style="font-size:11px;color:var(--text3);font-style:italic">${a.action_en}</div>
+              ${a.deadline ? `<div style="font-size:10px;color:var(--amber);margin-top:4px;font-family:'IBM Plex Mono',monospace">⏰ ${a.deadline}</div>` : ''}
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+  grid.appendChild(actionCard);
+
+  // Store for popup
+  window._currentResult = result;
+}
+
+function formatAnalysis(text) {
+  if (!text) return '';
+  return text.split('\n').filter(p=>p.trim()).map(p => {
+    if (p.startsWith('⚠️') || p.startsWith('→') || p.toLowerCase().includes('cần làm ngay')) {
+      return `<div class="action">${p}</div>`;
+    }
+    if (p.startsWith('**') || p.includes('Lưu ý:') || p.includes('Note:')) {
+      return `<div class="highlight">${p.replace(/\*\*/g,'')}</div>`;
+    }
+    return `<p>${p}</p>`;
+  }).join('');
+}
+
+function toggleAnalysisLang(lang) {
+  document.getElementById('analysisTextVI').style.display = lang==='vi'?'':'none';
+  document.getElementById('analysisTextEN').style.display = lang==='en'?'':'none';
+  document.getElementById('analysisVI').classList.toggle('active', lang==='vi');
+  document.getElementById('analysisVI').classList.toggle('inactive', lang!=='vi');
+  document.getElementById('analysisEN').classList.toggle('active', lang==='en');
+  document.getElementById('analysisEN').classList.toggle('inactive', lang!=='en');
+}
+
+// ══════════════════════════════════════════════════════════
+// CITATION POPUP
+// ══════════════════════════════════════════════════════════
+function openCitation(index) {
+  const r = window._currentResult;
+  if (!r || !r.citations) return;
+  const c = r.citations[index];
+
+  document.getElementById('popupTitle').textContent = c.doc_name_vi;
+  document.getElementById('popupClause').textContent = c.article + ' | ' + c.doc_id;
+  document.getElementById('popupSource').textContent = 'Source: ' + c.doc_id + ' · Folder ' + (c.folder||'') + ' · DGM Food Law Database 2026';
+  document.getElementById('popupTextVI').innerHTML = `
+    <p><strong>${c.article}</strong> — ${c.doc_name_vi}</p>
+    <br>
+    <p>${c.content_vi || '(Xem file gốc trong folder ' + c.folder + ')'}</p>
+    ${c.relevance ? `<br><div class="highlight"><strong>Liên quan đến câu hỏi:</strong> ${c.relevance}</div>` : ''}
+  `;
+  document.getElementById('popupTextEN').innerHTML = `
+    <p><strong>${c.article_en}</strong> — ${c.doc_name_en}</p>
+    <br>
+    <p>${c.content_en || '(AI translation pending – see original file in folder ' + c.folder + ')'}</p>
+    ${c.relevance ? `<br><div class="highlight"><strong>Relevance:</strong> ${c.relevance}</div>` : ''}
+  `;
+  switchLang('vi');
+  openPopup();
+}
+
+function switchLang(lang) {
+  document.getElementById('popupTextVI').style.display = lang==='vi'?'':'none';
+  document.getElementById('popupTextEN').style.display = lang==='en'?'':'none';
+  document.getElementById('btnVI').classList.toggle('active', lang==='vi');
+  document.getElementById('btnVI').classList.toggle('inactive', lang!=='vi');
+  document.getElementById('btnEN').classList.toggle('active', lang==='en');
+  document.getElementById('btnEN').classList.toggle('inactive', lang!=='en');
+}
+
+// ══════════════════════════════════════════════════════════
+// IMAGE UPLOAD & LABEL ANALYSIS
+// ══════════════════════════════════════════════════════════
+// ── MULTI-IMAGE HANDLERS ──────────────────────────────────────────────────
+const MAX_IMAGES = 5;
+const ANALYSIS_MODES = [
+  { id:'compliance', icon:'⚖️', title:'Tuân thủ tổng thể', title_en:'Overall Compliance', sub:'Scan toàn bộ nhãn, chấm điểm /100', docs:'NĐ 37/2026, TT 29/2023' },
+  { id:'nip',        icon:'📊', title:'Bảng NIP',          title_en:'Nutrition Info Panel', sub:'Kiểm tra NIP đủ chỉ tiêu, đúng format', docs:'TT 29/2023/TT-BYT' },
+  { id:'sublabel',   icon:'🏷️', title:'Nhãn phụ',          title_en:'Sub-label (VN)',        sub:'Nội dung bắt buộc nhãn phụ NK', docs:'NĐ 37/2026 Đ37-42' },
+  { id:'claims',     icon:'✅', title:'Claim & Logo',       title_en:'Claims & Logos',        sub:'Organic/Halal/Non-GMO/No Preservatives...', docs:'NĐ 15/2018, CAC/GL 23' },
+  { id:'ingredients',icon:'🧪', title:'Ingredient List',   title_en:'Ingredient List',       sub:'Check INS codes vs TT 24/2019, phát hiện chất cấm', docs:'TT 24/2019/TT-BYT' },
+  { id:'compare',    icon:'🔄', title:'So sánh nhãn',      title_en:'Label Comparison',      sub:'Nhãn gốc vs nhãn phụ / 2 version khác nhau', docs:'NĐ 37/2026' },
+  { id:'barcode',    icon:'📦', title:'Barcode / Mã vạch', title_en:'Barcode Info',          sub:'Đọc mã vạch, tra thông tin SP', docs:'NĐ 37/2026 Đ14' },
+];
+
+let uploadedImages = []; // [{data, mimeType, name, label}]
+let selectedModes = new Set(['compliance']);
+
+function initAnalysisModes() {
+  const grid = document.getElementById('analysisModesGrid');
+  if (!grid) return;
+  grid.innerHTML = ANALYSIS_MODES.map(m => `
+    <div class="mode-card ${selectedModes.has(m.id)?'selected':''}" id="mc-${m.id}" onclick="toggleMode('${m.id}')">
+      <div class="mc-icon">${m.icon}</div>
+      <div class="mc-body">
+        <div class="mc-title">${m.title} · <span style="font-weight:400;color:var(--text3)">${m.title_en}</span></div>
+        <div class="mc-sub">${m.sub}</div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleMode(id) {
+  if (selectedModes.has(id)) {
+    if (selectedModes.size === 1) return; // keep at least 1
+    selectedModes.delete(id);
+  } else {
+    selectedModes.add(id);
+  }
+  document.getElementById('mc-'+id)?.classList.toggle('selected', selectedModes.has(id));
+  // Show compare notice if compare mode selected
+  const notice = document.getElementById('compareNotice');
+  if (notice) notice.style.display = selectedModes.has('compare') ? 'block' : 'none';
+}
+
+function applyPreset(preset) {
+  const presets = {
+    import: ['compliance','sublabel','ingredients'],
+    compare: ['compare','compliance'],
+    full: ['compliance','nip','sublabel','claims','ingredients','compare']
+  };
+  selectedModes = new Set(presets[preset] || ['compliance']);
+  initAnalysisModes();
+  const notice = document.getElementById('compareNotice');
+  if (notice) notice.style.display = selectedModes.has('compare') ? 'block' : 'none';
+}
+
+function handleDropMulti(e) {
+  e.preventDefault();
+  const ua = document.getElementById('uploadArea');
+  if (ua) { ua.style.borderColor='rgba(201,168,76,0.25)'; ua.style.background='rgba(201,168,76,0.02)'; }
+  const files = Array.from(e.dataTransfer.files);
+  files.forEach(f => addImageFile(f));
+}
+
+function handleFileSelectMulti(e) {
+  const files = Array.from(e.target.files);
+  files.forEach(f => addImageFile(f));
+  e.target.value = ''; // allow re-select same files
+}
+
+// Keep old single handlers as aliases for backward compat
+function handleDrop(e) { handleDropMulti(e); }
+function handleFileSelect(e) { handleFileSelectMulti(e); }
+
+function addImageFile(file) {
+  if (uploadedImages.length >= MAX_IMAGES) {
+    alert(`Tối đa ${MAX_IMAGES} ảnh mỗi lần. Xoá bớt để thêm ảnh mới.\nMax ${MAX_IMAGES} images. Remove some to add more.`);
+    return;
+  }
+  const supportedTypes = ['image/jpeg','image/jpg','image/png','image/gif','image/webp'];
+  let mimeType = file.type;
+  if (!mimeType || mimeType === 'application/octet-stream') {
+    const ext = file.name.split('.').pop().toLowerCase();
+    const extMap = {jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',gif:'image/gif',webp:'image/webp'};
+    mimeType = extMap[ext] || 'image/jpeg';
+  }
+  if (!supportedTypes.includes(mimeType)) {
+    alert(`${file.name}: Chỉ hỗ trợ JPG/PNG/WebP.`); return;
+  }
+  if (file.size > 15 * 1024 * 1024) {
+    alert(`${file.name}: Ảnh quá lớn (max 15MB).`); return;
+  }
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const base64 = ev.target.result.split(',')[1];
+    const label = uploadedImages.length === 0 ? 'Ảnh 1 (Gốc)' : `Ảnh ${uploadedImages.length+1}`;
+    uploadedImages.push({ data: base64, mimeType, name: file.name, src: ev.target.result, label });
+    renderThumbs();
+    showModeSelector();
+  };
+  reader.onerror = () => alert('Không đọc được file: ' + file.name);
+  reader.readAsDataURL(file);
+}
+
+// Keep old single-image compat
+function processFile(file) { addImageFile(file); }
+
+function renderThumbs() {
+  const row = document.getElementById('imgThumbRow');
+  if (!row) return;
+  row.style.display = uploadedImages.length ? 'flex' : 'none';
+  row.innerHTML = uploadedImages.map((img, i) => `
+    <div class="img-thumb ${i===0?'primary':i===1&&selectedModes.has('compare')?'secondary':''}">
+      <img src="${img.src}" alt="${img.label}">
+      <div class="thumb-label">${img.label}</div>
+      <button class="thumb-remove" onclick="removeImage(${i})" title="Xoá">×</button>
+    </div>
+  `).join('') + (uploadedImages.length < MAX_IMAGES ? `
+    <div class="img-thumb" style="border-style:dashed;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:transparent" onclick="document.getElementById('fileInput').click()">
+      <div style="font-size:20px">＋</div>
+      <div style="font-size:9px;color:var(--text3)">Thêm ảnh</div>
+    </div>` : '');
+}
+
+function removeImage(idx) {
+  uploadedImages.splice(idx, 1);
+  // Re-label
+  uploadedImages.forEach((img, i) => {
+    img.label = i === 0 ? 'Ảnh 1 (Gốc)' : `Ảnh ${i+1}`;
+  });
+  renderThumbs();
+  if (uploadedImages.length === 0) hideModeSelector();
+}
+
+function showModeSelector() {
+  document.getElementById('modeSelector').style.display = 'block';
+  initAnalysisModes();
+}
+function hideModeSelector() {
+  document.getElementById('modeSelector').style.display = 'none';
+}
+
+function clearUploadAll() {
+  uploadedImages = [];
+  selectedModes = new Set(['compliance']);
+  renderThumbs();
+  hideModeSelector();
+  document.getElementById('fileInput').value = '';
+  // Also clear old single-image compat
+  state.uploadedImage = null;
+}
+
+function clearUpload() { clearUploadAll(); }
+
+async function analyzeLabel() {
+  if (uploadedImages.length === 0 && !state.uploadedImage) {
+    alert('Vui lòng upload ít nhất 1 ảnh.'); return;
+  }
+  if (!state.apiKey) { openSettings(); return; }
+  // Compat: if old single-image used
+  if (uploadedImages.length === 0 && state.uploadedImage) {
+    uploadedImages = [{ ...state.uploadedImage, src:'', label:'Ảnh 1 (Gốc)' }];
+  }
+  if (state.currentMode === 'sku') setMode('keyword');
+  setLoading(true);
+  document.getElementById('resultsContainer').style.display = 'flex';
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('resultsGrid').style.display = 'none';
+
+  try {
+    const primaryImg = uploadedImages[0];
+    const secondaryImg = uploadedImages[1] || null;
+    const modesArr = Array.from(selectedModes);
+
+    // ── SINGLE CALL STRATEGY: gộp tất cả modes vào 1 prompt duy nhất ──────
+    // Giảm số API calls từ N xuống còn 1 → tránh rate limit & high demand error
+    document.getElementById('statusText').textContent = `🔍 Đang phân tích ${modesArr.length} nội dung... vui lòng chờ`;
+
+    const combinedPrompt = buildCombinedPrompt(modesArr, uploadedImages);
+
+    // Build image parts (all images)
+    const parts = [];
+    uploadedImages.forEach((img, i) => {
+      parts.push({ inlineData: { mimeType: img.mimeType, data: img.data } });
+    });
+    parts.push({ text: combinedPrompt });
+
+    // ── CALL with model fallback + retry ──────────────────────────────────
+    // Strategy: try 2.5-flash first, fallback to 1.5-flash on overload
+    const MODEL_SEQUENCE = [
+      'gemini-2.5-flash',
+      'gemini-1.5-flash'
+    ];
+    let data = null;
+    let lastErr = null;
+    let usedModel = '';
+
+    for (let mi = 0; mi < MODEL_SEQUENCE.length; mi++) {
+      const model = MODEL_SEQUENCE[mi];
+      const isFirstModel = mi === 0;
+      let modelSuccess = false;
+
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          const attemptLabel = isFirstModel && attempt === 1
+            ? '🔍 Đang phân tích...'
+            : '⏳ Thử model ' + (mi+1) + '/' + MODEL_SEQUENCE.length + ', lần ' + attempt + '...';
+          document.getElementById('statusText').textContent = attemptLabel;
+
+          const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + state.apiKey;
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ role: 'user', parts }],
+              generationConfig: { temperature: 0.15, topP: 0.8, maxOutputTokens: 6000 }
+            })
+          });
+          const d = await res.json();
+
+          if (d.error) {
+            const errMsg = d.error.message || '';
+            const isOverload = errMsg.includes('high demand') || errMsg.includes('overloaded') ||
+                               errMsg.includes('UNAVAILABLE') || errMsg.includes('503') ||
+                               errMsg.includes('quota') || res.status === 429 || res.status === 503;
+            if (isOverload) {
+              lastErr = errMsg;
+              // Short wait before trying next model or attempt
+              await new Promise(r => setTimeout(r, attempt === 1 ? 2000 : 4000));
+              continue; // try next attempt, then next model
+            }
+            // Non-retryable error (bad key, bad request etc)
+            throw new Error(errMsg);
+          }
+
+          // Success
+          data = d;
+          usedModel = model;
+          modelSuccess = true;
+          lastErr = null;
+          break;
+
+        } catch(fetchErr) {
+          lastErr = fetchErr.message;
+          if (attempt < 2) await new Promise(r => setTimeout(r, 2000));
+        }
+      }
+
+      if (modelSuccess) break; // stop trying other models
+    }
+
+    if (!data) throw new Error(lastErr || 'Gemini không phản hồi sau 3 model. Vui lòng thử lại sau vài phút.');
+    if (usedModel && usedModel !== 'gemini-2.5-flash') {
+      console.log('Used fallback model:', usedModel);
+    }
+
+    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!raw) throw new Error('Gemini trả về kết quả rỗng. Vui lòng thử lại.');
+
+    // ── PARSE combined result ───────────────────────────────────────────────
+    const combinedResult = safeParseJSON(raw);
+    if (!combinedResult) throw new Error('Không parse được kết quả. Vui lòng thử lại.');
+
+    // ── SPLIT result back into per-mode objects ─────────────────────────────
+    const allResults = {};
+    for (const modeId of modesArr) {
+      const modeInfo = ANALYSIS_MODES.find(m => m.id === modeId);
+      const modeData = combinedResult[modeId] || combinedResult; // fallback to root if single mode
+      if (modeData) {
+        allResults[modeId] = { ...modeData, modeId, modeInfo };
+      }
+    }
+
+    // If only 1 mode selected and result is at root level, wrap it
+    if (modesArr.length === 1 && Object.keys(allResults).length === 0) {
+      const modeId = modesArr[0];
+      const modeInfo = ANALYSIS_MODES.find(m => m.id === modeId);
+      allResults[modeId] = { ...combinedResult, modeId, modeInfo };
+    }
+
+    renderMultiModeResults(allResults, uploadedImages);
+    const modeNames = modesArr.map(id => ANALYSIS_MODES.find(m=>m.id===id)?.title||id).join(' · ');
+    addToHistory(`📷 [${modeNames}]`, { citations: Object.values(allResults).flatMap(r=>r.citations||[]), risks: Object.values(allResults).flatMap(r=>r.risks||[]), actions: [] });
+    state.queryCount++;
+    saveState();
+    updateStatus();
+
+  } catch(e) {
+    // Show inline error (no blocking alert)
+    const es = document.getElementById('emptyState');
+    es.style.display = 'flex';
+    const isOverload = e.message && (e.message.includes('high demand') || e.message.includes('overloaded') || e.message.includes('503') || e.message.includes('unavailable') || e.message.includes('All Gemini'));
+    es.innerHTML = `
+      <div class="empty-icon">${isOverload ? '⏳' : '⚠️'}</div>
+      <div class="empty-title" style="color:${isOverload?'var(--amber)':'var(--red)'}">
+        ${isOverload ? 'Gemini đang quá tải / High demand' : 'Lỗi phân tích ảnh'}
+      </div>
+      <div class="empty-sub" style="color:var(--text3);max-width:380px">
+        ${isOverload
+          ? 'Gemini API đang bận — thường chỉ vài phút. Vui lòng thử lại sau ít phút.<br><em>Gemini is experiencing high demand. Please retry in a few minutes.</em>'
+          : e.message}
+      </div>
+      <div class="empty-examples" style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+        <button class="example-btn" onclick="analyzeLabel()" style="border-color:var(--gold);color:var(--gold)">
+          🔄 Thử lại ngay / Retry
+        </button>
+        <button class="example-btn" onclick="document.getElementById('emptyState').innerHTML='';document.getElementById('emptyState').style.display='none'">
+          ← Quay lại
+        </button>
+      </div>`;
+    console.error('Label analysis error:', e);
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ── COMBINED PROMPT BUILDER — 1 call cho tất cả modes ──────────────────────
+function buildCombinedPrompt(modesArr, images) {
+  var imgCount = images.length;
+
+  // Mode-specific JSON schemas — plain strings, no nesting
+  var modeSchemas = {
+    compliance: '"compliance":{"product_detected":"","overall_score":75,"compliance_checks":[' +
+      '{"item":"Product name in Vietnamese","status":"pass","note_vi":"","note_en":""},' +
+      '{"item":"Ingredients list in Vietnamese","status":"pass","note_vi":"","note_en":""},' +
+      '{"item":"Country of origin (Xuat xu)","status":"pass","note_vi":"","note_en":""},' +
+      '{"item":"Net weight/volume","status":"pass","note_vi":"","note_en":""},' +
+      '{"item":"MFG/EXP dates","status":"pass","note_vi":"","note_en":""},' +
+      '{"item":"Importer/Distributor in Vietnam","status":"pass","note_vi":"","note_en":""},' +
+      '{"item":"Nutrition Info Panel (NIP)","status":"pass","note_vi":"","note_en":""},' +
+      '{"item":"Storage/Usage instructions","status":"pass","note_vi":"","note_en":""},' +
+      '{"item":"Claims/Logos legality","status":"pass","note_vi":"","note_en":""}' +
+      '],"citations":[{"doc_id":"ND 37/2026/ND-CP","doc_name_vi":"Nghi dinh 37/2026 ve ghi nhan hang hoa","doc_name_en":"Decree 37/2026 on goods labelling","article":"Dieu 37","article_en":"Article 37","content_vi":"Nhan hang hoa phai the hien cac noi dung bat buoc","content_en":"Labels must include all mandatory information","relevance":"Quy dinh noi dung bat buoc tren nhan phu NK","folder":"D"}],' +
+      '"analysis_vi":"","analysis_en":"",' +
+      '"risks":[{"level":"high","title_vi":"","title_en":"","desc_vi":"","desc_en":""}],' +
+      '"actions":[{"priority":1,"action_vi":"","action_en":"","deadline":""}]}',
+
+    nip: '"nip":{"nip_present":true,"nip_score":80,"nip_items":[' +
+      '{"nutrient":"Energy","declared":"","unit_correct":true,"required":true,"status":"pass","note_vi":"","note_en":""},' +
+      '{"nutrient":"Protein","declared":"","unit_correct":true,"required":true,"status":"pass","note_vi":"","note_en":""},' +
+      '{"nutrient":"Total Fat","declared":"","unit_correct":true,"required":true,"status":"pass","note_vi":"","note_en":""},' +
+      '{"nutrient":"Saturated Fat","declared":"","unit_correct":true,"required":true,"status":"pass","note_vi":"","note_en":""},' +
+      '{"nutrient":"Trans Fat","declared":"","unit_correct":true,"required":true,"status":"pass","note_vi":"","note_en":""},' +
+      '{"nutrient":"Carbohydrate","declared":"","unit_correct":true,"required":true,"status":"pass","note_vi":"","note_en":""},' +
+      '{"nutrient":"Sugars","declared":"","unit_correct":true,"required":true,"status":"pass","note_vi":"","note_en":""},' +
+      '{"nutrient":"Sodium","declared":"","unit_correct":true,"required":true,"status":"pass","note_vi":"","note_en":""}' +
+      '],"citations":[{"doc_id":"TT 29/2023/TT-BYT","doc_name_vi":"Thong tu 29/2023 ve ghi thong tin dinh duong","doc_name_en":"Circular 29/2023 on nutrition labelling","article":"Dieu 5","article_en":"Article 5","content_vi":"Bat buoc ghi thong tin dinh duong tu 01/01/2026","content_en":"Mandatory NIP from 01/01/2026","relevance":"NIP bat buoc tren tat ca SP bao goi san","folder":"D"}],' +
+      '"analysis_vi":"","analysis_en":"",' +
+      '"risks":[{"level":"high","title_vi":"","title_en":"","desc_vi":"","desc_en":""}],' +
+      '"actions":[{"priority":1,"action_vi":"","action_en":"","deadline":""}]}',
+
+    sublabel: '"sublabel":{"sublabel_score":80,"mandatory_fields":[' +
+      '{"field":"Ten SP tieng Viet","present":true,"compliant":true,"issue":"","note_vi":"","note_en":""},' +
+      '{"field":"Thanh phan tieng Viet","present":true,"compliant":true,"issue":"","note_vi":"","note_en":""},' +
+      '{"field":"Khoi luong tinh","present":true,"compliant":true,"issue":"","note_vi":"","note_en":""},' +
+      '{"field":"Xuat xu / San xuat tai","present":true,"compliant":true,"issue":"","note_vi":"","note_en":""},' +
+      '{"field":"Ngay SX / HSD","present":true,"compliant":true,"issue":"","note_vi":"","note_en":""},' +
+      '{"field":"Nha NK / Phan phoi tai VN","present":true,"compliant":true,"issue":"","note_vi":"","note_en":""},' +
+      '{"field":"HDSD / Bao quan","present":true,"compliant":true,"issue":"","note_vi":"","note_en":""},' +
+      '{"field":"Co chu toi thieu","present":true,"compliant":true,"issue":"","note_vi":"","note_en":""}' +
+      '],"citations":[{"doc_id":"ND 37/2026/ND-CP","doc_name_vi":"Nghi dinh 37/2026 ve ghi nhan hang hoa","doc_name_en":"Decree 37/2026 on goods labelling","article":"Dieu 37, Khoan 1","article_en":"Article 37, Clause 1","content_vi":"Nhan phu hang NK phai the hien day du noi dung bat buoc bang tieng Viet","content_en":"Vietnamese sub-label must contain all mandatory info in Vietnamese","relevance":"Noi dung bat buoc nhan phu NK","folder":"D"}],' +
+      '"analysis_vi":"","analysis_en":"",' +
+      '"risks":[{"level":"high","title_vi":"","title_en":"","desc_vi":"","desc_en":""}],' +
+      '"actions":[{"priority":1,"action_vi":"","action_en":"","deadline":""}]}',
+
+    claims: '"claims":{"claims_found":[{"claim":"","type":"nutrition","legal_basis":"","compliant":true,"condition_met":true,"evidence_required":"","note_vi":"","note_en":"","risk_level":"low"}],' +
+      '"citations":[{"doc_id":"ND 15/2018/ND-CP","doc_name_vi":"Nghi dinh 15/2018 huong dan Luat ATTP","doc_name_en":"Decree 15/2018 guiding Food Safety Law","article":"Dieu 27-29","article_en":"Article 27-29","content_vi":"Dieu kien de ghi claim dinh duong va suc khoe tren nhan","content_en":"Conditions for nutrition and health claims on labels","relevance":"Co so phap ly cho cac claim tren nhan","folder":"F"}],' +
+      '"analysis_vi":"","analysis_en":"",' +
+      '"risks":[{"level":"medium","title_vi":"","title_en":"","desc_vi":"","desc_en":""}],' +
+      '"actions":[{"priority":1,"action_vi":"","action_en":"","deadline":""}]}',
+
+    ingredients: '"ingredients":{"ingredients_readable":true,"additives_found":[{"name":"","ins_code":"","function":"","permitted_vn":true,"compliant":true,"note_vi":"","note_en":""}],"red_flags":[],' +
+      '"citations":[{"doc_id":"TT 24/2019/TT-BYT","doc_name_vi":"Thong tu 24/2019 ve phu gia thuc pham","doc_name_en":"Circular 24/2019 on food additives","article":"Danh muc phu gia","article_en":"Permitted additive list","content_vi":"Danh muc phu gia thuc pham duoc phep su dung tai Viet Nam","content_en":"List of food additives permitted in Vietnam","relevance":"Kiem tra INS codes trong ingredient list","folder":"E"}],' +
+      '"analysis_vi":"","analysis_en":"",' +
+      '"risks":[{"level":"medium","title_vi":"","title_en":"","desc_vi":"","desc_en":""}],' +
+      '"actions":[{"priority":1,"action_vi":"","action_en":"","deadline":""}]}',
+
+    compare: '"compare":{"label1_desc":"","label2_desc":"","differences":[{"field":"","label1_value":"","label2_value":"","change_type":"changed","compliant":true,"recommendation":"","note_vi":"","note_en":""}],"compliance_improvement":true,"overall_assessment_vi":"","overall_assessment_en":"",' +
+      '"citations":[{"doc_id":"ND 37/2026/ND-CP","doc_name_vi":"Nghi dinh 37/2026 ve ghi nhan hang hoa","doc_name_en":"Decree 37/2026 on goods labelling","article":"Dieu 36, Khoan 4","article_en":"Article 36, Clause 4","content_vi":"Hang hoa phai ghi nhan theo quy dinh khi dua ra luu thong","content_en":"Goods must be labelled as required before circulation","relevance":"So sanh phien ban nhan va tuan thu","folder":"D"}],' +
+      '"risks":[{"level":"medium","title_vi":"","title_en":"","desc_vi":"","desc_en":""}],' +
+      '"actions":[{"priority":1,"action_vi":"","action_en":"","deadline":""}]}',
+
+    barcode: '"barcode":{"barcodes_found":[{"type":"EAN-13","value":"","country_prefix":"","readable":true}],"product_info":{"brand":"","sku":"","batch":"","country_of_origin":"","importer":""},"analysis_vi":"","analysis_en":"","actions":[{"priority":1,"action_vi":"","action_en":"","deadline":""}],"citations":[],"risks":[]}'
+  };
+
+  // Build schema for selected modes only
+  var schemaLines = modesArr.map(function(id) { return modeSchemas[id] || ''; }).filter(Boolean);
+  var schemaBlock = '{\n  ' + schemaLines.join(',\n  ') + '\n}';
+
+  // Image description — plain string concat, no nested template literals
+  var imgDesc = 'The uploaded image shows a food product label.';
+  if (imgCount === 2) {
+    imgDesc = '2 images uploaded. Image 1 is the primary/original label. Image 2 is the Vietnamese sub-label or a newer version for comparison.';
+  } else if (imgCount > 2) {
+    imgDesc = imgCount + ' images uploaded. Image 1 is the primary label. Additional images show other sides or versions.';
+  }
+
+  var modeList = modesArr.join(', ');
+
+  return 'You are a Vietnamese food label compliance expert for DGM Vietnam (importer/distributor of Ayam Brand from Malaysia/Thailand, Alce Nero from Italy, Duchef).\n\n' +
+    imgDesc + '\n\n' +
+    'Analyze the label image(s) for these aspect(s): ' + modeList + '.\n\n' +
+    'Vietnamese food law context:\n' +
+    '- ND 37/2026/ND-CP: Labelling decree (23/01/2026). Mandatory on Vietnamese sub-label: product name in Vietnamese, ingredients, net weight, country of origin, MFG/EXP dates, importer/distributor in VN, storage instructions, NIP.\n' +
+    '- TT 29/2023/TT-BYT: Nutrition Information Panel mandatory for ALL pre-packaged food from 01/01/2026. Required nutrients: Energy (kcal+kJ), Protein, Total Fat, Saturated Fat, Trans Fat, Carbohydrate, Sugars, Sodium.\n' +
+    '- ND 15/2018/ND-CP: Product registration and claims (currently in force; ND 46/2026 suspended by NQ 15/2026).\n' +
+    '- TT 24/2019/TT-BYT: Permitted food additives (INS codes). Check each additive against this list.\n' +
+    '- CAC/GL 23-1997: Codex conditions for nutrition and health claims (No Preservatives, Organic, Halal, Low Fat, Gluten-Free, etc.).\n\n' +
+    'CRITICAL INSTRUCTIONS:\n' +
+    '1. Return ONLY raw valid JSON — absolutely no markdown backticks, no explanation text, no comments before or after the JSON.\n' +
+    '2. Fill in ALL string fields with actual analysis of what you see in the image(s).\n' +
+    '3. Use "pass", "fail", or "check" for status fields.\n' +
+    '4. For compliance_checks/mandatory_fields: examine the actual label image carefully.\n' +
+    '5. For analysis_vi: write 2-3 sentences in Vietnamese summarizing findings.\n' +
+    '6. For analysis_en: write 2-3 sentences in English summarizing findings.\n\n' +
+    'Return this exact JSON structure (fill all empty strings with real content):\n' +
+    schemaBlock;
+}
+
+
+// ── BUILD MODE PROMPT ────────────────────────────────────────────────────────
+
+
+// ── RENDER MULTI-MODE RESULTS ─────────────────────────────────────────────────
+function renderMultiModeResults(allResults, images) {
+  const container = document.getElementById('resultsContainer');
+  const grid = document.getElementById('resultsGrid');
+
+  // Clear ALL previous results cleanly
+  grid.style.display = 'none';
+  grid.innerHTML = '';
+  container.querySelectorAll('.result-mode-tabs, .mode-results-panel, .results-area-inner').forEach(el => el.remove());
+
+  // Hide empty state
+  const es = document.getElementById('emptyState');
+  if (es) es.style.display = 'none';
+
+  const modeIds = Object.keys(allResults);
+  if (modeIds.length === 0) return;
+
+  // Build tab bar
+  const tabBar = document.createElement('div');
+  tabBar.className = 'result-mode-tabs fade-in';
+  tabBar.innerHTML = modeIds.map((id, i) => {
+    const m = ANALYSIS_MODES.find(x=>x.id===id);
+    return `<div class="result-mode-tab ${i===0?'active':''}" id="rtab-${id}" onclick="switchResultTab('${id}')">${m?.icon||''} ${m?.title||id}</div>`;
+  }).join('');
+  container.insertBefore(tabBar, document.getElementById('resultsGrid'));
+
+  // Build panels
+  modeIds.forEach((id, i) => {
+    const panel = document.createElement('div');
+    panel.className = 'mode-results-panel ' + (i===0?'active':'');
+    panel.id = 'rpanel-' + id;
+    panel.style.flex = '1';
+    panel.style.overflowY = 'auto';
+    panel.style.overflowX = 'hidden';
+    panel.style.padding = '16px 24px';
+    panel.style.minHeight = '200px';
+    panel.innerHTML = buildModeResultHTML(id, allResults[id]);
+    container.insertBefore(panel, document.getElementById('resultsGrid'));
+  });
+
+  // Store for export
+  window._currentResult = { citations: Object.values(allResults).flatMap(r=>r.citations||[]), risks: Object.values(allResults).flatMap(r=>r.risks||[]), actions: Object.values(allResults).flatMap(r=>r.actions||[]), analysis_vi: Object.values(allResults).map(r=>r.analysis_vi||r.overall_assessment_vi||'').join('\n\n') };
+}
+
+function switchResultTab(id) {
+  document.querySelectorAll('.result-mode-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.mode-results-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('rtab-'+id)?.classList.add('active');
+  document.getElementById('rpanel-'+id)?.classList.add('active');
+}
+
+function buildModeResultHTML(modeId, r) {
+  const scoreColor = s => s >= 80 ? 'var(--green)' : s >= 60 ? 'var(--amber)' : 'var(--red)';
+  const riskBadge = level => ({high:'🔴 Cao', medium:'🟡 TB', low:'🟢 OK'}[level]||level);
+  const riskColor = level => ({high:'rgba(224,82,82,.12)', medium:'rgba(224,154,56,.1)', low:'rgba(76,175,130,.1)'}[level]||'');
+  const riskFt = level => ({high:'var(--red)', medium:'var(--amber)', low:'var(--green)'}[level]||'');
+
+  let html = '<div class="results-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;grid-auto-rows:min-content">';
+
+  // ── Compliance / NIP / Sublabel: show score + checklist
+  if (['compliance','nip','sublabel'].includes(modeId)) {
+    const score = r.overall_score || r.nip_score || r.sublabel_score || 0;
+    const checks = r.compliance_checks || r.nip_items || r.mandatory_fields || [];
+    html += `<div class="result-card" style="grid-column:1/-1">
+      <div class="card-header"><div class="card-title">${r.modeInfo?.icon} ${r.modeInfo?.title} · Score</div></div>
+      <div class="card-body" style="display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:center">
+        <div style="text-align:center">
+          <div style="font-size:48px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:${scoreColor(score)}">${score}</div>
+          <div style="font-size:11px;color:var(--text3)">/100</div>
+          <div style="background:var(--navy3);border-radius:4px;height:6px;margin-top:6px;overflow:hidden"><div style="width:${score}%;height:100%;background:${scoreColor(score)};border-radius:4px"></div></div>
+        </div>
+        <div>${checks.map(c => `
+          <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border2)">
+            <span style="font-size:13px">${c.status==='pass'||c.compliant===true?'✅':c.status==='fail'||c.compliant===false?'❌':'⚠️'}</span>
+            <div style="flex:1;font-size:11px;color:var(--text2)">${c.item||c.nutrient||c.field||''}</div>
+            ${c.note_vi?`<div style="font-size:10px;color:var(--text3);max-width:180px">${c.note_vi}</div>`:''}
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ── Claims: show each claim card
+  if (modeId === 'claims' && r.claims_found) {
+    html += `<div class="result-card" style="grid-column:1/-1">
+      <div class="card-header"><div class="card-title">✅ Claims & Logos phát hiện được</div></div>
+      <div class="card-body">${(r.claims_found||[]).map(c => `
+        <div style="padding:10px 12px;border-radius:8px;border:1px solid var(--border2);margin-bottom:8px;background:${riskColor(c.risk_level)}">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <strong style="font-size:12px;color:var(--text)">${c.claim}</strong>
+            <span style="font-size:10px;padding:2px 6px;border-radius:20px;background:rgba(201,168,76,.12);color:var(--gold)">${c.type}</span>
+            <span style="margin-left:auto;font-size:11px;font-weight:600;color:${riskFt(c.risk_level)}">${riskBadge(c.risk_level)}</span>
+          </div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:2px">${c.note_vi}</div>
+          <div style="font-size:10px;color:var(--text3);font-style:italic">${c.note_en}</div>
+          ${c.evidence_required?`<div style="font-size:10px;color:var(--amber);margin-top:4px">📋 Cần: ${c.evidence_required}</div>`:''}
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  // ── Ingredients: show additive table
+  if (modeId === 'ingredients' && r.additives_found) {
+    html += `<div class="result-card" style="grid-column:1/-1">
+      <div class="card-header"><div class="card-title">🧪 Phụ gia phát hiện được / Additives Found</div></div>
+      <div class="card-body">
+        ${r.red_flags?.length ? `<div style="background:rgba(224,82,82,.08);border:1px solid rgba(224,82,82,.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--red)">⚠️ Cảnh báo: ${r.red_flags.join(' · ')}</div>` : ''}
+        <table style="width:100%;border-collapse:collapse;font-size:11px">
+          <thead><tr style="border-bottom:1px solid var(--border2)">
+            <th style="text-align:left;padding:6px;color:var(--text3);font-weight:500">Tên phụ gia</th>
+            <th style="text-align:center;padding:6px;color:var(--text3);font-weight:500">INS Code</th>
+            <th style="text-align:center;padding:6px;color:var(--text3);font-weight:500">Chức năng</th>
+            <th style="text-align:center;padding:6px;color:var(--text3);font-weight:500">VN OK?</th>
+            <th style="text-align:left;padding:6px;color:var(--text3);font-weight:500">Ghi chú</th>
+          </tr></thead>
+          <tbody>${(r.additives_found||[]).map(a => `
+            <tr style="border-bottom:1px solid var(--border2)">
+              <td style="padding:6px;color:var(--text2)">${a.name}</td>
+              <td style="padding:6px;text-align:center;font-family:'IBM Plex Mono',monospace;color:var(--gold)">${a.ins_code||'—'}</td>
+              <td style="padding:6px;text-align:center;color:var(--text3)">${a.function||'—'}</td>
+              <td style="padding:6px;text-align:center">${a.permitted_vn?'✅':'❌'}</td>
+              <td style="padding:6px;color:var(--text3);font-size:10px">${a.note_vi||''}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+
+  // ── Compare: show diff table
+  if (modeId === 'compare') {
+    const improvement = r.compliance_improvement;
+    html += `<div class="result-card" style="grid-column:1/-1">
+      <div class="card-header">
+        <div class="card-title">🔄 So sánh nhãn / Label Comparison</div>
+        <div style="font-size:11px;color:${improvement?'var(--green)':'var(--amber)'}">${improvement?'✅ Cải thiện':'⚠️ Có điểm giảm'}</div>
+      </div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+          <div style="background:var(--navy3);border-radius:8px;padding:10px;font-size:11px;color:var(--text3)"><strong style="color:var(--text2)">Nhãn 1 (Gốc)</strong><br>${r.label1_desc||'—'}</div>
+          <div style="background:var(--navy3);border-radius:8px;padding:10px;font-size:11px;color:var(--text3)"><strong style="color:var(--text2)">Nhãn 2 (Mới/VN)</strong><br>${r.label2_desc||'—'}</div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:11px">
+          <thead><tr style="border-bottom:1px solid var(--border2)">
+            <th style="text-align:left;padding:6px;color:var(--text3);font-weight:500">Nội dung</th>
+            <th style="text-align:left;padding:6px;color:var(--text3);font-weight:500">Nhãn 1</th>
+            <th style="text-align:left;padding:6px;color:var(--text3);font-weight:500">Nhãn 2</th>
+            <th style="text-align:center;padding:6px;color:var(--text3);font-weight:500">Thay đổi</th>
+            <th style="text-align:left;padding:6px;color:var(--text3);font-weight:500">Nhận xét</th>
+          </tr></thead>
+          <tbody>${(r.differences||[]).map(d => {
+            const typeColor = {added:'var(--green)',removed:'var(--red)',changed:'var(--amber)',missing:'var(--red)'}[d.change_type]||'var(--text3)';
+            return `<tr style="border-bottom:1px solid var(--border2)">
+              <td style="padding:6px;color:var(--text2);font-weight:500">${d.field}</td>
+              <td style="padding:6px;color:var(--text3);font-size:10px">${d.label1_value||'—'}</td>
+              <td style="padding:6px;color:var(--text3);font-size:10px">${d.label2_value||'—'}</td>
+              <td style="padding:6px;text-align:center"><span style="padding:2px 6px;border-radius:20px;background:rgba(255,255,255,.05);color:${typeColor};font-size:10px">${d.change_type}</span></td>
+              <td style="padding:6px;color:var(--text3);font-size:10px">${d.note_vi||d.recommendation||''}</td>
+            </tr>`;}).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+
+  // ── Barcode
+  if (modeId === 'barcode') {
+    html += `<div class="result-card" style="grid-column:1/-1">
+      <div class="card-header"><div class="card-title">📦 Barcode / Mã vạch</div></div>
+      <div class="card-body">
+        ${(r.barcodes_found||[]).map(b => `
+          <div style="padding:10px;border-radius:8px;border:1px solid var(--border2);margin-bottom:8px">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--gold);margin-bottom:4px">${b.value||'Không đọc được'}</div>
+            <div style="font-size:11px;color:var(--text3)">Type: ${b.type} · Country prefix: ${b.country_prefix||'—'}</div>
+          </div>`).join('') || '<div style="color:var(--text3);font-size:12px">Không tìm thấy mã vạch rõ trong ảnh</div>'}
+        ${r.product_info ? `
+          <div style="margin-top:12px;padding:10px;background:var(--navy3);border-radius:8px">
+            <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Thông tin sản phẩm</div>
+            ${Object.entries(r.product_info||{}).map(([k,v]) => v ? `<div style="font-size:11px;color:var(--text2);margin-bottom:3px"><strong style="color:var(--text3)">${k}:</strong> ${v}</div>` : '').join('')}
+          </div>` : ''}
+      </div>
+    </div>`;
+  }
+
+  // ── Common sections: Citations, AI Analysis, Risks, Actions
+  const citations = r.citations || [];
+  const risks = r.risks || [];
+  const actions = r.actions || [];
+  const analysisVI = r.analysis_vi || r.overall_assessment_vi || '';
+  const analysisEN = r.analysis_en || r.overall_assessment_en || '';
+
+  if (citations.length) {
+    html += `<div class="result-card">
+      <div class="card-header"><div class="card-title">📑 Quy định áp dụng</div></div>
+      <div class="card-body">${citations.map((c,i) => `
+        <div class="citation-item" onclick="openCitationDirect(${JSON.stringify(c).replace(/"/g,'&quot;')})">
+          <div class="citation-doc">[${c.folder||''}] ${c.doc_id}</div>
+          <div class="citation-clause">${c.article} — ${c.doc_name_vi}</div>
+          <div class="citation-ref">→ Click để xem chi tiết</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  if (analysisVI || risks.length) {
+    html += `<div class="result-card">
+      <div class="card-header"><div class="card-title">🤖 Phân tích & Rủi ro</div></div>
+      <div class="card-body">
+        ${analysisVI ? `<div class="ai-analysis">${formatAnalysis(analysisVI)}</div>` : ''}
+        ${risks.map(r2 => `
+          <div class="risk-item" style="margin-top:8px">
+            <div class="risk-indicator risk-${r2.level}"></div>
+            <div class="risk-content"><div class="risk-title">${r2.title_vi}</div><div class="risk-desc">${r2.desc_vi}</div></div>
+            <div class="risk-badge risk-badge-${r2.level}">${riskBadge(r2.level)}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  if (actions.length) {
+    html += `<div class="result-card" style="grid-column:1/-1">
+      <div class="card-header"><div class="card-title">✅ Hành động cần làm</div></div>
+      <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        ${actions.map((a,i) => `
+          <div style="padding:10px 12px;border-radius:8px;border:1px solid var(--border2);display:flex;gap:8px">
+            <div style="width:20px;height:20px;border-radius:50%;background:rgba(201,168,76,.2);color:var(--gold);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0">${a.priority||i+1}</div>
+            <div><div style="font-size:12px;color:var(--text);margin-bottom:2px">${a.action_vi}</div>
+            <div style="font-size:10px;color:var(--text3);font-style:italic">${a.action_en}</div>
+            ${a.deadline?`<div style="font-size:10px;color:var(--amber);margin-top:3px">⏰ ${a.deadline}</div>`:''}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  html += '</div>';
+  return html;
+}
+
+function openCitationDirect(c) {
+  if (typeof c === 'string') { try { c = JSON.parse(c); } catch(e) { return; } }
+  document.getElementById('popupTitle').textContent = c.doc_name_vi || c.doc_id;
+  document.getElementById('popupClause').textContent = (c.article||'') + ' | ' + (c.doc_id||'');
+  document.getElementById('popupSource').textContent = 'Source: ' + (c.doc_id||'') + ' · Folder ' + (c.folder||'') + ' · DGM Food Law Database 2026';
+  var relevanceVI = c.relevance ? '<br><div class="highlight"><strong>Li&#xEA;n quan:</strong> ' + c.relevance + '</div>' : '';
+  document.getElementById('popupTextVI').innerHTML = '<p><strong>' + (c.article||'') + '</strong> &#x2014; ' + (c.doc_name_vi||'') + '</p><br><p>' + (c.content_vi||'Xem file g&#x1ED1;c trong folder ' + (c.folder||'')) + '</p>' + relevanceVI;
+  document.getElementById('popupTextEN').innerHTML = `<p><strong>${c.article_en||c.article||''}</strong> — ${c.doc_name_en||''}</p><br><p>${c.content_en||'See original file in folder ' + (c.folder||'')}</p>`;
+  switchLang('vi');
+  openPopup();
+}
+
+function renderLabelResults(result) {
+  const grid = document.getElementById('resultsGrid');
+  grid.innerHTML = '';
+  grid.style.display = 'grid';
+
+  // Score card
+  const score = result.overall_score || 0;
+  const scoreColor = score >= 80 ? 'var(--green)' : score >= 60 ? 'var(--amber)' : 'var(--red)';
+  const scoreCard = document.createElement('div');
+  scoreCard.className = 'result-card fade-in';
+  scoreCard.innerHTML = `
+    <div class="card-header"><div class="card-title">📊 Điểm tuân thủ nhãn / Label Compliance Score</div></div>
+    <div class="card-body" style="text-align:center;padding:24px">
+      <div style="font-size:56px;font-weight:600;font-family:'IBM Plex Mono',monospace;color:${scoreColor};margin-bottom:8px">${score}</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:16px">/100 · ${result.product_detected||'Sản phẩm được phân tích'}</div>
+      <div style="background:var(--navy3);border-radius:4px;height:8px;overflow:hidden">
+        <div style="width:${score}%;height:100%;background:${scoreColor};border-radius:4px;transition:width 1s ease"></div>
+      </div>
+    </div>
+    <div class="card-body" style="padding-top:0">
+      ${(result.compliance_checks||[]).map(c => `
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border2)">
+          <div style="font-size:14px">${c.status==='pass'?'✅':c.status==='fail'?'❌':'⚠️'}</div>
+          <div style="flex:1;font-size:11px;color:var(--text2)">${c.item}</div>
+          ${c.note_vi ? `<div style="font-size:10px;color:var(--text3)">${c.note_vi}</div>` : ''}
+        </div>
+      `).join('')}
+    </div>`;
+  grid.appendChild(scoreCard);
+
+  // Citations card (same as before)
+  if (result.citations && result.citations.length) {
+    window._currentResult = result;
+    const citCard = document.createElement('div');
+    citCard.className = 'result-card fade-in';
+    citCard.style.animationDelay = '.1s';
+    citCard.innerHTML = `
+      <div class="card-header"><div class="card-title">📑 Quy định áp dụng / Applicable Regulations</div></div>
+      <div class="card-body">
+        ${result.citations.map((c,i) => `
+          <div class="citation-item" onclick="openCitation(${i})">
+            <div class="citation-doc">[${c.folder||''}] ${c.doc_id}</div>
+            <div class="citation-clause">${c.article} — ${c.doc_name_vi}</div>
+            <div class="citation-ref">→ Click để xem chi tiết</div>
+          </div>
+        `).join('')}
+      </div>`;
+    grid.appendChild(citCard);
+  }
+
+  // Risks & Actions
+  const raCard = document.createElement('div');
+  raCard.className = 'result-card fade-in';
+  raCard.style.animationDelay = '.15s';
+  raCard.innerHTML = `
+    <div class="card-header"><div class="card-title">⚠️ Rủi ro & Hành động / Risks & Actions</div></div>
+    <div class="risk-panel">
+      ${(result.risks||[]).map(r => `
+        <div class="risk-item">
+          <div class="risk-indicator risk-${r.level}"></div>
+          <div class="risk-content">
+            <div class="risk-title">${r.title_vi}</div>
+            <div class="risk-desc">${r.desc_vi}</div>
+          </div>
+          <div class="risk-badge risk-badge-${r.level}">${r.level==='high'?'🔴':r.level==='medium'?'🟡':'🟢'}</div>
+        </div>
+      `).join('')}
+    </div>`;
+  grid.appendChild(raCard);
+}
+
+// ══════════════════════════════════════════════════════════
+// SKU CHECKLIST MODE
+// ══════════════════════════════════════════════════════════
+const SKU_CHECKLISTS = {
+  tuna: {
+    name: 'Cá ngừ đóng hộp (Tuna) / Canned Tuna',
+    items: [
+      {item:'HSCB/TCCS còn hiệu lực',doc:'NĐ 15/2018 Đ5; NQ 66.13/2026'},
+      {item:'Nhãn phụ: tên SP, thành phần, NSX, HSD, xuất xứ, NTK',doc:'NĐ 37/2026 Đ37-42'},
+      {item:'Nutrition Information Panel (NIP) đầy đủ từ 01/01/2026',doc:'TT 29/2023/TT-BYT'},
+      {item:'Test report Histamine ≤ 10mg/100g (100mg/kg)',doc:'TCVN 6388:2006'},
+      {item:'Test report Thiếc Sn ≤ 200mg/kg',doc:'QCVN 8-2:2011/BYT'},
+      {item:'Test report Chì Pb ≤ 0.3mg/kg',doc:'QCVN 8-2:2011/BYT'},
+      {item:'Test report Thủy ngân Hg ≤ 0.5mg/kg',doc:'QCVN 8-2:2011/BYT'},
+      {item:'Test report Salmonella: không phát hiện/25g',doc:'QCVN 8-3:2012/BYT'},
+      {item:'Test report E.coli ≤ 10 CFU/g',doc:'QCVN 8-3:2012/BYT'},
+      {item:'Kiểm tra phụ gia INS codes hợp lệ',doc:'TT 24/2019/TT-BYT'},
+      {item:'Hồ sơ thông quan (Invoice, BL, Packing List, CFS)',doc:'TT 38/2015/TT-BTC'},
+      {item:'Claim trên nhãn có cơ sở pháp lý (nếu có)',doc:'NĐ 15/2018 Đ27-29'},
+      {item:'Halal cert còn hiệu lực (nếu có logo)',doc:'CAC/GL 24-1997'}
+    ]
+  },
+  beans: {
+    name: 'Đậu sốt cà chua (Baked Beans) / Canned Baked Beans in Tomato',
+    items: [
+      {item:'HSCB/TCCS còn hiệu lực',doc:'NĐ 15/2018 Đ5'},
+      {item:'Nhãn phụ đầy đủ theo NĐ 37/2026',doc:'NĐ 37/2026 Đ37-42'},
+      {item:'NIP trên nhãn (bắt buộc 01/01/2026)',doc:'TT 29/2023/TT-BYT'},
+      {item:'Test Aflatoxin B1 ≤ 5µg/kg; Tổng ≤ 10µg/kg',doc:'QCVN 8-1:2011/BYT'},
+      {item:'Test Ochratoxin A ≤ 5µg/kg',doc:'QCVN 8-1:2011/BYT'},
+      {item:'Test Sn ≤ 200mg/kg (đồ hộp)',doc:'QCVN 8-2:2011/BYT'},
+      {item:'Test Pb ≤ 0.3mg/kg; Cd ≤ 0.1mg/kg',doc:'QCVN 8-2:2011/BYT'},
+      {item:'Test Salmonella không PH/25g',doc:'QCVN 8-3:2012/BYT'},
+      {item:'Brix sốt cà chua ≥ 7% (Puree)',doc:'TCVN 5305:2008'},
+      {item:'Phụ gia hợp lệ (Benzoate, Sorbate nếu có)',doc:'TT 24/2019/TT-BYT'},
+      {item:'CFS + hồ sơ thông quan đủ',doc:'NĐ 15/2018 Đ13'}
+    ]
+  },
+  pasta: {
+    name: 'Mì/Nui Alce Nero (Pasta) / Organic Pasta',
+    items: [
+      {item:'HSCB/TCCS còn hiệu lực',doc:'NĐ 15/2018 Đ5'},
+      {item:'Chứng chỉ Organic EU còn hiệu lực',doc:'CAC/GL 32-1999; EU Reg.848/2018'},
+      {item:'Nhãn phụ đầy đủ + NIP',doc:'NĐ 37/2026; TT 29/2023'},
+      {item:'Test Aflatoxin B1 ≤ 5µg/kg',doc:'QCVN 8-1:2011/BYT'},
+      {item:'Test DON ≤ 750µg/kg (theo EU - khuyến nghị)',doc:'CXS 193-1995; EU 1881/2006'},
+      {item:'Test Dư lượng BVTV = Không phát hiện (organic)',doc:'TT 50/2016/TT-BYT'},
+      {item:'Test Glyphosate < 10µg/kg (organic standard)',doc:'EU Organic Reg.848/2018'},
+      {item:'Độ ẩm ≤ 12.5%',doc:'TCVN 12040:2017'},
+      {item:'Hàm lượng protein ≥ 10% CK',doc:'TCVN 12040:2017'},
+      {item:'Pb ≤ 0.2mg/kg; Cd ≤ 0.2mg/kg',doc:'QCVN 8-2:2011/BYT'},
+      {item:'Vi sinh: Tổng khuẩn ≤ 10⁵ CFU/g',doc:'QCVN 8-3:2012/BYT'},
+      {item:'Logo EU Organic được phép sử dụng tại VN',doc:'NĐ 15/2018 Đ27-29'}
+    ]
+  },
+  soysauce: {
+    name: 'Nước tương Ayam Brand (Soy Sauce)',
+    items: [
+      {item:'HSCB/TCCS còn hiệu lực',doc:'NĐ 15/2018'},
+      {item:'Nhãn phụ đầy đủ + NIP',doc:'NĐ 37/2026; TT 29/2023'},
+      {item:'Test 3-MCPD ≤ 1mg/kg (VN) / ≤ 0.02mg/kg (EU)',doc:'QĐ 46/2007/QĐ-BYT'},
+      {item:'Protein tổng số ≥ 8g/100ml',doc:'TCVN 7396:2004 (tham chiếu)'},
+      {item:'Test Pb ≤ 0.2mg/kg; As ≤ 1mg/kg',doc:'QCVN 8-2:2011/BYT'},
+      {item:'Salmonella: không PH/25ml',doc:'QCVN 8-3:2012/BYT'},
+      {item:'E.coli: không PH/1ml',doc:'QCVN 8-3:2012/BYT'},
+      {item:'Phụ gia: Benzoate ≤ 1000mg/kg nếu có',doc:'TT 24/2019/TT-BYT'},
+      {item:'Histamine test (nếu có anchovy/cá cơm)',doc:'TCVN 6388:2006'},
+      {item:'CFS + LOA từ nhà máy MY/SG',doc:'NĐ 15/2018 Đ13'}
+    ]
+  }
+};
+
+// Add more SKUs
+['mackerel','sardine','chickpea','tomato','corn','chilli','seasoning','coconut'].forEach(k => {
+  if (!SKU_CHECKLISTS[k]) {
+    SKU_CHECKLISTS[k] = {
+      name: `${k.charAt(0).toUpperCase()+k.slice(1)} checklist`,
+      items: [
+        {item:'HSCB/TCCS còn hiệu lực',doc:'NĐ 15/2018'},
+        {item:'Nhãn phụ đầy đủ theo NĐ 37/2026',doc:'NĐ 37/2026'},
+        {item:'NIP bắt buộc từ 01/01/2026',doc:'TT 29/2023/TT-BYT'},
+        {item:'Test kim loại nặng (Pb, Cd, As, Hg)',doc:'QCVN 8-2:2011/BYT'},
+        {item:'Test vi sinh (Salmonella, E.coli)',doc:'QCVN 8-3:2012/BYT'},
+        {item:'Kiểm tra phụ gia INS',doc:'TT 24/2019/TT-BYT'},
+        {item:'Hồ sơ thông quan',doc:'NĐ 15/2018; TT 38/2015'}
+      ]
+    };
+  }
+});
+
+let selectedSKUKey = null;
+function selectSKU(key) {
+  selectedSKUKey = key;
+  document.querySelectorAll('.sku-card').forEach(c => c.classList.remove('active'));
+  document.getElementById('sku-'+key).classList.add('active');
+  loadChecklist(key);
+}
+
+function loadChecklist(key) {
+  const sku = SKU_CHECKLISTS[key];
+  if (!sku) return;
+  document.getElementById('skuTitle').textContent = sku.name;
+  document.getElementById('checklistArea').style.display = 'block';
+  const tbody = document.getElementById('checklistBody');
+  tbody.innerHTML = sku.items.map((item,i) => `
+    <tr>
+      <td style="color:var(--text3);font-family:'IBM Plex Mono',monospace">${i+1}</td>
+      <td style="color:var(--text2)">${item.item}</td>
+      <td style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace">${item.doc}</td>
+      <td>
+        <select class="check-select" id="check-${key}-${i}" onchange="updateCheckColor(this)">
+          <option value="">—</option>
+          <option value="pass">✅ Đạt</option>
+          <option value="fail">❌ Không đạt</option>
+          <option value="na">N/A</option>
+          <option value="pending">⏳ Đang kiểm</option>
+        </select>
+      </td>
+      <td><textarea class="check-note" rows="1" placeholder="Ghi chú..." id="note-${key}-${i}"></textarea></td>
+    </tr>
+  `).join('');
+}
+
+function updateCheckColor(sel) {
+  const colors = {pass:'rgba(76,175,130,.15)',fail:'rgba(224,82,82,.15)',na:'',pending:'rgba(224,154,56,.1)','':''};
+  sel.style.background = colors[sel.value] || 'var(--navy3)';
+}
+
+async function runSKUAnalysis() {
+  if (!selectedSKUKey || !state.apiKey) { if(!state.apiKey) openSettings(); return; }
+  const sku = SKU_CHECKLISTS[selectedSKUKey];
+  const results = sku.items.map((item,i) => ({
+    item: item.item, doc: item.doc,
+    result: document.getElementById(`check-${selectedSKUKey}-${i}`)?.value || '',
+    note: document.getElementById(`note-${selectedSKUKey}-${i}`)?.value || ''
+  }));
+  const fails = results.filter(r => r.result === 'fail');
+  const pending = results.filter(r => r.result === 'pending' || r.result === '');
+
+  setLoading(true);
+  try {
+    const prompt = `Phân tích checklist tuân thủ pháp luật thực phẩm cho sản phẩm: ${sku.name}
+Kết quả kiểm tra:
+${results.map(r => `- ${r.item} [${r.doc}]: ${r.result||'chưa kiểm'} ${r.note?'| Note: '+r.note:''}`).join('\n')}
+
+Hãy đưa ra:
+1. Đánh giá tổng thể (tiếng Việt + English)
+2. Các vấn đề cần giải quyết ngay
+3. Rủi ro pháp lý
+4. Kế hoạch hành động ưu tiên
+
+Trả về JSON với fields: analysis_vi, analysis_en, risks (array), actions (array)`;
+
+    const raw = await callGemini(prompt);
+    const res = safeParseJSON(raw);
+    if (!res) throw new Error('Không parse được kết quả phân tích SKU.');
+    window._currentResult = { ...res, citations: [] };
+
+    setMode('keyword');
+    document.getElementById('resultsGrid').style.display = 'grid';
+    document.getElementById('emptyState').style.display = 'none';
+    const grid = document.getElementById('resultsGrid');
+    grid.innerHTML = `
+      <div class="result-card fade-in">
+        <div class="card-header"><div class="card-title">🤖 Phân tích checklist AI / AI Checklist Analysis</div></div>
+        <div class="card-body">
+          <div class="ai-analysis">${formatAnalysis(res.analysis_vi||'')}</div>
+        </div>
+      </div>
+      <div class="risk-panel result-card fade-in" style="animation-delay:.1s">
+        <div class="card-header"><div class="card-title">⚠️ Rủi ro & Hành động</div></div>
+        ${(res.risks||[]).map(r=>`
+          <div class="risk-item">
+            <div class="risk-indicator risk-${r.level}"></div>
+            <div class="risk-content"><div class="risk-title">${r.title_vi}</div><div class="risk-desc">${r.desc_vi}</div></div>
+            <div class="risk-badge risk-badge-${r.level}">${r.level==='high'?'🔴 Cao':r.level==='medium'?'🟡 TB':'🟢'}</div>
+          </div>`).join('')}
+      </div>`;
+  } catch(e) { alert('Lỗi: ' + e.message); }
+  finally { setLoading(false); }
+}
+
+function exportChecklist() {
+  if (!selectedSKUKey) return;
+  const sku = SKU_CHECKLISTS[selectedSKUKey];
+  const rows = sku.items.map((item,i) => [
+    i+1, item.item, item.doc,
+    document.getElementById(`check-${selectedSKUKey}-${i}`)?.value || '',
+    document.getElementById(`note-${selectedSKUKey}-${i}`)?.value || ''
+  ]);
+  let csv = 'STT,Hạng mục kiểm tra,Văn bản áp dụng,Kết quả,Ghi chú\n';
+  csv += rows.map(r => r.map(c => `"${(c+'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `DGM_Checklist_${selectedSKUKey}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ══════════════════════════════════════════════════════════
+// HISTORY & BOOKMARKS
+// ══════════════════════════════════════════════════════════
+function addToHistory(query, result) {
+  const risks = result.risks || [];
+  const maxRisk = risks.some(r=>r.level==='high') ? 'red' : risks.some(r=>r.level==='medium') ? 'amber' : 'green';
+  state.history.unshift({ query, time: new Date().toLocaleTimeString('vi-VN'), risk: maxRisk, result });
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!state.history.length) { list.innerHTML = '<div style="font-size:11px;color:var(--text3);text-align:center;padding:16px">Chưa có lịch sử</div>'; return; }
+  list.innerHTML = state.history.slice(0,20).map((h,i) => `
+    <div class="history-item" onclick="replayHistory(${i})">
+      <div class="history-q">${h.query}</div>
+      <div class="history-meta">
+        <div class="risk-dot risk-${h.risk}"></div>
+        <div class="history-time">${h.time}</div>
+      </div>
+    </div>`).join('');
+}
+
+function replayHistory(i) {
+  const h = state.history[i];
+  if (h.result) { window._currentResult = h.result; renderResults(h.result, {intent_vi: h.query, intent_en: h.query}); }
+}
+
+function bookmarkResult() {
+  if (!window._currentResult) return;
+  const q = state.currentQuery || 'Bookmark';
+  state.bookmarks.unshift({ query: q, time: new Date().toLocaleDateString('vi-VN'), result: window._currentResult });
+  saveState(); renderBookmarks(); updateStatus();
+}
+
+function renderBookmarks() {
+  const list = document.getElementById('bookmarkList');
+  if (!state.bookmarks.length) { list.innerHTML = '<div style="font-size:11px;color:var(--text3);text-align:center;padding:16px">Chưa có bookmark</div>'; return; }
+  list.innerHTML = state.bookmarks.slice(0,10).map((b,i) => `
+    <div class="bookmark-item" onclick="replayBookmark(${i})">
+      <div class="bookmark-q">${b.query}</div>
+      <div class="bookmark-tags"><span class="bookmark-tag">${b.time}</span></div>
+    </div>`).join('');
+}
+
+function replayBookmark(i) {
+  const b = state.bookmarks[i];
+  if (b.result) { window._currentResult = b.result; renderResults(b.result, {intent_vi: b.query, intent_en: b.query}); }
+}
+
+function toggleBookmarks() {
+  const sidebar = document.querySelector('.sidebar-right');
+  sidebar.scrollIntoView ? sidebar.scrollIntoView({behavior:'smooth'}) : null;
+}
+
+function exportReport() {
+  if (!window._currentResult) { alert('Chưa có kết quả để xuất'); return; }
+  const r = window._currentResult;
+  let md = `# DGM Food Law Intelligence Report\n`;
+  md += `**Date:** ${new Date().toLocaleDateString('vi-VN')}\n`;
+  md += `**Query:** ${state.currentQuery || 'N/A'}\n\n`;
+  md += `## Trích dẫn pháp lý / Legal Citations\n\n`;
+  (r.citations||[]).forEach((c,i) => {
+    md += `### ${i+1}. ${c.doc_id} — ${c.article}\n`;
+    md += `**${c.doc_name_vi}**\n${c.content_vi||''}\n\n`;
+    md += `*${c.doc_name_en}*\n${c.content_en||''}\n\n`;
+  });
+  md += `## Phân tích / Analysis\n\n${r.analysis_vi||''}\n\n`;
+  md += `## Rủi ro / Risks\n\n`;
+  (r.risks||[]).forEach(r2 => { md += `- **[${r2.level.toUpperCase()}]** ${r2.title_vi}: ${r2.desc_vi}\n`; });
+  md += `\n## Hành động / Actions\n\n`;
+  (r.actions||[]).forEach((a,i) => { md += `${a.priority||i+1}. ${a.action_vi}\n   *${a.action_en}*\n`; });
+  md += `\n---\n*Generated by DGM Food Law Intelligence System*`;
+
+  const blob = new Blob([md], {type:'text/markdown'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `DGM_FoodLaw_Report_${new Date().toISOString().slice(0,10)}.md`;
+  a.click();
+}
+
+
+// ══════════════════════════════════════════════════════════
+// ONBOARDING
+// ══════════════════════════════════════════════════════════
+function showOnboarding() {
+  document.getElementById('obOverlay').style.display = 'flex';
+  document.getElementById('obStep1').style.display = 'block';
+  document.getElementById('obStep2').style.display = 'none';
+}
+function hideOnboarding() {
+  document.getElementById('obOverlay').style.display = 'none';
+}
+function goObStep2() {
+  document.getElementById('obStep1').style.display = 'none';
+  document.getElementById('obStep2').style.display = 'block';
+  setTimeout(() => document.getElementById('obKeyInput').focus(), 80);
+}
+function goObStep1() {
+  document.getElementById('obStep2').style.display = 'none';
+  document.getElementById('obStep1').style.display = 'block';
+}
+function toggleObEye() {
+  const inp = document.getElementById('obKeyInput');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+function clearObMsg() {
+  const el = document.getElementById('obTestMsg');
+  el.textContent = ''; el.className = 'ob-test-msg';
+}
+function showObMsg(msg, type) {
+  const el = document.getElementById('obTestMsg');
+  el.textContent = msg; el.className = 'ob-test-msg ob-test-' + type;
+}
+async function testAndSaveKey() {
+  const key = document.getElementById('obKeyInput').value.trim();
+  if (!key || key.length < 20) {
+    showObMsg('Key qua ngan hoac rong / Key too short or empty', 'err'); return;
+  }
+  const btn = document.getElementById('obSaveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Dang kiem tra... / Testing...';
+  showObMsg('Dang ket noi Gemini API...', 'loading');
+  try {
+    // Try models in order for key validation
+    let url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + key;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        contents:[{role:'user',parts:[{text:'Say OK'}]}],
+        generationConfig:{maxOutputTokens:5,responseMimeType:'text/plain'}
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (reply) {
+      showObMsg('Key hop le! Dang luu... / Valid! Saving...', 'ok');
+      state.apiKey = key;
+      saveState(); updateStatus();
+      setTimeout(() => hideOnboarding(), 1000);
+    } else { throw new Error('No response from Gemini'); }
+  } catch(e) {
+    const msg = e.message.includes('API_KEY_INVALID') ? 'Key khong hop le / Invalid API key' :
+                e.message.includes('PERMISSION_DENIED') ? 'Key bi tu choi / Key permission denied' :
+                e.message;
+    showObMsg(msg, 'err');
+    btn.disabled = false;
+    btn.textContent = 'Kiem tra & Luu key / Test & Save';
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+loadState();
+updateStatus();
+renderHistory();
+renderBookmarks();
+if (!state.apiKey) {
+  setTimeout(() => showOnboarding(), 350);
+} else {
+  document.getElementById('statusDot').classList.remove('error');
+}
+// Auto-load Drive index if GAS URL is configured
+if (state.gasWebAppUrl) {
+  setTimeout(() => loadDriveIndex(false), 1000);
+}
+</script>
+
+<!-- ── ONBOARDING POPUP ── -->
+<div id="obOverlay" class="ob-overlay" style="display:none">
+  <div class="ob-modal">
+
+    <!-- STEP 1: Guide -->
+    <div id="obStep1">
+      <div class="ob-header">
+        <div class="ob-logo-mark">DGM</div>
+        <div class="ob-title">Ch&#xE0;o m&#x1EEB;ng! &middot; Welcome</div>
+        <div class="ob-sub">&#x110;&#x1EC3; s&#x1EED; d&#x1EE5;ng app, b&#x1EA1;n c&#x1EA7;n 1 Gemini API key mi&#x1EC5;n ph&#xED; t&#x1EEB; Google.</div>
+        <div class="ob-sub" style="font-style:italic;margin-bottom:16px">You need a free Gemini API key from Google to get started.</div>
+      </div>
+      <div class="ob-steps">
+        <div class="ob-step">
+          <div class="ob-step-num">1</div>
+          <div>
+            <div class="ob-step-title">M&#x1EDF; Google AI Studio</div>
+            <div class="ob-step-desc">Truy c&#x1EAD;p <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> &mdash; &#x111;&#x103;ng nh&#x1EAD;p b&#x1EB1;ng t&#xE0;i kho&#x1EA3;n Google b&#x1EA5;t k&#x1EF3;. Mi&#x1EC5;n ph&#xED;, kh&#xF4;ng c&#x1EA7;n th&#x1EBB; t&#xED;n d&#x1EE5;ng.<br><em>Visit the link, sign in with any Google account. Free, no credit card.</em></div>
+          </div>
+        </div>
+        <div class="ob-step">
+          <div class="ob-step-num">2</div>
+          <div>
+            <div class="ob-step-title">T&#x1EA1;o API Key</div>
+            <div class="ob-step-desc">Click n&#xFA;t <strong style="color:#e8c96a">&ldquo;Create API key&rdquo;</strong> g&#xF3;c tr&#xEA;n ph&#x1EA3;i &rarr; ch&#x1ECD;n <strong style="color:#e8c96a">&ldquo;Create API key in new project&rdquo;</strong> &rarr; key hi&#x1EC7;n ra.<br><em>Click "Create API key" top-right &rarr; "Create API key in new project".</em>
+              <div class="ob-step-code">AIzaSy... (d&#x1EA1;ng n&#xE0;y / looks like this)</div>
+            </div>
+          </div>
+        </div>
+        <div class="ob-step">
+          <div class="ob-step-num">3</div>
+          <div>
+            <div class="ob-step-title">Copy &amp; d&#xE1;n v&#xE0;o b&#x01B0;&#x1EDB;c ti&#x1EBF;p theo</div>
+            <div class="ob-step-desc">Copy key &rarr; quay l&#x1EA1;i &#x111;&#xE2;y &rarr; paste v&#xE0;o &#xF4; b&#xEA;n d&#x01B0;&#x1EDB;i. Key &#x111;&#x01B0;&#x1EE3;c l&#x01B0;u tr&#xEA;n m&#xE1;y b&#x1EA1;n, kh&#xF4;ng g&#x1EED;i &#x111;i &#x111;&#xE2;u kh&#xE1;c.<br><em>Copy key &rarr; paste below. Stored locally, never sent anywhere else.</em></div>
+          </div>
+        </div>
+      </div>
+      <div class="ob-divider"></div>
+      <div class="ob-footer">
+        <button class="ob-btn-primary" onclick="goObStep2()">T&#xF4;i &#x111;&#xE3; c&#xF3; API key &rarr; Ti&#x1EBF;p t&#x1EE5;c &nbsp;&middot;&nbsp; I have a key &rarr; Continue</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Enter key -->
+    <div id="obStep2" style="display:none">
+      <div class="ob-header" style="padding-bottom:20px">
+        <div class="ob-logo-mark" style="font-size:22px;background:rgba(201,168,76,0.15);color:#c9a84c;border:1px solid rgba(201,168,76,0.3)">&#x1F511;</div>
+        <div class="ob-title">Nh&#x1EAD;p API Key &middot; Enter Key</div>
+        <div class="ob-sub" style="margin-bottom:16px">Paste Gemini API key c&#x1EE7;a b&#x1EA1;n v&#xE0;o &#x111;&#xE2;y. &nbsp;<em>Paste your key below.</em></div>
+      </div>
+      <div class="ob-steps" style="padding-bottom:4px">
+        <div class="ob-key-wrap">
+          <input type="password" id="obKeyInput" class="ob-key-input" placeholder="AIzaSy..." oninput="clearObMsg()" onkeydown="if(event.key==='Enter')testAndSaveKey()">
+          <button class="ob-eye-btn" onclick="toggleObEye()" title="Hi&#x1EC7;n/&#x1EA8;n">&#x1F441;</button>
+        </div>
+        <div id="obTestMsg" class="ob-test-msg"></div>
+      </div>
+      <div class="ob-divider"></div>
+      <div class="ob-footer">
+        <button class="ob-btn-primary" onclick="testAndSaveKey()" id="obSaveBtn">&#x2713; Ki&#x1EC3;m tra &amp; L&#x01B0;u key &nbsp;&middot;&nbsp; Test &amp; Save</button>
+        <button class="ob-back-btn" onclick="goObStep1()">&#x2190; Quay l&#x1EA1;i h&#x01B0;&#x1EDB;ng d&#x1EAB;n &middot; Back to guide</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
