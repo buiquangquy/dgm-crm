@@ -926,6 +926,33 @@ function safeParseJSON(raw) {
   if (arrMatch) { try { return JSON.parse(arrMatch[0]); } catch(e) {} }
   // 4. Try removing control chars and retry
   try { return JSON.parse(cleaned.replace(/[\u0000-\u001F\u007F]/g, ' ')); } catch(e) {}
+  // 5. TRUNCATION RECOVERY: JSON bị cắt giữa chừng → thử auto-close
+  try {
+    // Find the last complete top-level field by truncating at last }
+    let truncated = cleaned;
+    // Remove trailing incomplete string/field
+    const lastComma = truncated.lastIndexOf(',"');
+    const lastClose = truncated.lastIndexOf('}');
+    if (lastComma > lastClose) {
+      truncated = truncated.slice(0, lastComma);
+    }
+    // Count open braces/arrays and close them
+    let opens = 0, openArr = 0;
+    for (const ch of truncated) {
+      if (ch === '{') opens++;
+      else if (ch === '}') opens--;
+      else if (ch === '[') openArr++;
+      else if (ch === ']') openArr--;
+    }
+    // Close any open arrays first, then objects
+    let closing = '';
+    if (openArr > 0) closing += ']'.repeat(openArr);
+    if (opens > 0)   closing += '}'.repeat(opens);
+    const recovered = truncated + closing;
+    const result = JSON.parse(recovered);
+    console.warn('[safeParseJSON] Recovered truncated JSON, closing chars added:', closing.length);
+    return result;
+  } catch(e) {}
   console.error('safeParseJSON failed on:', cleaned.slice(0, 300));
   return null;
 }
@@ -951,7 +978,7 @@ async function callGemini(prompt, systemPrompt='', imageData=null) {
     }
     parts.push({ text: systemPrompt ? systemPrompt + '\n\n' + prompt : prompt });
 
-    const genConfig = { temperature: 0.2, topP: 0.8, maxOutputTokens: 8192 };
+    const genConfig = { temperature: 0.2, topP: 0.8, maxOutputTokens: 16384 };
     if (!imageData) { genConfig.responseMimeType = 'application/json'; }
 
     const body = { contents: [{ role: 'user', parts }], generationConfig: genConfig };
@@ -1075,11 +1102,13 @@ async function confirmIntent() {
 
     const resPrompt = `Bạn là chuyên gia tư vấn pháp lý an toàn thực phẩm Việt Nam cho DGM Vietnam (công ty nhập khẩu, sản xuất và phân phối thực phẩm: Ayam Brand từ Malaysia/Thailand, Alce Nero từ Italy, Duchef).
 
+⚠️ QUAN TRỌNG: Trả về JSON hợp lệ và ĐẦY ĐỦ. Giới hạn mỗi trường text tối đa 300 ký tự. KHÔNG được cắt giữa chừng.
+
 Câu hỏi: ${intent.intent_vi}
 (${intent.intent_en})
 
-Văn bản liên quan trong database: ${(intent.related_docs||[]).join(', ')}
-Folder tra cứu: ${(intent.folders||[]).join(', ')}
+Văn bản liên quan: ${(intent.related_docs||[]).join(', ')}
+Folder: ${(intent.folders||[]).join(', ')}
 ${sourceNote}
 
 ${folderCtx}
@@ -1234,7 +1263,7 @@ function searchDriveIndex(keywords, folders) {
   }).filter(f => f.score > 0);
 
   scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, 8); // top 8 most relevant files
+  return scored.slice(0, 4); // top 4 most relevant files (keep context manageable)
 }
 
 // Build context string from Drive index for AI prompt
@@ -1254,7 +1283,7 @@ function buildDriveContext(files) {
     }
     if (f.summary) {
       // Send first 1500 chars of the actual document text
-      const excerpt = f.summary.slice(0, 1500).replace(/\n{3,}/g, '\n\n');
+      const excerpt = f.summary.slice(0, 800).replace(/\n{3,}/g, '\n\n');
       ctx += `    Nội dung (trích):\n${excerpt}\n`;
     }
     ctx += '\n';
