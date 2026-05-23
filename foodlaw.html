@@ -1843,58 +1843,22 @@ async function analyzeLabel() {
     // Giảm số API calls từ N xuống còn 1 → tránh rate limit & high demand error
     document.getElementById('statusText').textContent = `🔍 Đang phân tích ${modesArr.length} nội dung... vui lòng chờ`;
 
-    // ── AUTO-DETECT PRODUCT TYPE ─────────────────────────────────────────────
-    // Quick pre-scan to detect: domestic VN / imported / OEM before full analysis
-    document.getElementById('statusText').textContent = '🔍 Đang nhận diện loại sản phẩm...';
-    let productTypeCtx = '';
-    try {
-      const detectParts = [];
-      uploadedImages.slice(0,2).forEach(img => {
-        detectParts.push({ inlineData: { mimeType: img.mimeType, data: img.data } });
-      });
-      detectParts.push({ text: `Examine this food product label carefully. Identify the product type by looking for these signals:
-- Language on label (Vietnamese only / bilingual / English only)
-- "Sản xuất tại Việt Nam" or "Made in Vietnam" → DOMESTIC
-- "Nhập khẩu bởi" / "Importer" / foreign country of origin → IMPORTED
-- "Gia công tại" / OEM manufacturer outside VN with VN brand → OEM_IMPORT
-- Barcode prefix: 893 = Vietnam registered
-- Presence of Vietnamese importer/distributor info
+    // Product type detection is now MERGED into the single analysis call (no extra API call)
+    // The prompt instructs Gemini to auto-detect and apply the right rules in one pass
+    const productTypeCtx = `
 
-Return ONLY a JSON object with no markdown:
-{"product_type":"DOMESTIC|IMPORTED|OEM_IMPORT|UNKNOWN","country_of_manufacture":"","evidence":"brief reason max 60 chars","has_vn_importer_required":true|false}` });
+⚡ PRODUCT TYPE — DETECT FROM LABEL BEFORE ANALYZING:
+Step 1: Look for these signals to identify product type:
+  - "Sản xuất tại Việt Nam" / "Made in Vietnam" / barcode prefix 893 → DOMESTIC
+  - "Nhập khẩu bởi" / "Importer:" / foreign country of origin → IMPORTED
+  - OEM manufacturer abroad + Vietnamese brand → OEM_IMPORT
 
-      const detectResp = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + state.apiKey,
-        { method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ contents:[{role:'user', parts: detectParts}], generationConfig:{temperature:0.1, maxOutputTokens:200} }) }
-      );
-      const detectData = await detectResp.json();
-      const detectRaw = detectData.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      const detectResult = safeParseJSON(detectRaw);
-      if (detectResult && detectResult.product_type) {
-        const pt = detectResult.product_type;
-        const ptLabel = pt === 'DOMESTIC' ? '🇻🇳 Sản phẩm nội địa' :
-                        pt === 'IMPORTED' ? '📦 Sản phẩm nhập khẩu' :
-                        pt === 'OEM_IMPORT' ? '🏭 Sản phẩm gia công nước ngoài' : '❓ Chưa xác định';
-        productTypeCtx = `\n\n⚡ PRODUCT TYPE DETECTED: ${pt} (${ptLabel})
-Evidence: ${detectResult.evidence || ''}
-Country of manufacture: ${detectResult.country_of_manufacture || 'Unknown'}
-Vietnamese importer info required on label: ${detectResult.has_vn_importer_required ? 'YES' : 'NO'}
+Step 2: Apply the correct compliance rule:
+  - DOMESTIC → DO NOT flag missing importer info as FAIL. Check instead: manufacturer name & address in VN, factory license, product registration number.
+  - IMPORTED or OEM_IMPORT → Vietnamese sub-label MUST include importer/distributor name & address in VN (NĐ 37/2026 Điều 37). Flag FAIL if missing.
+  - UNKNOWN → Apply imported rules as conservative default.
 
-CRITICAL COMPLIANCE RULE BASED ON PRODUCT TYPE:
-${pt === 'DOMESTIC'
-  ? '→ This is a DOMESTIC Vietnamese product. DO NOT flag missing importer/distributor info as a violation — domestic products do NOT require importer info on label. Instead check for: manufacturer name & address in VN, product registration number, factory license.'
-  : pt === 'IMPORTED'
-  ? '→ This is an IMPORTED product. Vietnamese sub-label MUST include: importer/distributor name & address in VN (per NĐ 37/2026 Điều 37). Flag as FAIL if missing.'
-  : pt === 'OEM_IMPORT'
-  ? '→ This is an OEM/contract-manufactured product imported to VN. Treat as imported — Vietnamese importer info is required on label.'
-  : '→ Product type unclear. Apply imported product rules as a conservative default.'}`;
-        document.getElementById('statusText').textContent = `${ptLabel} · Đang phân tích chi tiết...`;
-      }
-    } catch(detectErr) {
-      console.warn('Product type detection failed:', detectErr.message);
-    }
-    // ─────────────────────────────────────────────────────────────────────────
+Add "product_type": "DOMESTIC|IMPORTED|OEM_IMPORT|UNKNOWN" to the root of your JSON response.`;
 
     const combinedPrompt = buildCombinedPrompt(modesArr, uploadedImages, productTypeCtx);
 
@@ -1906,7 +1870,7 @@ ${pt === 'DOMESTIC'
     parts.push({ text: combinedPrompt });
 
     // ── CALL with model fallback + retry ──────────────────────────────────
-    // Strategy: try 2.5-flash first, fallback to 1.5-flash on overload
+    // Strategy: try 2.5-flash first, fallback to 2.0-flash on overload
     const MODEL_SEQUENCE = [
       'gemini-2.5-flash',
       'gemini-2.0-flash'
@@ -1914,6 +1878,7 @@ ${pt === 'DOMESTIC'
     let data = null;
     let lastErr = null;
     let usedModel = '';
+    let isQuotaError = false;
 
     for (let mi = 0; mi < MODEL_SEQUENCE.length; mi++) {
       const model = MODEL_SEQUENCE[mi];
@@ -1940,16 +1905,22 @@ ${pt === 'DOMESTIC'
 
           if (d.error) {
             const errMsg = d.error.message || '';
+            const is429 = res.status === 429 || errMsg.includes('quota') || errMsg.includes('RESOURCE_EXHAUSTED');
             const isOverload = errMsg.includes('high demand') || errMsg.includes('overloaded') ||
-                               errMsg.includes('UNAVAILABLE') || errMsg.includes('503') ||
-                               errMsg.includes('quota') || res.status === 429 || res.status === 503;
+                               errMsg.includes('UNAVAILABLE') || errMsg.includes('503') || res.status === 503;
+            if (is429) {
+              isQuotaError = true;
+              lastErr = errMsg;
+              // Wait longer on quota errors before trying next model
+              document.getElementById('statusText').textContent = '⏳ Đang chờ quota reset...';
+              await new Promise(r => setTimeout(r, attempt === 1 ? 5000 : 10000));
+              continue;
+            }
             if (isOverload) {
               lastErr = errMsg;
-              // Short wait before trying next model or attempt
-              await new Promise(r => setTimeout(r, attempt === 1 ? 2000 : 4000));
-              continue; // try next attempt, then next model
+              await new Promise(r => setTimeout(r, attempt === 1 ? 3000 : 6000));
+              continue;
             }
-            // Non-retryable error (bad key, bad request etc)
             throw new Error(errMsg);
           }
 
@@ -1958,15 +1929,16 @@ ${pt === 'DOMESTIC'
           usedModel = model;
           modelSuccess = true;
           lastErr = null;
+          isQuotaError = false;
           break;
 
         } catch(fetchErr) {
           lastErr = fetchErr.message;
-          if (attempt < 2) await new Promise(r => setTimeout(r, 2000));
+          if (attempt < 2) await new Promise(r => setTimeout(r, 3000));
         }
       }
 
-      if (modelSuccess) break; // stop trying other models
+      if (modelSuccess) break;
     }
 
     if (!data) throw new Error(lastErr || 'Gemini không phản hồi sau 3 model. Vui lòng thử lại sau vài phút.');
@@ -2009,17 +1981,20 @@ ${pt === 'DOMESTIC'
     // Show inline error (no blocking alert)
     const es = document.getElementById('emptyState');
     es.style.display = 'flex';
-    const isOverload = e.message && (e.message.includes('high demand') || e.message.includes('overloaded') || e.message.includes('503') || e.message.includes('unavailable') || e.message.includes('All Gemini'));
+    const isQuota = isQuotaError || (e.message && (e.message.includes('quota') || e.message.includes('RESOURCE_EXHAUSTED') || e.message.includes('429')));
+    const isOverload = !isQuota && e.message && (e.message.includes('high demand') || e.message.includes('overloaded') || e.message.includes('503') || e.message.includes('unavailable') || e.message.includes('All Gemini'));
+    const icon = isQuota ? '🚦' : isOverload ? '⏳' : '⚠️';
+    const color = isQuota ? 'var(--amber)' : isOverload ? 'var(--amber)' : 'var(--red)';
+    const title = isQuota ? 'Vượt quota Gemini / Rate limit' : isOverload ? 'Gemini đang quá tải / High demand' : 'Lỗi phân tích ảnh';
+    const msg = isQuota
+      ? `Free tier Gemini API giới hạn số lần gọi mỗi phút.<br>Vui lòng <strong>đợi 1–2 phút</strong> rồi thử lại.<br><em>Free tier has per-minute request limits. Wait 1–2 minutes then retry.</em><br><br><small style="color:var(--text3)">Tip: Nếu thường xuyên bị lỗi này → dùng <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--gold)">API key khác</a> hoặc thử lại sau.</small>`
+      : isOverload
+      ? 'Gemini API đang bận — vui lòng thử lại sau vài phút.<br><em>Gemini is experiencing high demand. Retry in a few minutes.</em>'
+      : e.message;
     es.innerHTML = `
-      <div class="empty-icon">${isOverload ? '⏳' : '⚠️'}</div>
-      <div class="empty-title" style="color:${isOverload?'var(--amber)':'var(--red)'}">
-        ${isOverload ? 'Gemini đang quá tải / High demand' : 'Lỗi phân tích ảnh'}
-      </div>
-      <div class="empty-sub" style="color:var(--text3);max-width:380px">
-        ${isOverload
-          ? 'Gemini API đang bận — thường chỉ vài phút. Vui lòng thử lại sau ít phút.<br><em>Gemini is experiencing high demand. Please retry in a few minutes.</em>'
-          : e.message}
-      </div>
+      <div class="empty-icon">${icon}</div>
+      <div class="empty-title" style="color:${color}">${title}</div>
+      <div class="empty-sub" style="color:var(--text3);max-width:400px">${msg}</div>
       <div class="empty-examples" style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
         <button class="example-btn" onclick="analyzeLabel()" style="border-color:var(--gold);color:var(--gold)">
           🔄 Thử lại ngay / Retry
