@@ -1135,7 +1135,7 @@ async function callGemini(prompt, systemPrompt='', imageData=null) {
     throw new Error('Vui lòng cấu hình Gemini API key');
   }
   // Try 2.5-flash, fallback to 1.5-flash on overload
-  const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-1.5-flash'];
+  const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash'];
   let lastGeminiErr = '';
   for (let mi = 0; mi < GEMINI_MODELS.length; mi++) {
     const model = GEMINI_MODELS[mi];
@@ -1909,7 +1909,7 @@ ${pt === 'DOMESTIC'
     // Strategy: try 2.5-flash first, fallback to 1.5-flash on overload
     const MODEL_SEQUENCE = [
       'gemini-2.5-flash',
-      'gemini-1.5-flash'
+      'gemini-2.0-flash'
     ];
     let data = null;
     let lastErr = null;
@@ -1970,7 +1970,7 @@ ${pt === 'DOMESTIC'
     }
 
     if (!data) throw new Error(lastErr || 'Gemini không phản hồi sau 3 model. Vui lòng thử lại sau vài phút.');
-    if (usedModel && usedModel !== 'gemini-2.5-flash') {
+    if (usedModel && usedModel !== 'gemini-2.5-flash' && usedModel !== 'gemini-2.0-flash') {
       console.log('Used fallback model:', usedModel);
     }
 
