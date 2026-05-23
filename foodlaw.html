@@ -1834,6 +1834,8 @@ async function analyzeLabel() {
   document.getElementById('emptyState').style.display = 'none';
   document.getElementById('resultsGrid').style.display = 'none';
 
+  let isQuotaError = false; // declared outside try/catch so both blocks can access
+
   try {
     const primaryImg = uploadedImages[0];
     const secondaryImg = uploadedImages[1] || null;
@@ -1878,7 +1880,7 @@ Add "product_type": "DOMESTIC|IMPORTED|OEM_IMPORT|UNKNOWN" to the root of your J
     let data = null;
     let lastErr = null;
     let usedModel = '';
-    let isQuotaError = false;
+    isQuotaError = false; // reset for this attempt
 
     for (let mi = 0; mi < MODEL_SEQUENCE.length; mi++) {
       const model = MODEL_SEQUENCE[mi];
