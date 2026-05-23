@@ -423,7 +423,12 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
           <input type="text" id="searchInput" class="search-input"
             placeholder="Nhập từ khoá... vd: nhãn phụ cá ngừ NK · histamine test report · organic claim điều kiện..."
             onkeydown="if(event.key==='Enter')doSearch()"
-            oninput="updateChips()">
+            oninput="updateChips()"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            name="dgm-law-search">
           <button class="search-btn" onclick="doSearch()">→</button>
         </div>
         <div id="chipContainer" class="keyword-chips"></div>
@@ -2591,6 +2596,11 @@ loadState();
 updateStatus();
 renderHistory();
 renderBookmarks();
+// Clear search input on load (prevent browser autofill showing email)
+setTimeout(() => {
+  const si = document.getElementById('searchInput');
+  if (si) si.value = '';
+}, 100);
 if (!state.apiKey) {
   setTimeout(() => showOnboarding(), 350);
 } else {
