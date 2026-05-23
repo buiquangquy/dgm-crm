@@ -2071,7 +2071,7 @@ function buildCombinedPrompt(modesArr, images, productTypeCtx) {
       '"risks":[{"level":"medium","title_vi":"","title_en":"","desc_vi":"","desc_en":""}],' +
       '"actions":[{"priority":1,"action_vi":"","action_en":"","deadline":""}]}',
 
-    compare: '"compare":{"label1_desc":"","label2_desc":"","differences":[{"field":"","label1_value":"","label2_value":"","change_type":"changed","compliant":true,"recommendation":"","note_vi":"","note_en":""}],"compliance_improvement":true,"overall_assessment_vi":"","overall_assessment_en":"",' +
+    compare: '"compare":{"label1_desc":"Describe label 1 based ONLY on what is visible","label2_desc":"Describe label 2 based ONLY on what is visible","differences":[{"field":"","label1_value":"VERBATIM text from image 1 or NOT VISIBLE ON LABEL","label2_value":"VERBATIM text from image 2 or NOT VISIBLE ON LABEL","change_type":"changed","compliant":true,"recommendation":"","note_vi":"","note_en":""}],"compliance_improvement":true,"overall_assessment_vi":"","overall_assessment_en":"",' +
       '"citations":[{"doc_id":"ND 37/2026/ND-CP","doc_name_vi":"Nghi dinh 37/2026 ve ghi nhan hang hoa","doc_name_en":"Decree 37/2026 on goods labelling","article":"Dieu 36, Khoan 4","article_en":"Article 36, Clause 4","content_vi":"Hang hoa phai ghi nhan theo quy dinh khi dua ra luu thong","content_en":"Goods must be labelled as required before circulation","relevance":"So sanh phien ban nhan va tuan thu","folder":"D"}],' +
       '"risks":[{"level":"medium","title_vi":"","title_en":"","desc_vi":"","desc_en":""}],' +
       '"actions":[{"priority":1,"action_vi":"","action_en":"","deadline":""}]}',
@@ -2096,6 +2096,12 @@ function buildCombinedPrompt(modesArr, images, productTypeCtx) {
   return 'You are a Vietnamese food label compliance expert. You help manufacturers, importers, and distributors ensure their products comply with Vietnamese food safety regulations.\n\n' +
     imgDesc + productTypeCtx + '\n\n' +
     'Analyze the label image(s) for these aspect(s): ' + modeList + '.\n\n' +
+    '🚨 ANTI-HALLUCINATION RULES — MUST FOLLOW:\n' +
+    '- ONLY use information VISUALLY PRESENT in the label image(s). Do NOT infer, assume, or recall from training data.\n' +
+    '- If a field is NOT visible on the label → use exact string "NOT VISIBLE ON LABEL" as the value.\n' +
+    '- NEVER fabricate company names, addresses, registration numbers, certifications, or any text not seen in the image.\n' +
+    '- For comparison: label1_value and label2_value must be VERBATIM text from each respective image, or "NOT VISIBLE ON LABEL".\n' +
+    '- If you are uncertain whether something is present → use "check" status + note "Cần xác minh trực tiếp trên nhãn thật".\n\n' +
     'Vietnamese food law context:\n' +
     '- ND 37/2026/ND-CP: Labelling decree (23/01/2026). Mandatory on Vietnamese sub-label: product name in Vietnamese, ingredients, net weight, country of origin, MFG/EXP dates, importer/distributor in VN, storage instructions, NIP.\n' +
     '- TT 29/2023/TT-BYT: Nutrition Information Panel mandatory for ALL pre-packaged food from 01/01/2026. Required nutrients: Energy (kcal+kJ), Protein, Total Fat, Saturated Fat, Trans Fat, Carbohydrate, Sugars, Sodium.\n' +
@@ -2104,13 +2110,13 @@ function buildCombinedPrompt(modesArr, images, productTypeCtx) {
     '- CAC/GL 23-1997: Codex conditions for nutrition and health claims (No Preservatives, Organic, Halal, Low Fat, Gluten-Free, etc.).\n\n' +
     'CRITICAL INSTRUCTIONS:\n' +
     '1. Return ONLY raw valid JSON — absolutely no markdown backticks, no explanation text, no comments before or after the JSON.\n' +
-    '2. Fill in ALL string fields with actual analysis of what you see in the image(s).\n' +
+    '2. Fill string fields ONLY with text actually visible in the image. Use "NOT VISIBLE ON LABEL" if not found.\n' +
     '3. Use "pass", "fail", or "check" for status fields.\n' +
-    '4. For compliance_checks/mandatory_fields: examine the actual label image carefully.\n' +
+    '4. For compliance_checks/mandatory_fields: examine the actual label image carefully — do not assume.\n' +
     '5. For analysis_vi: write 2-3 sentences in Vietnamese summarizing findings.\n' +
     '6. For analysis_en: write 2-3 sentences in English summarizing findings.\n' +
     '7. IMPORTANT: Keep each note_vi/note_en field under 80 characters. Keep analysis fields under 200 characters. Return COMPLETE valid JSON — never truncate mid-object.\n\n' +
-    'Return this exact JSON structure (fill all empty strings with real content):\n' +
+    'Return this exact JSON structure (fill fields with ONLY what you see in the image):\n' +
     schemaBlock;
 }
 
@@ -2189,7 +2195,10 @@ function buildModeResultHTML(modeId, r) {
           <div style="font-size:11px;color:var(--text3)">/100</div>
           <div style="background:var(--navy3);border-radius:4px;height:6px;margin-top:6px;overflow:hidden"><div style="width:${score}%;height:100%;background:${scoreColor(score)};border-radius:4px"></div></div>
         </div>
-        <div>${checks.map(c => `
+        <div>          <div style="background:rgba(74,159,212,0.06);border:1px solid rgba(74,159,212,0.15);border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:10px;color:var(--blue);line-height:1.4">
+            ℹ️ Kết quả dựa trên phân tích ảnh. Hàng ⚠️ "check" = AI không đọc rõ — cần xác minh trực tiếp trên nhãn thật.
+          </div>
+          ${checks.map(c => `
           <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border2)">
             <span style="font-size:13px">${c.status==='pass'||c.compliant===true?'✅':c.status==='fail'||c.compliant===false?'❌':'⚠️'}</span>
             <div style="flex:1;font-size:11px;color:var(--text2)">${c.item||c.nutrient||c.field||''}</div>
@@ -2256,6 +2265,11 @@ function buildModeResultHTML(modeId, r) {
         <div style="font-size:11px;color:${improvement?'var(--green)':'var(--amber)'}">${improvement?'✅ Cải thiện':'⚠️ Có điểm giảm'}</div>
       </div>
       <div class="card-body">
+        <div style="background:rgba(224,154,56,0.08);border:1px solid rgba(224,154,56,0.25);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:11px;color:var(--amber);line-height:1.5">
+          ⚠️ <strong>Lưu ý quan trọng:</strong> Tất cả thông tin trong bảng này được đọc trực tiếp từ ảnh nhãn bạn upload. 
+          Hàng nào hiện <span style="background:rgba(224,82,82,0.15);color:var(--red);padding:1px 5px;border-radius:3px;font-family:monospace;font-size:10px">NOT VISIBLE</span> = AI không thấy thông tin đó trên ảnh — không có nghĩa là nhãn thiếu, có thể do ảnh không rõ. 
+          <strong>Luôn đối chiếu với nhãn thật trước khi kết luận.</strong>
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
           <div style="background:var(--navy3);border-radius:8px;padding:10px;font-size:11px;color:var(--text3)"><strong style="color:var(--text2)">Nhãn 1 (Gốc)</strong><br>${r.label1_desc||'—'}</div>
           <div style="background:var(--navy3);border-radius:8px;padding:10px;font-size:11px;color:var(--text3)"><strong style="color:var(--text2)">Nhãn 2 (Mới/VN)</strong><br>${r.label2_desc||'—'}</div>
@@ -2270,10 +2284,16 @@ function buildModeResultHTML(modeId, r) {
           </tr></thead>
           <tbody>${(r.differences||[]).map(d => {
             const typeColor = {added:'var(--green)',removed:'var(--red)',changed:'var(--amber)',missing:'var(--red)'}[d.change_type]||'var(--text3)';
-            return `<tr style="border-bottom:1px solid var(--border2)">
+            const v1 = d.label1_value||'—';
+            const v2 = d.label2_value||'—';
+            const notVisible1 = v1.includes('NOT VISIBLE');
+            const notVisible2 = v2.includes('NOT VISIBLE');
+            const v1display = notVisible1 ? `<span style="color:var(--text3);font-style:italic;font-size:9px">không thấy trên ảnh</span>` : v1;
+            const v2display = notVisible2 ? `<span style="color:var(--text3);font-style:italic;font-size:9px">không thấy trên ảnh</span>` : v2;
+            return `<tr style="border-bottom:1px solid var(--border2)${notVisible1||notVisible2?';opacity:0.7':''}">
               <td style="padding:6px;color:var(--text2);font-weight:500">${d.field}</td>
-              <td style="padding:6px;color:var(--text3);font-size:10px">${d.label1_value||'—'}</td>
-              <td style="padding:6px;color:var(--text3);font-size:10px">${d.label2_value||'—'}</td>
+              <td style="padding:6px;color:var(--text3);font-size:10px">${v1display}</td>
+              <td style="padding:6px;color:var(--text3);font-size:10px">${v2display}</td>
               <td style="padding:6px;text-align:center"><span style="padding:2px 6px;border-radius:20px;background:rgba(255,255,255,.05);color:${typeColor};font-size:10px">${d.change_type}</span></td>
               <td style="padding:6px;color:var(--text3);font-size:10px">${d.note_vi||d.recommendation||''}</td>
             </tr>`;}).join('')}
