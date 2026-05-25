@@ -198,6 +198,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
     <div class="nav-item" onclick="nav('mt',this)"><span class="nav-icon">🏬</span><span id="nav-mt">MT — Pass-through</span></div>
     <div class="nav-item" onclick="nav('gt',this)"><span class="nav-icon">🛒</span><span id="nav-gt">GT — Pass-through</span></div>
     <div class="nav-item" onclick="nav('drift',this)"><span class="nav-icon">📡</span><span id="nav-drift">Drift & Biến động</span><span class="nav-badge" id="drift-badge">0</span></div>
+    <div class="nav-item" onclick="nav('pricecomp',this)"><span class="nav-icon">💹</span><span id="nav-pricecomp">So sánh giá</span></div>
   </div>
 
   <div class="nav-section">
@@ -1125,6 +1126,167 @@ input:focus, select:focus, textarea:focus { border-color: var(--navy); }
       <div class="tbl-wrap"><table><thead><tr><th>Tên Agent</th><th>Khu vực GT</th><th>Trạng thái</th></tr></thead><tbody id="tb-agents"><tr><td colspan="3" style="text-align:center;">Đang tải...</td></tr></tbody></table></div>
     </div>
   </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       PAGE: SO SÁNH GIÁ — GT & MT Price Ladder
+  ══════════════════════════════════════════════════════════ -->
+  <div class="page" id="page-pricecomp">
+
+    <!-- Sub-tab bar -->
+    <div style="display:flex;gap:0;margin-bottom:18px;border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;width:fit-content;">
+      <button id="pctab-gt" onclick="switchPCTab('gt')"
+        style="padding:9px 24px;font-size:13px;font-weight:600;border:none;cursor:pointer;background:var(--navy);color:#fff;border-right:1px solid rgba(255,255,255,0.15);">
+        🛒 GT — So sánh giá 3 tầng
+      </button>
+      <button id="pctab-mt" onclick="switchPCTab('mt')"
+        style="padding:9px 24px;font-size:13px;font-weight:600;border:none;cursor:pointer;background:#f3f4f6;color:var(--gray);">
+        🏬 MT — So sánh giá theo chain
+      </button>
+    </div>
+
+    <!-- ── GT TAB ── -->
+    <div id="pc-tab-gt">
+
+      <!-- KPI row -->
+      <div class="kpi-row cols-4" style="margin-bottom:16px;">
+        <div class="kpi blue">
+          <div class="kpi-val" id="pc-gt-kpi-total">—</div>
+          <div class="kpi-label">SKU đang KD GT</div>
+        </div>
+        <div class="kpi green">
+          <div class="kpi-val" id="pc-gt-kpi-survey">—</div>
+          <div class="kpi-label">Có survey NTD thực tế</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-val" id="pc-gt-kpi-committed">—</div>
+          <div class="kpi-label">Chỉ có giá cam kết</div>
+        </div>
+        <div class="kpi orange">
+          <div class="kpi-val" id="pc-gt-kpi-none">—</div>
+          <div class="kpi-label">Chưa có data NTD</div>
+        </div>
+      </div>
+
+      <!-- Legend + Filters -->
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
+        <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--gray);">
+          <span style="width:10px;height:10px;border-radius:50%;background:var(--green);display:inline-block;"></span> Survey thực tế (ưu tiên)
+        </span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--gray);">
+          <span style="width:10px;height:10px;border-radius:50%;background:var(--blue);display:inline-block;"></span> Giá cam kết (chưa survey)
+        </span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--gray);">
+          <span style="width:10px;height:10px;border-radius:50%;background:#d1d5db;display:inline-block;"></span> Chưa có data
+        </span>
+        <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
+          <select id="pc-gt-filter-cat" onchange="renderPCGT()" style="border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;background:white;">
+            <option value="">Tất cả category</option>
+          </select>
+          <select id="pc-gt-filter-origin" onchange="renderPCGT()" style="border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;background:white;">
+            <option value="">Tất cả xuất xứ</option>
+          </select>
+          <select id="pc-gt-filter-event" onchange="renderPCGT()" style="border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;background:white;">
+            <option value="">Tất cả đợt tăng giá</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="tbl-wrap">
+          <table id="pc-gt-table" style="min-width:860px;">
+            <thead>
+              <tr>
+                <th rowspan="2" style="min-width:180px;vertical-align:bottom;padding:10px 12px;">Sản phẩm</th>
+                <th rowspan="2" style="text-align:right;min-width:100px;vertical-align:bottom;padding:10px 12px;">Giá DGM<br><span style="font-weight:400;font-size:10px;opacity:0.75;">(→ Agent)</span></th>
+                <th rowspan="2" style="text-align:right;min-width:100px;vertical-align:bottom;padding:10px 12px;">Giá Agent<br><span style="font-weight:400;font-size:10px;opacity:0.75;">(→ Outlet)</span></th>
+                <th colspan="3" style="text-align:center;border-left:1px solid var(--border);background:rgba(16,185,129,0.06);padding:8px 12px;font-size:11px;letter-spacing:0.3px;">
+                  💰 Giá NTD theo vùng (Outlet → NTD)
+                </th>
+                <th rowspan="2" style="min-width:160px;vertical-align:bottom;padding:10px 12px;">Phân tích</th>
+              </tr>
+              <tr>
+                <th style="text-align:right;min-width:100px;border-left:1px solid var(--border);background:rgba(16,185,129,0.04);">🔵 North</th>
+                <th style="text-align:right;min-width:100px;background:rgba(16,185,129,0.04);">🔴 South</th>
+                <th style="text-align:right;min-width:100px;background:rgba(16,185,129,0.04);">🟡 Central</th>
+              </tr>
+            </thead>
+            <tbody id="pc-gt-tbody">
+              <tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:32px;">Đang tải...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MT TAB ── -->
+    <div id="pc-tab-mt" style="display:none;">
+
+      <!-- KPI row -->
+      <div class="kpi-row cols-4" style="margin-bottom:16px;">
+        <div class="kpi blue">
+          <div class="kpi-val" id="pc-mt-kpi-total">—</div>
+          <div class="kpi-label">SKU đang KD MT</div>
+        </div>
+        <div class="kpi green">
+          <div class="kpi-val" id="pc-mt-kpi-survey">—</div>
+          <div class="kpi-label">Có survey NTD thực tế</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-val" id="pc-mt-kpi-committed">—</div>
+          <div class="kpi-label">Chỉ có giá cam kết</div>
+        </div>
+        <div class="kpi orange">
+          <div class="kpi-val" id="pc-mt-kpi-none">—</div>
+          <div class="kpi-label">Chưa có data NTD</div>
+        </div>
+      </div>
+
+      <!-- Legend + Filters -->
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
+        <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--gray);">
+          <span style="width:10px;height:10px;border-radius:50%;background:var(--green);display:inline-block;"></span> Survey thực tế
+        </span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--gray);">
+          <span style="width:10px;height:10px;border-radius:50%;background:var(--blue);display:inline-block;"></span> Giá cam kết
+        </span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--gray);">
+          <span style="width:10px;height:10px;border-radius:50%;background:#d1d5db;display:inline-block;"></span> Chưa có data
+        </span>
+        <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
+          <select id="pc-mt-filter-cat" onchange="renderPCMT()" style="border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;background:white;">
+            <option value="">Tất cả category</option>
+          </select>
+          <select id="pc-mt-filter-chain" onchange="renderPCMT()" style="border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;background:white;">
+            <option value="">Tất cả chain</option>
+          </select>
+          <select id="pc-mt-filter-event" onchange="renderPCMT()" style="border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;background:white;">
+            <option value="">Tất cả đợt tăng giá</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="tbl-wrap">
+          <table id="pc-mt-table" style="min-width:900px;">
+            <thead id="pc-mt-thead">
+              <tr>
+                <th style="min-width:180px;">Sản phẩm</th>
+                <th style="text-align:right;min-width:100px;">Giá DGM<br><span style="font-weight:400;font-size:10px;opacity:0.75;">(mới nhất)</span></th>
+                <th colspan="99" style="text-align:center;border-left:1px solid var(--border);background:rgba(59,130,246,0.05);font-size:11px;">
+                  💰 Giá NTD theo chain
+                </th>
+              </tr>
+            </thead>
+            <tbody id="pc-mt-tbody">
+              <tr><td colspan="10" style="text-align:center;color:#9ca3af;padding:32px;">Đang tải...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page-pricecomp -->
+
 </main>
 
 <!-- ══ MODALS ══ -->
@@ -1421,8 +1583,10 @@ const LANG = {
     nav_alerts:      'Cảnh báo',
     nav_history:     'Lịch sử Survey',
     nav_masterdata:  'Master Data',
+    nav_pricecomp:   'So sánh giá',
     // Page titles
     title_dashboard: 'Tổng quan — Tác động tăng giá',
+    title_pricecomp: 'So sánh giá — GT & MT Price Ladder',
     title_distribution: 'Distribution — Phủ mã & Hiện diện kênh',
     title_mt:        'MT — Pass-through & Lan truyền giá',
     title_gt:        'GT — Pass-through 3 tầng',
@@ -1553,8 +1717,10 @@ const LANG = {
     nav_alerts:      'Alerts',
     nav_history:     'Survey History',
     nav_masterdata:  'Master Data',
+    nav_pricecomp:   'Price Comparison',
     // Page titles
     title_dashboard: 'Overview — Price Increase Impact',
+    title_pricecomp: 'Price Comparison — GT & MT Price Ladder',
     title_distribution: 'Distribution — SKU Coverage & Channel Presence',
     title_mt:        'MT — Pass-through & Price Propagation',
     title_gt:        'GT — 3-tier Pass-through',
@@ -1706,6 +1872,7 @@ function applyLang() {
     'nav-alerts':     'nav_alerts',
     'nav-history':    'nav_history',
     'nav-masterdata': 'nav_masterdata',
+    'nav-pricecomp':  'nav_pricecomp',
   };
   Object.entries(navMap).forEach(([id, key]) => {
     const el2 = document.getElementById(id);
@@ -4936,11 +5103,13 @@ function nav(id, navEl) {
     dashboard:'title_dashboard', distribution:'title_distribution',
     mt:'title_mt', gt:'title_gt',
     drift:'title_drift', events:'title_events', alerts:'title_alerts',
-    history:'title_history', masterdata:'title_masterdata'
+    history:'title_history', masterdata:'title_masterdata',
+    pricecomp:'title_pricecomp'
   };
   el('page-title').textContent = tr(titleMap[id]||'title_dashboard');
   if(id==='masterdata') showMDTab('products', document.querySelector('#page-masterdata .ftab'));
   if(id==='distribution') renderDistribution();
+  if(id==='pricecomp') renderPriceComp();
   // Apply lang để update table headers, card titles khi switch page
   applyLang();
 }
@@ -5235,6 +5404,407 @@ function showToast(msg, type='') {
   te.className='toast show'+(type?' '+type:'');
   clearTimeout(_toastTimer);
   _toastTimer=setTimeout(()=>te.className='toast',3500);
+}
+
+// ════════════════════════════════════════
+// SO SÁNH GIÁ — Price Comparison Page
+// ════════════════════════════════════════
+
+let _pcTab = 'gt';
+
+function switchPCTab(tab) {
+  _pcTab = tab;
+  el('pc-tab-gt').style.display  = tab === 'gt' ? 'block' : 'none';
+  el('pc-tab-mt').style.display  = tab === 'mt' ? 'block' : 'none';
+  el('pctab-gt').style.background = tab === 'gt' ? 'var(--navy)' : '#f3f4f6';
+  el('pctab-gt').style.color      = tab === 'gt' ? '#fff'        : 'var(--gray)';
+  el('pctab-mt').style.background = tab === 'mt' ? 'var(--navy)' : '#f3f4f6';
+  el('pctab-mt').style.color      = tab === 'mt' ? '#fff'        : 'var(--gray)';
+  if (tab === 'gt') renderPCGT();
+  else renderPCMT();
+}
+
+function renderPriceComp() {
+  if (_pcTab === 'gt') renderPCGT();
+  else renderPCMT();
+}
+
+// ─── helpers ───
+function pcFmt(n) {
+  const v = parseFloat(n);
+  if (isNaN(v) || v === 0) return null;
+  return new Intl.NumberFormat('vi').format(Math.round(v)) + 'đ';
+}
+
+function pcNtdCell(valStr, type, dgmVal) {
+  const v = pcFmt(valStr);
+  if (!v) return '<td style="text-align:right;padding:8px 12px;"><span style="color:#d1d5db;font-size:11px;">Chưa có data</span></td>';
+  const isSurvey = type === 'survey';
+  const dotColor = isSurvey ? 'var(--green)' : 'var(--blue)';
+  const badge    = isSurvey
+    ? '<span style="display:inline-block;padding:1px 6px;border-radius:8px;font-size:10px;background:rgba(16,185,129,0.12);color:#059669;">survey</span>'
+    : '<span style="display:inline-block;padding:1px 6px;border-radius:8px;font-size:10px;background:rgba(59,130,246,0.10);color:#1d4ed8;">cam kết</span>';
+  // margin calc
+  let marginHtml = '';
+  const dgm = parseFloat(dgmVal);
+  const ntd = parseFloat(valStr);
+  if (!isNaN(dgm) && dgm > 0 && !isNaN(ntd) && ntd > 0) {
+    const margin = Math.round((ntd / dgm - 1) * 100);
+    const mColor = margin > 40 ? 'var(--red)' : margin > 20 ? 'var(--orange)' : 'var(--green)';
+    marginHtml = `<div style="font-size:10px;color:${mColor};margin-top:1px;">Margin ~${margin}%</div>`;
+  }
+  return `<td style="text-align:right;padding:8px 12px;white-space:nowrap;">
+    <div style="font-size:12px;font-weight:600;color:var(--navy);">${v}</div>
+    <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:2px;">
+      <span style="width:6px;height:6px;border-radius:50%;background:${dotColor};display:inline-block;flex-shrink:0;"></span>
+      ${badge}
+    </div>
+    ${marginHtml}
+  </td>`;
+}
+
+function pcAnalysisNote(regions, dgmVal) {
+  const vals = regions.filter(r => r && parseFloat(r.v) > 0).map(r => parseFloat(r.v));
+  if (!vals.length) return '<td style="padding:8px 12px;font-size:11px;color:#9ca3af;">Chưa đủ data</td>';
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const dgm = parseFloat(dgmVal);
+  const notes = [];
+  if (max - min > 2000 && min > 0) {
+    notes.push(`<span style="color:var(--orange);">⚠ Chênh lệch giá vùng: ${pcFmt(max - min)}</span>`);
+  }
+  if (!isNaN(dgm) && dgm > 0 && min > 0) {
+    const margin = Math.round((min / dgm - 1) * 100);
+    if (margin > 50) notes.push(`<span style="color:var(--red);">Margin NTD/DGM cao: ~${margin}%</span>`);
+  }
+  const noDataCount = regions.filter(r => !r || !parseFloat(r.v)).length;
+  if (noDataCount > 0) notes.push(`<span style="color:var(--gray);">${noDataCount} vùng chưa có data</span>`);
+  if (!notes.length) notes.push('<span style="color:var(--green);">✓ Giá đồng đều</span>');
+  return `<td style="padding:8px 12px;font-size:11px;line-height:1.7;">${notes.join('<br>')}</td>`;
+}
+
+// ─── GT RENDER ───
+function renderPCGT() {
+  const products  = D.master?.products  || [];
+  const gtTracker = D.gtTracker || [];
+  const events    = D.events    || [];
+
+  const catFilter    = (el('pc-gt-filter-cat')?.value    || '').trim();
+  const originFilter = (el('pc-gt-filter-origin')?.value || '').trim();
+  const evFilter     = (el('pc-gt-filter-event')?.value  || '').trim();
+
+  // Populate event filter
+  const evSel = el('pc-gt-filter-event');
+  if (evSel && evSel.options.length <= 1) {
+    const gtEvIds = [...new Set(gtTracker.map(r => r.ma_tang_gia).filter(Boolean))];
+    gtEvIds.forEach(id => {
+      const ev = events.find(e => e.ma_tang_gia === id);
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = ev ? `${id} — ${ev.ten_su_kien||''}` : id;
+      evSel.appendChild(opt);
+    });
+  }
+
+  // Build map: ma_san_pham → { region → { gia_dgm, gia_agent, ntd_v, ntd_type } }
+  // Use most recent tracker row per SKU×region (highest gia_dgm_agent_sau)
+  const skuRegionMap = {};  // skuId → { 'GT North': {...}, 'GT South': {...}, 'GT Central': {...} }
+  const skuDGMMap    = {};  // skuId → latest gia_dgm_agent_sau
+  const skuAgentMap  = {};  // skuId → latest gia_agent_outlet_sau
+
+  const REGIONS = ['GT North', 'GT South', 'GT Central'];
+
+  let trackerRows = evFilter
+    ? gtTracker.filter(r => r.ma_tang_gia === evFilter)
+    : gtTracker;
+
+  trackerRows.forEach(r => {
+    const spId = r.ma_san_pham || r.ten_san_pham;
+    if (!spId) return;
+    const region = r.gt_region;
+    if (!REGIONS.includes(region)) return;
+
+    if (!skuRegionMap[spId]) {
+      skuRegionMap[spId] = {};
+      REGIONS.forEach(reg => skuRegionMap[spId][reg] = null);
+    }
+
+    // DGM price (latest = highest sau)
+    const dgmNew = parseFloat(r.gia_dgm_agent_sau);
+    if (!isNaN(dgmNew) && dgmNew > (parseFloat(skuDGMMap[spId]) || 0)) {
+      skuDGMMap[spId]   = dgmNew;
+    }
+    // Agent price
+    const agNew = parseFloat(r.gia_agent_outlet_sau);
+    if (!isNaN(agNew) && agNew > (parseFloat(skuAgentMap[spId]) || 0)) {
+      skuAgentMap[spId] = agNew;
+    }
+
+    // NTD: prefer survey (gia_ntd_moi_nhat), fallback committed (gia_ntd_cam_ket_sau)
+    const surveyV = parseFloat(r.gia_ntd_moi_nhat);
+    const commitV = parseFloat(r.gia_ntd_cam_ket_sau);
+    const existing = skuRegionMap[spId][region];
+    let ntdV = null, ntdType = 'none';
+    if (!isNaN(surveyV) && surveyV > 0) { ntdV = surveyV; ntdType = 'survey'; }
+    else if (!isNaN(commitV) && commitV > 0) { ntdV = commitV; ntdType = 'committed'; }
+
+    // Keep survey over committed; keep higher committed if both committed
+    if (!existing || ntdType === 'survey' || (existing.type !== 'survey' && ntdV > (existing.v || 0))) {
+      skuRegionMap[spId][region] = { v: ntdV, type: ntdType };
+    }
+  });
+
+  // Merge with master product data for category / origin
+  const skuIds = Object.keys(skuRegionMap);
+
+  // Populate category filter
+  const catSel = el('pc-gt-filter-cat');
+  const originSel = el('pc-gt-filter-origin');
+  if (catSel && catSel.options.length <= 1) {
+    const cats = [...new Set(products.map(p => p.nhom_san_pham || p.group || '').filter(Boolean))].sort();
+    cats.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; catSel.appendChild(o); });
+  }
+  if (originSel && originSel.options.length <= 1) {
+    const origins = [...new Set(products.map(p => p.xuat_xu || p.origin || '').filter(Boolean))].sort();
+    origins.forEach(o2 => { const o = document.createElement('option'); o.value = o2; o.textContent = o2; originSel.appendChild(o); });
+  }
+
+  // Build display rows enriched with product info
+  const rows = skuIds.map(id => {
+    const prod = products.find(p => (p.ma_san_pham || p.id) === id || (p.ten_san_pham || p.name) === id) || {};
+    return {
+      id,
+      name    : prod.ten_san_pham || prod.name || id,
+      cat     : prod.nhom_san_pham || prod.group || '—',
+      origin  : prod.xuat_xu || prod.origin || '—',
+      dgm     : skuDGMMap[id] || 0,
+      agent   : skuAgentMap[id] || 0,
+      regions : skuRegionMap[id],
+    };
+  }).filter(row => {
+    if (catFilter && row.cat !== catFilter) return false;
+    if (originFilter && row.origin !== originFilter) return false;
+    return true;
+  });
+
+  // KPI
+  let kTotal = rows.length, kSurvey = 0, kCommit = 0, kNone = 0;
+  rows.forEach(row => {
+    const allRegions = Object.values(row.regions);
+    const hasSurvey = allRegions.some(r => r && r.type === 'survey');
+    const hasAny    = allRegions.some(r => r && r.v > 0);
+    if (hasSurvey) kSurvey++;
+    else if (hasAny) kCommit++;
+    else kNone++;
+  });
+  el('pc-gt-kpi-total').textContent     = kTotal;
+  el('pc-gt-kpi-survey').textContent    = kSurvey;
+  el('pc-gt-kpi-committed').textContent = kCommit;
+  el('pc-gt-kpi-none').textContent      = kNone;
+
+  if (!rows.length) {
+    el('pc-gt-tbody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:32px;">Chưa có dữ liệu GT tracker — tạo tracker sau khi nhập Price Events</td></tr>';
+    return;
+  }
+
+  // Group by category → origin
+  const grouped = {};
+  rows.forEach(row => {
+    const key = row.cat + '|||' + row.origin;
+    if (!grouped[key]) grouped[key] = { cat: row.cat, origin: row.origin, rows: [] };
+    grouped[key].rows.push(row);
+  });
+
+  const na = '<td style="text-align:right;padding:8px 12px;"><span style="color:#d1d5db;font-size:11px;">—</span></td>';
+  let html = '';
+
+  Object.values(grouped).forEach(grp => {
+    // Category header row
+    html += `<tr style="background:#f8f9fa;">
+      <td colspan="7" style="padding:8px 12px;">
+        <strong style="color:var(--navy);font-size:12px;">${grp.cat}</strong>
+        <span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:rgba(245,158,11,0.12);color:#92400e;margin-left:8px;">${grp.rows.length} SKU</span>
+        <div style="font-size:10px;color:var(--gray);margin-top:2px;font-style:italic;">Xuất xứ: ${grp.origin}</div>
+      </td>
+    </tr>`;
+
+    grp.rows.forEach(row => {
+      const dgmFmt   = pcFmt(row.dgm)   || '<span style="color:#d1d5db;">—</span>';
+      const agentFmt = pcFmt(row.agent) || '<span style="color:#d1d5db;">—</span>';
+      const rNorth   = row.regions['GT North'];
+      const rSouth   = row.regions['GT South'];
+      const rCentral = row.regions['GT Central'];
+      html += `<tr style="transition:background 0.1s;" onmouseover="this.style.background='#fafbff'" onmouseout="this.style.background=''">
+        <td style="padding:8px 12px;font-size:12px;font-weight:600;color:var(--navy);">${row.name}</td>
+        <td style="text-align:right;padding:8px 12px;font-size:12px;font-weight:600;color:var(--navy);">${dgmFmt}</td>
+        <td style="text-align:right;padding:8px 12px;font-size:12px;color:var(--gray);">${agentFmt}</td>
+        ${pcNtdCell(rNorth?.v, rNorth?.type, row.dgm)}
+        ${pcNtdCell(rSouth?.v, rSouth?.type, row.dgm)}
+        ${pcNtdCell(rCentral?.v, rCentral?.type, row.dgm)}
+        ${pcAnalysisNote([rNorth, rSouth, rCentral], row.dgm)}
+      </tr>`;
+    });
+  });
+
+  el('pc-gt-tbody').innerHTML = html;
+}
+
+// ─── MT RENDER ───
+function renderPCMT() {
+  const products  = D.master?.products  || [];
+  const mtTracker = D.mtTracker || [];
+  const events    = D.events    || [];
+
+  const catFilter   = (el('pc-mt-filter-cat')?.value   || '').trim();
+  const chainFilter = (el('pc-mt-filter-chain')?.value || '').trim();
+  const evFilter    = (el('pc-mt-filter-event')?.value || '').trim();
+
+  let trackerRows = evFilter
+    ? mtTracker.filter(r => r.ma_tang_gia === evFilter)
+    : mtTracker;
+
+  // Populate event filter
+  const evSel = el('pc-mt-filter-event');
+  if (evSel && evSel.options.length <= 1) {
+    const mtEvIds = [...new Set(mtTracker.map(r => r.ma_tang_gia).filter(Boolean))];
+    mtEvIds.forEach(id => {
+      const ev = events.find(e => e.ma_tang_gia === id);
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = ev ? `${id} — ${ev.ten_su_kien||''}` : id;
+      evSel.appendChild(opt);
+    });
+  }
+
+  // Collect all unique chains
+  const allChains = [...new Set(trackerRows.map(r => r.ten_khach_hang).filter(Boolean))].sort();
+
+  // Populate chain filter
+  const chainSel = el('pc-mt-filter-chain');
+  if (chainSel && chainSel.options.length <= 1) {
+    allChains.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; chainSel.appendChild(o); });
+  }
+
+  const displayChains = chainFilter ? [chainFilter] : allChains;
+
+  // Build map: ma_san_pham → { chain → { dgm, ntd_v, ntd_type } }
+  const skuMap = {};  // spId → { dgm, chains: { chainName: { v, type } } }
+
+  trackerRows.forEach(r => {
+    const spId = r.ma_san_pham || r.ten_san_pham;
+    if (!spId) return;
+    const chain = r.ten_khach_hang;
+    if (!chain) return;
+    if (chainFilter && chain !== chainFilter) return;
+
+    if (!skuMap[spId]) skuMap[spId] = { name: r.ten_san_pham || spId, dgm: 0, chains: {} };
+
+    // DGM price
+    const dgmNew = parseFloat(r.gia_dgm_sau || r.gia_dgm_moi);
+    if (!isNaN(dgmNew) && dgmNew > skuMap[spId].dgm) skuMap[spId].dgm = dgmNew;
+
+    // NTD: prefer survey, fallback committed
+    const surveyV = parseFloat(r.gia_ntd_moi_nhat);
+    const commitV = parseFloat(r.gia_ntd_cam_ket_sau);
+    let ntdV = null, ntdType = 'none';
+    if (!isNaN(surveyV) && surveyV > 0) { ntdV = surveyV; ntdType = 'survey'; }
+    else if (!isNaN(commitV) && commitV > 0) { ntdV = commitV; ntdType = 'committed'; }
+
+    const existing = skuMap[spId].chains[chain];
+    if (!existing || ntdType === 'survey' || (existing.type !== 'survey' && ntdV > (existing.v || 0))) {
+      skuMap[spId].chains[chain] = { v: ntdV, type: ntdType };
+    }
+  });
+
+  // Populate category filter
+  const catSel = el('pc-mt-filter-cat');
+  if (catSel && catSel.options.length <= 1) {
+    const cats = [...new Set(products.map(p => p.nhom_san_pham || p.group || '').filter(Boolean))].sort();
+    cats.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; catSel.appendChild(o); });
+  }
+
+  // Enrich with product data
+  let rows = Object.entries(skuMap).map(([id, data]) => {
+    const prod = products.find(p => (p.ma_san_pham || p.id) === id || (p.ten_san_pham || p.name) === id) || {};
+    return {
+      id,
+      name   : data.name || prod.ten_san_pham || prod.name || id,
+      cat    : prod.nhom_san_pham || prod.group || '—',
+      origin : prod.xuat_xu || prod.origin || '—',
+      dgm    : data.dgm,
+      chains : data.chains,
+    };
+  }).filter(row => {
+    if (catFilter && row.cat !== catFilter) return false;
+    return true;
+  });
+
+  // KPI
+  let kTotal = rows.length, kSurvey = 0, kCommit = 0, kNone = 0;
+  rows.forEach(row => {
+    const allC = Object.values(row.chains);
+    const hasSurvey = allC.some(c => c && c.type === 'survey');
+    const hasAny    = allC.some(c => c && c.v > 0);
+    if (hasSurvey) kSurvey++;
+    else if (hasAny) kCommit++;
+    else kNone++;
+  });
+  el('pc-mt-kpi-total').textContent     = kTotal;
+  el('pc-mt-kpi-survey').textContent    = kSurvey;
+  el('pc-mt-kpi-committed').textContent = kCommit;
+  el('pc-mt-kpi-none').textContent      = kNone;
+
+  // Rebuild table header dynamically based on chains
+  const thead = el('pc-mt-thead');
+  const colSpan = displayChains.length + 3; // name + dgm + chains + analysis
+  thead.innerHTML = `<tr>
+    <th rowspan="2" style="min-width:180px;vertical-align:bottom;padding:10px 12px;">Sản phẩm</th>
+    <th rowspan="2" style="text-align:right;min-width:100px;vertical-align:bottom;padding:10px 12px;">Giá DGM<br><span style="font-weight:400;font-size:10px;opacity:0.75;">(mới nhất)</span></th>
+    <th colspan="${displayChains.length}" style="text-align:center;border-left:1px solid var(--border);background:rgba(59,130,246,0.05);padding:8px 12px;font-size:11px;letter-spacing:0.3px;">💰 Giá NTD theo chain</th>
+    <th rowspan="2" style="min-width:160px;vertical-align:bottom;padding:10px 12px;">Phân tích</th>
+  </tr><tr>
+    ${displayChains.map((c,i) => `<th style="text-align:right;min-width:90px;${i===0?'border-left:1px solid var(--border);':''} background:rgba(59,130,246,0.03);">${c}</th>`).join('')}
+  </tr>`;
+
+  if (!rows.length) {
+    el('pc-mt-tbody').innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center;color:#9ca3af;padding:32px;">Chưa có dữ liệu MT tracker — tạo tracker sau khi nhập Price Events</td></tr>`;
+    return;
+  }
+
+  // Group by category → origin
+  const grouped = {};
+  rows.forEach(row => {
+    const key = row.cat + '|||' + row.origin;
+    if (!grouped[key]) grouped[key] = { cat: row.cat, origin: row.origin, rows: [] };
+    grouped[key].rows.push(row);
+  });
+
+  let html = '';
+  Object.values(grouped).forEach(grp => {
+    html += `<tr style="background:#f8f9fa;">
+      <td colspan="${colSpan}" style="padding:8px 12px;">
+        <strong style="color:var(--navy);font-size:12px;">${grp.cat}</strong>
+        <span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:rgba(245,158,11,0.12);color:#92400e;margin-left:8px;">${grp.rows.length} SKU</span>
+        <div style="font-size:10px;color:var(--gray);margin-top:2px;font-style:italic;">Xuất xứ: ${grp.origin}</div>
+      </td>
+    </tr>`;
+
+    grp.rows.forEach(row => {
+      const dgmFmt = pcFmt(row.dgm) || '<span style="color:#d1d5db;">—</span>';
+      const chainCells = displayChains.map((c, i) => {
+        const d = row.chains[c];
+        return pcNtdCell(d?.v, d?.type, row.dgm).replace('<td ', `<td ${i===0?'style="border-left:1px solid var(--border);text-align:right;padding:8px 12px;white-space:nowrap;"':'style="text-align:right;padding:8px 12px;white-space:nowrap;"'} `).replace('<td style="text-align:right;padding:8px 12px;white-space:nowrap;">', i===0 ? '<td style="border-left:1px solid var(--border);text-align:right;padding:8px 12px;white-space:nowrap;">' : '<td style="text-align:right;padding:8px 12px;white-space:nowrap;">');
+      }).join('');
+      const chainVals = displayChains.map(c => row.chains[c]);
+      html += `<tr onmouseover="this.style.background='#fafbff'" onmouseout="this.style.background=''">
+        <td style="padding:8px 12px;font-size:12px;font-weight:600;color:var(--navy);">${row.name}</td>
+        <td style="text-align:right;padding:8px 12px;font-size:12px;font-weight:600;color:var(--navy);">${dgmFmt}</td>
+        ${chainCells}
+        ${pcAnalysisNote(chainVals, row.dgm)}
+      </tr>`;
+    });
+  });
+
+  el('pc-mt-tbody').innerHTML = html;
 }
 </script>
 </body>
