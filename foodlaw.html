@@ -1565,7 +1565,7 @@ function renderResults(result, intent) {
     if (pills.length > 1) {
       pillsHtml = '<div class="article-pills">' +
         pills.map(function(p) {
-          const pSafe = p.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+          const pSafe = p.replace(/’/g, '').replace(/["']/g, ' ');
           return '<span class="article-pill" onclick="event.stopPropagation();openArticleDetail(' + i + ',\'' + pSafe + '\',this)">' + p + '</span>';
         }).join('') + '</div>';
     }
@@ -1807,11 +1807,8 @@ function openArticleDetail(citIndex, articleStr, pillEl) {
     if (found && found.found_article) {
       // Format: highlight the article heading
       const excerptHtml = found.excerpt
-        .replace(/
-
-+/g, '</p><p>')
-        .replace(/
-/g, '<br>');
+        .replace(/\n\n+/g, '</p><p>')
+        .replace(/\n/g, '<br>');
       bodyEl.innerHTML = `
         <div style="margin-bottom:10px;padding:6px 10px;background:rgba(201,168,76,0.06);border-radius:6px;font-size:10px;color:var(--text3)">
           📄 Trích từ: <strong style="color:var(--text2)">${found.file.name.replace(/\.[^.]+$/,'')}</strong>
@@ -1832,8 +1829,7 @@ function openArticleDetail(citIndex, articleStr, pillEl) {
         </div>
         <div class="csr-not-found">⚠️ Không tìm thấy chính xác "${articleStr}" trong nội dung đã index. Hiển thị phần đầu tài liệu:</div>
         <div style="border-left:2px solid rgba(201,168,76,0.3);padding-left:12px;color:var(--text3)">
-          ${found.excerpt.replace(/
-/g,'<br>')}
+          ${found.excerpt.replace(/\n/g,'<br>')}
         </div>
         <a href="${found.file.url}" target="_blank" style="display:inline-block;margin-top:10px;font-size:10px;color:var(--gold)">📎 Mở file gốc để tìm ${articleStr}</a>`;
     } else {
