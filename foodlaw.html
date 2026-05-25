@@ -136,6 +136,24 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
 .card-title{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);font-weight:500}
 .card-body{padding:16px}
 .citation-item{padding:10px 12px;border-radius:var(--radius);border:1px solid var(--border2);margin-bottom:8px;cursor:pointer;transition:all .2s}
+
+/* Article pills */
+.article-pills{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px}
+.article-pill{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;font-family:'IBM Plex Mono',monospace;background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.3);color:var(--gold);cursor:pointer;transition:all .18s;letter-spacing:.3px}
+.article-pill:hover{background:rgba(201,168,76,0.25);border-color:var(--gold)}
+.article-pill.active{background:var(--gold);color:var(--navy);border-color:var(--gold)}
+
+/* Split panel for citation detail */
+.citation-split-wrap{display:flex;gap:12px;align-items:flex-start;transition:all .3s ease}
+.citation-split-left{flex:1;transition:transform .3s ease,flex .3s ease;min-width:0}
+.citation-split-left.shifted{transform:translateX(-8px);flex:0 0 calc(50% - 6px)}
+.citation-split-right{flex:0 0 calc(50% - 6px);background:var(--navy3);border:1px solid rgba(201,168,76,0.2);border-radius:var(--radius);overflow:hidden;animation:slideInRight .25s ease;min-width:0}
+.citation-split-right .csr-header{padding:10px 14px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;gap:8px;background:rgba(201,168,76,0.05)}
+.citation-split-right .csr-body{padding:14px;max-height:420px;overflow-y:auto;font-size:11px;line-height:1.8;color:var(--text2)}
+.citation-split-right .csr-body p{margin-bottom:10px}
+.csr-doc-tag{font-size:9px;font-family:'IBM Plex Mono',monospace;color:var(--gold);background:rgba(201,168,76,0.1);padding:2px 7px;border-radius:10px}
+.csr-not-found{color:var(--text3);font-style:italic;font-size:11px;padding:8px 0}
+@keyframes slideInRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
 .citation-item:hover{background:rgba(201,168,76,.05);border-color:rgba(201,168,76,.3)}
 .citation-doc{font-size:11px;color:var(--gold);font-family:'IBM Plex Mono',monospace;margin-bottom:4px}
 .citation-clause{font-size:13px;color:var(--text);line-height:1.4;margin-bottom:4px}
@@ -759,7 +777,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
 // ══════════════════════════════════════════════════════════
 let state = {
   apiKey: '', folderIds: {A:'',B:'',C:'',D:'',E:'',F:''},
-  gasWebAppUrl: '',  // Google Apps Script Web App URL
+  gasWebAppUrl: 'https://script.google.com/macros/s/AKfycbzrSEwLjIzgBcZugZYkDjNceyr4eu4fTGeMcwnJ6Z3VMmsMyH5LAqw5dzNbaGb1Lynp/exec',  // Google Apps Script Web App URL
   history: [], bookmarks: [], queryCount: 0,
   currentIntent: '', currentQuery: '', currentFolder: 'all',
   activeTab: 'text', currentMode: 'keyword', selectedSKU: null,
@@ -802,7 +820,7 @@ function loadState() {
       const s = JSON.parse(saved);
       state.apiKey = s.apiKey || '';
       state.folderIds = s.folderIds || {A:'',B:'',C:'',D:'',E:'',F:''};
-      state.gasWebAppUrl = s.gasWebAppUrl || '';
+      state.gasWebAppUrl = s.gasWebAppUrl || 'https://script.google.com/macros/s/AKfycbzrSEwLjIzgBcZugZYkDjNceyr4eu4fTGeMcwnJ6Z3VMmsMyH5LAqw5dzNbaGb1Lynp/exec';
       state.history = s.history || [];
       state.bookmarks = s.bookmarks || [];
       state.queryCount = s.queryCount || 0;
@@ -1534,23 +1552,48 @@ function renderResults(result, intent) {
   }
 
   // Card 1: Citations
+  // Build citation card with split panel support
   const citCard = document.createElement('div');
   citCard.className = 'result-card fade-in';
+  citCard.id = 'citationMainCard';
   citCard.innerHTML = `
     <div class="card-header">
       <div class="card-title">📑 Trích dẫn điều khoản / Legal Citations (${(result.citations||[]).length})</div>
       <button class="export-btn" style="font-size:10px;padding:3px 8px" onclick="bookmarkResult()">🔖</button>
     </div>
-    <div class="card-body">
-      ${(result.citations||[]).map((c,i) => `
-        <div class="citation-item" onclick="openCitation(${i})" data-index="${i}">
-          <div class="citation-doc">${c.folder ? `[${c.folder}]` : ''} ${c.doc_id}${c.source_file ? ` <span style="color:var(--green);font-size:9px">· 📄 ${c.source_file}</span>` : ''}</div>
-          <div class="citation-clause">${c.article} — ${c.doc_name_vi}</div>
-          <div class="citation-clause-en">${c.article_en} — ${c.doc_name_en}</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:4px;line-height:1.4">${c.content_vi ? c.content_vi.substring(0,150)+'...' : ''}</div>
-          <div class="citation-ref">→ Click để xem nguyên văn / Click to view full text</div>
+    <div class="card-body" id="citationCardBody">
+      <div class="citation-split-wrap" id="citationSplitWrap">
+        <div class="citation-split-left" id="citationSplitLeft">
+          ${(result.citations||[]).map((c,i) => {
+            // Parse article pills from the article field
+            // e.g. "Điều 37, Khoản 4" or "Mục 2.1, 3, 4, 5"
+            const pills = parseArticlePills(c.article || '');
+            const pillsHtml = pills.length > 1
+              ? `<div class="article-pills">${pills.map(p => `<span class="article-pill" onclick="event.stopPropagation();openArticleDetail(${i},'${p.replace(/'/g,"\\'")}',this)">${p}</span>`).join('')}</div>`
+              : '';
+            return `
+            <div class="citation-item" id="cit-item-${i}" onclick="openCitation(${i})" data-index="${i}">
+              <div class="citation-doc">${c.folder ? `[${c.folder}]` : ''} ${c.doc_id}${c.source_file ? ` <span style="color:var(--green);font-size:9px">· 📄 ${c.source_file}</span>` : ''}</div>
+              <div class="citation-clause">${c.article} — ${c.doc_name_vi}</div>
+              <div class="citation-clause-en">${c.article_en} — ${c.doc_name_en}</div>
+              ${pillsHtml}
+              <div style="font-size:11px;color:var(--text2);margin-top:4px;line-height:1.4">${c.content_vi ? c.content_vi.substring(0,150)+'...' : ''}</div>
+              <div class="citation-ref">📖 Click pill mục để xem trích dẫn · Click để xem tổng quan</div>
+            </div>`;
+          }).join('')}
         </div>
-      `).join('')}
+        <!-- Citation detail panel (slide in from right) -->
+        <div class="citation-split-right" id="citationDetailPanel" style="display:none">
+          <div class="csr-header">
+            <div>
+              <span class="csr-doc-tag" id="csr-doc-tag">—</span>
+              <span style="font-size:11px;color:var(--text2);margin-left:8px" id="csr-article-label">—</span>
+            </div>
+            <button onclick="closeArticleDetail()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0 4px">✕</button>
+          </div>
+          <div class="csr-body" id="csr-body">—</div>
+        </div>
+      </div>
     </div>`;
   grid.appendChild(citCard);
 
@@ -1644,6 +1687,163 @@ function toggleAnalysisLang(lang) {
 // ══════════════════════════════════════════════════════════
 // CITATION POPUP
 // ══════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════
+// ARTICLE PILLS — parse + Drive DB lookup
+// ══════════════════════════════════════════════════════════
+
+// Parse article string into pill array
+// "Điều 37, Khoản 4, 5" → ["Điều 37", "Khoản 4", "Khoản 5"]
+// "Mục 2.1, 3, 4, 5" → ["Mục 2.1", "Mục 3", "Mục 4", "Mục 5"]
+function parseArticlePills(articleStr) {
+  if (!articleStr) return [];
+  // Split by comma/semicolon
+  const raw = articleStr.split(/[,;]/).map(s => s.trim()).filter(Boolean);
+  if (raw.length <= 1) return raw; // single article, no pills needed
+  return raw;
+}
+
+// Search Drive index for content matching doc + article
+function findArticleInDrive(docId, articleStr) {
+  if (!driveIndex || !driveIndex.files) return null;
+
+  // Find matching file by doc_id keywords
+  const docKeywords = docId.toLowerCase()
+    .replace(/[\/\-\.]/g, ' ')
+    .split(/\s+/)
+    .filter(k => k.length > 1);
+
+  const candidates = driveIndex.files.filter(f => {
+    if (!f.extract_ok || !f.summary) return false;
+    const nameLower = f.name.toLowerCase();
+    return docKeywords.some(k => nameLower.includes(k));
+  });
+
+  if (candidates.length === 0) return null;
+
+  // Score by doc_id match
+  candidates.sort((a, b) => {
+    const scoreA = docKeywords.filter(k => a.name.toLowerCase().includes(k)).length;
+    const scoreB = docKeywords.filter(k => b.name.toLowerCase().includes(k)).length;
+    return scoreB - scoreA;
+  });
+
+  const bestFile = candidates[0];
+  const summary = bestFile.summary || '';
+
+  // Now find the article section in the summary
+  // Try to extract text around the article mention
+  const artKeywords = articleStr.toLowerCase()
+    .replace(/điều|khoản|mục|tiết|phụ lục/gi, '')
+    .trim()
+    .split(/[\s,]+/)
+    .filter(k => k.length > 0);
+
+  // Find position of article in text
+  let excerpt = '';
+  const summaryLower = summary.toLowerCase();
+
+  // Try to find the article heading and extract ~800 chars after it
+  for (const kw of [articleStr, ...artKeywords]) {
+    const idx = summaryLower.indexOf(kw.toLowerCase());
+    if (idx !== -1) {
+      const start = Math.max(0, idx - 50);
+      const end = Math.min(summary.length, idx + 1200);
+      excerpt = summary.slice(start, end);
+      break;
+    }
+  }
+
+  // Fallback: first 800 chars of summary
+  if (!excerpt) excerpt = summary.slice(0, 800);
+
+  return {
+    file: bestFile,
+    excerpt: excerpt,
+    found_article: excerpt.length > 100
+  };
+}
+
+// Open article detail panel (slide from right)
+function openArticleDetail(citIndex, articleStr, pillEl) {
+  const r = window._currentResult;
+  if (!r || !r.citations) return;
+  const cit = r.citations[citIndex];
+
+  // Update active pill
+  document.querySelectorAll('.article-pill').forEach(p => p.classList.remove('active'));
+  if (pillEl) pillEl.classList.add('active');
+
+  // Activate split layout
+  const splitWrap = document.getElementById('citationSplitWrap');
+  const leftPane  = document.getElementById('citationSplitLeft');
+  const rightPane = document.getElementById('citationDetailPanel');
+  if (!splitWrap || !leftPane || !rightPane) return;
+
+  leftPane.classList.add('shifted');
+  rightPane.style.display = 'block';
+
+  // Update header
+  document.getElementById('csr-doc-tag').textContent = cit.doc_id;
+  document.getElementById('csr-article-label').textContent = articleStr;
+
+  const bodyEl = document.getElementById('csr-body');
+  bodyEl.innerHTML = '<div style="color:var(--text3);font-size:11px">🔍 Tìm trong Drive DB...</div>';
+
+  // Search Drive DB
+  setTimeout(() => {
+    const found = findArticleInDrive(cit.doc_id, articleStr);
+
+    if (found && found.found_article) {
+      // Format: highlight the article heading
+      const excerptHtml = found.excerpt
+        .replace(/
+
++/g, '</p><p>')
+        .replace(/
+/g, '<br>');
+      bodyEl.innerHTML = `
+        <div style="margin-bottom:10px;padding:6px 10px;background:rgba(201,168,76,0.06);border-radius:6px;font-size:10px;color:var(--text3)">
+          📄 Trích từ: <strong style="color:var(--text2)">${found.file.name.replace(/\.[^.]+$/,'')}</strong>
+          <span style="color:var(--green);margin-left:6px">· Folder ${found.file.folder}</span>
+        </div>
+        <div style="border-left:2px solid var(--gold);padding-left:12px">
+          <p>${excerptHtml}</p>
+        </div>
+        <div style="margin-top:12px;font-size:10px;color:var(--text3);border-top:1px solid var(--border2);padding-top:8px">
+          ⚠️ Trích từ database — đối chiếu với văn bản gốc để xác nhận chính xác.
+          <a href="${found.file.url}" target="_blank" style="color:var(--gold);margin-left:6px">📎 Mở file gốc</a>
+        </div>`;
+    } else if (found) {
+      // File found but article not pinpointed — show full summary start
+      bodyEl.innerHTML = `
+        <div style="margin-bottom:10px;padding:6px 10px;background:rgba(201,168,76,0.06);border-radius:6px;font-size:10px;color:var(--text3)">
+          📄 <strong style="color:var(--text2)">${found.file.name.replace(/\.[^.]+$/,'')}</strong> · Folder ${found.file.folder}
+        </div>
+        <div class="csr-not-found">⚠️ Không tìm thấy chính xác "${articleStr}" trong nội dung đã index. Hiển thị phần đầu tài liệu:</div>
+        <div style="border-left:2px solid rgba(201,168,76,0.3);padding-left:12px;color:var(--text3)">
+          ${found.excerpt.replace(/
+/g,'<br>')}
+        </div>
+        <a href="${found.file.url}" target="_blank" style="display:inline-block;margin-top:10px;font-size:10px;color:var(--gold)">📎 Mở file gốc để tìm ${articleStr}</a>`;
+    } else {
+      bodyEl.innerHTML = `
+        <div class="csr-not-found">
+          📭 Không tìm thấy <strong>${cit.doc_id}</strong> trong Drive DB.<br><br>
+          Có thể file chưa được upload vào folder hoặc là PDF scan (không có text layer).<br><br>
+          <span style="color:var(--text3);font-size:10px">Tip: Upload file Word/PDF có text vào folder tương ứng → Reload Drive DB</span>
+        </div>`;
+    }
+  }, 100);
+}
+
+function closeArticleDetail() {
+  const leftPane  = document.getElementById('citationSplitLeft');
+  const rightPane = document.getElementById('citationDetailPanel');
+  if (leftPane)  leftPane.classList.remove('shifted');
+  if (rightPane) rightPane.style.display = 'none';
+  document.querySelectorAll('.article-pill').forEach(p => p.classList.remove('active'));
+}
+
 function openCitation(index) {
   const r = window._currentResult;
   if (!r || !r.citations) return;
