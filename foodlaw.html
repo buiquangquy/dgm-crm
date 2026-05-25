@@ -1556,45 +1556,56 @@ function renderResults(result, intent) {
   const citCard = document.createElement('div');
   citCard.className = 'result-card fade-in';
   citCard.id = 'citationMainCard';
-  citCard.innerHTML = `
-    <div class="card-header">
-      <div class="card-title">📑 Trích dẫn điều khoản / Legal Citations (${(result.citations||[]).length})</div>
-      <button class="export-btn" style="font-size:10px;padding:3px 8px" onclick="bookmarkResult()">🔖</button>
-    </div>
-    <div class="card-body" id="citationCardBody">
-      <div class="citation-split-wrap" id="citationSplitWrap">
-        <div class="citation-split-left" id="citationSplitLeft">
-          ${(result.citations||[]).map((c,i) => {
-            // Parse article pills from the article field
-            // e.g. "Điều 37, Khoản 4" or "Mục 2.1, 3, 4, 5"
-            const pills = parseArticlePills(c.article || '');
-            const pillsHtml = pills.length > 1
-              ? `<div class="article-pills">${pills.map(p => `<span class="article-pill" onclick="event.stopPropagation();openArticleDetail(${i},'${p.replace(/'/g,"\\'")}',this)">${p}</span>`).join('')}</div>`
-              : '';
-            return `
-            <div class="citation-item" id="cit-item-${i}" onclick="openCitation(${i})" data-index="${i}">
-              <div class="citation-doc">${c.folder ? `[${c.folder}]` : ''} ${c.doc_id}${c.source_file ? ` <span style="color:var(--green);font-size:9px">· 📄 ${c.source_file}</span>` : ''}</div>
-              <div class="citation-clause">${c.article} — ${c.doc_name_vi}</div>
-              <div class="citation-clause-en">${c.article_en} — ${c.doc_name_en}</div>
-              ${pillsHtml}
-              <div style="font-size:11px;color:var(--text2);margin-top:4px;line-height:1.4">${c.content_vi ? c.content_vi.substring(0,150)+'...' : ''}</div>
-              <div class="citation-ref">📖 Click pill mục để xem trích dẫn · Click để xem tổng quan</div>
-            </div>`;
-          }).join('')}
-        </div>
-        <!-- Citation detail panel (slide in from right) -->
-        <div class="citation-split-right" id="citationDetailPanel" style="display:none">
-          <div class="csr-header">
-            <div>
-              <span class="csr-doc-tag" id="csr-doc-tag">—</span>
-              <span style="font-size:11px;color:var(--text2);margin-left:8px" id="csr-article-label">—</span>
-            </div>
-            <button onclick="closeArticleDetail()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0 4px">✕</button>
-          </div>
-          <div class="csr-body" id="csr-body">—</div>
-        </div>
-      </div>
-    </div>`;
+
+  // Build citation items as string (avoid nested template literals)
+  let citItemsHtml = '';
+  (result.citations||[]).forEach(function(cit, i) {
+    const pills = parseArticlePills(cit.article || '');
+    let pillsHtml = '';
+    if (pills.length > 1) {
+      pillsHtml = '<div class="article-pills">' +
+        pills.map(function(p) {
+          const pSafe = p.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+          return '<span class="article-pill" onclick="event.stopPropagation();openArticleDetail(' + i + ',\'' + pSafe + '\',this)">' + p + '</span>';
+        }).join('') + '</div>';
+    }
+    const folderTag = cit.folder ? '[' + cit.folder + '] ' : '';
+    const sourceTag = cit.source_file ? ' <span style="color:var(--green);font-size:9px">· 📄 ' + cit.source_file + '</span>' : '';
+    const preview = cit.content_vi ? cit.content_vi.substring(0,150) + '...' : '';
+    citItemsHtml +=
+      '<div class="citation-item" id="cit-item-' + i + '" onclick="openCitation(' + i + ')" data-index="' + i + '">' +
+        '<div class="citation-doc">' + folderTag + cit.doc_id + sourceTag + '</div>' +
+        '<div class="citation-clause">' + (cit.article||'') + ' — ' + (cit.doc_name_vi||'') + '</div>' +
+        '<div class="citation-clause-en">' + (cit.article_en||'') + ' — ' + (cit.doc_name_en||'') + '</div>' +
+        pillsHtml +
+        '<div style="font-size:11px;color:var(--text2);margin-top:4px;line-height:1.4">' + preview + '</div>' +
+        '<div class="citation-ref">📖 Click pill mục để xem trích dẫn · Click để xem tổng quan</div>' +
+      '</div>';
+  });
+
+  citCard.innerHTML =
+    '<div class="card-header">' +
+      '<div class="card-title">📑 Trích dẫn điều khoản / Legal Citations (' + (result.citations||[]).length + ')</div>' +
+      '<button class="export-btn" style="font-size:10px;padding:3px 8px" onclick="bookmarkResult()">🔖</button>' +
+    '</div>' +
+    '<div class="card-body" id="citationCardBody">' +
+      '<div class="citation-split-wrap" id="citationSplitWrap">' +
+        '<div class="citation-split-left" id="citationSplitLeft">' +
+          citItemsHtml +
+        '</div>' +
+        '<div class="citation-split-right" id="citationDetailPanel" style="display:none">' +
+          '<div class="csr-header">' +
+            '<div>' +
+              '<span class="csr-doc-tag" id="csr-doc-tag">—</span>' +
+              '<span style="font-size:11px;color:var(--text2);margin-left:8px" id="csr-article-label">—</span>' +
+            '</div>' +
+            '<button onclick="closeArticleDetail()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0 4px">✕</button>' +
+          '</div>' +
+          '<div class="csr-body" id="csr-body">—</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
   grid.appendChild(citCard);
 
   // Card 2: AI Analysis
