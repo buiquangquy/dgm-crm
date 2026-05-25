@@ -1717,43 +1717,62 @@ function parseArticlePills(articleStr) {
 function findArticleInDrive(docId, articleStr) {
   if (!driveIndex || !driveIndex.files) return null;
 
-  // Find matching file by doc_id keywords
-  const docKeywords = docId.toLowerCase()
-    .replace(/[\/\-\.]/g, ' ')
-    .split(/\s+/)
-    .filter(k => k.length > 1);
+  // Normalize: remove diacritics, replace separators with space
+  function normalize(str) {
+    return str.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  // strip diacritics: NĐ→nd, ND→nd
+      .replace(/[\/\-\._]/g, ' ')
+      .replace(/\s+/g, ' ').trim();
+  }
+
+  const docNorm = normalize(docId);
+  // Extract meaningful keywords: numbers + key abbreviations
+  const docKeywords = docNorm.split(/\s+/).filter(k => k.length > 1);
+  // Also extract just the numbers (most reliable match: "43", "2017")
+  const docNumbers = docId.match(/\d+/g) || [];
 
   const candidates = driveIndex.files.filter(f => {
-    if (!f.extract_ok || !f.summary) return false;
-    const nameLower = f.name.toLowerCase();
-    return docKeywords.some(k => nameLower.includes(k));
+    if (!f.extract_ok && !f.summary) return false; // allow files even if extract failed partially
+    const nameNorm = normalize(f.name);
+    const kwStr = normalize((f.keywords || []).join(' '));
+    const summaryNorm = f.summary ? normalize(f.summary.slice(0, 500)) : '';
+
+    // Match if: all doc numbers found in filename OR keyword match OR summary match
+    const numbersInName = docNumbers.length > 0 && docNumbers.every(n => nameNorm.includes(n));
+    const keywordMatch = docKeywords.some(k => nameNorm.includes(k) || kwStr.includes(k));
+    const summaryMatch = docNumbers.length > 0 && docNumbers.every(n => summaryNorm.includes(n));
+
+    return numbersInName || (keywordMatch && docNumbers.some(n => nameNorm.includes(n))) || summaryMatch;
   });
 
   if (candidates.length === 0) return null;
 
-  // Score by doc_id match
+  // Score: prefer files where more doc numbers appear in filename
   candidates.sort((a, b) => {
-    const scoreA = docKeywords.filter(k => a.name.toLowerCase().includes(k)).length;
-    const scoreB = docKeywords.filter(k => b.name.toLowerCase().includes(k)).length;
+    const nameA = normalize(a.name);
+    const nameB = normalize(b.name);
+    const kwA = normalize((a.keywords||[]).join(' '));
+    const kwB = normalize((b.keywords||[]).join(' '));
+    const scoreA = docNumbers.filter(n => nameA.includes(n)).length * 3
+                 + docKeywords.filter(k => nameA.includes(k) || kwA.includes(k)).length;
+    const scoreB = docNumbers.filter(n => nameB.includes(n)).length * 3
+                 + docKeywords.filter(k => nameB.includes(k) || kwB.includes(k)).length;
     return scoreB - scoreA;
   });
 
   const bestFile = candidates[0];
   const summary = bestFile.summary || '';
 
-  // Now find the article section in the summary
-  // Try to extract text around the article mention
+  // Find article section in summary
   const artKeywords = articleStr.toLowerCase()
     .replace(/điều|khoản|mục|tiết|phụ lục/gi, '')
     .trim()
     .split(/[\s,]+/)
     .filter(k => k.length > 0);
 
-  // Find position of article in text
   let excerpt = '';
   const summaryLower = summary.toLowerCase();
 
-  // Try to find the article heading and extract ~800 chars after it
   for (const kw of [articleStr, ...artKeywords]) {
     const idx = summaryLower.indexOf(kw.toLowerCase());
     if (idx !== -1) {
@@ -1764,7 +1783,6 @@ function findArticleInDrive(docId, articleStr) {
     }
   }
 
-  // Fallback: first 800 chars of summary
   if (!excerpt) excerpt = summary.slice(0, 800);
 
   return {
