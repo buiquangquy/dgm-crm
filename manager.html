@@ -5631,6 +5631,28 @@ function pcDgmCell(giaTruoc, giaHienTai, coTang, style) {
   </td>`;
 }
 
+// ─── Margin helper (chuẩn ngành bán lẻ FMCG) ───────────────────────────────
+// Margin % = (Giá bán - Giá vốn) / Giá bán × 100
+// Đây là cách MT, siêu thị, agent đều dùng khi đàm phán.
+// Ví dụ: DGM = 39.312đ, NTD = 57.000đ → Margin = (57.000-39.312)/57.000 = 31%
+// (Khác với markup: 57.000/39.312-1 = 45% — con số lớn hơn nhưng không phải ngôn ngữ ngành)
+function _calcMargin(giaBan, giaVon) {
+  const b = parseFloat(giaBan), c = parseFloat(giaVon);
+  if (isNaN(b) || isNaN(c) || b <= 0 || c <= 0) return null;
+  return Math.round((b - c) / b * 100);
+}
+
+// Màu margin theo ngưỡng thực tế ngành thực phẩm đóng gói:
+// >35%: chain đang lấy cao — đàm phán được    (cam/đỏ)
+// 20-35%: mức bình thường ngành               (xanh)
+// <20%: thấp, chain có thể không muốn đẩy hàng (xám)
+function _marginColor(m) {
+  if (m === null) return 'var(--gray)';
+  if (m > 35) return 'var(--red)';
+  if (m > 20) return 'var(--green)';
+  return 'var(--gray)';
+}
+
 function pcNtdCell(valObj, dgmVal, extraStyle) {
   const base = extraStyle || 'text-align:right;padding:8px 12px;white-space:nowrap;';
   if (!valObj || !valObj.v) {
@@ -5641,18 +5663,35 @@ function pcNtdCell(valObj, dgmVal, extraStyle) {
   const badge = isSurvey
     ? '<span style="padding:1px 6px;border-radius:8px;font-size:10px;background:rgba(16,185,129,0.12);color:#059669;">survey</span>'
     : '<span style="padding:1px 6px;border-radius:8px;font-size:10px;background:rgba(59,130,246,0.10);color:#1d4ed8;">cam kết</span>';
-  let marginHtml = '';
-  const dgm = parseFloat(dgmVal), ntd = parseFloat(valObj.v);
-  if (!isNaN(dgm) && dgm > 0 && !isNaN(ntd) && ntd > 0) {
-    const m = Math.round((ntd/dgm - 1)*100);
-    const mc = m > 50 ? 'var(--red)' : m > 25 ? 'var(--orange)' : 'var(--green)';
-    marginHtml = `<div style="font-size:10px;color:${mc};">Margin ~${m}%</div>`;
-  }
+
+  // Margin chuẩn ngành: (NTD - DGM) / NTD
+  const m = _calcMargin(valObj.v, dgmVal);
+  const marginHtml = m !== null
+    ? `<div style="font-size:10px;color:${_marginColor(m)};font-weight:600;">Margin ${m}%</div>`
+    : '';
+
   return `<td style="${base}">
     <div style="font-size:12px;font-weight:600;color:var(--navy);">${pcFmt(valObj.v)}</div>
     <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:2px;">
       <span style="width:6px;height:6px;border-radius:50%;background:${dotColor};display:inline-block;"></span>${badge}
     </div>${marginHtml}
+  </td>`;
+}
+
+// Cell hiển thị giá Agent → Outlet với margin agent
+function pcAgentCell(agentVal, dgmVal, style) {
+  const s = style || 'text-align:right;padding:8px 12px;white-space:nowrap;border-right:1px solid var(--border);';
+  if (!agentVal || agentVal <= 0) {
+    return `<td style="${s}"><span style="color:#d1d5db;font-size:11px;">—</span></td>`;
+  }
+  // Margin của agent = (Agent - DGM) / Agent × 100
+  const m = _calcMargin(agentVal, dgmVal);
+  const marginHtml = m !== null
+    ? `<div style="font-size:10px;color:${_marginColor(m)};font-weight:600;">Margin agent ${m}%</div>`
+    : '';
+  return `<td style="${s}">
+    <div style="font-size:12px;color:var(--navy);font-weight:600;">${pcFmt(agentVal)}</div>
+    ${marginHtml}
   </td>`;
 }
 
@@ -5662,11 +5701,26 @@ function pcAnalysisNote(valObjs, dgmVal, colSpan) {
   if (!vals.length) return `<td ${cs} style="padding:8px 12px;font-size:11px;color:#9ca3af;">Chưa đủ data</td>`;
   const min=Math.min(...vals), max=Math.max(...vals), dgm=parseFloat(dgmVal);
   const notes=[];
-  if (max-min>2000&&min>0) notes.push(`<span style="color:var(--orange);">⚠ Chênh lệch vùng: ${pcFmt(max-min)}</span>`);
-  if (!isNaN(dgm)&&dgm>0&&min>0) { const m=Math.round((min/dgm-1)*100); if(m>55) notes.push(`<span style="color:var(--red);">Margin NTD/DGM cao: ~${m}%</span>`); }
+
+  // Chênh lệch giá NTD giữa các vùng/chain
+  if (max-min > 2000 && min > 0)
+    notes.push(`<span style="color:var(--orange);">⚠ Chênh lệch vùng: ${pcFmt(max-min)}</span>`);
+
+  // Margin trên giá bán của chain/agent (chuẩn ngành)
+  if (!isNaN(dgm) && dgm > 0 && min > 0) {
+    const mMin = _calcMargin(min, dgm);   // margin thấp nhất (vùng/chain bán thấp nhất)
+    const mMax = _calcMargin(max, dgm);   // margin cao nhất
+    if (mMax !== null && mMax > 35)
+      notes.push(`<span style="color:var(--red);">Margin cao: ${mMax}% — có thể đàm phán giảm</span>`);
+    else if (mMin !== null && mMin < 15)
+      notes.push(`<span style="color:var(--gray);">Margin thấp: ${mMin}% — chain ít động lực</span>`);
+  }
+
+  // Số vùng/chain chưa có data
   const nd = valObjs.filter(r=>!r||!r.v).length;
-  if (nd>0) notes.push(`<span style="color:var(--gray);">${nd} vùng/chain chưa data</span>`);
-  if (!notes.length) notes.push('<span style="color:var(--green);">✓ Giá đồng đều</span>');
+  if (nd > 0) notes.push(`<span style="color:var(--gray);">${nd} vùng/chain chưa data</span>`);
+  if (!notes.length) notes.push('<span style="color:var(--green);">✓ Margin đồng đều, hợp lý</span>');
+
   return `<td ${cs} style="padding:8px 12px;font-size:11px;line-height:1.8;">${notes.join('<br>')}</td>`;
 }
 
@@ -5775,9 +5829,7 @@ function renderPCGT() {
           <div style="margin-top:2px;">${tagHtml}</div>
         </td>
         ${pcDgmCell(giaTruocGT, giaHienTaiGT, p.co_tang_gia_gt, 'text-align:right;padding:8px 12px;white-space:nowrap;')}
-        <td style="text-align:right;padding:8px 12px;border-right:1px solid var(--border);">
-          <div style="font-size:12px;color:var(--navy);">${pcFmt(agent)||'<span style="color:#d1d5db;font-size:11px;">—</span>'}</div>
-        </td>
+        ${pcAgentCell(agent, giaHienTaiGT)}
         ${pcNtdCell(rn, giaHienTaiGT, 'text-align:right;padding:8px 12px;white-space:nowrap;border-left:1px solid var(--border);')}
         ${pcNtdCell(rs, giaHienTaiGT)}
         ${pcNtdCell(rc, giaHienTaiGT)}
