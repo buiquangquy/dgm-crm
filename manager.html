@@ -5759,17 +5759,13 @@ function renderPCGT() {
   const gtTracker  = D.gtTracker || [];
   const REGIONS    = ['GT North','GT South','GT Central'];
 
-  // Build NTD lookup từ gtTracker: _ma_san_pham → region → {v, type}
+  // Build NTD lookup từ gtTracker: ma_san_pham → region → {v, type}
   const ntdMap = {};
-  const agentMap = {};
   gtTracker.forEach(r => {
     const id = r.ma_san_pham; if (!id) return;
     if (!ntdMap[id]) { ntdMap[id]={}; REGIONS.forEach(rg=>ntdMap[id][rg]=null); }
-    // Agent → Outlet (giá sau tăng hoặc trước tăng)
-    const ag = parseFloat(r.gia_agent_outlet_sau||r.gia_agent_outlet_truoc);
-    if (!isNaN(ag) && ag > (agentMap[id]||0)) agentMap[id] = ag;
-    // NTD: ưu tiên survey thực tế → rồi cam kết
     const region = r.gt_region; if (!REGIONS.includes(region)) return;
+    // NTD: ưu tiên survey thực tế → cam kết
     const sv=parseFloat(r.gia_ntd_moi_nhat), cv=parseFloat(r.gia_ntd_cam_ket_sau);
     let ntdV=null, ntdType='none';
     if (!isNaN(sv)&&sv>0){ntdV=sv;ntdType='survey';}
@@ -5777,6 +5773,8 @@ function renderPCGT() {
     const ex = ntdMap[id][region];
     if (!ex || ntdType==='survey' || (ex.type!=='survey'&&ntdV>(ex.v||0))) ntdMap[id][region]={v:ntdV,type:ntdType};
   });
+  // Giá agent → outlet: lấy trực tiếp từ Products (gia_hien_tai_agent_*)
+  // theo từng region — đây là nguồn chính xác nhất
 
   // KPI
   let kT=priceList.length, kInc=0, kS=0, kN=0;
@@ -5811,17 +5809,29 @@ function renderPCGT() {
     html += renderCatHeader(grp.cat, grp.origin, grp.prods.length, 8);
     grp.prods.forEach(p => {
       const id = p._ma_san_pham;
-      const giaTruocGT  = p.gia_gt || 0;
-      const giaHienTaiGT= p.gia_hien_tai_gt || giaTruocGT;
-      const agent       = agentMap[id] || 0;
+      const giaTruocGT   = p.gia_gt || 0;
+      const giaHienTaiGT = p.gia_hien_tai_gt || giaTruocGT;
+
+      // Giá Agent → Outlet từng vùng — từ Products sheet (nguồn chính)
+      // gia_hien_tai_agent_* = đã tự chọn mới nhất (tg2 → tg1 → baseline)
+      const agentC = p.gia_hien_tai_agent_central || 0;
+      const agentS = p.gia_hien_tai_agent_south   || 0;
+      const agentN = p.gia_hien_tai_agent_north    || 0;
+
+      // Giá agent đại diện hiển thị ở cột "Giá Agent" (trung bình 3 vùng nếu khác nhau)
+      const agentVals = [agentC, agentS, agentN].filter(v=>v>0);
+      const agentDisplay = agentVals.length > 0
+        ? Math.round(agentVals.reduce((a,b)=>a+b,0)/agentVals.length)
+        : 0;
+
+      // NTD từ survey/tracker
       const rn = ntdMap[id]?.['GT North'];
       const rs = ntdMap[id]?.['GT South'];
       const rc = ntdMap[id]?.['GT Central'];
 
-      // Tag tăng giá
       const tagHtml = p.co_tang_gia_gt
-        ? `<span style="display:inline-block;padding:1px 7px;border-radius:8px;font-size:10px;font-weight:700;background:rgba(200,16,46,0.10);color:var(--red);margin-left:6px;">↑ Tăng giá</span>`
-        : `<span style="display:inline-block;padding:1px 7px;border-radius:8px;font-size:10px;font-weight:600;background:#f3f4f6;color:var(--gray);margin-left:6px;">Giữ nguyên</span>`;
+        ? '<span style="display:inline-block;padding:1px 7px;border-radius:8px;font-size:10px;font-weight:700;background:rgba(200,16,46,0.10);color:var(--red);margin-left:6px;">↑ Tăng giá</span>'
+        : '<span style="display:inline-block;padding:1px 7px;border-radius:8px;font-size:10px;font-weight:600;background:#f3f4f6;color:var(--gray);margin-left:6px;">Giữ nguyên</span>';
 
       html += `<tr onmouseover="this.style.background='#fafbff'" onmouseout="this.style.background=''">
         <td style="padding:8px 12px;">
@@ -5829,10 +5839,10 @@ function renderPCGT() {
           <div style="margin-top:2px;">${tagHtml}</div>
         </td>
         ${pcDgmCell(giaTruocGT, giaHienTaiGT, p.co_tang_gia_gt, 'text-align:right;padding:8px 12px;white-space:nowrap;')}
-        ${pcAgentCell(agent, giaHienTaiGT)}
-        ${pcNtdCell(rn, giaHienTaiGT, 'text-align:right;padding:8px 12px;white-space:nowrap;border-left:1px solid var(--border);')}
-        ${pcNtdCell(rs, giaHienTaiGT)}
-        ${pcNtdCell(rc, giaHienTaiGT)}
+        ${pcAgentCell(agentDisplay, giaHienTaiGT)}
+        ${pcNtdCell(rn, agentN||giaHienTaiGT, 'text-align:right;padding:8px 12px;white-space:nowrap;border-left:1px solid var(--border);')}
+        ${pcNtdCell(rs, agentS||giaHienTaiGT)}
+        ${pcNtdCell(rc, agentC||giaHienTaiGT)}
         ${pcAnalysisNote([rn,rs,rc], giaHienTaiGT)}
       </tr>`;
     });
