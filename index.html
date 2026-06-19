@@ -72,9 +72,12 @@ a{color:var(--blue)}
 .bALL{background:var(--s2);color:var(--t2)}
 .btodo{background:var(--s2);color:var(--t2)}
 .binprogress{background:var(--blt);color:var(--bdk)}
+.bconfirm{background:var(--alt);color:var(--amb)}
 .breview{background:var(--alt);color:var(--amb)}
 .bdone{background:var(--glt);color:var(--grn)}
 .bdone_fail{background:var(--rlt);color:var(--red)}
+.bok{background:var(--glt);color:var(--grn)}
+.bnotok{background:var(--rlt);color:var(--red)}
 .bov{background:var(--rlt);color:var(--red)}
 .bsoon{background:var(--alt);color:var(--amb)}
 .bgr{background:var(--s2);color:var(--t2)}
@@ -88,7 +91,7 @@ a{color:var(--blue)}
 .fb{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
 .fc{font-size:11px;padding:3px 10px;border:.5px solid var(--bd);border-radius:10px;background:var(--s);color:var(--t2);cursor:pointer}
 .fc.active{background:var(--blue);color:#fff;border-color:var(--blue)}
-.board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;align-items:start}
+.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px;align-items:start}
 .kol{background:var(--s2);border-radius:var(--rx);padding:8px;min-height:160px}
 .kh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:6px;border-bottom:.5px solid var(--bd)}
 .kt{font-size:12px;font-weight:600}
@@ -347,6 +350,7 @@ table tbody td::before{content:attr(data-label);font-size:10px;color:var(--t3);f
 </div>
 <div class="nm" id="nav">
 <button class="nb active" onclick="showPage('kanban',this)">📋 Kanban</button>
+<button class="nb" onclick="showPage('leads',this)">🤝 CRM Chào hàng</button>
 <button class="nb" onclick="showPage('customers',this)">🏢 Khách hàng</button>
 <button class="nb" onclick="showPage('products',this)">📦 Sản phẩm</button>
 <button class="nb mgr-only" onclick="showPage('users',this)">👥 Team</button>
@@ -372,15 +376,16 @@ table tbody td::before{content:attr(data-label);font-size:10px;color:var(--t3);f
 <div class="board" id="board"></div>
 </div>
 
-<div class="pg" id="pg-customers">
-<div class="sh">
-<div class="sti">🏢 Khách hàng</div>
-<button class="btn btn-p btn-sm" onclick="openCustForm()">+ Thêm</button>
+<div class="pg" id="pg-leads">
+<div class="sr" id="lead-stats"></div>
+<div class="fb" id="lead-fbar"></div>
+<div class="board" id="lead-board"></div>
 </div>
-<div class="tw"><table>
-<thead><tr><th>Tên</th><th>Kênh</th><th>Vùng</th><th>Hình thức KD</th><th>PIC</th><th>Liên hệ</th><th>SĐT</th><th>Số CH</th><th>Tasks</th><th></th></tr></thead>
-<tbody id="ctb"></tbody>
-</table></div>
+
+<div class="pg" id="pg-customers">
+<div class="sr" id="cust-stats"></div>
+<div class="fb" id="cust-fbar"></div>
+<div id="cust-body"></div>
 </div>
 
 <div class="pg" id="pg-products">
@@ -455,7 +460,15 @@ table tbody td::before{content:attr(data-label);font-size:10px;color:var(--t3);f
 
 <script>
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbxVBfHwL58O2hT7iAIpt-ZSk4d0eczLinvZmgwnubwNPigOeMXg79D6an8UWL2SXBih/exec';
-const STATUSES=['todo','inprogress','review','done','done_fail'];
+const STATUSES=['todo','inprogress','confirm','done'];
+const OUTCOME={success:'✅ Thành công',fail:'❌ Không thành công',cancel:'🚫 Hủy'};
+const OUTCOME_CLR={success:'var(--grn)',fail:'var(--red)',cancel:'var(--t3)'};
+// Pipeline CRM (Leads)
+const LEAD_STAGES={
+  listing:['Yêu cầu mẫu','Nhận mẫu','Gửi mẫu/Hồ sơ','Phản hồi','Kết quả'],
+  new:['Tiếp xúc','Gửi mẫu/Thông tin','Thương lượng HĐ','Kết quả']
+};
+const LEAD_TYPE={listing:'Listing (KH hiện tại)',new:'Khách hàng mới'};
 
 // 🔧 FIX B1: Helper ẩn loading overlay
 function hideLoading(){
@@ -476,7 +489,7 @@ window.addEventListener('offline',()=>{
   toast('📶 Mạng bị ngắt — đang dùng cache','warn');
 });
 
-const SL={todo:'To Do',inprogress:'In Progress',review:'Chờ duyệt',done:'✅ Hoàn thành',done_fail:'❌ Không thành công'};
+const SL={todo:'To Do',inprogress:'Đang làm',confirm:'Chờ xác nhận',done:'Hoàn thành'};
 const CHANNELS=['ALL','MT','GT','B2B','HoReCa'];
 
 const DEFAULT_USERS=[
@@ -558,7 +571,7 @@ const DEFAULT_PRODUCTS=[
 {id:33,name:'Great Northern Beans',brand:'Kelly Beans',category:'Dry Beans',sku:'',unit:'',status:'Active'}
 ];
 
-let state={tasks:[],customers:[],products:[],users:[],config:[],currentUser:null,fCh:'all',fPIC:'all',syncing:false,lastSync:null};
+let state={tasks:[],customers:[],products:[],users:[],config:[],leads:[],currentUser:null,fCh:'all',fPIC:'all',fLeadType:'listing',fCustGroup:'channel',custView:'board',syncing:false,lastSync:null};
 
 // ---- UTILS ----
 const $=id=>document.getElementById(id);
@@ -574,6 +587,7 @@ function isMgrOrTM(){
 }
 function aUsers(){return state.users.filter(u=>u.status==='Active'||!u.status)}
 function getCust(id){return state.customers.find(c=>String(c.id)===String(id))}
+function getProd(id){return state.products.find(p=>String(p.id)===String(id))}
 function getUser(id){return state.users.find(u=>u.id===id||u.email===id||String(u.id)===String(id))}
 function getFlowSteps(flowName){
   const f=state.config.find(x=>x.name===flowName||x.id===flowName);
@@ -741,15 +755,16 @@ function mapTask(row){
   if(typeof subs==='string'){try{subs=JSON.parse(subs);}catch(e){subs=[];}}
   let comms=row.comments||[];
   if(typeof comms==='string'){try{comms=JSON.parse(comms);}catch(e){comms=[];}}
-  let atch=row.attachments||[];
-  if(typeof atch==='string'){try{atch=JSON.parse(atch);}catch(e){atch=[];}}
   let picIds=row.pic_ids||[];
   if(typeof picIds==='string')picIds=picIds.split(',').filter(Boolean);
-  let doneConf=row.done_confirmations||[];
-  if(typeof doneConf==='string'){try{doneConf=JSON.parse(doneConf);}catch(e){doneConf=[];}}
-  let delConf=row.delete_confirmations||[];
-  if(typeof delConf==='string'){try{delConf=JSON.parse(delConf);}catch(e){delConf=[];}}
-  return{...row,subtasks:subs,comments:comms,attachments:atch,pic_ids:picIds,done_confirmations:doneConf,delete_confirmations:delConf};
+  let prodIds=row.product_ids||[];
+  if(typeof prodIds==='string'){try{prodIds=JSON.parse(prodIds);}catch(e){prodIds=prodIds.split(',').filter(Boolean);}}
+  // Migrate trạng thái cũ (v8) → model mới
+  let st=row.status;let outcome=row.outcome||'';
+  if(st==='review')st='confirm';
+  if(st==='done_fail'){st='done';if(!outcome)outcome='fail';}
+  if(st==='done'&&!outcome)outcome='success';
+  return{...row,subtasks:subs,comments:comms,pic_ids:picIds,product_ids:prodIds,status:st,outcome:outcome};
 }
 
 async function apiPost(payload){
@@ -766,30 +781,12 @@ async function apiPost(payload){
   }catch(e){console.error(e);return false;}
 }
 
-async function uploadFile(file,taskId){
-  if(!SCRIPT_URL)return null;
-  if(file.size>4*1024*1024){toast('File quá lớn. Giới hạn 4MB.','err');return null;}
-  toast('Đang upload '+file.name+'...');
-  return new Promise(resolve=>{
-    const rd=new FileReader();
-    rd.onload=async e=>{
-      try{
-        const b64=e.target.result.split(',')[1];
-        const payload={action:'upload',filename:file.name,mimeType:file.type||'application/octet-stream',base64data:b64,taskId:taskId||'general'};
-        const enc=encodeURIComponent(JSON.stringify(payload));
-        if(enc.length<7000){
-          const res=await fetch(SCRIPT_URL+'?action=upload&payload='+enc,{redirect:'follow'});
-          const d=await res.json();
-          if(d.ok){toast('Upload OK: '+file.name);resolve(d);}
-          else{toast('Upload lỗi: '+d.error,'err');resolve(null);}
-        }else{
-          await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
-          resolve({ok:true,fileName:file.name,viewUrl:'#',size:file.size});
-        }
-      }catch(err){toast('Upload lỗi','err');resolve(null);}
-    };
-    rd.readAsDataURL(file);
-  });
+function mapLead(row){
+  let prodIds=row.product_ids||[];
+  if(typeof prodIds==='string'){try{prodIds=JSON.parse(prodIds);}catch(e){prodIds=prodIds.split(',').filter(Boolean);}}
+  let comms=row.comments||[];
+  if(typeof comms==='string'){try{comms=JSON.parse(comms);}catch(e){comms=[];}}
+  return{...row,product_ids:Array.isArray(prodIds)?prodIds:[],comments:comms};
 }
 
 async function syncAll(){
@@ -809,6 +806,7 @@ async function syncAll(){
       const rawFlows=(dt.flows||dt.Flows||[]).map(mapFlow).filter(f=>f.name&&!/^(▶|STT|⚙️)/.test(f.name));
       state.config=rawFlows.length?rawFlows:DEFAULT_FLOWS;
       state.tasks=(dt.tasks||dt.Tasks||[]).map(mapTask).filter(t=>t.title||t.id);
+      state.leads=(dt.leads||dt.Leads||[]).map(mapLead).filter(l=>l.id&&(l.customer_name||l.customer_id));
       state.lastSync=new Date();setSS('ok');
       try{
         localStorage.setItem('dgm_cache',JSON.stringify({
@@ -817,6 +815,7 @@ async function syncAll(){
           products:state.products,
           config:state.config,
           tasks:state.tasks,
+          leads:state.leads,
           cachedAt:new Date().toISOString()
         }));
       }catch(ce){console.warn('Cache save failed',ce);}
@@ -840,6 +839,7 @@ async function syncAll(){
         if(cache.products&&cache.products.length)state.products=cache.products;
         if(cache.config&&cache.config.length)state.config=cache.config;
         if(cache.tasks&&cache.tasks.length)state.tasks=cache.tasks;
+        if(cache.leads&&cache.leads.length)state.leads=cache.leads;
         const cAt=cache.cachedAt?new Date(cache.cachedAt).toLocaleTimeString('vi-VN'):'?';
         setSS('ok');
         toast('📦 Dùng cache ('+cAt+') — mạng đang yếu','warn');
@@ -870,14 +870,24 @@ async function saveTask(task){
     ...task,
     subtasks:JSON.stringify(Array.isArray(task.subtasks)?task.subtasks:[]),
     comments:JSON.stringify(Array.isArray(task.comments)?task.comments:[]),
-    attachments:JSON.stringify(Array.isArray(task.attachments)?task.attachments:[]),
     pic_ids:Array.isArray(task.pic_ids)?task.pic_ids.join(','):task.pic_ids||'',
-    done_confirmations:JSON.stringify(Array.isArray(task.done_confirmations)?task.done_confirmations:[]),
-    delete_confirmations:JSON.stringify(Array.isArray(task.delete_confirmations)?task.delete_confirmations:[]),
+    product_ids:JSON.stringify(Array.isArray(task.product_ids)?task.product_ids:[]),
   }};
   const ok=await apiPost(payload);
   if(ok){state.lastSync=new Date();setSS('ok');}
   else toast('Lưu thất bại','warn');
+  return ok;
+}
+
+async function saveLead(lead){
+  const payload={action:'upsert',sheet:'Leads',data:{
+    ...lead,
+    product_ids:JSON.stringify(Array.isArray(lead.product_ids)?lead.product_ids:[]),
+    comments:JSON.stringify(Array.isArray(lead.comments)?lead.comments:[]),
+  }};
+  const ok=await apiPost(payload);
+  if(ok){state.lastSync=new Date();setSS('ok');}
+  else toast('Lưu lead thất bại','warn');
   return ok;
 }
 
@@ -902,6 +912,7 @@ function showPage(nm,btn){
   localStorage.setItem('dgm_page',nm);
   if(nm==='customers')renderCustomers();
   else if(nm==='products')renderProducts();
+  else if(nm==='leads')renderLeads();
   else if(nm==='users'){
     if(!isMgr()){
       openMyProfile();
@@ -927,6 +938,7 @@ function mobileNav(nm,btn){
     const menu=document.createElement('div');
     menu.style.cssText='position:fixed;bottom:70px;right:12px;background:var(--s);border:.5px solid var(--bd2);border-radius:var(--rl);padding:8px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:300;min-width:150px';
     menu.innerHTML='<div style="font-size:11px;color:var(--t3);padding:4px 8px;font-weight:600">Thêm</div>'+
+      '<button onclick="showPage(\'leads\',null);this.parentNode.remove()" style="display:block;width:100%;text-align:left;padding:8px;font-size:13px;background:none;border:none;cursor:pointer;border-radius:var(--r)">🤝 CRM Chào hàng</button>'+
       (isMgr()?'<button onclick="showPage(\'users\',null);this.parentNode.remove()" style="display:block;width:100%;text-align:left;padding:8px;font-size:13px;background:none;border:none;cursor:pointer;border-radius:var(--r)">👥 Team</button>':'') +
       (isMgr()?'<button onclick="showPage(\'config\',null);this.parentNode.remove()" style="display:block;width:100%;text-align:left;padding:8px;font-size:13px;background:none;border:none;cursor:pointer;border-radius:var(--r)">⚙️ Cấu hình</button>':'') +
       (!isMgr()?'<button onclick="openMyProfile();this.parentNode.remove()" style="display:block;width:100%;text-align:left;padding:8px;font-size:13px;background:none;border:none;cursor:pointer;border-radius:var(--r)">👤 Hồ sơ</button>':'') +
@@ -948,6 +960,7 @@ function renderAll(){
   if(pid==='pg-kanban')renderKanban();
   else if(pid==='pg-customers')renderCustomers();
   else if(pid==='pg-products')renderProducts();
+  else if(pid==='pg-leads')renderLeads();
   else if(pid==='pg-users')renderUsers();
   else if(pid==='pg-config')renderConfig();
   else renderKanban();
@@ -955,12 +968,12 @@ function renderAll(){
 
 // ---- KANBAN ----
 function getVisible(){
-  let list=state.tasks;
+  let list=state.tasks.slice();
   if(!isMgr()){
     const uid=state.currentUser.id,uemail=state.currentUser.email;
     list=list.filter(t=>{
       const ids=Array.isArray(t.pic_ids)?t.pic_ids:String(t.pic_ids||'').split(',').filter(Boolean);
-      return ids.includes(uid)||ids.includes(uemail)||t.pic_id===uid||t.pic_email===uemail;
+      return ids.includes(uid)||ids.includes(uemail)||t.pic_id===uid||t.created_by===uid;
     });
   }
   if(state.fCh!=='all')list=list.filter(t=>t.channel===state.fCh);
@@ -968,6 +981,8 @@ function getVisible(){
     const ids=Array.isArray(t.pic_ids)?t.pic_ids:String(t.pic_ids||'').split(',');
     return ids.includes(state.fPIC)||t.pic_id===state.fPIC;
   });
+  // Mới nhất trên cùng
+  list.sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
   return list;
 }
 
@@ -980,12 +995,13 @@ function setF(type,val){
 function renderKanban(){
   if(!state.currentUser)return;
   const vis=getVisible();
+  const doneList=vis.filter(t=>t.status==='done');
   $('stats').innerHTML=`
 <div class="sc"><div class="sl">Tổng tasks</div><div class="sv">${vis.length}</div></div>
 <div class="sc"><div class="sl">Đang làm</div><div class="sv" style="color:var(--blue)">${vis.filter(t=>t.status==='inprogress').length}</div></div>
-<div class="sc"><div class="sl">Chờ duyệt</div><div class="sv" style="color:var(--amb)">${vis.filter(t=>t.status==='review').length}</div></div>
-<div class="sc"><div class="sl">Hoàn thành ✓</div><div class="sv" style="color:var(--grn)">${vis.filter(t=>t.status==='done').length}</div></div>
-<div class="sc"><div class="sl">Không thành công</div><div class="sv" style="color:var(--red)">${vis.filter(t=>t.status==='done_fail').length}</div></div>`;
+<div class="sc"><div class="sl">Chờ xác nhận</div><div class="sv" style="color:var(--amb)">${vis.filter(t=>t.status==='confirm').length}</div></div>
+<div class="sc"><div class="sl">Thành công ✓</div><div class="sv" style="color:var(--grn)">${doneList.filter(t=>t.outcome==='success').length}</div></div>
+<div class="sc"><div class="sl">Không TC / Hủy</div><div class="sv" style="color:var(--red)">${doneList.filter(t=>t.outcome==='fail'||t.outcome==='cancel').length}</div></div>`;
   const sus=aUsers().filter(u=>u.role!=='manager');
   $('fbar').innerHTML=`
 <span style="font-size:11px;color:var(--t3)">Kênh:</span>
@@ -995,8 +1011,8 @@ ${isMgr()?`<span style="font-size:11px;color:var(--t3);margin-left:8px">PIC:</sp
 <button class="fc ${state.fPIC==='all'?'active':''}" onclick="setF('pic','all')">Tất cả</button>
 ${sus.map(u=>`<button class="fc ${state.fPIC===u.id?'active':''}" onclick="setF('pic','${u.id}')">${u.name}</button>`).join('')}`:''}
 <button class="btn btn-p btn-sm" style="margin-left:auto" onclick="openTaskForm()">+ Thêm task</button>`;
-  const KCL={todo:'',inprogress:'',review:'krev',done:'kdon',done_fail:'kfail'};
-  const KTI={todo:'To Do',inprogress:'In Progress',review:'⏳ Chờ duyệt',done:'✅ Hoàn thành',done_fail:'❌ Không thành công'};
+  const KCL={todo:'',inprogress:'',confirm:'krev',done:'kdon'};
+  const KTI={todo:'To Do',inprogress:'Đang làm',confirm:'⏳ Chờ xác nhận',done:'✅ Hoàn thành'};
   $('board').innerHTML=STATUSES.map(st=>{
     const col=vis.filter(t=>t.status===st);
     return`<div class="kol ${KCL[st]}" id="kol-${st}"
@@ -1011,42 +1027,36 @@ function rCard(t){
   const c=getCust(t.customer_id);
   const pics=getPics(t);
   const days=t.deadline?daysFrom(t.deadline):null;
-  const ov=!['done','done_fail'].includes(t.status)&&days!==null&&days<0;
-  const sn=!['done','done_fail'].includes(t.status)&&days!==null&&days>=0&&days<=3;
+  const done=t.status==='done';
+  const ov=!done&&days!==null&&days<0;
+  const sn=!done&&days!==null&&days>=0&&days<=3;
   const sp=subProg(t);
   const cms=Array.isArray(t.comments)?t.comments:[];
-  const done=['done','done_fail'].includes(t.status);
   const st=t.status;
-  const routing=doneRouting(t);
   const me=state.currentUser;
-  const picIds=getPicIds(t);
-  const confirmed=Array.isArray(t.done_confirmations)?t.done_confirmations:[];
-  const iMeConfirmed=confirmed.includes(me?.id);
-  const iAmPic=picIds.length===0||picIds.includes(me?.id)||isMgr();
+  const iAmPic=isPic(t)||isMgr();
+  const iCreator=canConfirm(t);
 
   let mv='';
   if(!done){
     if(st==='inprogress')mv+=`<button class="mb" onclick="event.stopPropagation();mvT('${t.id}','todo')">← To Do</button>`;
-    if(st==='todo')mv+=`<button class="mb" onclick="event.stopPropagation();mvT('${t.id}','inprogress')">→ In Progress</button>`;
+    if(st==='todo')mv+=`<button class="mb" onclick="event.stopPropagation();mvT('${t.id}','inprogress')">→ Đang làm</button>`;
+  }
+  // Nút theo trạng thái
+  let act='';
+  if(st==='inprogress'&&iAmPic){
+    act+=`<button class="mb" style="background:var(--glt);color:var(--grn);border-color:rgba(15,110,86,.3)"
+      onclick="event.stopPropagation();openReportDone('${t.id}')">✅ Báo kết thúc</button>`;
+  }
+  if(st==='confirm'&&iCreator){
+    act+=`<button class="mb" style="background:var(--glt);color:var(--grn);border-color:rgba(15,110,86,.3)"
+      onclick="event.stopPropagation();openConfirmDone('${t.id}')">✔ Xác nhận</button>`;
   }
 
-  // Quick Done button trên card
-  let quickDone='';
-  if(!done&&iAmPic){
-    if(routing==='done'||routing==='review'){
-      quickDone=`<button class="mb" style="background:var(--glt);color:var(--grn);border-color:rgba(15,110,86,.3)"
-        onclick="event.stopPropagation();requestDone('${t.id}')">
-        ${routing==='review'?'⏳ Gửi duyệt':'✅ Done'}
-      </button>`;
-    } else if(!iMeConfirmed){
-      quickDone=`<button class="mb" style="background:var(--glt);color:var(--grn);border-color:rgba(15,110,86,.3)"
-        onclick="event.stopPropagation();requestDone('${t.id}')">✅ Xác nhận</button>`;
-    }
-  }
-
-  // Badge chờ nhóm
-  const pendingGroup=routing==='group'&&!done&&confirmed.length>0&&confirmed.length<picIds.length;
-  const ap=isMgr()&&st==='review'?`<button class="apbtn" onclick="event.stopPropagation();openApprove('${t.id}')">⚡ Duyệt hoàn thành</button>`:'';
+  // Badge outcome khi đã done
+  const outBadge=done&&t.outcome?`<span class="b" style="background:var(--s2);color:${OUTCOME_CLR[t.outcome]}">${OUTCOME[t.outcome]}</span>`:'';
+  // Badge chờ xác nhận
+  const confBadge=st==='confirm'?`<span class="b" style="background:var(--alt);color:var(--amb)">⏳ ${t.outcome==='fail'?'Báo: Không TC':'Báo: Thành công'}</span>`:'';
 
   return`<div class="tc" id="card-${t.id}" draggable="true"
   ondragstart="drs(event,'${t.id}')" onclick="openDetail('${t.id}')">
@@ -1056,17 +1066,16 @@ function rCard(t){
   ${c?`<span class="b bgr">${c.name}</span>`:''}
   ${ov?`<span class="b bov">Quá hạn</span>`:''}
   ${sn&&!ov?`<span class="b bsoon">Sắp hạn</span>`:''}
-  ${pendingGroup?`<span class="b" style="background:#EDE9FE;color:#5B21B6">⏳ ${confirmed.length}/${picIds.length}</span>`:''}
+  ${confBadge}${outBadge}
 </div>
 ${t.step?`<div class="tstep">▶ ${t.step}</div>`:''}
 ${sp?`<div class="spb"><div class="spf" style="width:${sp.pct}%"></div></div><div class="spt">${sp.done}/${sp.total} subtasks</div>`:''}
 ${cms.length?`<div style="font-size:10px;color:var(--t3);margin-top:3px">💬 ${cms.filter(x=>!x.isSystem).length} comment(s)</div>`:''}
 <div class="tf">
   <span class="tdl ${ov?'ov':sn?'sn':''}">${t.deadline?'📅 '+fmtD(t.deadline):''}</span>
-  <div class="pics">${pics.map(u=>`<div class="av avs" title="${u.name}${confirmed.includes(u.id)&&routing==='group'?' ✓':''}">${u.initials||u.name[0]}</div>`).join('')}</div>
+  <div class="pics">${pics.map(u=>`<div class="av avs" title="${u.name}">${u.initials||u.name[0]}</div>`).join('')}</div>
 </div>
-${(mv||quickDone)?`<div class="mvb">${mv}${quickDone}</div>`:''}
-${ap}
+${(mv||act)?`<div class="mvb">${mv}${act}</div>`:''}
 </div>`;
 }
 
@@ -1078,95 +1087,115 @@ function dlv(e,st){document.getElementById('kol-'+st)?.classList.remove('dov');}
 async function drp(e,st){
   e.preventDefault();
   document.getElementById('kol-'+st)?.classList.remove('dov');
-  if(!_drag)return;
-  const t=state.tasks.find(x=>String(x.id)===String(_drag));
+  const id=_drag;_drag=null;
+  if(!id)return;
+  const t=state.tasks.find(x=>String(x.id)===String(id));
   if(!t||t.status===st)return;
+  // Kéo vào "Chờ xác nhận" → mở báo kết thúc (cần chọn kết quả)
+  if(st==='confirm'){
+    if(!(isPic(t)||isMgr())){toast('Chỉ người thực hiện mới báo kết thúc','warn');renderKanban();return;}
+    openReportDone(id);return;
+  }
+  // Kéo vào "Hoàn thành" → người tạo xác nhận
+  if(st==='done'){
+    if(!canConfirm(t)){toast('Chỉ người tạo task mới xác nhận kết thúc','warn');renderKanban();return;}
+    openConfirmDone(id);return;
+  }
+  // todo / inprogress → di chuyển tự do; nếu từ done/confirm quay lại thì reset outcome
   const old=t.status;t.status=st;
+  if(old==='done'||old==='confirm'){t.outcome='';t.cancel_reason='';}
   addSysCom(t,'Chuyển: '+SL[old]+' → '+SL[st]+' bởi '+(state.currentUser?.name||''));
   renderKanban();
   await saveTask(t);
-  _drag=null;
 }
 
-// ---- TASK ACTIONS ----
-
-// ── Helper: lấy danh sách PIC ids của task
+// ============================================================
+// TASK ACTIONS — model mới: PIC báo kết thúc → người TẠO xác nhận
+// ============================================================
 function getPicIds(t){
-  let ids=Array.isArray(t.pic_ids)?t.pic_ids:String(t.pic_ids||'').split(',').filter(Boolean);
-  return ids;
+  return Array.isArray(t.pic_ids)?t.pic_ids:String(t.pic_ids||'').split(',').filter(Boolean);
 }
-
-// ── Helper: task có manager trong PIC không?
-function taskHasMgr(t){
+function isPic(t){
+  const ids=getPicIds(t);const me=state.currentUser;
+  return ids.length===0||ids.includes(me?.id)||ids.includes(me?.email)||t.pic_id===me?.id;
+}
+// Người được quyền XÁC NHẬN kết thúc = người tạo task (hoặc Manager).
+// Task cũ (v8) không có created_by → fallback: Manager hoặc PIC đầu tiên.
+function canConfirm(t){
+  const me=state.currentUser;if(!me)return false;
+  if(isMgr())return true;
+  if(t.created_by)return t.created_by===me.id;
   const ids=getPicIds(t);
-  return ids.some(id=>{const u=getUser(id);return u&&u.role==='manager';});
+  return ids.length>0?ids[0]===me.id:true;
 }
 
-// ── Helper: task là "cá nhân" — chỉ 1 người, không assign ai khác, không có khách hàng
-function isPersonalTask(t){
-  const ids=getPicIds(t);
-  return ids.length<=1 && !t.customer_id;
+// ── PIC báo kết thúc: chọn Thành công / Không thành công
+function openReportDone(id){
+  const t=state.tasks.find(x=>String(x.id)===String(id));if(!t)return;
+  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" onclick="event.stopPropagation()">
+<div class="mh"><div class="mti">✅ Báo kết thúc</div><button class="mcl" onclick="CM()">×</button></div>
+<p style="font-size:13px;margin-bottom:6px">Task: <strong>${t.title}</strong></p>
+<p style="font-size:12px;color:var(--t2);margin-bottom:14px">Chọn kết quả — task sẽ chuyển sang <strong>Chờ xác nhận</strong>, người tạo task sẽ xác nhận để kết thúc.</p>
+<div class="fa">
+  <button class="btn btn-g" onclick="reportDone('${t.id}','success')">✅ Thành công</button>
+  <button class="btn btn-d" onclick="reportDone('${t.id}','fail')">❌ Không thành công</button>
+  <button class="btn" onclick="CM()">Huỷ</button>
+</div>
+</div></div>`;
+}
+async function reportDone(id,outcome){
+  const t=state.tasks.find(x=>String(x.id)===String(id));if(!t)return;
+  const me=state.currentUser;
+  t.status='confirm';t.outcome=outcome;t.done_by=me.id;
+  addSysCom(t,'✅ '+me.name+' báo kết thúc — '+OUTCOME[outcome]+' — chờ người tạo xác nhận');
+  // Notify người tạo
+  if(t.created_by&&t.created_by!==me.id){
+    pushNotif(t.created_by,'⏳ Chờ bạn xác nhận','"'+t.title+'" đã báo kết thúc ('+OUTCOME[outcome]+')',id);
+  }
+  CM();renderKanban();await saveTask(t);
+  toast('Đã gửi — chờ người tạo xác nhận','ok');
 }
 
-// ── Helper: xác định routing khi bấm Done
-// Returns: 'done' (hoàn thành thẳng) | 'review' (cần manager duyệt) | 'group' (cần đủ nhóm)
-function doneRouting(t){
-  if(isPersonalTask(t)) return 'done';
-  if(taskHasMgr(t)) return 'review';
-  return 'group'; // nhóm không có manager
-}
-
-// ── Bấm Done từ nút trong task detail / card
-async function requestDone(id){
+// ── Người tạo xác nhận kết thúc (giữ hoặc đổi kết quả) / trả lại
+function openConfirmDone(id){
   const t=state.tasks.find(x=>String(x.id)===String(id));
   if(!t)return;
-  if(['done','done_fail'].includes(t.status)){toast('Task đã kết thúc','warn');return;}
-  const routing=doneRouting(t);
-  const me=state.currentUser;
-
-  if(routing==='done'){
-    // Cá nhân → done thẳng
-    const old=t.status; t.status='done';
-    addSysCom(t,'✅ Hoàn thành bởi '+me.name);
-    CM();renderKanban();await saveTask(t);
-    toast('Task hoàn thành ✓','ok');
-    return;
-  }
-
-  if(routing==='review'){
-    // Có manager trong PIC → chuyển sang review để manager duyệt
-    const old=t.status; t.status='review';
-    addSysCom(t,'⏳ Gửi duyệt bởi '+me.name+' — chờ Manager xác nhận');
-    CM();renderKanban();await saveTask(t);
-    toast('Đã gửi chờ Manager duyệt','ok');
-    return;
-  }
-
-  // routing==='group' → nhóm không có manager, cần đủ mọi người confirm
-  if(!Array.isArray(t.done_confirmations))t.done_confirmations=[];
-  const already=t.done_confirmations.includes(me.id);
-  if(already){toast('Bạn đã xác nhận Done rồi','warn');return;}
-  t.done_confirmations.push(me.id);
-
-  const ids=getPicIds(t);
-  const confirmed=t.done_confirmations;
-  const remaining=ids.filter(id=>!confirmed.includes(id)).map(id=>getUser(id)?.name||id);
-
-  addSysCom(t,'✅ '+me.name+' xác nhận Done'+(remaining.length?' — Còn chờ: '+remaining.join(', '):''));
-
-  if(remaining.length===0){
-    // Tất cả đã confirm
-    t.status='done';
-    addSysCom(t,'✅ Tất cả thành viên đã xác nhận — Task hoàn thành');
-    CM();renderKanban();await saveTask(t);
-    toast('Tất cả xác nhận — Task hoàn thành ✓','ok');
-  } else {
-    // Còn người chưa confirm → vẫn ở done (nhưng badge "⚠ Chưa đủ")
-    // Giữ status hiện tại ở inprogress, đánh dấu partial
-    t.status='inprogress';
-    CM();openDetail(id);renderKanban();await saveTask(t);
-    toast('Đã xác nhận — Còn chờ: '+remaining.join(', '),'warn');
-  }
+  if(!canConfirm(t)){toast('Chỉ người tạo task mới xác nhận','warn');return;}
+  const proposed=t.outcome||'success';
+  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" onclick="event.stopPropagation()">
+<div class="mh"><div class="mti">✔ Xác nhận kết thúc</div><button class="mcl" onclick="CM()">×</button></div>
+<p style="font-size:13px;margin-bottom:4px">Task: <strong>${t.title}</strong></p>
+<p style="font-size:12px;color:var(--t2);margin-bottom:8px">Người thực hiện báo: <strong style="color:${OUTCOME_CLR[proposed]}">${OUTCOME[proposed]}</strong>. Xác nhận kết quả cuối:</p>
+<div class="fr"><label class="fl">Kết quả</label>
+<select id="cd-out" class="fi">
+  <option value="success" ${proposed==='success'?'selected':''}>✅ Thành công</option>
+  <option value="fail" ${proposed==='fail'?'selected':''}>❌ Không thành công</option>
+</select></div>
+<div class="fr"><label class="fl">Ghi chú (tuỳ chọn)</label><input id="cd-note" class="fi" placeholder="Lý do / ghi chú kết quả..."></div>
+<div class="fa">
+  <button class="btn btn-g" onclick="confirmDone('${t.id}')">✔ Xác nhận kết thúc</button>
+  <button class="btn" onclick="sendBack('${t.id}')">↩ Trả lại (làm tiếp)</button>
+  <button class="btn" onclick="CM()">Huỷ</button>
+</div>
+</div></div>`;
+}
+async function confirmDone(id){
+  const t=state.tasks.find(x=>String(x.id)===String(id));if(!t)return;
+  const out=document.getElementById('cd-out')?.value||t.outcome||'success';
+  const note=document.getElementById('cd-note')?.value.trim()||'';
+  t.status='done';t.outcome=out;t.confirmed_by=state.currentUser.id;
+  addSysCom(t,'✔ '+state.currentUser.name+' xác nhận kết thúc — '+OUTCOME[out]+(note?' — '+note:''));
+  getPicIds(t).forEach(pid=>{if(pid!==state.currentUser?.id)pushNotif(pid,'🏁 Task kết thúc','"'+t.title+'" — '+OUTCOME[out],id);});
+  CM();renderKanban();await saveTask(t);
+  toast('Đã xác nhận kết thúc ✓','ok');
+}
+async function sendBack(id){
+  const t=state.tasks.find(x=>String(x.id)===String(id));if(!t)return;
+  t.status='inprogress';t.outcome='';
+  addSysCom(t,'↩ '+state.currentUser.name+' trả lại task để làm tiếp');
+  if(t.done_by&&t.done_by!==state.currentUser?.id)pushNotif(t.done_by,'↩ Task trả lại','"'+t.title+'" cần làm tiếp',id);
+  CM();renderKanban();await saveTask(t);
+  toast('Đã trả lại — Đang làm','warn');
 }
 
 async function mvT(id,st){
@@ -1258,12 +1287,12 @@ async function updStep(tid,step){
   if(total>0){
     if(idx===0) newStatus='todo';
     else if(idx===total-1){
-      // Bước cuối cùng của flow → trigger done routing
+      // Bước cuối flow → người thực hiện báo kết thúc (chọn kết quả)
       t.step=step;
       addSysCom(t,'Cập nhật bước: "'+step+'" — bước cuối của flow');
-      openDetail(tid);renderKanban();await saveTask(t);
-      // Gọi requestDone để xử lý routing
-      requestDone(tid);
+      renderKanban();await saveTask(t);
+      if(isPic(t)||isMgr())openReportDone(tid);
+      else openDetail(tid);
       return;
     } else {
       newStatus='inprogress';
@@ -1279,95 +1308,33 @@ async function updStep(tid,step){
   openDetail(tid);renderKanban();await saveTask(t);
 }
 
-// ── Xóa task: cần xác nhận từ các PIC hoặc Manager
+// ── Hủy task: người TẠO (hoặc Manager) hủy + nhập lý do, không cần duyệt
+// Task chuyển sang Hoàn thành với outcome = Hủy (giữ record, không xóa cứng)
 function openDeleteConfirm(id){
   const t=state.tasks.find(x=>String(x.id)===String(id));if(!t)return;
-  const me=state.currentUser;
-  const ids=getPicIds(t);
-  const hasMgrPic=taskHasMgr(t);
-  // ✅ v8: Manager xóa → không cần xác nhận từ bất kỳ ai
-  const isAloneOrMgr=ids.length===0||isMgr()||(ids.length===1&&ids.includes(me.id));
-
-  // Nếu chỉ mình hoặc manager → xác nhận đơn giản 1 bước
-  if(isAloneOrMgr||ids.length<=1){
-    $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" onclick="event.stopPropagation()">
-<div class="mh"><div class="mti" style="color:var(--red)">🗑 Xóa task</div><button class="mcl" onclick="CM()">×</button></div>
-<p style="font-size:13px;margin-bottom:6px">Task: <strong>${t.title}</strong></p>
-<p style="font-size:12px;color:var(--t2);margin-bottom:16px">Task sẽ chuyển sang <span style="color:var(--red)">❌ Không thành công</span> thay vì bị xóa vĩnh viễn.</p>
-<div class="fa">
-  <button class="btn btn-d" onclick="confirmDelete('${t.id}','${me.id}')">Xác nhận xóa</button>
-  <button class="btn" onclick="CM()">Huỷ</button>
-</div>
-</div></div>`;
-    return;
-  }
-
-  // Nhiều PIC → hiển thị danh sách, ai xác nhận thì tick
-  if(!Array.isArray(t.delete_confirmations))t.delete_confirmations=[];
-  const already=t.delete_confirmations;
-  const picUsers=ids.map(id=>getUser(id)).filter(Boolean);
-
+  if(!canConfirm(t)){toast('Chỉ người tạo task mới được hủy','warn');return;}
   $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" onclick="event.stopPropagation()">
-<div class="mh"><div class="mti" style="color:var(--red)">🗑 Xóa task — Cần xác nhận</div><button class="mcl" onclick="CM()">×</button></div>
-<p style="font-size:13px;margin-bottom:4px">Task: <strong>${t.title}</strong></p>
-<p style="font-size:12px;color:var(--t2);margin-bottom:12px">
-  ${hasMgrPic?'Task có Manager trong PIC — chỉ cần Manager xác nhận.':'Cần tất cả thành viên PIC xác nhận để xóa.'}
-  <br>Task sẽ chuyển sang <span style="color:var(--red)">❌ Không thành công</span>.
-</p>
-<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
-${picUsers.map(u=>{
-  const confirmed=already.includes(u.id);
-  return`<div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--s2);border-radius:var(--r)">
-    <div class="av avs">${u.initials||u.name[0]}</div>
-    <span style="flex:1;font-size:12px">${u.name}</span>
-    <span style="font-size:11px;color:${confirmed?'var(--grn)':'var(--t3)'}">
-      ${confirmed?'✓ Đã xác nhận':'Chưa xác nhận'}
-    </span>
-  </div>`;
-}).join('')}
-</div>
+<div class="mh"><div class="mti" style="color:var(--red)">🚫 Hủy task</div><button class="mcl" onclick="CM()">×</button></div>
+<p style="font-size:13px;margin-bottom:6px">Task: <strong>${t.title}</strong></p>
+<p style="font-size:12px;color:var(--t2);margin-bottom:10px">Task sẽ chuyển sang <span style="color:var(--t3)">🚫 Hủy</span> (vẫn lưu để theo dõi). Vui lòng nhập lý do.</p>
+<div class="fr"><label class="fl">Lý do hủy *</label>
+<textarea id="cancel-reason" class="fi" placeholder="VD: tạo nhầm, trùng task, khách hủy yêu cầu..."></textarea></div>
 <div class="fa">
-  <button class="btn btn-d" onclick="confirmDelete('${t.id}','${me.id}')">✓ Tôi xác nhận xóa</button>
-  <button class="btn" onclick="CM()">Huỷ</button>
+  <button class="btn btn-d" onclick="confirmCancel('${t.id}')">🚫 Xác nhận hủy</button>
+  <button class="btn" onclick="CM()">Đóng</button>
 </div>
 </div></div>`;
 }
 
-async function confirmDelete(tid,uid){
+async function confirmCancel(tid){
   const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
-  if(!Array.isArray(t.delete_confirmations))t.delete_confirmations=[];
-  if(!t.delete_confirmations.includes(uid))t.delete_confirmations.push(uid);
-
-  const ids=getPicIds(t);
-  const hasMgrPic=taskHasMgr(t);
-  let canDelete=false;
-
-  if(isMgr()){
-    canDelete=true; // ✅ v8: Manager xóa không cần xác nhận từ ai
-  } else if(hasMgrPic){
-    // Có manager trong PIC → chỉ cần manager xác nhận
-    canDelete=t.delete_confirmations.some(id=>{const u=getUser(id);return u&&u.role==='manager';});
-  } else if(ids.length<=1){
-    canDelete=true;
-  } else {
-    // Tất cả PIC phải xác nhận
-    canDelete=ids.every(id=>t.delete_confirmations.includes(id));
-  }
-
-  if(canDelete){
-    const old=t.status; t.status='done_fail';
-    addSysCom(t,'🗑 Task bị xóa bởi '+state.currentUser.name+' — chuyển sang Không thành công');
-    state.tasks=state.tasks.filter(x=>String(x.id)!==String(tid));
-    CM();renderKanban();
-    await apiPost({action:'delete',sheet:'Tasks',id:tid});
-    toast('Task đã xóa','warn');
-  } else {
-    // Lưu xác nhận, chờ người còn lại
-    const remaining=ids.filter(id=>!t.delete_confirmations.includes(id)).map(id=>getUser(id)?.name||id);
-    addSysCom(t,'🗑 '+state.currentUser.name+' xác nhận xóa — Còn chờ: '+remaining.join(', '));
-    CM();openDetail(tid);await saveTask(t);
-    toast('Đã ghi nhận — Còn chờ: '+remaining.join(', '),'warn');
-  }
+  const reason=document.getElementById('cancel-reason')?.value.trim()||'';
+  if(!reason){toast('Vui lòng nhập lý do hủy','warn');return;}
+  t.status='done';t.outcome='cancel';t.cancel_reason=reason;
+  addSysCom(t,'🚫 '+state.currentUser.name+' hủy task — Lý do: '+reason);
+  getPicIds(t).forEach(pid=>{if(pid!==state.currentUser?.id)pushNotif(pid,'🚫 Task bị hủy','"'+t.title+'" — '+reason,tid);});
+  CM();renderKanban();await saveTask(t);
+  toast('Đã hủy task','warn');
 }
 
 // ---- TASK DETAIL ----
@@ -1377,47 +1344,37 @@ function openDetail(id){
   const c=getCust(t.customer_id);
   const pics=getPics(t);
   const days=t.deadline?daysFrom(t.deadline):null;
-  const ov=days!==null&&!['done','done_fail'].includes(t.status)&&days<0;
+  const isDone=t.status==='done';
+  const ov=days!==null&&!isDone&&days<0;
   const steps=getFlowSteps(t.flow_name||t.channel);
   const subs=Array.isArray(t.subtasks)?t.subtasks:[];
   const cms=Array.isArray(t.comments)?t.comments:[];
-  const atch=Array.isArray(t.attachments)?t.attachments:[];
+  const prods=(Array.isArray(t.product_ids)?t.product_ids:[]).map(pid=>getProd(pid)).filter(Boolean);
   const sp=subProg(t);
   const me=state.currentUser;
-  const isDone=['done','done_fail'].includes(t.status);
-  const routing=doneRouting(t);
-  const picIds=getPicIds(t);
-  const confirmed=Array.isArray(t.done_confirmations)?t.done_confirmations:[];
-  const iMeConfirmed=confirmed.includes(me?.id);
-  const iAmPic=picIds.length===0||picIds.includes(me?.id)||isMgr();
+  const iAmPic=isPic(t)||isMgr();
+  const iCreator=canConfirm(t);
+  const creator=t.created_by?getUser(t.created_by):null;
 
-  // Badge chờ xác nhận nhóm
-  let groupBadge='';
-  if(t.status==='inprogress'&&routing==='group'&&confirmed.length>0){
-    const remaining=picIds.filter(id=>!confirmed.includes(id)).map(id=>getUser(id)?.name||id);
-    if(remaining.length>0){
-      groupBadge=`<div style="background:var(--alt);border:.5px solid var(--amb);border-radius:var(--r);padding:8px 12px;font-size:12px;color:var(--amb);margin-bottom:12px">
-        ⏳ <strong>Chờ xác nhận Done:</strong> ${remaining.join(', ')}
-      </div>`;
+  // Nút action theo trạng thái + vai trò
+  let actBtns='';
+  if(!isDone){
+    if(t.status==='inprogress'&&iAmPic)
+      actBtns+=`<button class="btn btn-g" onclick="openReportDone('${t.id}')">✅ Báo kết thúc</button>`;
+    if(t.status==='confirm'&&iCreator){
+      actBtns+=`<button class="btn btn-g" onclick="openConfirmDone('${t.id}')">✔ Xác nhận kết thúc</button>`;
+      actBtns+=`<button class="btn" onclick="sendBack('${t.id}')">↩ Trả lại</button>`;
     }
+    if(t.status==='todo'&&iAmPic)
+      actBtns+=`<button class="btn btn-p" onclick="mvT('${t.id}','inprogress');CM()">→ Bắt đầu làm</button>`;
   }
-
-  // Nút Done
-  let doneBtn='';
-  if(!isDone&&iAmPic){
-    if(routing==='done'){
-      doneBtn=`<button class="btn btn-g" onclick="requestDone('${t.id}')">✅ Hoàn thành</button>`;
-    } else if(routing==='review'){
-      doneBtn=`<button class="btn btn-g" onclick="requestDone('${t.id}')">✅ Gửi duyệt</button>`;
-    } else {
-      // group
-      const myDoneText=iMeConfirmed?'✅ Đã xác nhận Done':'✅ Xác nhận Done của tôi';
-      doneBtn=`<button class="btn btn-g" ${iMeConfirmed?'disabled style="opacity:.5"':''} onclick="requestDone('${t.id}')">${myDoneText}</button>`;
-    }
-  }
-
-  // Nút xóa — ai là PIC hoặc manager đều thấy
-  const delBtn=(iAmPic||isMgr())?`<button class="btn btn-d btn-sm" onclick="openDeleteConfirm('${t.id}')">🗑 Xóa task</button>`:'';
+  // Nút Hủy — chỉ người tạo / Manager, khi chưa kết thúc
+  const delBtn=(iCreator&&!isDone)?`<button class="btn btn-d btn-sm" onclick="openDeleteConfirm('${t.id}')">🚫 Hủy</button>`:'';
+  // Badge trạng thái + outcome
+  const statusBadge=isDone&&t.outcome
+    ?`<span class="b" style="background:var(--s2);color:${OUTCOME_CLR[t.outcome]}">${OUTCOME[t.outcome]}</span>`
+    :`<span class="b b${t.status}">${SL[t.status]}</span>`;
+  const confBadge=t.status==='confirm'?`<span class="b" style="background:var(--alt);color:var(--amb)">Báo: ${t.outcome==='fail'?'Không TC':'Thành công'} — chờ người tạo</span>`:'';
 
   $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo mo-lg" onclick="event.stopPropagation()">
 <div class="mh">
@@ -1425,11 +1382,10 @@ function openDetail(id){
     <div class="mti">${t.title}</div>
     <div style="margin-top:5px;display:flex;gap:6px;flex-wrap:wrap">
       <span class="b b${t.channel||'ALL'}">${t.channel||'ALL'}</span>
-      <span class="b b${t.status}">${SL[t.status]}</span>
+      ${statusBadge}
+      ${confBadge}
       ${c?`<span class="b bgr">🏢 ${c.name}</span>`:''}
       ${ov?`<span class="b bov">⚠ Quá hạn</span>`:''}
-      ${routing==='review'&&!isDone?`<span class="b breview">Cần Manager duyệt</span>`:''}
-      ${routing==='group'&&!isDone?`<span class="b" style="background:#EDE9FE;color:#5B21B6">Nhóm xác nhận</span>`:''}
     </div>
   </div>
   <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
@@ -1438,18 +1394,16 @@ function openDetail(id){
     <button class="mcl" onclick="CM()">×</button>
   </div>
 </div>
-${groupBadge}
+${t.outcome==='cancel'&&t.cancel_reason?`<div style="background:var(--s2);border-radius:var(--r);padding:8px 12px;font-size:12px;color:var(--t2);margin-bottom:12px">🚫 <strong>Lý do hủy:</strong> ${t.cancel_reason}</div>`:''}
 <div class="dmg">
   <div class="dmi"><div class="dl">Deadline</div><div class="dv">📅 ${fmtD(t.deadline)}</div></div>
   <div class="dmi"><div class="dl">Kênh</div><div class="dv">${t.channel||'—'}</div></div>
-  <div class="dmi"><div class="dl">Loại</div><div class="dv">${t.flow_name||t.task_type||'—'}</div></div>
+  <div class="dmi"><div class="dl">Loại</div><div class="dv">${t.flow_name||'—'}</div></div>
+  <div class="dmi"><div class="dl">Người tạo</div><div class="dv">${creator?creator.name:'—'}</div></div>
   <div class="dmi"><div class="dl">Tạo lúc</div><div class="dv">${fmtDT(t.created_at)}</div></div>
-  <div class="dmi"><div class="dl">Cập nhật</div><div class="dv">${fmtDT(t.updated_at)}</div></div>
-  <div class="dmi"><div class="dl">PIC</div><div class="dv">${pics.map(u=>{
-    const conf=confirmed.includes(u.id);
-    return`<span title="${u.name}">${u.name}${conf&&routing==='group'?' ✓':''}</span>`;
-  }).join(', ')||'—'}</div></div>
+  <div class="dmi"><div class="dl">PIC</div><div class="dv">${pics.map(u=>`<span title="${u.name}">${u.name}</span>`).join(', ')||'—'}</div></div>
 </div>
+${prods.length?`<div class="ds"><div class="dst">Sản phẩm liên quan</div><div style="display:flex;gap:5px;flex-wrap:wrap">${prods.map(p=>`<span class="b bgr">${p.name}</span>`).join('')}</div></div>`:''}
 ${t.notes?`<div class="ds"><div class="dst">Ghi chú</div><div class="nb2">${t.notes}</div></div>`:''}
 ${steps.length?`<div class="ds"><div class="dst">Flow / Bước hiện tại</div>
 <div class="ft">${steps.map(s=>{
@@ -1497,13 +1451,6 @@ ${subs.length?`<div class="ds"><div class="dst">Subtasks</div>
   <input type="date" id="ns-dl-${t.id}" class="fi" style="font-size:11px;padding:4px 6px;flex:1;min-width:110px" ${t.deadline?'max="'+t.deadline+'"':''} title="Deadline subtask">
   <button class="btn btn-sm" onclick="addSub('${t.id}')">+ Thêm</button>
 </div></div>`}
-${atch.length?`<div class="ds"><div class="dst">Đính kèm</div>
-<div class="atch">${atch.map(a=>`<div class="ati">
-  <span>📎</span>
-  <span class="ati-n">${a.fileName||a.name||'file'}</span>
-  <span class="ati-s">${a.size?Math.round(a.size/1024)+'KB':''}</span>
-  ${a.viewUrl&&a.viewUrl!=='#'?`<a href="${a.viewUrl}" target="_blank" class="btn btn-xs">Xem</a>`:''}
-</div>`).join('')}</div></div>`:''}
 <div class="ds"><div class="dst">Comments (${cms.filter(x=>!x.isSystem).length})</div>
 <div class="cl">${cms.map(cm=>cm.isSystem?
   `<div class="sys-cm"><span>${cm.text}</span></div>`:
@@ -1516,41 +1463,9 @@ ${atch.length?`<div class="ds"><div class="dst">Đính kèm</div>
 <button class="btn btn-p btn-sm" onclick="postCom('${t.id}')">Gửi</button>
 </div></div>
 <div class="fa" style="margin-top:12px">
-  ${doneBtn}
-  ${isMgr()&&t.status==='review'?`<button class="btn btn-g" onclick="openApprove('${t.id}')">⚡ Duyệt hoàn thành</button>`:''}
+  ${actBtns}
 </div>
 </div></div>`;
-}
-
-// ---- APPROVE ----
-function openApprove(id){
-  const t=state.tasks.find(x=>String(x.id)===String(id));if(!t)return;
-  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" onclick="event.stopPropagation()">
-<div class="mh"><div class="mti">Duyệt hoàn thành</div><button class="mcl" onclick="CM()">×</button></div>
-<p style="font-size:13px;margin-bottom:12px">Task: <strong>${t.title}</strong></p>
-<div class="fa">
-  <button class="btn btn-g" onclick="approveTask('${t.id}','done')">✅ Hoàn thành</button>
-  <button class="btn btn-d" onclick="approveTask('${t.id}','done_fail')">❌ Không thành công</button>
-  <button class="btn" onclick="CM()">Huỷ</button>
-</div>
-</div></div>`;
-}
-async function approveTask(id,st){
-  const t=state.tasks.find(x=>String(x.id)===String(id));if(!t)return;
-  const old=t.status;t.status=st;
-  // ✅ v8: Manager duyệt → clear hết done_confirmations, bypass toàn bộ PIC
-  t.done_confirmations=[];
-  addSysCom(t,(st==='done'?'✅ Manager đã duyệt hoàn thành — tất cả PIC không cần xác nhận thêm':'❌ Đánh dấu không thành công')+' bởi '+state.currentUser.name);
-  // ✅ v8: Notify tất cả PIC
-  const picIds=getPicIds(t);
-  picIds.forEach(pid=>{
-    if(pid!==state.currentUser?.id){
-      pushNotif(pid,st==='done'?'✅ Task hoàn thành':'❌ Task không thành công',
-        (st==='done'?'Manager đã duyệt hoàn thành task: ':'Task bị đánh dấu không thành công: ')+'"'+t.title+'"',id);
-    }
-  });
-  CM();renderKanban();await saveTask(t);
-  toast(st==='done'?'Đã duyệt ✓':'Đã đánh dấu không thành công');
 }
 
 // ---- TASK FORM ----
@@ -1607,7 +1522,8 @@ function openTaskForm(editId){
 <div class="g2">
   <div class="fr"><label class="fl">Trạng thái</label>
     <select id="tf-status" class="fi" onchange="previewStatusMove(this.value)">
-      ${STATUSES.map(s=>`<option value="${s}" ${(d.status||'todo')===s?'selected':''}>${SL[s]}</option>`).join('')}
+      ${['todo','inprogress'].map(s=>`<option value="${s}" ${(d.status||'todo')===s?'selected':''}>${SL[s]}</option>`).join('')}
+      ${['confirm','done'].includes(d.status)?`<option value="${d.status}" selected>${SL[d.status]}</option>`:''}
     </select>
     <div id="status-move-hint" class="status-hint">⬆ Task sẽ chuyển sang cột tương ứng sau khi lưu</div>
   </div>
@@ -1677,10 +1593,11 @@ async function saveTaskForm(editId){
     pic_ids:selPics,
     subtasks:existingTask?.subtasks||[],
     comments:existingTask?.comments||[],
-    attachments:existingTask?.attachments||[],
-    // Reset confirmations nếu PIC thay đổi
-    done_confirmations:existingTask?.done_confirmations||[],
-    delete_confirmations:existingTask?.delete_confirmations||[],
+    product_ids:existingTask?.product_ids||[],
+    created_by:existingTask?.created_by||creatorId||'',
+    outcome:existingTask?.outcome||'',
+    done_by:existingTask?.done_by||'',
+    cancel_reason:existingTask?.cancel_reason||'',
     created_at:existingTask?.created_at||new Date().toISOString(),
     updated_at:new Date().toISOString(),
   };
@@ -1700,12 +1617,408 @@ async function saveTaskForm(editId){
   await saveTask(task);
 }
 
-// ---- CUSTOMERS ----
-function renderCustomers(){
+// ============================================================
+// CRM LEADS — Pipeline Listing (KH hiện tại) + Khách hàng mới
+// ============================================================
+function setLeadType(tp){state.fLeadType=tp;renderLeads();}
+
+function getVisibleLeads(){
+  let list=state.leads.filter(l=>l.type===state.fLeadType);
+  if(!isMgr()){
+    const me=state.currentUser;
+    list=list.filter(l=>l.pic_id===me.id||l.created_by===me.id);
+  }
+  list.sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+  return list;
+}
+
+function leadName(l){
+  if(l.customer_id){const c=getCust(l.customer_id);if(c)return c.name;}
+  return l.customer_name||'(chưa đặt tên)';
+}
+
+// Cảnh báo trùng: tên KH đã có trong danh mục KH hoặc đang có lead mở
+function checkDupLead(name,excludeId){
+  const norm=s=>String(s||'').trim().toLowerCase().replace(/\s+/g,' ');
+  const n=norm(name);
+  if(!n)return null;
+  const cust=state.customers.find(c=>norm(c.name)===n);
+  if(cust){
+    const pic=cust.pic_id?getUser(cust.pic_id):null;
+    return{where:'Danh mục khách hàng',who:pic?pic.name:'(chưa gán PIC)'};
+  }
+  const lead=state.leads.find(l=>String(l.id)!==String(excludeId||'')&&norm(leadName(l))===n&&l.result!=='success'&&l.result!=='fail');
+  if(lead){
+    const pic=lead.pic_id?getUser(lead.pic_id):null;
+    return{where:'Lead đang xử lý',who:pic?pic.name:'(chưa gán PIC)'};
+  }
+  return null;
+}
+
+function renderLeads(){
+  if(!state.currentUser)return;
+  const tp=state.fLeadType;
+  const all=getVisibleLeads();
+  const fin=all.filter(l=>l.result==='success'||l.result==='fail');
+  $('lead-stats').innerHTML=`
+<div class="sc"><div class="sl">Tổng lead</div><div class="sv">${all.length}</div></div>
+<div class="sc"><div class="sl">Đang xử lý</div><div class="sv" style="color:var(--blue)">${all.length-fin.length}</div></div>
+<div class="sc"><div class="sl">Thành công ✓</div><div class="sv" style="color:var(--grn)">${all.filter(l=>l.result==='success').length}</div></div>
+<div class="sc"><div class="sl">Không thành công</div><div class="sv" style="color:var(--red)">${all.filter(l=>l.result==='fail').length}</div></div>`;
+  $('lead-fbar').innerHTML=`
+<span style="font-size:11px;color:var(--t3)">Loại:</span>
+<button class="fc ${tp==='listing'?'active':''}" onclick="setLeadType('listing')">📋 Listing (KH hiện tại)</button>
+<button class="fc ${tp==='new'?'active':''}" onclick="setLeadType('new')">🌱 Khách hàng mới</button>
+<button class="btn btn-p btn-sm" style="margin-left:auto" onclick="openLeadForm('${tp}')">+ Thêm lead</button>`;
+  const stages=LEAD_STAGES[tp];
+  $('lead-board').innerHTML=stages.map(stg=>{
+    const col=all.filter(l=>(l.stage||stages[0])===stg);
+    const isResult=stg===stages[stages.length-1];
+    return`<div class="kol ${isResult?'kdon':''}" id="lkol-${stg.replace(/[^a-zA-Z]/g,'')}"
+  ondragover="ldov(event,'${stg.replace(/'/g,"\\'")}')" ondragleave="ldlv(event,'${stg.replace(/'/g,"\\'")}')" ondrop="ldrp(event,'${stg.replace(/'/g,"\\'")}')">
+<div class="kh"><span class="kt">${stg}</span><span class="kc">${col.length}</span></div>
+${col.length?col.map(l=>rLeadCard(l)).join(''):`<div class="ec">—</div>`}
+</div>`;
+  }).join('');
+}
+
+function rLeadCard(l){
+  const prods=(Array.isArray(l.product_ids)?l.product_ids:[]).map(p=>getProd(p)).filter(Boolean);
+  const pic=l.pic_id?getUser(l.pic_id):null;
+  const done=l.result==='success'||l.result==='fail';
+  const resBadge=done?`<span class="b ${l.result==='success'?'bok':'bnotok'}">${l.result==='success'?'✅ Thành công':'❌ Không TC'}</span>`:'';
+  const respBadge=l.response==='OK'?'<span class="b bok">👍 OK</span>':(l.response==='NOT_OK'?'<span class="b bnotok">👎 Không OK</span>':'');
+  return`<div class="tc" id="lcard-${l.id}" draggable="true" ondragstart="ldrs(event,'${l.id}')" onclick="openLeadDetail('${l.id}')">
+<div class="tt">${leadName(l)}</div>
+<div class="tb2">
+  <span class="b b${l.channel||'ALL'}">${l.channel||'ALL'}</span>
+  ${prods.length?`<span class="b bgr">📦 ${prods.length} SP</span>`:''}
+  ${respBadge}${resBadge}
+</div>
+${l.email||l.phone?`<div style="font-size:10px;color:var(--t3);margin-top:3px">${l.phone?'📞 '+l.phone:''} ${l.email?' ✉ '+l.email:''}</div>`:''}
+<div class="tf">
+  <span style="font-size:10px;color:var(--t3)">${fmtD(l.created_at)}</span>
+  ${pic?`<div class="pics"><div class="av avs" title="${pic.name}">${pic.initials||pic.name[0]}</div></div>`:''}
+</div>
+</div>`;
+}
+
+// ── Drag & drop pipeline lead
+let _ldrag=null;
+function ldrs(e,id){_ldrag=id;e.dataTransfer.effectAllowed='move';}
+function ldov(e,stg){e.preventDefault();e.dataTransfer.dropEffect='move';}
+function ldlv(e,stg){}
+async function ldrp(e,stg){
+  e.preventDefault();const id=_ldrag;_ldrag=null;if(!id)return;
+  const l=state.leads.find(x=>String(x.id)===String(id));if(!l||l.stage===stg)return;
+  const stages=LEAD_STAGES[l.type];
+  // Kéo tới bước cuối "Kết quả" → mở nhập kết quả
+  if(stg===stages[stages.length-1]){l.stage=stg;await saveLead(l);openLeadResult(id);renderLeads();return;}
+  l.stage=stg;renderLeads();await saveLead(l);
+}
+
+function openLeadForm(tp,editId){
+  const l=editId?state.leads.find(x=>String(x.id)===String(editId)):null;
+  tp=l?l.type:tp;
+  const d=l||{type:tp,customer_id:'',customer_name:'',channel:tp==='listing'?'MT':'MT',region:'Miền Nam',business_type:'',contact_name:'',phone:'',email:'',num_stores:'',location:'',product_ids:[],notes:''};
+  const selProd=Array.isArray(d.product_ids)?d.product_ids:[];
+  const prodList=state.products.filter(p=>p.status==='Active'||!p.status);
+  const custInfo=tp==='listing'?`
+<div class="fr"><label class="fl">Khách hàng (hiện tại) *</label>
+<select id="lf-cust" class="fi" onchange="lfDupCheckCust()">
+  <option value="">-- Chọn khách hàng --</option>
+  ${state.customers.map(c=>`<option value="${c.id}" ${String(c.id)===String(d.customer_id)?'selected':''}>${c.name} ${c.channel?'('+c.channel+')':''}</option>`).join('')}
+</select></div>`:`
+<div class="fr"><label class="fl">Tên khách hàng mới *</label>
+<input id="lf-name" class="fi" value="${(d.customer_name||'').replace(/"/g,'&quot;')}" placeholder="Tên KH / hệ thống..." oninput="lfDupCheckName()"></div>
+<div id="lf-dup" style="display:none;font-size:12px;background:var(--alt);color:var(--amb);border-radius:var(--r);padding:7px 10px;margin-bottom:10px"></div>
+<div class="g3">
+  <div class="fr"><label class="fl">Người liên hệ</label><input id="lf-contact" class="fi" value="${(d.contact_name||'').replace(/"/g,'&quot;')}"></div>
+  <div class="fr"><label class="fl">SĐT</label><input id="lf-phone" class="fi" value="${d.phone||''}"></div>
+  <div class="fr"><label class="fl">Email</label><input id="lf-email" class="fi" value="${d.email||''}"></div>
+</div>
+<div class="g3">
+  <div class="fr"><label class="fl">Số cửa hàng</label><input id="lf-stores" type="number" class="fi" value="${d.num_stores||''}"></div>
+  <div class="fr"><label class="fl">Địa điểm</label><input id="lf-loc" class="fi" value="${(d.location||'').replace(/"/g,'&quot;')}"></div>
+  <div class="fr"><label class="fl">Hình thức KD</label><input id="lf-btype" class="fi" value="${(d.business_type||'').replace(/"/g,'&quot;')}"></div>
+</div>`;
+  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo mo-lg" onclick="event.stopPropagation()">
+<div class="mh"><div class="mti">${l?'Sửa lead':'Thêm lead — '+LEAD_TYPE[tp]}</div><button class="mcl" onclick="CM()">×</button></div>
+${custInfo}
+<div class="g2">
+  <div class="fr"><label class="fl">Kênh</label>
+    <select id="lf-ch" class="fi">${CHANNELS.map(c=>`<option value="${c}" ${d.channel===c?'selected':''}>${c}</option>`).join('')}</select></div>
+  <div class="fr"><label class="fl">Vùng</label>
+    <select id="lf-rg" class="fi">${['Toàn quốc','Miền Nam','Miền Bắc','Miền Trung'].map(r=>`<option value="${r}" ${d.region===r?'selected':''}>${r}</option>`).join('')}</select></div>
+</div>
+<div class="fr"><label class="fl">Sản phẩm chào (chọn nhiều)</label>
+<div class="pmc" id="lf-prods" style="max-height:160px;overflow:auto">
+${prodList.map(p=>{const sel=selProd.includes(String(p.id))||selProd.includes(p.id);
+  return`<div class="pch ${sel?'sel':''}" onclick="this.classList.toggle('sel')" data-pid="${p.id}">${p.name}</div>`;}).join('')}
+</div></div>
+<div class="fr"><label class="fl">Ghi chú</label><textarea id="lf-notes" class="fi">${d.notes||''}</textarea></div>
+<div class="fa">
+  <button class="btn btn-p" onclick="saveLeadForm('${tp}','${editId||''}')">💾 Lưu lead</button>
+  <button class="btn" onclick="CM()">Huỷ</button>
+</div>
+</div></div>`;
+}
+
+function lfDupCheckName(){
+  const v=document.getElementById('lf-name')?.value||'';
+  const box=document.getElementById('lf-dup');if(!box)return;
+  const dup=checkDupLead(v);
+  if(dup){box.style.display='block';box.innerHTML=`⚠ <strong>${v.trim()}</strong> đã tồn tại trong <strong>${dup.where}</strong> — PIC: <strong>${dup.who}</strong>. Kiểm tra tránh nhập trùng.`;}
+  else box.style.display='none';
+}
+function lfDupCheckCust(){/* listing: chọn từ KH có sẵn, không cần cảnh báo trùng tên */}
+
+async function saveLeadForm(tp,editId){
+  const existing=editId?state.leads.find(x=>String(x.id)===String(editId)):null;
+  const selProd=[...document.querySelectorAll('#lf-prods .pch.sel')].map(el=>el.getAttribute('data-pid')).filter(Boolean);
+  let custId='',custName='';
+  if(tp==='listing'){
+    custId=document.getElementById('lf-cust')?.value||'';
+    if(!custId){toast('Vui lòng chọn khách hàng','warn');return;}
+  }else{
+    custName=document.getElementById('lf-name')?.value.trim()||'';
+    if(!custName){toast('Vui lòng nhập tên khách hàng','warn');return;}
+    // Cảnh báo trùng (cho phép tiếp tục nếu xác nhận)
+    if(!existing){
+      const dup=checkDupLead(custName);
+      if(dup&&!confirm('⚠ "'+custName+'" đã có trong '+dup.where+' (PIC: '+dup.who+').\nVẫn tiếp tục tạo lead mới?')){return;}
+    }
+  }
+  const stages=LEAD_STAGES[tp];
+  const lead={
+    id:existing?.id||('l'+Date.now()),
+    type:tp,
+    customer_id:custId,
+    customer_name:custName||existing?.customer_name||'',
+    channel:document.getElementById('lf-ch')?.value||'MT',
+    region:document.getElementById('lf-rg')?.value||'',
+    business_type:document.getElementById('lf-btype')?.value||existing?.business_type||'',
+    contact_name:document.getElementById('lf-contact')?.value||existing?.contact_name||'',
+    phone:document.getElementById('lf-phone')?.value||existing?.phone||'',
+    email:document.getElementById('lf-email')?.value||existing?.email||'',
+    num_stores:document.getElementById('lf-stores')?.value||existing?.num_stores||'',
+    location:document.getElementById('lf-loc')?.value||existing?.location||'',
+    product_ids:selProd,
+    stage:existing?.stage||stages[0],
+    response:existing?.response||'',
+    result:existing?.result||'',
+    reason:existing?.reason||'',
+    support_info:existing?.support_info||'',
+    pic_id:existing?.pic_id||state.currentUser.id,
+    created_by:existing?.created_by||state.currentUser.id,
+    notes:document.getElementById('lf-notes')?.value||'',
+    comments:existing?.comments||[],
+    created_at:existing?.created_at||new Date().toISOString(),
+    updated_at:new Date().toISOString(),
+  };
+  if(existing){const i=state.leads.findIndex(x=>String(x.id)===String(existing.id));if(i>=0)state.leads[i]=lead;}
+  else state.leads.unshift(lead);
+  CM();renderLeads();toast('Đã lưu lead ✓');
+  await saveLead(lead);
+}
+
+function openLeadDetail(id){
+  const l=state.leads.find(x=>String(x.id)===String(id));if(!l)return;
+  const stages=LEAD_STAGES[l.type];
+  const prods=(Array.isArray(l.product_ids)?l.product_ids:[]).map(p=>getProd(p)).filter(Boolean);
+  const pic=l.pic_id?getUser(l.pic_id):null;
+  const cms=Array.isArray(l.comments)?l.comments:[];
+  const done=l.result==='success'||l.result==='fail';
+  const curIdx=stages.indexOf(l.stage||stages[0]);
+  const isListing=l.type==='listing';
+  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo mo-lg" onclick="event.stopPropagation()">
+<div class="mh">
+  <div><div class="mti">${leadName(l)}</div>
+  <div style="margin-top:5px;display:flex;gap:6px;flex-wrap:wrap">
+    <span class="b bgr">${LEAD_TYPE[l.type]}</span>
+    <span class="b b${l.channel||'ALL'}">${l.channel||'ALL'}</span>
+    ${l.response==='OK'?'<span class="b bok">👍 Phản hồi OK</span>':(l.response==='NOT_OK'?'<span class="b bnotok">👎 Không OK</span>':'')}
+    ${done?`<span class="b ${l.result==='success'?'bok':'bnotok'}">${l.result==='success'?'✅ Thành công':'❌ Không thành công'}</span>`:''}
+  </div></div>
+  <div style="display:flex;gap:6px;align-items:center">
+    <button class="btn btn-sm" onclick="openLeadForm('${l.type}','${l.id}')">✏️ Sửa</button>
+    <button class="mcl" onclick="CM()">×</button>
+  </div>
+</div>
+<div class="dmg">
+  <div class="dmi"><div class="dl">Người liên hệ</div><div class="dv">${l.contact_name||'—'}</div></div>
+  <div class="dmi"><div class="dl">SĐT</div><div class="dv">${l.phone?`<a href="tel:${l.phone}">${l.phone}</a>`:'—'}</div></div>
+  <div class="dmi"><div class="dl">Email</div><div class="dv">${l.email||'—'}</div></div>
+  <div class="dmi"><div class="dl">Số CH</div><div class="dv">${l.num_stores||'—'}</div></div>
+  <div class="dmi"><div class="dl">Địa điểm</div><div class="dv">${l.location||'—'}</div></div>
+  <div class="dmi"><div class="dl">PIC</div><div class="dv">${pic?pic.name:'—'}</div></div>
+</div>
+${prods.length?`<div class="ds"><div class="dst">Sản phẩm chào (${prods.length})</div><div style="display:flex;gap:5px;flex-wrap:wrap">${prods.map(p=>`<span class="b bgr">${p.name}</span>`).join('')}</div></div>`:''}
+<div class="ds"><div class="dst">Pipeline — bước hiện tại</div>
+<div class="ft">${stages.map((s,i)=>{
+  const cur=(l.stage||stages[0])===s;const don=i<curIdx;
+  return`<button class="fn ${cur?'cur':don?'don':''}" onclick="advLeadStage('${l.id}','${s.replace(/'/g,"&#39;")}')">${s}</button>`;
+}).join('')}</div></div>
+${isListing&&!done?`<div class="ds"><div class="dst">Phản hồi khách hàng</div>
+<div class="fa">
+  <button class="btn ${l.response==='OK'?'btn-g':''}" onclick="setLeadResponse('${l.id}','OK')">👍 OK</button>
+  <button class="btn ${l.response==='NOT_OK'?'btn-d':''}" onclick="setLeadResponse('${l.id}','NOT_OK')">👎 Không OK</button>
+</div></div>`:''}
+${done?`<div class="ds"><div class="dst">Kết quả</div>
+<div class="nb2"><strong>${l.result==='success'?'✅ Thành công':'❌ Không thành công'}</strong>${l.reason?'<br>Lý do: '+l.reason:''}${l.support_info?'<br>Hỗ trợ/CTKM: '+l.support_info:''}</div>
+<button class="btn btn-sm" style="margin-top:6px" onclick="openLeadResult('${l.id}')">Sửa kết quả</button></div>`:
+`<div class="ds"><button class="btn btn-p" onclick="openLeadResult('${l.id}')">🏁 Ghi nhận kết quả</button></div>`}
+${l.notes?`<div class="ds"><div class="dst">Ghi chú</div><div class="nb2">${l.notes}</div></div>`:''}
+<div class="ds"><div class="dst">Comments (${cms.filter(x=>!x.isSystem).length})</div>
+<div class="cl">${cms.map(cm=>cm.isSystem?`<div class="sys-cm"><span>${cm.text}</span></div>`:
+  `<div class="ci"><div class="av avs">${cm.author?.[0]||'?'}</div><div class="cb"><div style="display:flex;justify-content:space-between"><span class="ca">${cm.author}</span><span class="ctm">${fmtDT(cm.time)}</span></div><div class="ctx">${cm.text}</div></div></div>`).join('')}</div>
+<div class="cir"><textarea id="lci-${l.id}" placeholder="Nhập comment..."></textarea>
+<button class="btn btn-p btn-sm" onclick="postLeadCom('${l.id}')">Gửi</button></div></div>
+</div></div>`;
+}
+
+async function advLeadStage(id,stage){
+  const l=state.leads.find(x=>String(x.id)===String(id));if(!l)return;
+  const stages=LEAD_STAGES[l.type];
+  l.stage=stage;
+  if(!Array.isArray(l.comments))l.comments=[];
+  l.comments.push({id:Date.now(),text:'▶ Chuyển bước: '+stage+' bởi '+state.currentUser.name,author:'System',time:new Date().toISOString(),isSystem:true});
+  if(stage===stages[stages.length-1]){openLeadResult(id);renderLeads();await saveLead(l);return;}
+  openLeadDetail(id);renderLeads();await saveLead(l);
+}
+async function setLeadResponse(id,val){
+  const l=state.leads.find(x=>String(x.id)===String(id));if(!l)return;
+  l.response=val;
+  if(!Array.isArray(l.comments))l.comments=[];
+  l.comments.push({id:Date.now(),text:'Phản hồi KH: '+(val==='OK'?'OK 👍':'Không OK 👎')+' — '+state.currentUser.name,author:'System',time:new Date().toISOString(),isSystem:true});
+  openLeadDetail(id);renderLeads();await saveLead(l);
+}
+function openLeadResult(id){
+  const l=state.leads.find(x=>String(x.id)===String(id));if(!l)return;
+  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" onclick="event.stopPropagation()">
+<div class="mh"><div class="mti">🏁 Kết quả lead</div><button class="mcl" onclick="CM()">×</button></div>
+<p style="font-size:13px;margin-bottom:8px"><strong>${leadName(l)}</strong></p>
+<div class="fr"><label class="fl">Kết quả *</label>
+<select id="lr-result" class="fi">
+  <option value="">-- Chọn --</option>
+  <option value="success" ${l.result==='success'?'selected':''}>✅ Thành công</option>
+  <option value="fail" ${l.result==='fail'?'selected':''}>❌ Không thành công</option>
+</select></div>
+<div class="fr"><label class="fl">Lý do / Ghi chú</label><textarea id="lr-reason" class="fi" placeholder="Lý do thành công / thất bại...">${l.reason||''}</textarea></div>
+<div class="fr"><label class="fl">CTKM / Hỗ trợ cần có</label><textarea id="lr-support" class="fi" placeholder="Chiết khấu, trưng bày, sampling, hỗ trợ...">${l.support_info||''}</textarea></div>
+<div class="fa">
+  <button class="btn btn-p" onclick="setLeadResult('${l.id}')">💾 Lưu kết quả</button>
+  <button class="btn" onclick="openLeadDetail('${l.id}')">Quay lại</button>
+</div>
+</div></div>`;
+}
+async function setLeadResult(id){
+  const l=state.leads.find(x=>String(x.id)===String(id));if(!l)return;
+  const result=document.getElementById('lr-result')?.value||'';
+  if(!result){toast('Vui lòng chọn kết quả','warn');return;}
+  const stages=LEAD_STAGES[l.type];
+  l.result=result;l.stage=stages[stages.length-1];
+  l.reason=document.getElementById('lr-reason')?.value||'';
+  l.support_info=document.getElementById('lr-support')?.value||'';
+  if(!Array.isArray(l.comments))l.comments=[];
+  l.comments.push({id:Date.now(),text:'🏁 Kết quả: '+(result==='success'?'Thành công':'Không thành công')+' — '+state.currentUser.name,author:'System',time:new Date().toISOString(),isSystem:true});
+  CM();renderLeads();toast('Đã lưu kết quả ✓');await saveLead(l);
+}
+async function postLeadCom(id){
+  const l=state.leads.find(x=>String(x.id)===String(id));if(!l)return;
+  const inp=document.getElementById('lci-'+id);const txt=inp?.value.trim();if(!txt)return;
+  if(!Array.isArray(l.comments))l.comments=[];
+  l.comments.push({id:Date.now(),text:txt,author:state.currentUser?.name||'?',time:new Date().toISOString(),isSystem:false});
+  openLeadDetail(id);await saveLead(l);
+}
+
+// ---- CUSTOMERS (Board / CRM view) ----
+function setCustGroup(g){state.fCustGroup=g;renderCustomers();}
+function setCustView(v){state.custView=v;renderCustomers();}
+
+function custTaskInfo(c){
+  const ts=state.tasks.filter(t=>String(t.customer_id)===String(c.id));
+  const open=ts.filter(t=>t.status!=='done').length;
+  return{total:ts.length,open:open};
+}
+
+// Trả về danh sách [{key,label,items}] theo chiều nhóm
+function custGroups(){
+  const g=state.fCustGroup;
   const custs=state.customers;
-  $('ctb').innerHTML=custs.map(c=>{
+  if(g==='region'){
+    const order=['Toàn quốc','Miền Nam','Miền Bắc','Miền Trung','Khác'];
+    const map={};order.forEach(o=>map[o]=[]);
+    custs.forEach(c=>{const k=order.includes(c.region)?c.region:'Khác';map[k].push(c);});
+    return order.filter(o=>map[o].length).map(o=>({key:o,label:o,items:map[o]}));
+  }
+  if(g==='pic'){
+    const map={};
+    custs.forEach(c=>{const k=c.pic_id||'__none';(map[k]=map[k]||[]).push(c);});
+    return Object.keys(map).map(k=>({key:k,label:k==='__none'?'Chưa gán PIC':(getUser(k)?.name||k),items:map[k]}))
+      .sort((a,b)=>b.items.length-a.items.length);
+  }
+  // default: channel
+  const order=['MT','GT','B2B','HoReCa','Khác'];
+  const map={};order.forEach(o=>map[o]=[]);
+  custs.forEach(c=>{const k=order.includes(c.channel)?c.channel:'Khác';map[k].push(c);});
+  return order.filter(o=>map[o].length).map(o=>({key:o,label:o,items:map[o]}));
+}
+
+function renderCustomers(){
+  if(!state.currentUser)return;
+  const custs=state.customers;
+  const totalStores=custs.reduce((s,c)=>s+(parseInt(c.num_stores)||0),0);
+  const withPic=custs.filter(c=>c.pic_id).length;
+  $('cust-stats').innerHTML=`
+<div class="sc"><div class="sl">Tổng KH</div><div class="sv">${custs.length}</div></div>
+<div class="sc"><div class="sl">MT / GT / B2B</div><div class="sv" style="font-size:16px">${custs.filter(c=>c.channel==='MT').length} / ${custs.filter(c=>c.channel==='GT').length} / ${custs.filter(c=>c.channel==='B2B').length}</div></div>
+<div class="sc"><div class="sl">Đã gán PIC</div><div class="sv" style="color:var(--grn)">${withPic}</div></div>
+<div class="sc"><div class="sl">Tổng điểm bán</div><div class="sv" style="color:var(--blue)">${totalStores.toLocaleString('vi-VN')}</div></div>`;
+  const g=state.fCustGroup;
+  $('cust-fbar').innerHTML=`
+<span style="font-size:11px;color:var(--t3)">Nhóm theo:</span>
+<button class="fc ${g==='channel'?'active':''}" onclick="setCustGroup('channel')">Kênh</button>
+<button class="fc ${g==='region'?'active':''}" onclick="setCustGroup('region')">Vùng miền</button>
+<button class="fc ${g==='pic'?'active':''}" onclick="setCustGroup('pic')">PIC</button>
+<span style="width:1px;height:18px;background:var(--bd2);margin:0 4px"></span>
+<button class="fc ${state.custView==='board'?'active':''}" onclick="setCustView('board')">🗂 Board</button>
+<button class="fc ${state.custView==='table'?'active':''}" onclick="setCustView('table')">📄 Bảng</button>
+<button class="btn btn-p btn-sm" style="margin-left:auto" onclick="openCustForm()">+ Thêm KH</button>`;
+  if(state.custView==='table'){renderCustTable();return;}
+  const groups=custGroups();
+  $('cust-body').innerHTML=`<div class="board">${groups.map(grp=>`
+<div class="kol">
+<div class="kh"><span class="kt">${grp.label}</span><span class="kc">${grp.items.length}</span></div>
+${grp.items.map(c=>rCustCard(c)).join('')||'<div class="ec">—</div>'}
+</div>`).join('')}</div>`;
+}
+
+function rCustCard(c){
+  const pic=c.pic_id?getUser(c.pic_id):null;
+  const ti=custTaskInfo(c);
+  return`<div class="tc" onclick="openCustDetail('${c.id}')">
+<div class="tt">${c.name}</div>
+<div class="tb2">
+  <span class="b b${c.channel||'ALL'}">${c.channel||'—'}</span>
+  ${c.region?`<span class="b bgr">${c.region}</span>`:''}
+  ${c.business_type?`<span class="b bgr">${c.business_type}</span>`:''}
+</div>
+${(c.num_stores||c.contact_name)?`<div style="font-size:10px;color:var(--t3);margin-top:4px">${c.num_stores?'🏪 '+c.num_stores+' điểm bán':''}${c.num_stores&&c.contact_name?' · ':''}${c.contact_name?'👤 '+c.contact_name:''}</div>`:''}
+<div class="tf">
+  <span style="font-size:10px;color:${ti.open?'var(--blue)':'var(--t3)'}">${ti.open?'📋 '+ti.open+' task mở':(ti.total?ti.total+' task':'· chưa có task')}</span>
+  ${pic?`<div class="pics"><div class="av avs" title="${pic.name}">${pic.initials||pic.name[0]}</div></div>`:'<span style="font-size:10px;color:var(--amb)">⚠ chưa gán PIC</span>'}
+</div>
+</div>`;
+}
+
+function renderCustTable(){
+  const custs=state.customers;
+  $('cust-body').innerHTML=`<div class="tw"><table>
+<thead><tr><th>Tên</th><th>Kênh</th><th>Vùng</th><th>Hình thức KD</th><th>PIC</th><th>Liên hệ</th><th>SĐT</th><th>Số CH</th><th>Tasks</th><th></th></tr></thead>
+<tbody>${custs.map(c=>{
     const pic=c.pic_id?getUser(c.pic_id):null;
-    const taskCount=state.tasks.filter(t=>String(t.customer_id)===String(c.id)).length;
+    const ti=custTaskInfo(c);
     return`<tr>
 <td data-label="Tên"><strong>${c.name}</strong></td>
 <td data-label="Kênh"><span class="b b${c.channel||'MT'}">${c.channel||'—'}</span></td>
@@ -1715,13 +2028,14 @@ function renderCustomers(){
 <td data-label="Liên hệ">${c.contact_name||'—'}</td>
 <td data-label="SĐT">${c.phone?`<a href="tel:${c.phone}">${c.phone}</a>`:'—'}</td>
 <td data-label="Số CH">${c.num_stores||'—'}</td>
-<td data-label="Tasks"><span class="b bgr">${taskCount} tasks</span></td>
+<td data-label="Tasks"><span class="b bgr">${ti.open}/${ti.total}</span></td>
 <td><div class="tab">
   <button class="btn btn-sm" onclick="openCustDetail('${c.id}')">Xem</button>
   ${isMgr()?`<button class="btn btn-sm" onclick="openCustForm('${c.id}')">Sửa</button>`:''}
 </div></td>
 </tr>`;
-  }).join('');
+  }).join('')}</tbody>
+</table></div>`;
 }
 
 function openCustDetail(id){
