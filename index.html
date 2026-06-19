@@ -571,7 +571,7 @@ const DEFAULT_PRODUCTS=[
 {id:33,name:'Great Northern Beans',brand:'Kelly Beans',category:'Dry Beans',sku:'',unit:'',status:'Active'}
 ];
 
-let state={tasks:[],customers:[],products:[],users:[],config:[],leads:[],currentUser:null,fCh:'all',fPIC:'all',fLeadType:'listing',fCustGroup:'channel',custView:'board',syncing:false,lastSync:null};
+let state={tasks:[],customers:[],products:[],users:[],config:[],leads:[],currentUser:null,fCh:'all',fPIC:'all',fLeadType:'listing',fLeadArchive:false,fCustGroup:'channel',custView:'board',syncing:false,lastSync:null};
 
 // ---- UTILS ----
 const $=id=>document.getElementById(id);
@@ -1620,15 +1620,26 @@ async function saveTaskForm(editId){
 // ============================================================
 // CRM LEADS — Pipeline Listing (KH hiện tại) + Khách hàng mới
 // ============================================================
-function setLeadType(tp){state.fLeadType=tp;renderLeads();}
+function setLeadType(tp){state.fLeadType=tp;state.fLeadArchive=false;renderLeads();}
+function setLeadArchive(v){state.fLeadArchive=v;renderLeads();}
+function isDeletedLead(l){return l.deleted===true||l.deleted==='1'||l.deleted==='TRUE'||l.deleted==='true';}
 
 function getVisibleLeads(){
-  let list=state.leads.filter(l=>l.type===state.fLeadType);
+  let list=state.leads.filter(l=>l.type===state.fLeadType&&!isDeletedLead(l));
   if(!isMgr()){
     const me=state.currentUser;
     list=list.filter(l=>l.pic_id===me.id||l.created_by===me.id);
   }
   list.sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+  return list;
+}
+function getDeletedLeads(){
+  let list=state.leads.filter(l=>isDeletedLead(l));
+  if(!isMgr()){
+    const me=state.currentUser;
+    list=list.filter(l=>l.pic_id===me.id||l.created_by===me.id);
+  }
+  list.sort((a,b)=>new Date(b.deleted_at||0)-new Date(a.deleted_at||0));
   return list;
 }
 
@@ -1647,7 +1658,7 @@ function checkDupLead(name,excludeId){
     const pic=cust.pic_id?getUser(cust.pic_id):null;
     return{where:'Danh mục khách hàng',who:pic?pic.name:'(chưa gán PIC)'};
   }
-  const lead=state.leads.find(l=>String(l.id)!==String(excludeId||'')&&norm(leadName(l))===n&&l.result!=='success'&&l.result!=='fail');
+  const lead=state.leads.find(l=>String(l.id)!==String(excludeId||'')&&!isDeletedLead(l)&&norm(leadName(l))===n&&l.result!=='success'&&l.result!=='fail');
   if(lead){
     const pic=lead.pic_id?getUser(lead.pic_id):null;
     return{where:'Lead đang xử lý',who:pic?pic.name:'(chưa gán PIC)'};
@@ -1658,6 +1669,8 @@ function checkDupLead(name,excludeId){
 function renderLeads(){
   if(!state.currentUser)return;
   const tp=state.fLeadType;
+  const delCount=getDeletedLeads().length;
+  if(state.fLeadArchive){renderLeadArchive();return;}
   const all=getVisibleLeads();
   const fin=all.filter(l=>l.result==='success'||l.result==='fail');
   $('lead-stats').innerHTML=`
@@ -1669,6 +1682,7 @@ function renderLeads(){
 <span style="font-size:11px;color:var(--t3)">Loại:</span>
 <button class="fc ${tp==='listing'?'active':''}" onclick="setLeadType('listing')">📋 Listing (KH hiện tại)</button>
 <button class="fc ${tp==='new'?'active':''}" onclick="setLeadType('new')">🌱 Khách hàng mới</button>
+${delCount?`<button class="fc" onclick="setLeadArchive(true)">🗑 Đã xóa (${delCount})</button>`:''}
 <button class="btn btn-p btn-sm" style="margin-left:auto" onclick="openLeadForm('${tp}')">+ Thêm lead</button>`;
   const stages=LEAD_STAGES[tp];
   $('lead-board').innerHTML=stages.map(stg=>{
@@ -1680,6 +1694,41 @@ function renderLeads(){
 ${col.length?col.map(l=>rLeadCard(l)).join(''):`<div class="ec">—</div>`}
 </div>`;
   }).join('');
+}
+
+// Khu vực Lead đã xóa (giữ lại để truy vết)
+function renderLeadArchive(){
+  const dels=getDeletedLeads();
+  $('lead-stats').innerHTML=`
+<div class="sc"><div class="sl">Lead đã xóa</div><div class="sv" style="color:var(--red)">${dels.length}</div></div>
+<div class="sc"><div class="sl">Listing</div><div class="sv">${dels.filter(l=>l.type==='listing').length}</div></div>
+<div class="sc"><div class="sl">KH mới</div><div class="sv">${dels.filter(l=>l.type==='new').length}</div></div>`;
+  $('lead-fbar').innerHTML=`
+<button class="btn btn-sm" onclick="setLeadArchive(false)">← Quay lại pipeline</button>
+<span style="font-size:12px;color:var(--t3);margin-left:6px">🗑 Lead đã xóa — lưu lại để theo dõi</span>`;
+  $('lead-board').innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">${
+    dels.length?dels.map(l=>{
+      const pic=l.pic_id?getUser(l.pic_id):null;
+      const delBy=l.deleted_by?getUser(l.deleted_by):null;
+      return`<div class="tc" style="cursor:default;opacity:.92">
+<div style="display:flex;justify-content:space-between;align-items:start;gap:8px">
+  <div>
+    <div class="tt" style="text-decoration:line-through;color:var(--t2)">${leadName(l)}</div>
+    <div class="tb2" style="margin-top:3px">
+      <span class="b bgr">${LEAD_TYPE[l.type]}</span>
+      <span class="b b${l.channel||'ALL'}">${l.channel||'ALL'}</span>
+      ${pic?`<span class="b bgr">PIC: ${pic.name}</span>`:''}
+    </div>
+  </div>
+  ${isMgr()||l.created_by===state.currentUser.id?`<button class="btn btn-sm" onclick="restoreLead('${l.id}')">↩ Khôi phục</button>`:''}
+</div>
+<div style="font-size:12px;color:var(--red);background:var(--rlt);border-radius:var(--r);padding:6px 10px;margin-top:8px">
+  🗑 <strong>Lý do xóa:</strong> ${l.delete_reason||'—'}
+</div>
+<div style="font-size:10px;color:var(--t3);margin-top:5px">Xóa bởi ${delBy?delBy.name:'—'} · ${fmtDT(l.deleted_at)}</div>
+</div>`;
+    }).join(''):'<div class="ec" style="padding:30px">Chưa có lead nào bị xóa</div>'
+  }</div>`;
 }
 
 function rLeadCard(l){
@@ -1842,6 +1891,7 @@ function openLeadDetail(id){
   </div></div>
   <div style="display:flex;gap:6px;align-items:center">
     <button class="btn btn-sm" onclick="openLeadForm('${l.type}','${l.id}')">✏️ Sửa</button>
+    ${(isMgr()||l.created_by===state.currentUser.id)?`<button class="btn btn-d btn-sm" onclick="openLeadDelete('${l.id}')">🗑 Xóa</button>`:''}
     <button class="mcl" onclick="CM()">×</button>
   </div>
 </div>
@@ -1875,6 +1925,41 @@ ${l.notes?`<div class="ds"><div class="dst">Ghi chú</div><div class="nb2">${l.n
 <div class="cir"><textarea id="lci-${l.id}" placeholder="Nhập comment..."></textarea>
 <button class="btn btn-p btn-sm" onclick="postLeadCom('${l.id}')">Gửi</button></div></div>
 </div></div>`;
+}
+
+// ── Xóa lead: nhập lý do, lưu lại (soft-delete) để truy vết
+function openLeadDelete(id){
+  const l=state.leads.find(x=>String(x.id)===String(id));if(!l)return;
+  if(!(isMgr()||l.created_by===state.currentUser.id)){toast('Chỉ người tạo lead mới được xóa','warn');return;}
+  $('mc').innerHTML=`<div class="mbg" onclick="CM()"><div class="mo" onclick="event.stopPropagation()">
+<div class="mh"><div class="mti" style="color:var(--red)">🗑 Xóa lead</div><button class="mcl" onclick="CM()">×</button></div>
+<p style="font-size:13px;margin-bottom:6px">Lead: <strong>${leadName(l)}</strong></p>
+<p style="font-size:12px;color:var(--t2);margin-bottom:10px">Lead sẽ được chuyển vào khu <strong>🗑 Đã xóa</strong> (vẫn lưu lại để theo dõi, có thể khôi phục). Vui lòng nhập lý do.</p>
+<div class="fr"><label class="fl">Lý do xóa *</label>
+<textarea id="lead-del-reason" class="fi" placeholder="VD: nhập nhầm, trùng lead, khách không còn nhu cầu..."></textarea></div>
+<div class="fa">
+  <button class="btn btn-d" onclick="confirmLeadDelete('${l.id}')">🗑 Xác nhận xóa</button>
+  <button class="btn" onclick="openLeadDetail('${l.id}')">Quay lại</button>
+</div>
+</div></div>`;
+}
+async function confirmLeadDelete(id){
+  const l=state.leads.find(x=>String(x.id)===String(id));if(!l)return;
+  const reason=document.getElementById('lead-del-reason')?.value.trim()||'';
+  if(!reason){toast('Vui lòng nhập lý do xóa','warn');return;}
+  l.deleted='1';l.delete_reason=reason;l.deleted_by=state.currentUser.id;l.deleted_at=new Date().toISOString();
+  if(!Array.isArray(l.comments))l.comments=[];
+  l.comments.push({id:Date.now(),text:'🗑 Xóa bởi '+state.currentUser.name+' — Lý do: '+reason,author:'System',time:new Date().toISOString(),isSystem:true});
+  CM();renderLeads();toast('Đã xóa lead (đã lưu vào khu Đã xóa)','warn');
+  await saveLead(l);
+}
+async function restoreLead(id){
+  const l=state.leads.find(x=>String(x.id)===String(id));if(!l)return;
+  l.deleted='';l.delete_reason='';l.deleted_by='';l.deleted_at='';
+  if(!Array.isArray(l.comments))l.comments=[];
+  l.comments.push({id:Date.now(),text:'↩ Khôi phục bởi '+state.currentUser.name,author:'System',time:new Date().toISOString(),isSystem:true});
+  renderLeads();toast('Đã khôi phục lead ✓','ok');
+  await saveLead(l);
 }
 
 async function advLeadStage(id,stage){
