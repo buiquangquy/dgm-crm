@@ -388,6 +388,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
   <div class="header-actions">
     <span id="modeKeyword" class="mode-badge active" onclick="setMode('keyword')">🔍 Tra cứu</span>
     <span id="modeSKU" class="mode-badge inactive" onclick="setMode('sku')">📋 Checklist SKU</span>
+    <span id="modeEngine" class="mode-badge active" onclick="toggleEngine()" title="Chuyển AI ↔ Database-only. DB-only chạy không cần Gemini.">⚡ AI</span>
     <button class="btn-icon" title="Bookmark" onclick="toggleBookmarks()">🔖</button>
     <button class="btn-icon" title="Export" onclick="exportReport()">⬇️</button>
     <button class="btn-icon" title="Cài đặt" onclick="openSettings()">⚙️</button>
@@ -667,8 +668,8 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         </div>
         <div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.12);border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:10px;color:#686460;line-height:1.6">
           ⚡ <strong style="color:#a8a49a">Lưu ý kỹ thuật:</strong> App dùng Gemini API free key — giới hạn ~15 lần/phút.<br>
-          Nếu báo lỗi <em>"quota exceeded"</em> → đợi 1–2 phút rồi thử lại.<br>
-          Chọn ít mode phân tích hơn để tiết kiệm quota.<br>
+          Khi báo <em>"quota exceeded"</em> → app TỰ chuyển sang <strong style="color:#c9a84c">📚 Database-only</strong>: vẫn tra cứu & trích xuất tài liệu gốc, chỉ tạm thời không có phân tích AI.<br>
+          Bấm <strong>⚡ AI / 📚 DB-only</strong> trên thanh tiêu đề để chủ động đổi chế độ.<br>
           Dùng nhiều → tạo thêm key miễn phí tại <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#c9a84c;text-decoration:none">Google AI Studio</a>.
         </div>
         <a href="mailto:quangquy.bui@gmail.com" style="display:inline-flex;align-items:center;gap:5px;font-size:10px;color:#c9a84c;text-decoration:none;font-family:'IBM Plex Mono',monospace">📧 quangquy.bui@gmail.com</a>
@@ -781,7 +782,9 @@ let state = {
   history: [], bookmarks: [], queryCount: 0,
   currentIntent: '', currentQuery: '', currentFolder: 'all',
   activeTab: 'text', currentMode: 'keyword', selectedSKU: null,
-  uploadedImage: null, defaultLang: 'bilingual', appLang: 'vi'
+  uploadedImage: null, defaultLang: 'bilingual', appLang: 'vi',
+  dbOnly: false,    // true = chế độ Database-only (không gọi Gemini)
+  fastMode: true    // true = bỏ bước AI phân tích ý định → chỉ 1 lần gọi Gemini
 };
 
 // ══════════════════════════════════════════════════════════
@@ -826,6 +829,8 @@ function loadState() {
       state.queryCount = s.queryCount || 0;
       state.defaultLang = s.defaultLang || 'bilingual';
       state.appLang = s.appLang || 'vi';
+      state.dbOnly = s.dbOnly || false;
+      state.fastMode = s.fastMode !== false; // mặc định true
     }
   } catch(e) {}
 }
@@ -836,7 +841,8 @@ function saveState() {
     gasWebAppUrl: state.gasWebAppUrl,
     history: state.history.slice(0,50), bookmarks: state.bookmarks.slice(0,30),
     queryCount: state.queryCount, defaultLang: state.defaultLang,
-    appLang: state.appLang
+    appLang: state.appLang,
+    dbOnly: state.dbOnly, fastMode: state.fastMode
   }));
 }
 
@@ -1021,7 +1027,9 @@ function filterFolder(id) {
 function updateStatus() {
   const hasKey = !!state.apiKey;
   document.getElementById('statusDot').classList.toggle('error', !hasKey);
-  document.getElementById('statusText').textContent = hasKey ? 'Gemini 2.5 Flash · Sẵn sàng' : 'Chưa cấu hình API key – Vào ⚙️ để thiết lập';
+  document.getElementById('statusText').textContent = state.dbOnly
+    ? '📚 Database-only · Không gọi Gemini'
+    : (hasKey ? 'Gemini · Sẵn sàng' : '📚 Chưa có API key · Đang dùng Database-only (⚙️ thêm key để bật phân tích AI)');
   document.getElementById('queryCount').textContent = state.queryCount + ' queries hôm nay';
   document.getElementById('stat-queries').textContent = state.queryCount;
   document.getElementById('stat-bookmarks').textContent = state.bookmarks.length;
@@ -1043,6 +1051,32 @@ function updateStatus() {
     }
   }
   updateFolderCounts();
+  applyEngineBadge();
+}
+
+// ══════════════════════════════════════════════════════════
+// ENGINE TOGGLE (⚡ AI  ↔  📚 Database-only)  · Track 1
+// ══════════════════════════════════════════════════════════
+function toggleEngine() {
+  state.dbOnly = !state.dbOnly;
+  applyEngineBadge();
+  saveState();
+  const st = document.getElementById('statusText');
+  if (st) st.textContent = state.dbOnly
+    ? '📚 Database-only · Không gọi Gemini · Tra cứu tài liệu gốc'
+    : (state.apiKey ? 'Gemini · Sẵn sàng' : 'Chưa có API key – sẽ dùng Database-only');
+}
+function applyEngineBadge() {
+  const b = document.getElementById('modeEngine');
+  if (!b) return;
+  const offline = state.dbOnly || !state.apiKey;
+  if (offline) {
+    b.textContent = state.dbOnly ? '📚 DB-only' : '📚 DB (no key)';
+    b.classList.remove('active'); b.classList.add('inactive');
+  } else {
+    b.textContent = '⚡ AI';
+    b.classList.add('active'); b.classList.remove('inactive');
+  }
 }
 
 function loadSettingsUI() {
@@ -1177,7 +1211,7 @@ async function callGemini(prompt, systemPrompt='', imageData=null) {
     }
     parts.push({ text: systemPrompt ? systemPrompt + '\n\n' + prompt : prompt });
 
-    const genConfig = { temperature: 0.2, topP: 0.8, maxOutputTokens: 16384 };
+    const genConfig = { temperature: 0.2, topP: 0.8, maxOutputTokens: 8192 };
     if (!imageData) { genConfig.responseMimeType = 'application/json'; }
 
     const body = { contents: [{ role: 'user', parts }], generationConfig: genConfig };
@@ -1210,10 +1244,180 @@ function quickSearch(q) {
   doSearch();
 }
 
+// ══════════════════════════════════════════════════════════
+// LOCAL DB ENGINE — tra cứu KHÔNG cần Gemini (Track 1A)
+// Khi hết quota / không có API key / bật DB-only → vẫn chạy,
+// chỉ tìm & trích xuất từ Drive index có sẵn.
+// ══════════════════════════════════════════════════════════
+function stripDia(s) {
+  return (s || '').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd');
+}
+function isQuotaErr(msg) {
+  msg = (msg || '').toLowerCase();
+  return ['quota','exceed','limit','429','rate','resource_exhausted',
+          'overload','unavailable','503','api key','api_key','permission']
+         .some(k => msg.includes(k));
+}
+const VN_STOP = new Set(['quy','dinh','ve','la','gi','cho','cua','va','cac','co',
+  'the','khi','theo','nao','duoc','tren','trong','mot','can','phai','khong','hay',
+  'nhu','thi','se','o','den','tu','toi','muon','hoi','xin','lam','sao']);
+function localTokenize(raw) {
+  const norm = stripDia(raw).replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  const keywords = [...new Set(norm.split(' ').filter(w => w.length > 1 && !VN_STOP.has(w)))];
+  const numbers  = (raw.match(/\d+/g) || []).filter(n => n.length >= 2);
+  return { keywords, numbers, norm };
+}
+function detectFoldersLocal(rawNorm) {
+  const t = rawNorm, f = new Set();
+  if (/nhan|ghi nhan|nip|nhan phu|thanh phan|ingredient|label/.test(t)) f.add('D');
+  if (/kiem nghiem|chi tieu|xet nghiem|test|qcvn|tcvn|gioi han|dung sai|histamine|kim loai|vi sinh|microbio/.test(t)) f.add('E');
+  if (/claim|logo|quang cao|organic|halal|gluten|chung nhan/.test(t)) f.add('F');
+  if (/cong bo|nghi dinh|ho so|tu cong bo|dang ky ban cong bo/.test(t)) f.add('B');
+  if (/luat|attp|an toan thuc pham/.test(t)) f.add('A');
+  if (/nghi quyet/.test(t)) f.add('C');
+  return f.size ? [...f] : ['all'];
+}
+// Build a local "intent" object so the AI path can skip the extra Gemini call
+function buildLocalIntent(raw) {
+  const { keywords, numbers, norm } = localTokenize(raw);
+  return {
+    intent_vi: raw, intent_en: raw,
+    folders: detectFoldersLocal(norm),
+    related_docs: numbers,
+    keywords: keywords
+  };
+}
+function makeExcerpt(summary, terms) {
+  if (!summary || !summary.trim())
+    return '⚠️ File chưa có text trích xuất (có thể là PDF scan chưa OCR). Mở file gốc để đọc nội dung.';
+  const s = summary.replace(/\s+/g, ' ').trim();
+  const sNorm = stripDia(s);
+  let pos = -1;
+  for (const t of terms) { const i = sNorm.indexOf(t); if (i >= 0) { pos = i; break; } }
+  if (pos < 0) pos = 0;
+  const start = Math.max(0, pos - 110), end = Math.min(s.length, pos + 380);
+  return (start > 0 ? '… ' : '') + s.slice(start, end) + (end < s.length ? ' …' : '');
+}
+// Score every file diacritic-insensitively; works even when extract_ok = false
+function localRankFiles(raw, folders) {
+  const { keywords, numbers } = localTokenize(raw);
+  const terms = keywords;
+  let pool = driveIndex.files || [];
+  if (folders && folders.length && !folders.includes('all'))
+    pool = pool.filter(f => folders.includes(f.folder));
+  if (pool.length === 0) pool = driveIndex.files || []; // folder guess too narrow → widen
+  const scored = pool.map(f => {
+    const nameH = stripDia(f.name || '');
+    const kwH   = stripDia((f.keywords || []).join(' '));
+    const sumH  = stripDia((f.summary || '').slice(0, 4000));
+    const numH  = stripDia([f.doc_number, f.doc_year].filter(Boolean).join(' '));
+    let score = 0;
+    terms.forEach(t => {
+      if (nameH.includes(t)) score += 15;
+      else if (kwH.includes(t)) score += 8;
+      else if (sumH.includes(t)) score += 3;
+    });
+    numbers.forEach(n => {
+      if (nameH.includes(n) || numH.includes(n)) score += 12;
+      else if (sumH.includes(n)) score += 5;
+    });
+    return { ...f, score };
+  }).filter(f => f.score > 0);
+  scored.sort((a, b) => b.score - a.score);
+  return { files: scored.slice(0, 6), terms: terms.concat(numbers) };
+}
+function buildLocalResult(raw, files, terms) {
+  const citations = files.map(f => {
+    const docId = [f.doc_type, (f.doc_number ? f.doc_number + (f.doc_year ? '/' + f.doc_year : '') : '')]
+      .filter(Boolean).join(' ') || f.name.replace(/\.[^.]+$/, '');
+    return {
+      doc_id: docId,
+      doc_name_vi: f.name.replace(/\.[^.]+$/, ''),
+      doc_name_en: '',
+      article: '', article_en: '',
+      content_vi: makeExcerpt(f.summary, terms),
+      content_en: '',
+      relevance: '',
+      folder: f.folder || '',
+      source_file: f.name
+    };
+  });
+  const fileLinks = files.map((f, i) =>
+    `→ [${i + 1}] ${f.name.replace(/\.[^.]+$/, '')}` +
+    (f.url ? ` — <a href="${f.url}" target="_blank" style="color:var(--gold)">📎 mở file gốc</a>` : '')
+  ).join('\n');
+  const analysis_vi =
+    '**Chế độ Database (không dùng AI) đang hoạt động** — vì Gemini hết hạn mức hoặc bạn đã bật 📚 DB-only.\n' +
+    'Hệ thống đã tra cứu và xếp hạng ' + files.length + ' văn bản khớp nhất với câu hỏi. ' +
+    'Cột trái là đoạn trích THẬT lấy từ file; bấm "📎 mở file gốc" để đọc nguyên văn điều/khoản.\n' +
+    'Lưu ý: chế độ này KHÔNG diễn giải/đánh giá tự động — chỉ tra cứu & trích xuất tài liệu gốc. ' +
+    'Khi có hạn mức Gemini trở lại, bấm 📚→⚡ trên thanh tiêu đề để bật phân tích AI đầy đủ.\n' +
+    'Văn bản tìm thấy:\n' + fileLinks;
+  const analysis_en =
+    '**Database mode (no AI) is active** because the Gemini quota is exhausted or DB-only is on. ' +
+    'Ranked ' + files.length + ' best-matching documents; left column shows real excerpts. Lookup & source extraction only — no automated analysis.';
+  return {
+    citations, analysis_vi, analysis_en,
+    risks: [], actions: [],
+    summary_vi: 'Tìm thấy ' + files.length + ' văn bản khớp trong Database (không AI).',
+    summary_en: files.length + ' matching documents (no-AI mode).',
+    _isDriveMode: true, _driveFilesFound: files, _dbOnly: true
+  };
+}
+function dbEmptyMsg() {
+  setLoading(false);
+  document.getElementById('intentConfirm').style.display = 'none';
+  document.getElementById('emptyState').style.display = 'none';
+  const grid = document.getElementById('resultsGrid');
+  grid.style.display = 'grid';
+  grid.innerHTML =
+    '<div style="grid-column:1/-1;background:rgba(224,154,56,0.08);border:1px solid rgba(224,154,56,0.3);border-radius:8px;padding:16px;font-size:13px;color:var(--text);line-height:1.7">' +
+    '<strong style="color:var(--amber)">📚 Chế độ Database — chưa tìm thấy văn bản khớp</strong><br>' +
+    (driveIndexStatus !== 'ok'
+      ? 'Drive DB chưa được tải. Nhấn <strong>🔄 Reload Drive DB</strong> ở thanh bên trái, hoặc vào ⚙️ để nhập GAS Web App URL.'
+      : 'Không có file khớp từ khoá. Thử từ khoá khác. Nếu chắc chắn có văn bản nhưng không tìm thấy — file có thể là PDF scan chưa OCR; cần nâng cấp GAS indexer (bước C).') +
+    '</div>';
+}
+// Main entry: tra cứu hoàn toàn cục bộ, không gọi Gemini
+async function localDbSearch(raw) {
+  setLoading(true);
+  document.getElementById('intentConfirm').style.display = 'none';
+  // Đảm bảo có index — thử tải 1 lần nếu đã cấu hình GAS
+  if (!(driveIndexStatus === 'ok' && driveIndex && driveIndex.files)) {
+    if (state.gasWebAppUrl && driveIndexStatus !== 'loading') {
+      await loadDriveIndex(false);
+    }
+    if (!(driveIndexStatus === 'ok' && driveIndex && driveIndex.files)) {
+      return dbEmptyMsg();
+    }
+  }
+  const intent = buildLocalIntent(raw);
+  const { files, terms } = localRankFiles(raw, intent.folders);
+  setLoading(false);
+  if (!files.length) return dbEmptyMsg();
+  const result = buildLocalResult(raw, files, terms);
+  document.getElementById('emptyState').style.display = 'none';
+  renderResults(result, intent);
+  addToHistory('[DB] ' + raw, result);
+  state.queryCount++; saveState(); updateStatus();
+}
+
 async function doSearch() {
   const raw = document.getElementById('searchInput').value.trim();
   if (!raw) return;
-  if (!state.apiKey) { openSettings(); return; }
+
+  // ── ENGINE DISPATCH (Track 1: A + B) ──────────────────────
+  // A) DB-only hoặc chưa có API key → tra cứu cục bộ, KHÔNG gọi Gemini
+  if (state.dbOnly || !state.apiKey) { return localDbSearch(raw); }
+  // B) Fast mode → bỏ bước AI phân tích ý định, chỉ gọi Gemini 1 lần
+  if (state.fastMode) {
+    state.currentIntent = buildLocalIntent(raw);
+    state.currentQuery = raw;
+    return confirmIntent();
+  }
+  // ── CLASSIC 2-STEP (AI intent → confirm) ──────────────────
 
   setLoading(true);
   document.getElementById('intentConfirm').classList.remove('visible');
@@ -1255,6 +1459,7 @@ Trả về JSON:
     document.getElementById('intentConfirm').classList.add('visible');
 
   } catch(e) {
+    if (isQuotaErr(e.message)) { setLoading(false); return localDbSearch(raw); }
     alert('Lỗi: ' + e.message);
   } finally {
     setLoading(false);
@@ -1373,6 +1578,11 @@ Hãy trả về phân tích toàn diện dạng JSON:
     saveState(); updateStatus();
 
   } catch(e) {
+    // Gemini hết quota / lỗi → tự động chuyển sang Database thay vì chết
+    if (isQuotaErr(e.message)) {
+      setLoading(false);
+      return localDbSearch(state.currentQuery || document.getElementById('searchInput').value.trim());
+    }
     document.getElementById('emptyState').style.display = 'flex';
     alert('Lỗi phân tích: ' + e.message);
   } finally {
