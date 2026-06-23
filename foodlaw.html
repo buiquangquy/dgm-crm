@@ -1304,31 +1304,40 @@ function makeExcerpt(summary, terms) {
 function localRankFiles(raw, folders) {
   const { keywords, numbers } = localTokenize(raw);
   const terms = keywords;
-  let pool = driveIndex.files || [];
-  if (folders && folders.length && !folders.includes('all'))
-    pool = pool.filter(f => folders.includes(f.folder));
-  if (pool.length === 0) pool = driveIndex.files || []; // folder guess too narrow → widen
-  const scored = pool.map(f => {
+  const wantFolders = (folders && folders.length && !folders.includes('all')) ? folders : null;
+  const scored = (driveIndex.files || []).map(f => {
     const nameH = stripDia(f.name || '');
     const kwH   = stripDia((f.keywords || []).join(' '));
-    const sumH  = stripDia((f.summary || '').slice(0, 4000));
-    const numH  = stripDia([f.doc_number, f.doc_year].filter(Boolean).join(' '));
+    const sumH  = stripDia((f.summary || '').slice(0, 6000));
+    const typeH = stripDia([f.doc_type, f.doc_number, f.doc_year].filter(Boolean).join(' '));
+    const hay   = nameH + ' ' + kwH + ' ' + typeH;
     let score = 0;
     terms.forEach(t => {
-      if (nameH.includes(t)) score += 15;
-      else if (kwH.includes(t)) score += 8;
-      else if (sumH.includes(t)) score += 3;
+      if (nameH.includes(t))      score += 15;
+      else if (kwH.includes(t))   score += 8;
+      else if (typeH.includes(t)) score += 6;
+      else if (sumH.includes(t))  score += 3;
     });
     numbers.forEach(n => {
-      if (nameH.includes(n) || numH.includes(n)) score += 12;
-      else if (sumH.includes(n)) score += 5;
+      if (hay.includes(n))        score += 12;
+      else if (sumH.includes(n))  score += 5;
     });
+    if (score > 0 && wantFolders && wantFolders.includes(f.folder)) score += 6; // boost, không lọc bỏ
     return { ...f, score };
   }).filter(f => f.score > 0);
   scored.sort((a, b) => b.score - a.score);
   return { files: scored.slice(0, 6), terms: terms.concat(numbers) };
 }
-function buildLocalResult(raw, files, terms) {
+// Khi không khớp từ khoá → trả về các file trong nhóm liên quan để duyệt thủ công
+function browseFolders(folders) {
+  if (!driveIndex || !driveIndex.files) return [];
+  const want = (folders && folders.length && !folders.includes('all')) ? folders : null;
+  let pool = want ? driveIndex.files.filter(f => want.includes(f.folder)) : driveIndex.files;
+  if (!pool.length) pool = driveIndex.files;
+  return pool.slice(0, 8).map(f => ({ ...f, score: 0 }));
+}
+function buildLocalResult(raw, files, terms, mode) {
+  const isBrowse = mode === 'browse';
   const citations = files.map(f => {
     const docId = [f.doc_type, (f.doc_number ? f.doc_number + (f.doc_year ? '/' + f.doc_year : '') : '')]
       .filter(Boolean).join(' ') || f.name.replace(/\.[^.]+$/, '');
@@ -1348,16 +1357,22 @@ function buildLocalResult(raw, files, terms) {
     `→ [${i + 1}] ${f.name.replace(/\.[^.]+$/, '')}` +
     (f.url ? ` — <a href="${f.url}" target="_blank" style="color:var(--gold)">📎 mở file gốc</a>` : '')
   ).join('\n');
-  const analysis_vi =
-    '**Chế độ Database (không dùng AI) đang hoạt động** — vì Gemini hết hạn mức hoặc bạn đã bật 📚 DB-only.\n' +
-    'Hệ thống đã tra cứu và xếp hạng ' + files.length + ' văn bản khớp nhất với câu hỏi. ' +
-    'Cột trái là đoạn trích THẬT lấy từ file; bấm "📎 mở file gốc" để đọc nguyên văn điều/khoản.\n' +
-    'Lưu ý: chế độ này KHÔNG diễn giải/đánh giá tự động — chỉ tra cứu & trích xuất tài liệu gốc. ' +
-    'Khi có hạn mức Gemini trở lại, bấm 📚→⚡ trên thanh tiêu đề để bật phân tích AI đầy đủ.\n' +
-    'Văn bản tìm thấy:\n' + fileLinks;
-  const analysis_en =
-    '**Database mode (no AI) is active** because the Gemini quota is exhausted or DB-only is on. ' +
-    'Ranked ' + files.length + ' best-matching documents; left column shows real excerpts. Lookup & source extraction only — no automated analysis.';
+  const analysis_vi = isBrowse
+    ? ('**Chế độ Database — không khớp từ khoá chính xác.**\n' +
+       'Không có file nào chứa đúng từ khoá (thường vì file là PDF scan chưa OCR nên hệ thống chưa đọc được nội dung). ' +
+       'Dưới đây là ' + files.length + ' văn bản trong nhóm liên quan để bạn mở đọc trực tiếp:\n' +
+       fileLinks + '\n' +
+       'Để tra cứu được theo nội dung (NIP, dung sai, chỉ tiêu…) cần nâng cấp GAS indexer có OCR — bước C.')
+    : ('**Chế độ Database (không dùng AI) đang hoạt động** — vì Gemini hết hạn mức hoặc bạn đã bật 📚 DB-only.\n' +
+       'Hệ thống đã tra cứu và xếp hạng ' + files.length + ' văn bản khớp nhất với câu hỏi. ' +
+       'Cột trái là đoạn trích THẬT lấy từ file; bấm "📎 mở file gốc" để đọc nguyên văn điều/khoản.\n' +
+       'Lưu ý: chế độ này KHÔNG diễn giải/đánh giá tự động — chỉ tra cứu & trích xuất tài liệu gốc. ' +
+       'Khi có hạn mức Gemini trở lại, bấm 📚→⚡ trên thanh tiêu đề để bật phân tích AI đầy đủ.\n' +
+       'Văn bản tìm thấy:\n' + fileLinks);
+  const analysis_en = isBrowse
+    ? ('**Database mode — no exact keyword match.** Showing ' + files.length + ' documents from the related folder to open directly. Full-text lookup needs the OCR indexer upgrade (step C).')
+    : ('**Database mode (no AI) is active** because the Gemini quota is exhausted or DB-only is on. ' +
+       'Ranked ' + files.length + ' best-matching documents; left column shows real excerpts. Lookup & source extraction only — no automated analysis.');
   return {
     citations, analysis_vi, analysis_en,
     risks: [], actions: [],
@@ -1396,12 +1411,25 @@ async function localDbSearch(raw) {
   const intent = buildLocalIntent(raw);
   const { files, terms } = localRankFiles(raw, intent.folders);
   setLoading(false);
-  if (!files.length) return dbEmptyMsg();
-  const result = buildLocalResult(raw, files, terms);
-  document.getElementById('emptyState').style.display = 'none';
-  renderResults(result, intent);
-  addToHistory('[DB] ' + raw, result);
-  state.queryCount++; saveState(); updateStatus();
+  if (files.length) {
+    const result = buildLocalResult(raw, files, terms, 'match');
+    document.getElementById('emptyState').style.display = 'none';
+    renderResults(result, intent);
+    addToHistory('[DB] ' + raw, result);
+    state.queryCount++; saveState(); updateStatus();
+    return;
+  }
+  // Không khớp từ khoá → duyệt các file trong nhóm liên quan (nếu index có file)
+  const browse = browseFolders(intent.folders);
+  if (browse.length) {
+    const result = buildLocalResult(raw, browse, terms, 'browse');
+    document.getElementById('emptyState').style.display = 'none';
+    renderResults(result, intent);
+    addToHistory('[DB·duyệt] ' + raw, result);
+    state.queryCount++; saveState(); updateStatus();
+    return;
+  }
+  return dbEmptyMsg();
 }
 
 async function doSearch() {
