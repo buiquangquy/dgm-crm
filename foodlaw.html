@@ -242,6 +242,28 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
 .acc-head.open .acc-chev{transform:rotate(90deg)}
 .acc-body{display:none;padding:4px 2px 12px}
 .acc-body.open{display:block;animation:fadeIn .3s ease}
+
+/* ── ARTICLE MODAL ── */
+.law-modal-card{background:var(--navy2);border:1px solid var(--gold);border-radius:var(--radius2);width:min(720px,92vw);max-height:84vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.5);animation:ob-in .25s ease}
+.lm-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid var(--border)}
+.lm-tag{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gold2);background:rgba(201,168,76,.1);padding:4px 10px;border-radius:8px}
+.lm-label{font-size:13px;color:var(--text);margin-left:10px;font-weight:600}
+.lm-close{background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;line-height:1}
+.lm-close:hover{color:var(--gold)}
+.lm-body{padding:16px 20px;overflow-y:auto;font-size:13px;line-height:1.85;color:var(--text);white-space:pre-wrap;font-family:'IBM Plex Serif',serif}
+.lm-body mark{background:rgba(201,168,76,.32);color:var(--gold3);padding:0 2px;border-radius:3px}
+.lm-foot{display:flex;gap:8px;padding:12px 18px;border-top:1px solid var(--border);flex-wrap:wrap}
+
+/* ── PINPOINT (DB-only extractive answer) ── */
+.pinpoint{background:var(--navy3);border:1px solid var(--border2);border-left:3px solid var(--gold);border-radius:8px;padding:11px 13px;margin-bottom:9px;opacity:0;animation:fadeIn .4s ease forwards}
+.pinpoint:hover{border-color:var(--border)}
+.pp-head{font-size:12px;color:var(--text);margin-bottom:5px;font-weight:500}
+.pp-folder{color:var(--gold);font-family:'IBM Plex Mono',monospace;font-size:11px}
+.pp-snip{font-size:11.5px;color:var(--text2);line-height:1.6;margin-bottom:8px}
+.pp-snip mark{background:rgba(201,168,76,.28);color:var(--gold3);padding:0 2px;border-radius:3px}
+.pp-actions{display:flex;gap:7px;flex-wrap:wrap}
+.pp-btn{font-size:11px;padding:5px 11px;border-radius:14px;border:1px solid var(--border);background:rgba(201,168,76,.06);color:var(--gold2);cursor:pointer;text-decoration:none;transition:all .18s;display:inline-flex;align-items:center;gap:5px}
+.pp-btn:hover{background:var(--gold);color:var(--navy);border-color:var(--gold)}
 .checklist-table{width:100%;border-collapse:collapse}
 .checklist-table th{padding:10px 12px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border2);font-weight:500}
 .checklist-table td{padding:10px 12px;border-bottom:1px solid var(--border2);font-size:12px;vertical-align:top}
@@ -769,6 +791,20 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
 </div>
 
 <!-- ── SETTINGS ── -->
+<div id="lawModal" class="popup-overlay" onclick="if(event.target===this)closeLawModal()">
+  <div class="law-modal-card">
+    <div class="lm-head">
+      <div style="flex:1;min-width:0"><span class="lm-tag" id="lmTag">—</span><span class="lm-label" id="lmLabel"></span></div>
+      <button class="lm-close" onclick="closeLawModal()">✕</button>
+    </div>
+    <div class="lm-body" id="lmBody">—</div>
+    <div class="lm-foot">
+      <button class="pp-btn" id="lmFull" onclick="lmFullSearch()">🔍 Tra cứu đầy đủ</button>
+      <a class="pp-btn" id="lmSrc" href="#" target="_blank" style="display:none">📄 Mở file gốc</a>
+    </div>
+  </div>
+</div>
+
 <div id="settingsOverlay" class="settings-overlay" onclick="if(event.target===this)closeSettings()">
   <div class="settings-modal">
     <div class="settings-header">
@@ -1171,7 +1207,7 @@ function toggleAcc(el){
   const b=el.nextElementSibling;
   if(b && b.classList.contains('acc-body')) b.classList.toggle('open');
 }
-function _lawPill(law,q){ return `<span class="law-pill" onclick="guideLookup('${gesc(q)}')"><span class="arrow">➜</span> ${law}</span>`; }
+function _lawPill(law,q){ return `<span class="law-pill" onclick="lawPopup('${gesc(q)}','${gesc(law)}')"><span class="arrow">➜</span> ${law}</span>`; }
 function _appl(label,o){ const t=o.text||(o.type==='yes'?'Bắt buộc':o.type==='no'?'Không áp dụng':'Có điều kiện'); return `<span class="appl ${o.type}">${label}: ${t}</span>`; }
 function renderLabel(){
   let h=`<div class="g-section"><div class="gs-bar"></div><div class="gs-title">Nhãn sản phẩm đúng luật</div><div class="gs-note">· 16 nội dung bắt buộc · phân biệt SX tại VN / OEM-NK</div></div>`;
@@ -1219,6 +1255,90 @@ function showGuide(tab){
   ['label','hscb','spec'].forEach(t=>{ const e=document.getElementById('gtab-'+t); if(e) e.classList.toggle('active',t===tab); });
   const body=document.getElementById('guideBody');
   if(body) body.innerHTML = tab==='label'?renderLabel(): tab==='hscb'?renderHSCB(): renderSpec();
+}
+
+/* ===================== ARTICLE EXTRACTION + MODAL ===================== */
+function _escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function _termsOf(q){ try{ const t=localTokenize(q); return (t.keywords||[]).concat(t.numbers||[]).filter(Boolean); }catch(e){ return stripDia(String(q||'')).split(/\s+/).filter(w=>w.length>1); } }
+// Cắt văn bản thành các đoạn theo "Điều N"
+function getArticleSegments(text){
+  if(!text) return [];
+  const re=/Điều\s+\d+[a-zđ]?/gi; const hits=[]; let m;
+  while((m=re.exec(text))!==null){
+    const before=text[m.index-1];
+    if(m.index===0 || before==='\n' || before==='\r') hits.push({label:m[0].replace(/\s+/g,' '),pos:m.index});
+  }
+  if(!hits.length){ // nới lỏng: chấp nhận đứng sau khoảng trắng
+    while((m=re.exec(text))!==null) hits.push({label:m[0].replace(/\s+/g,' '),pos:m.index});
+  }
+  const segs=[];
+  for(let i=0;i<hits.length;i++){
+    const start=hits[i].pos, end=(i+1<hits.length)?hits[i+1].pos:text.length;
+    segs.push({label:hits[i].label, body:text.slice(start,end).trim()});
+  }
+  return segs;
+}
+function findArticleByLabel(text,label){
+  if(!text||!label) return null;
+  const want=stripDia(label).replace(/\s+/g,' ').toLowerCase();
+  for(const s of getArticleSegments(text)){ if(stripDia(s.label).toLowerCase()===want) return s.body.slice(0,4000); }
+  const i=stripDia(text).toLowerCase().indexOf(want);
+  if(i>=0){ const tail=text.slice(i+6); const nx=tail.search(/\n\s*Điều\s+\d+/i); const end=nx>=0?i+6+nx:Math.min(text.length,i+1800); return text.slice(i,end).trim().slice(0,4000); }
+  return null;
+}
+function bestArticleForTerms(text,termsNorm){
+  if(!text) return {label:'',snippet:''};
+  const segs=getArticleSegments(text);
+  if(!segs.length) return {label:'',snippet:(typeof relevantWindows==='function'?relevantWindows(text,termsNorm,700):text.slice(0,700))};
+  let best=null;
+  segs.forEach(s=>{
+    const norm=stripDia(s.body); let score=0;
+    termsNorm.forEach(t=>{ if(!t)return; let idx=0,c=0; while((idx=norm.indexOf(t,idx))>=0&&c<12){score++;idx+=t.length;c++;} });
+    if(!best||score>best.score) best={label:s.label,body:s.body,score:score};
+  });
+  if(!best||best.score===0) return {label:'',snippet:(typeof relevantWindows==='function'?relevantWindows(text,termsNorm,700):text.slice(0,700))};
+  return {label:best.label, snippet:best.body.slice(0,1600), score:best.score};
+}
+function _highlight(raw,q){
+  let h=_escHtml(raw);
+  const words=String(q||'').split(/[\s,]+/).filter(w=>w.length>=2 && !/^\d{1,2}$/.test(w)).slice(0,8);
+  words.forEach(w=>{ try{ const re=new RegExp('('+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'); h=h.replace(re,'<mark>$1</mark>'); }catch(e){} });
+  return h;
+}
+let _lmQ='';
+function articleModal(o){
+  document.getElementById('lmTag').textContent=o.docTitle||'Văn bản';
+  document.getElementById('lmLabel').textContent=o.label||'';
+  document.getElementById('lmBody').innerHTML=_highlight(o.bodyText||'(Không tìm thấy đoạn phù hợp)', o.q||o.label||'');
+  const src=document.getElementById('lmSrc');
+  if(o.url){ src.href=o.url; src.style.display=''; } else { src.style.display='none'; }
+  _lmQ=o.q||o.label||'';
+  document.getElementById('lmBody').scrollTop=0;
+  document.getElementById('lawModal').classList.add('visible');
+}
+function closeLawModal(){ document.getElementById('lawModal').classList.remove('visible'); }
+function lmFullSearch(){ closeLawModal(); if(_lmQ) guideLookup(_lmQ); }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeLawModal(); });
+
+// Bấm pill trong Hướng dẫn → popup đọc nhanh đúng điều/khoản
+function lawPopup(q,label){
+  const files=(window.driveIndex&&driveIndex.files)||[];
+  if(!files.length){ guideLookup(q); return; }
+  const docNum=((label.match(/(\d+)\s*\/\s*(\d{4})/)||[])[0]||(q.match(/(\d+)\/(\d{4})/)||[])[0]||'').replace(/\s/g,'');
+  let article=(label.match(/Điều\s*\d+[a-zđ]?/i)||label.match(/Khoản\s*\d+/i)||[])[0]||'';
+  let cands=files.filter(f=>(f.text||'').length>50);
+  if(docNum){ const c2=cands.filter(f=>(f.name||'').replace(/\s/g,'').includes(docNum)||((f.doc_number+'/'+f.doc_year)===docNum)); if(c2.length) cands=c2; }
+  if(!cands.length){ guideLookup(q); return; }
+  cands.sort((a,b)=>(b.text||'').length-(a.text||'').length);
+  const f=cands[0];
+  let body=article?findArticleByLabel(f.text,article):null;
+  if(!body){ const r=bestArticleForTerms(f.text,_termsOf(q)); body=r.snippet; if(!article&&r.label) article=r.label; }
+  articleModal({docTitle:f.name.replace(/\.[^.]+$/,''), label:(article?article+' · ':'')+label, bodyText:body||'(Mở file gốc để đọc nội dung)', url:f.url, q});
+}
+// Bấm "đọc điều này" trong panel DB-only
+function openPinpoint(idx){
+  const p=(window._pinpoints||[])[idx]; if(!p) return;
+  articleModal({docTitle:p.name, label:p.label||'Đoạn liên quan', bodyText:p.full||p.snippet, url:p.url, q:p.q});
 }
 
 function openSettings() { document.getElementById('settingsOverlay').classList.add('visible'); loadSettingsUI(); }
@@ -1589,7 +1709,19 @@ function buildLocalResult(raw, files, terms, mode) {
     risks: [], actions: [],
     summary_vi: 'Tìm thấy ' + files.length + ' văn bản khớp trong Database (không AI).',
     summary_en: files.length + ' matching documents (no-AI mode).',
-    _isDriveMode: true, _driveFilesFound: files, _dbOnly: true
+    _isDriveMode: true, _driveFilesFound: files, _dbOnly: true,
+    _pinpoints: (isBrowse ? [] : files.slice(0, 4).map(f => {
+      const full = f.text || f.summary || '';
+      const r = bestArticleForTerms(full, (terms || []).map(t => stripDia(String(t))).filter(Boolean));
+      const docName = f.name.replace(/\.[^.]+$/, '');
+      const docId = [f.doc_type, (f.doc_number ? f.doc_number + (f.doc_year ? '/' + f.doc_year : '') : '')].filter(Boolean).join(' ') || docName;
+      return {
+        folder: f.folder || '', doc: docId, name: docName,
+        label: r.label || '', snippet: (r.snippet || '').replace(/\s+/g, ' ').slice(0, 240),
+        full: r.label ? r.snippet : full.slice(0, 4000),
+        url: f.url || '', q: raw
+      };
+    }))
   };
 }
 function dbEmptyMsg() {
@@ -2088,11 +2220,30 @@ function renderResults(result, intent) {
 
   grid.appendChild(citCard);
 
-  // Card 2: AI Analysis
+  // Card 2: AI Analysis  (DB-only → trích điều khoản liên quan)
   const aiCard = document.createElement('div');
   aiCard.className = 'result-card fade-in';
   aiCard.style.animationDelay = '.1s';
-  aiCard.innerHTML = `
+  window._pinpoints = result._pinpoints || [];
+  if (result._dbOnly && window._pinpoints.length) {
+    let pin = '<div style="font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.6">📌 <b style="color:var(--gold2)">Điều khoản liên quan nhất</b> — hệ thống tự trích từ câu hỏi (không dùng AI), giúp đọc nhanh thay vì cả văn bản. Bấm <b>Đọc điều này</b> để xem toàn văn điều/khoản.</div>';
+    window._pinpoints.forEach((p, idx) => {
+      pin += '<div class="pinpoint" style="animation-delay:' + (idx*0.05).toFixed(2) + 's">' +
+        '<div class="pp-head"><span class="pp-folder">' + (p.folder ? '['+p.folder+']' : '') + '</span> ' + _escHtml(p.doc) +
+          (p.label ? ' · <b style="color:var(--gold2)">' + _escHtml(p.label) + '</b>' : '') + '</div>' +
+        '<div class="pp-snip">' + _highlight(p.snippet || '', p.q) + '…</div>' +
+        '<div class="pp-actions">' +
+          '<button class="pp-btn" onclick="openPinpoint(' + idx + ')">📖 Đọc điều này</button>' +
+          (p.url ? '<a class="pp-btn" href="' + p.url + '" target="_blank">📄 Mở file gốc</a>' : '') +
+        '</div></div>';
+    });
+    pin += '<div style="font-size:10px;color:var(--text3);margin-top:10px">Khi có hạn mức Gemini, bấm 📚→⚡ trên thanh tiêu đề để bật phân tích AI đầy đủ.</div>';
+    aiCard.innerHTML =
+      '<div class="card-header"><div class="card-title">📌 Điều khoản liên quan / Pinpoint</div>' +
+      '<span style="font-size:10px;color:var(--green);border:1px solid rgba(76,175,130,.3);padding:2px 8px;border-radius:10px">DB · tự trích</span></div>' +
+      '<div class="card-body">' + pin + '</div>';
+  } else {
+    aiCard.innerHTML = `
     <div class="card-header">
       <div class="card-title">🤖 Phân tích AI / AI Analysis</div>
       <div style="display:flex;gap:4px">
@@ -2104,6 +2255,7 @@ function renderResults(result, intent) {
       <div id="analysisTextVI" class="ai-analysis">${formatAnalysis(result.analysis_vi||'')}</div>
       <div id="analysisTextEN" class="ai-analysis" style="display:none">${formatAnalysis(result.analysis_en||'')}</div>
     </div>`;
+  }
   grid.appendChild(aiCard);
 
   // Card 3: Risk Panel
@@ -2167,6 +2319,7 @@ function formatAnalysis(text) {
 }
 
 function toggleAnalysisLang(lang) {
+  if (!document.getElementById('analysisTextVI') || !document.getElementById('analysisTextEN')) return;
   document.getElementById('analysisTextVI').style.display = lang==='vi'?'':'none';
   document.getElementById('analysisTextEN').style.display = lang==='en'?'':'none';
   document.getElementById('analysisVI').classList.toggle('active', lang==='vi');
