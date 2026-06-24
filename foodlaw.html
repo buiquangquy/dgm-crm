@@ -191,6 +191,57 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
 .sku-card.active{background:rgba(201,168,76,.1);border-color:var(--gold)}
 .sku-icon{font-size:24px;margin-bottom:6px}
 .sku-name{font-size:11px;color:var(--text2);font-weight:500}
+
+/* ── GUIDE / KNOWLEDGE BASE ── */
+.guide-panel{display:none;padding:18px 24px 48px;overflow-y:auto}
+.guide-panel.visible{display:block;animation:fadeIn .3s ease}
+.guide-head{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.guide-head .gh-icon{font-size:24px}
+.guide-title{font-family:'IBM Plex Serif',serif;font-size:19px;color:var(--text)}
+.guide-sub{font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.7}
+.guide-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.gtab{padding:9px 16px;border-radius:24px;font-size:12.5px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--navy3);color:var(--text2);transition:all .2s;display:flex;align-items:center;gap:7px}
+.gtab:hover{border-color:var(--gold);color:var(--gold)}
+.gtab.active{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);border-color:var(--gold);box-shadow:0 4px 14px rgba(201,168,76,.25)}
+.g-section{margin:20px 0 12px;display:flex;align-items:center;gap:10px}
+.g-section .gs-bar{width:4px;height:20px;background:var(--gold);border-radius:2px}
+.g-section .gs-title{font-family:'IBM Plex Serif',serif;font-size:15px;color:var(--gold2)}
+.g-section .gs-note{font-size:11px;color:var(--text3)}
+.g-card{background:var(--card);border:1px solid var(--border2);border-radius:var(--radius2);padding:14px 16px;margin-bottom:10px;opacity:0;transform:translateY(10px);animation:fadeIn .45s ease forwards;transition:border-color .2s,transform .2s,box-shadow .2s}
+.g-card:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.28)}
+.gc-top{display:flex;align-items:flex-start;gap:12px}
+.gc-num{flex:0 0 28px;height:28px;border-radius:8px;background:rgba(201,168,76,.14);color:var(--gold2);font-weight:600;font-size:12px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace}
+.gc-main{flex:1;min-width:0}
+.gc-title{font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:3px}
+.gc-desc{font-size:12px;color:var(--text2);line-height:1.6}
+.gc-flows{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.gc-flow{background:var(--navy3);border:1px solid var(--border2);border-radius:8px;padding:8px 10px}
+.gc-flow .gf-tag{font-size:9.5px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;margin-bottom:3px;display:inline-block}
+.gc-flow.vn .gf-tag{color:var(--green)}
+.gc-flow.imp .gf-tag{color:var(--blue)}
+.gc-flow .gf-text{font-size:11px;color:var(--text2);line-height:1.5}
+.law-pill{margin-top:10px;display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;background:rgba(201,168,76,.08);border:1px solid var(--border);color:var(--gold2);font-size:11px;font-family:'IBM Plex Mono',monospace;cursor:pointer;transition:all .18s}
+.law-pill:hover{background:var(--gold);color:var(--navy);border-color:var(--gold);transform:translateX(3px)}
+.law-pill .arrow{font-weight:700}
+.appl{display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:3px 9px;border-radius:12px;margin:0 6px 4px 0}
+.appl.yes{background:rgba(76,175,130,.12);color:var(--green);border:1px solid rgba(76,175,130,.3)}
+.appl.no{background:rgba(104,100,96,.12);color:var(--text3);border:1px solid var(--border2)}
+.appl.cond{background:rgba(224,154,56,.12);color:var(--amber);border:1px solid rgba(224,154,56,.3)}
+.spec-cat .sc-name{font-size:12px;font-weight:600;color:var(--gold2);margin-bottom:7px;display:flex;align-items:center;gap:6px}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:11px;padding:5px 10px;border-radius:14px;background:var(--navy3);border:1px solid var(--border2);color:var(--text2)}
+.chip .lim{color:var(--gold);font-family:'IBM Plex Mono',monospace;font-size:10px}
+.acc-head{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--navy3);border:1px solid var(--border2);border-radius:var(--radius2);padding:12px 16px;margin-bottom:8px;transition:all .2s}
+.acc-head:hover{border-color:var(--gold)}
+.acc-head.open{border-color:var(--gold);background:rgba(201,168,76,.06)}
+.acc-head .ah-left{display:flex;align-items:center;gap:11px}
+.acc-head .ah-icon{font-size:20px}
+.acc-head .ah-title{font-size:13.5px;font-weight:600;color:var(--text)}
+.acc-head .ah-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.acc-chev{transition:transform .25s;color:var(--gold);font-size:11px}
+.acc-head.open .acc-chev{transform:rotate(90deg)}
+.acc-body{display:none;padding:4px 2px 12px}
+.acc-body.open{display:block;animation:fadeIn .3s ease}
 .checklist-table{width:100%;border-collapse:collapse}
 .checklist-table th{padding:10px 12px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border2);font-weight:500}
 .checklist-table td{padding:10px 12px;border-bottom:1px solid var(--border2);font-size:12px;vertical-align:top}
@@ -388,6 +439,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
   <div class="header-actions">
     <span id="modeKeyword" class="mode-badge active" onclick="setMode('keyword')">🔍 Tra cứu</span>
     <span id="modeSKU" class="mode-badge inactive" onclick="setMode('sku')">📋 Checklist SKU</span>
+    <span id="modeGuide" class="mode-badge inactive" onclick="setMode('guide')">📘 Hướng dẫn</span>
     <span id="modeEngine" class="mode-badge active" onclick="toggleEngine()" title="Chuyển AI ↔ Database-only. DB-only chạy không cần Gemini.">⚡ AI</span>
     <button class="btn-icon" title="Bookmark" onclick="toggleBookmarks()">🔖</button>
     <button class="btn-icon" title="Export" onclick="exportReport()">⬇️</button>
@@ -581,6 +633,18 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
           <tbody id="checklistBody"></tbody>
         </table>
       </div>
+    </div>
+
+    <!-- Guide / Knowledge Base mode -->
+    <div id="guidePanel" class="guide-panel">
+      <div class="guide-head"><span class="gh-icon">📘</span><div class="guide-title">Hướng dẫn &amp; Template chuẩn</div></div>
+      <div class="guide-sub">Cầm sản phẩm / hồ sơ trên tay → dò theo template → biết ngay cần làm gì. Mỗi mục có <b style="color:var(--gold2)">➜ căn cứ pháp lý</b> — bấm để tra văn bản thật trong Database.</div>
+      <div class="guide-tabs">
+        <div class="gtab active" id="gtab-label" onclick="showGuide('label')">🏷️ Nhãn sản phẩm</div>
+        <div class="gtab" id="gtab-hscb" onclick="showGuide('hscb')">📑 Bộ HSCB</div>
+        <div class="gtab" id="gtab-spec" onclick="showGuide('spec')">🧪 Spec test theo nhóm</div>
+      </div>
+      <div id="guideBody" class="guide-body"></div>
     </div>
 
     <!-- Results / Empty state -->
@@ -991,15 +1055,21 @@ function setLoading(on) {
 }
 function setMode(mode) {
   state.currentMode = mode;
-  document.getElementById('modeKeyword').classList.toggle('active', mode==='keyword');
-  document.getElementById('modeKeyword').classList.toggle('inactive', mode!=='keyword');
-  document.getElementById('modeSKU').classList.toggle('active', mode==='sku');
-  document.getElementById('modeSKU').classList.toggle('inactive', mode!=='sku');
-  document.getElementById('skuPanel').classList.toggle('visible', mode==='sku');
-  document.getElementById('skuPanel').style.display = mode==='sku' ? 'block' : 'none';
-  document.getElementById('resultsContainer').style.display = mode==='sku' ? 'none' : 'flex';
-  document.querySelector('.search-area').style.display = mode==='sku' ? 'none' : '';
+  const isK = mode==='keyword', isS = mode==='sku', isG = mode==='guide';
+  document.getElementById('modeKeyword').classList.toggle('active', isK);
+  document.getElementById('modeKeyword').classList.toggle('inactive', !isK);
+  document.getElementById('modeSKU').classList.toggle('active', isS);
+  document.getElementById('modeSKU').classList.toggle('inactive', !isS);
+  const mg = document.getElementById('modeGuide');
+  if (mg) { mg.classList.toggle('active', isG); mg.classList.toggle('inactive', !isG); }
+  document.getElementById('skuPanel').classList.toggle('visible', isS);
+  document.getElementById('skuPanel').style.display = isS ? 'block' : 'none';
+  const gp = document.getElementById('guidePanel');
+  if (gp) { gp.classList.toggle('visible', isG); gp.style.display = isG ? 'block' : 'none'; }
+  document.getElementById('resultsContainer').style.display = (isS||isG) ? 'none' : 'flex';
+  document.querySelector('.search-area').style.display = (isS||isG) ? 'none' : '';
   document.getElementById('intentConfirm').style.display = 'none';
+  if (isG && !state._guideInit) { state._guideInit = true; showGuide('label'); }
 }
 function switchTab(tab) {
   state.activeTab = tab;
@@ -1010,6 +1080,147 @@ function switchTab(tab) {
   document.getElementById('textSearchPanel').style.display = tab==='text' ? '' : 'none';
   document.getElementById('imagePanel').style.display = tab==='image' ? '' : 'none';
 }
+/* ===================== GUIDE / KNOWLEDGE BASE ===================== */
+const GUIDE = {
+  label: [
+    {icon:'🏷️',title:'Tên sản phẩm',desc:'Tên gọi đúng bản chất, không gây hiểu nhầm; tiếng Việt.',vn:'Ghi trực tiếp tiếng Việt.',imp:'Tên SP tiếng Việt trên nhãn phụ.',law:'NĐ 37/2026 · Điều 42',q:'37/2026 nội dung bắt buộc nhãn tên sản phẩm'},
+    {icon:'⚖️',title:'Định lượng',desc:'Khối lượng tịnh/thể tích. Đồ hộp dạng rắn trong dung dịch ghi cả KHỐI LƯỢNG RÁO NƯỚC.',vn:'Như chuẩn.',imp:'Đổi đơn vị nếu nhãn gốc khác.',law:'NĐ 37/2026 · Phụ lục I',q:'37/2026 định lượng khối lượng ráo nước'},
+    {icon:'🧾',title:'Thành phần / định lượng',desc:'Liệt kê theo thứ tự giảm dần; ghi rõ phụ gia (nhóm chức năng + tên/INS).',vn:'Như chuẩn.',imp:'Dịch đầy đủ thành phần sang tiếng Việt.',law:'NĐ 37/2026 + TT 24/2019',q:'24/2019 phụ gia ghi nhãn thành phần INS'},
+    {icon:'⚠️',title:'Cảnh báo dị ứng',desc:'Nêu rõ thành phần gây dị ứng: cá, giáp xác, đậu nành, sữa, gluten, lạc…',vn:'Như chuẩn.',imp:'Bắt buộc trên nhãn phụ tiếng Việt.',law:'NĐ 37/2026 · cảnh báo',q:'37/2026 ghi nhãn cảnh báo thành phần dị ứng'},
+    {icon:'📅',title:'NSX & Hạn sử dụng',desc:'BẮT BUỘC ghi NSX (mới 2026). HSD hoặc "Sử dụng tốt nhất trước…". Định dạng ngày/tháng/năm.',vn:'Như chuẩn.',imp:'Đối chiếu định dạng nhãn gốc; bổ sung chú thích.',law:'NĐ 37/2026 · điểm mới',q:'37/2026 ngày sản xuất hạn sử dụng bắt buộc'},
+    {icon:'📖',title:'Hướng dẫn SD & bảo quản',desc:'Cách dùng, điều kiện bảo quản (vd: sau khi mở dùng trong…).',vn:'Như chuẩn.',imp:'Dịch sang tiếng Việt trên nhãn phụ.',law:'NĐ 37/2026',q:'37/2026 hướng dẫn sử dụng bảo quản nhãn'},
+    {icon:'🏢',title:'Tổ chức chịu trách nhiệm',desc:'Tên đầy đủ + địa chỉ đơn vị chịu trách nhiệm về hàng hóa.',vn:'Tên + địa chỉ NHÀ SẢN XUẤT tại VN.',imp:'Tên + địa chỉ NHÀ NHẬP KHẨU tại VN + NSX nước ngoài.',law:'NĐ 37/2026 · Điều 42',q:'37/2026 tên địa chỉ tổ chức chịu trách nhiệm nhập khẩu'},
+    {icon:'🌍',title:'Xuất xứ hàng hóa',desc:'Ghi nước/vùng xuất xứ; không xác định được → nơi thực hiện công đoạn cuối.',vn:'"Sản xuất tại Việt Nam".',imp:'Ghi đúng nước xuất xứ trên nhãn gốc.',law:'NĐ 37/2026 · Điều 42, 47',q:'37/2026 xuất xứ hàng hóa ghi nhãn Điều 47'},
+    {icon:'🔢',title:'Số lô sản xuất',desc:'Mã lô phục vụ truy xuất nguồn gốc.',vn:'Như chuẩn.',imp:'Giữ số lô của nhãn gốc.',law:'NĐ 37/2026 · truy xuất',q:'37/2026 số lô truy xuất nguồn gốc'},
+    {icon:'📊',title:'Bảng dinh dưỡng (NIP)',desc:'Năng lượng, đạm, béo (gồm béo bão hòa), carbohydrate, đường, natri; áp dụng dung sai.',vn:'Bắt buộc 100% SKU từ 01/01/2026.',imp:'Bổ sung bảng NIP tiếng Việt nếu nhãn gốc chưa đạt.',law:'TT 29/2023/TT-BYT',q:'29/2023 ghi nhãn dinh dưỡng năng lượng natri dung sai'},
+    {icon:'🔖',title:'Mã số – mã vạch / truy xuất',desc:'Quản lý chặt MSMV; gắn truy xuất nguồn gốc.',vn:'Như chuẩn.',imp:'Như chuẩn.',law:'NĐ 37/2026 · MSMV',q:'37/2026 mã số mã vạch truy xuất'},
+    {icon:'🔠',title:'Cỡ chữ & kích thước nhãn',desc:'Chiều cao chữ số tối thiểu 0,9 mm; có quy định riêng cho hàng hóa nhỏ.',vn:'Như chuẩn.',imp:'Kiểm tra cỡ chữ nhãn phụ đạt tối thiểu.',law:'NĐ 37/2026 · khoản 4 Điều 37',q:'37/2026 cỡ chữ chiều cao 0,9 mm kích thước nhãn'},
+    {icon:'®️',title:'Ký hiệu ® (nhãn hiệu)',desc:'KHÔNG dùng ® nếu nhãn hiệu chưa được bảo hộ tại Việt Nam.',vn:'Kiểm tra GCN đăng ký nhãn hiệu.',imp:'Gỡ ® trên nhãn phụ nếu chưa bảo hộ tại VN.',law:'NĐ 37/2026 · điểm mới',q:'37/2026 ký hiệu nhãn hiệu đăng ký bảo hộ'},
+    {icon:'📱',title:'Nhãn điện tử (tùy chọn)',desc:'QR/NFC… thay một phần/toàn bộ nhãn vật lý theo điều kiện quy định.',vn:'Áp dụng nếu muốn "thoáng" bao bì.',imp:'Áp dụng được; vẫn bảo đảm nội dung bắt buộc.',law:'NĐ 37/2026 · nhãn điện tử',q:'37/2026 nhãn điện tử QR điều kiện'},
+    {icon:'🛒',title:'Hiển thị trên sàn TMĐT',desc:'Hiển thị 100% nội dung nhãn trên trang SP; chỉ được ẩn NSX/HSD/số lô.',vn:'Áp dụng khi bán online.',imp:'Áp dụng khi bán online.',law:'NĐ 37/2026 + Luật TMĐT 122/2025',q:'37/2026 hiển thị nhãn thương mại điện tử'},
+    {icon:'🇻🇳',title:'Nhãn phụ tiếng Việt (NK/OEM)',desc:'Nhãn phụ TV đầy đủ nội dung bắt buộc, gắn TRƯỚC khi lưu thông; giữ nhãn gốc.',vn:'Không áp dụng (SX tại VN ghi trực tiếp).',imp:'BẮT BUỘC: dán nhãn phụ TV đầy đủ trước khi ra thị trường.',law:'NĐ 37/2026 · nhãn phụ',q:'37/2026 nhãn phụ tiếng Việt hàng nhập khẩu'},
+  ],
+  hscb: [
+    {icon:'🟢',title:'Luồng A — Tự công bố sản phẩm',note:'Đa số thực phẩm thường đã bao gói sẵn (Ayam · Alce Nero · Duchef)',items:[
+      {num:1,title:'Bản tự công bố sản phẩm',desc:'Theo Mẫu số 01 Phụ lục I; thông tin SP, chỉ tiêu ATTP, doanh nghiệp.',vn:{type:'yes'},imp:{type:'yes'},law:'NĐ 15/2018 · Điều 4–5 · Mẫu 01',q:'15/2018 tự công bố sản phẩm Mẫu 01'},
+      {num:2,title:'Phiếu kết quả kiểm nghiệm ATTP',desc:'Trong 12 tháng; phòng KN ISO 17025/được chỉ định; chỉ tiêu theo QCVN.',vn:{type:'yes'},imp:{type:'yes'},law:'NĐ 15/2018 · Điều 5',q:'15/2018 kết quả kiểm nghiệm 12 tháng tự công bố'},
+      {num:3,title:'Mẫu nhãn sản phẩm',desc:'Nhãn đúng NĐ 37/2026 + bảng NIP (TT 29/2023). NK kèm nhãn gốc + nhãn phụ.',vn:{type:'yes'},imp:{type:'yes',text:'Nhãn gốc + nhãn phụ'},law:'NĐ 37/2026 + TT 29/2023',q:'37/2026 mẫu nhãn sản phẩm công bố'},
+      {num:4,title:'GCN cơ sở đủ điều kiện ATTP',desc:'Cấp cho cơ sở trong nước (trừ trường hợp được miễn).',vn:{type:'cond',text:'Nếu không được miễn'},imp:{type:'no'},law:'NĐ 15/2018 · Điều 11–12',q:'15/2018 giấy chứng nhận cơ sở đủ điều kiện an toàn thực phẩm Điều 12'},
+      {num:5,title:'Đăng tải / nộp hồ sơ tự công bố',desc:'Đăng tải công khai hoặc nộp cơ quan quản lý địa phương; tự chịu trách nhiệm.',vn:{type:'yes'},imp:{type:'yes'},law:'NĐ 15/2018 · Điều 5',q:'15/2018 đăng tải hồ sơ tự công bố cơ quan quản lý'},
+    ]},
+    {icon:'🔵',title:'Luồng B — Đăng ký bản công bố',note:'TP bảo vệ sức khỏe · dinh dưỡng y học · TP cho trẻ <36 tháng · phụ gia công dụng mới',items:[
+      {num:6,title:'Bản công bố sản phẩm',desc:'Theo Mẫu số 02 Phụ lục I.',vn:{type:'yes'},imp:{type:'yes'},law:'NĐ 15/2018 · Điều 7 · Mẫu 02',q:'15/2018 đăng ký bản công bố sản phẩm Mẫu 02 Điều 7'},
+      {num:7,title:'Kết quả kiểm nghiệm',desc:'Trong 12 tháng, đủ chỉ tiêu ATTP của nhóm SP.',vn:{type:'yes'},imp:{type:'yes'},law:'NĐ 15/2018 · Điều 7',q:'15/2018 kết quả kiểm nghiệm đăng ký bản công bố'},
+      {num:8,title:'CFS / Health Certificate',desc:'Giấy lưu hành tự do của nước XK; hợp pháp hóa lãnh sự nếu được yêu cầu.',vn:{type:'no'},imp:{type:'yes'},law:'NĐ 15/2018 · Điều 7',q:'15/2018 giấy chứng nhận lưu hành tự do CFS nhập khẩu'},
+      {num:9,title:'GCN cơ sở GMP',desc:'Với thực phẩm bảo vệ sức khỏe (cơ sở sản xuất).',vn:{type:'cond',text:'TPBVSK'},imp:{type:'cond',text:'Theo hồ sơ NSX'},law:'NĐ 15/2018 · Điều 28',q:'15/2018 GMP thực phẩm bảo vệ sức khỏe Điều 28'},
+      {num:10,title:'Bằng chứng khoa học về công dụng',desc:'Với SP công bố công dụng/sức khỏe.',vn:{type:'cond',text:'Nếu có claim'},imp:{type:'cond',text:'Nếu có claim'},law:'NĐ 15/2018 · Điều 7',q:'15/2018 bằng chứng khoa học công dụng công bố'},
+      {num:11,title:'Giấy ủy quyền (LOA)',desc:'Chủ sở hữu SP ủy quyền cho DGM công bố & phân phối tại VN.',vn:{type:'no'},imp:{type:'yes'},law:'Hồ sơ NK · thông lệ',q:'giấy ủy quyền LOA nhập khẩu phân phối công bố'},
+    ]},
+    {icon:'🟠',title:'Bổ sung cho hàng nhập khẩu',note:'Kiểm tra nhà nước về ATTP nhập khẩu',items:[
+      {num:12,title:'Hồ sơ kiểm tra NN về ATTP nhập khẩu',desc:'Theo phương thức kiểm tra (giảm / thông thường / chặt); kèm bản công bố + chứng từ lô hàng.',vn:{type:'no'},imp:{type:'yes'},law:'NĐ 15/2018 · Điều 13–18',q:'15/2018 kiểm tra nhà nước an toàn thực phẩm nhập khẩu phương thức Điều 13'},
+    ]},
+  ],
+  spec: [
+    {icon:'🐟',name:'① Cá đóng hộp (ngừ · mòi/sardine · thu)',cats:[
+      {name:'Cảm quan & lý-hóa',law:'TCVN / Codex',q:'cá hộp chỉ tiêu cảm quan khối lượng ráo nước pH',chips:[{t:'Màu, mùi, vị, trạng thái'},{t:'Khối lượng tịnh & ráo'},{t:'Độ kín hộp'},{t:'pH'},{t:'NaCl'}]},
+      {name:'Kim loại nặng',law:'QCVN 8-2:2011',q:'QCVN 8-2 kim loại nặng thiếc cá hộp Pb Cd Hg',chips:[{t:'As'},{t:'Pb'},{t:'Cd'},{t:'Hg / MeHg'},{t:'Thiếc (Sn)'}]},
+      {name:'Histamine',law:'Codex / QCVN 8-3',q:'histamine cá ngừ cá thu giới hạn',chips:[{t:'Histamine (cá scombridae)'}]},
+      {name:'Vi sinh / vô trùng',law:'QCVN 8-3:2012',q:'QCVN 8-3 vi sinh Clostridium botulinum đồ hộp',chips:[{t:'Clostridium botulinum'},{t:'Tổng VSV hiếu khí'},{t:'Vô trùng thương mại'}]},
+      {name:'Phụ gia',law:'TT 24/2019',q:'24/2019 phụ gia cá hộp điều vị ổn định',chips:[{t:'Chất điều vị'},{t:'Chất ổn định'}]},
+    ]},
+    {icon:'🫘',name:'② Đậu / rau củ đóng hộp (đậu · bắp)',cats:[
+      {name:'Cảm quan & lý-hóa',law:'TCVN / Codex',q:'đậu đóng hộp chỉ tiêu cảm quan khối lượng ráo pH',chips:[{t:'Màu, mùi, vị, trạng thái'},{t:'Khối lượng ráo'},{t:'pH'}]},
+      {name:'Kim loại nặng',law:'QCVN 8-2:2011',q:'QCVN 8-2 kim loại nặng đậu rau củ',chips:[{t:'As'},{t:'Pb'},{t:'Cd'},{t:'Hg'},{t:'Sn'}]},
+      {name:'Độc tố vi nấm',law:'QCVN 8-1:2011',q:'QCVN 8-1 độc tố vi nấm aflatoxin',chips:[{t:'Aflatoxin'},{t:'Ochratoxin'}]},
+      {name:'Vi sinh',law:'QCVN 8-3:2012',q:'QCVN 8-3 vi sinh đậu rau củ đóng hộp',chips:[{t:'VSV gây bệnh'},{t:'Tổng VSV hiếu khí'}]},
+      {name:'Dư lượng BVTV',law:'TT 50/2016',q:'50/2016 dư lượng thuốc bảo vệ thực vật',chips:[{t:'Thuốc BVTV (MRL)'}]},
+    ]},
+    {icon:'🥥',name:'③ Nước cốt dừa & sản phẩm từ dừa',cats:[
+      {name:'Cảm quan & lý-hóa',law:'TCVN / Codex',q:'nước cốt dừa chỉ tiêu chất béo tổng chất rắn pH',chips:[{t:'Màu, mùi, vị'},{t:'Hàm lượng béo'},{t:'Tổng chất rắn'},{t:'pH'}]},
+      {name:'Kim loại nặng',law:'QCVN 8-2:2011',q:'QCVN 8-2 kim loại nặng',chips:[{t:'As'},{t:'Pb'},{t:'Cd'},{t:'Hg'}]},
+      {name:'Vi sinh & độc tố',law:'QCVN 8-3 / 8-1',q:'QCVN 8-3 vi sinh aflatoxin dừa',chips:[{t:'VSV gây bệnh'},{t:'Aflatoxin (nếu liên quan)'}]},
+      {name:'Phụ gia',law:'TT 24/2019',q:'24/2019 phụ gia nhũ hóa ổn định',chips:[{t:'Nhũ hóa'},{t:'Ổn định'}]},
+    ]},
+    {icon:'🍅',name:'④ Cà chua (paste · ketchup · sauce)',cats:[
+      {name:'Cảm quan & lý-hóa',law:'TCVN / Codex',q:'cà chua Brix pH Howard mold count',chips:[{t:'Màu, mùi, vị'},{t:'Howard mold count'},{t:'Độ Brix'},{t:'pH / độ axit'}]},
+      {name:'Kim loại nặng',law:'QCVN 8-2:2011',q:'QCVN 8-2 kim loại nặng cà chua',chips:[{t:'As'},{t:'Pb'},{t:'Cd'},{t:'Hg'},{t:'Sn'}]},
+      {name:'Vi sinh',law:'QCVN 8-3:2012',q:'QCVN 8-3 vi sinh nấm men mốc',chips:[{t:'VSV gây bệnh'},{t:'Nấm men / mốc'}]},
+      {name:'Dư lượng BVTV & phụ gia',law:'TT 50/2016 · 24/2019',q:'50/2016 24/2019 dư lượng phụ gia cà chua',chips:[{t:'Thuốc BVTV'},{t:'Bảo quản'},{t:'Tạo màu/đặc'}]},
+    ]},
+    {icon:'🫙',name:'⑤ Sốt / Condiment (gồm OEM)',cats:[
+      {name:'Cảm quan & lý-hóa',law:'TCVN / Codex',q:'nước tương sốt pH độ mặn Brix',chips:[{t:'Màu, mùi, vị'},{t:'pH'},{t:'Độ mặn (NaCl)'},{t:'Brix'}]},
+      {name:'3-MCPD',law:'QCVN (đối chiếu)',q:'3-MCPD nước tương giới hạn Việt Nam',chips:[{t:'3-MCPD (nước tương/đạm thủy phân)'}]},
+      {name:'Kim loại nặng & vi sinh',law:'QCVN 8-2 / 8-3',q:'QCVN 8-2 8-3 kim loại nặng vi sinh sốt',chips:[{t:'As, Pb, Cd, Hg'},{t:'VSV gây bệnh'}]},
+      {name:'Phụ gia & bảo quản',law:'TT 24/2019',q:'24/2019 phụ gia chất bảo quản sốt',chips:[{t:'Bảo quản'},{t:'Điều vị'},{t:'Tạo đặc'}]},
+    ]},
+    {icon:'🌿',name:'⑥ Bổ sung cho SP hữu cơ (Alce Nero)',cats:[
+      {name:'Chứng nhận hữu cơ',law:'NĐ 109/2018 + TCVN 11041',q:'109/2018 nông nghiệp hữu cơ chứng nhận TCVN 11041',chips:[{t:'Chứng nhận hữu cơ (TCVN 11041 / EU)'}]},
+      {name:'Yêu cầu thành phần',law:'TCVN 11041',q:'TCVN 11041 hữu cơ không phụ gia tổng hợp biến đổi gen',chips:[{t:'Không phụ gia tổng hợp'},{t:'Không biến đổi gen (tùy nhóm)'}]},
+    ]},
+  ]
+};
+function gesc(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+function guideLookup(q){
+  setMode('keyword');
+  if (typeof switchTab==='function') switchTab('text');
+  const si=document.getElementById('searchInput'); if(si) si.value=q;
+  if (typeof doSearch==='function') doSearch();
+}
+function toggleAcc(el){
+  el.classList.toggle('open');
+  const b=el.nextElementSibling;
+  if(b && b.classList.contains('acc-body')) b.classList.toggle('open');
+}
+function _lawPill(law,q){ return `<span class="law-pill" onclick="guideLookup('${gesc(q)}')"><span class="arrow">➜</span> ${law}</span>`; }
+function _appl(label,o){ const t=o.text||(o.type==='yes'?'Bắt buộc':o.type==='no'?'Không áp dụng':'Có điều kiện'); return `<span class="appl ${o.type}">${label}: ${t}</span>`; }
+function renderLabel(){
+  let h=`<div class="g-section"><div class="gs-bar"></div><div class="gs-title">Nhãn sản phẩm đúng luật</div><div class="gs-note">· 16 nội dung bắt buộc · phân biệt SX tại VN / OEM-NK</div></div>`;
+  GUIDE.label.forEach((it,i)=>{
+    h+=`<div class="g-card" style="animation-delay:${(i*0.035).toFixed(2)}s"><div class="gc-top"><div class="gc-num">${i+1}</div><div class="gc-main">
+      <div class="gc-title">${it.icon} ${it.title}</div><div class="gc-desc">${it.desc}</div>
+      <div class="gc-flows">
+        <div class="gc-flow vn"><span class="gf-tag">🇻🇳 SX tại VN</span><div class="gf-text">${it.vn}</div></div>
+        <div class="gc-flow imp"><span class="gf-tag">🌐 OEM / Nhập khẩu</span><div class="gf-text">${it.imp}</div></div>
+      </div>${_lawPill(it.law,it.q)}</div></div></div>`;
+  });
+  return h;
+}
+function renderHSCB(){
+  let h=`<div class="guide-sub" style="margin-bottom:14px">⚖️ Hiện áp dụng <b style="color:var(--gold2)">NĐ 15/2018</b> (NĐ 46/2026 đang tạm ngưng). Mỗi đầu mục → căn cứ pháp lý.</div>`;
+  GUIDE.hscb.forEach((flow,fi)=>{
+    const op=fi===0?'open':'';
+    h+=`<div class="acc-head ${op}" onclick="toggleAcc(this)"><div class="ah-left"><span class="ah-icon">${flow.icon}</span><div><div class="ah-title">${flow.title}</div><div class="ah-sub">${flow.note}</div></div></div><span class="acc-chev">▶</span></div><div class="acc-body ${op}">`;
+    flow.items.forEach((it,i)=>{
+      h+=`<div class="g-card" style="animation-delay:${(i*0.03).toFixed(2)}s"><div class="gc-top"><div class="gc-num">${it.num}</div><div class="gc-main">
+        <div class="gc-title">${it.title}</div><div class="gc-desc">${it.desc}</div>
+        <div style="margin-top:9px">${_appl('🇻🇳 SX VN',it.vn)}${_appl('🌐 NK',it.imp)}</div>
+        ${_lawPill(it.law,it.q)}</div></div></div>`;
+    });
+    h+=`</div>`;
+  });
+  return h;
+}
+function renderSpec(){
+  let h=`<div class="guide-sub" style="margin-bottom:14px">🧪 SP mới thuộc nhóm nào → mở nhóm đó → biết cần test chỉ tiêu gì. Ngưỡng cụ thể tra trong QCVN/TCVN (bấm ➜).</div>`;
+  GUIDE.spec.forEach((g,gi)=>{
+    const op=gi===0?'open':'';
+    h+=`<div class="acc-head ${op}" onclick="toggleAcc(this)"><div class="ah-left"><span class="ah-icon">${g.icon}</span><div class="ah-title">${g.name}</div></div><span class="acc-chev">▶</span></div><div class="acc-body ${op}">`;
+    g.cats.forEach((c,ci)=>{
+      h+=`<div class="g-card" style="animation-delay:${(ci*0.03).toFixed(2)}s"><div class="spec-cat"><div class="sc-name">▪ ${c.name}</div><div class="chip-row">`;
+      c.chips.forEach(ch=>{ h+=`<span class="chip">${ch.t}${ch.lim?` · <span class="lim">${ch.lim}</span>`:''}</span>`; });
+      h+=`</div>${_lawPill(c.law,c.q)}</div></div>`;
+    });
+    h+=`</div>`;
+  });
+  return h;
+}
+function showGuide(tab){
+  state.guideTab=tab;
+  ['label','hscb','spec'].forEach(t=>{ const e=document.getElementById('gtab-'+t); if(e) e.classList.toggle('active',t===tab); });
+  const body=document.getElementById('guideBody');
+  if(body) body.innerHTML = tab==='label'?renderLabel(): tab==='hscb'?renderHSCB(): renderSpec();
+}
+
 function openSettings() { document.getElementById('settingsOverlay').classList.add('visible'); loadSettingsUI(); }
 function closeSettings() { document.getElementById('settingsOverlay').classList.remove('visible'); }
 function openPopup() { document.getElementById('popupOverlay').classList.add('visible'); }
@@ -1308,7 +1519,7 @@ function localRankFiles(raw, folders) {
   const scored = (driveIndex.files || []).map(f => {
     const nameH = stripDia(f.name || '');
     const kwH   = stripDia((f.keywords || []).join(' '));
-    const sumH  = stripDia((f.summary || '').slice(0, 6000));
+    const sumH  = stripDia(f.text || f.summary || '');
     const typeH = stripDia([f.doc_type, f.doc_number, f.doc_year].filter(Boolean).join(' '));
     const hay   = nameH + ' ' + kwH + ' ' + typeH;
     let score = 0;
@@ -1346,7 +1557,7 @@ function buildLocalResult(raw, files, terms, mode) {
       doc_name_vi: f.name.replace(/\.[^.]+$/, ''),
       doc_name_en: '',
       article: '', article_en: '',
-      content_vi: makeExcerpt(f.summary, terms),
+      content_vi: makeExcerpt(f.text || f.summary, terms),
       content_en: '',
       relevance: '',
       folder: f.folder || '',
@@ -1359,10 +1570,10 @@ function buildLocalResult(raw, files, terms, mode) {
   ).join('\n');
   const analysis_vi = isBrowse
     ? ('**Chế độ Database — không khớp từ khoá chính xác.**\n' +
-       'Không có file nào chứa đúng từ khoá (thường vì file là PDF scan chưa OCR nên hệ thống chưa đọc được nội dung). ' +
+       'Không có file nào chứa đúng từ khoá trong TOÀN VĂN đã index. ' +
        'Dưới đây là ' + files.length + ' văn bản trong nhóm liên quan để bạn mở đọc trực tiếp:\n' +
        fileLinks + '\n' +
-       'Để tra cứu được theo nội dung (NIP, dung sai, chỉ tiêu…) cần nâng cấp GAS indexer có OCR — bước C.')
+       'Gợi ý: thử từ khoá khác hoặc số hiệu văn bản (vd "37/2026", "dung sai", "Điều 10").')
     : ('**Chế độ Database (không dùng AI) đang hoạt động** — vì Gemini hết hạn mức hoặc bạn đã bật 📚 DB-only.\n' +
        'Hệ thống đã tra cứu và xếp hạng ' + files.length + ' văn bản khớp nhất với câu hỏi. ' +
        'Cột trái là đoạn trích THẬT lấy từ file; bấm "📎 mở file gốc" để đọc nguyên văn điều/khoản.\n' +
@@ -1370,7 +1581,7 @@ function buildLocalResult(raw, files, terms, mode) {
        'Khi có hạn mức Gemini trở lại, bấm 📚→⚡ trên thanh tiêu đề để bật phân tích AI đầy đủ.\n' +
        'Văn bản tìm thấy:\n' + fileLinks);
   const analysis_en = isBrowse
-    ? ('**Database mode — no exact keyword match.** Showing ' + files.length + ' documents from the related folder to open directly. Full-text lookup needs the OCR indexer upgrade (step C).')
+    ? ('**Database mode — no exact keyword match.** Showing ' + files.length + ' documents from the related folder to open directly. Try other keywords or the document number (e.g. "37/2026", "Điều 10").')
     : ('**Database mode (no AI) is active** because the Gemini quota is exhausted or DB-only is on. ' +
        'Ranked ' + files.length + ' best-matching documents; left column shows real excerpts. Lookup & source extraction only — no automated analysis.');
   return {
@@ -1523,7 +1734,7 @@ async function confirmIntent() {
       ];
       driveFilesFound = searchDriveIndex(searchKeywords, intent.folders);
       if (driveFilesFound.length > 0) {
-        driveContentCtx = buildDriveContext(driveFilesFound);
+        driveContentCtx = buildDriveContext(driveFilesFound, searchKeywords);
         document.getElementById('statusText').textContent = `📄 Tìm thấy ${driveFilesFound.length} văn bản · Đang phân tích...`;
       }
     }
@@ -1695,7 +1906,7 @@ function searchDriveIndex(keywords, folders) {
     if (!file.extract_ok) return { ...file, score: 0 };
     let score = 0;
     const nameLower = (file.name || '').toLowerCase();
-    const summaryLower = (file.summary || '').toLowerCase();
+    const summaryLower = (file.text || file.summary || '').toLowerCase();
     const kwStr = (file.keywords || []).join(' ').toLowerCase();
 
     terms.forEach(t => {
@@ -1711,8 +1922,9 @@ function searchDriveIndex(keywords, folders) {
 }
 
 // Build context string from Drive index for AI prompt
-function buildDriveContext(files) {
+function buildDriveContext(files, terms) {
   if (!files || files.length === 0) return '';
+  const tNorm = (terms || []).map(t => stripDia(String(t))).filter(Boolean);
 
   let ctx = '\n\n═══ NỘI DUNG THỰC TẾ TỪ DRIVE DATABASE ═══\n';
   ctx += `(${files.length} văn bản liên quan được tìm thấy trong cơ sở dữ liệu pháp luật)\n\n`;
@@ -1725,15 +1937,45 @@ function buildDriveContext(files) {
     if (f.keywords && f.keywords.length > 0) {
       ctx += `    Keywords: ${f.keywords.slice(0,10).join(', ')}\n`;
     }
-    if (f.summary) {
-      // Send first 1500 chars of the actual document text
-      const excerpt = f.summary.slice(0, 800).replace(/\n{3,}/g, '\n\n');
-      ctx += `    Nội dung (trích):\n${excerpt}\n`;
+    const full = f.text || f.summary || '';
+    if (full) {
+      // Gửi ĐÚNG (các) đoạn liên quan tới câu hỏi thay vì cắt đầu tài liệu → AI thấy đúng điều/khoản
+      const excerpt = relevantWindows(full, tNorm, 1800).replace(/\n{3,}/g, '\n\n');
+      ctx += `    Nội dung (trích đúng đoạn liên quan):\n${excerpt}\n`;
     }
     ctx += '\n';
   });
   ctx += '═══ HẾT NỘI DUNG DRIVE ═══\n';
   return ctx;
+}
+
+// Lấy (các) đoạn quanh vị trí khớp từ khoá trên TOÀN VĂN; nếu không khớp → lấy phần đầu.
+function relevantWindows(text, tNorm, budget) {
+  if (!text) return '';
+  budget = budget || 1600;
+  const norm = stripDia(text);
+  const hits = [];
+  (tNorm || []).forEach(t => {
+    if (!t || t.length < 2) return;
+    let from = 0, idx, count = 0;
+    while ((idx = norm.indexOf(t, from)) >= 0 && count < 3) { hits.push(idx); from = idx + t.length; count++; }
+  });
+  if (!hits.length) return text.slice(0, budget) + (text.length > budget ? ' …' : '');
+  hits.sort((a, b) => a - b);
+  const maxWins = Math.min(3, hits.length);
+  const win = Math.max(500, Math.floor(budget / maxWins));
+  const picked = [];
+  let last = -1e9;
+  for (const h of hits) {
+    if (h - last < win * 0.6) continue;          // bỏ vị trí cùng cụm
+    const start = Math.max(0, h - Math.floor(win * 0.3));
+    const end   = Math.min(text.length, h + Math.floor(win * 0.7));
+    picked.push([start, end]); last = h;
+    if (picked.length >= maxWins) break;
+  }
+  return picked
+    .map(([s, e]) => (s > 0 ? '… ' : '') + text.slice(s, e).trim() + (e < text.length ? ' …' : ''))
+    .join('\n  ----\n');
 }
 
 function buildFolderContext(folders) {
@@ -1973,7 +2215,7 @@ function findArticleInDrive(docId, articleStr) {
     if (!f.extract_ok && !f.summary) return false; // allow files even if extract failed partially
     const nameNorm = normalize(f.name);
     const kwStr = normalize((f.keywords || []).join(' '));
-    const summaryNorm = f.summary ? normalize(f.summary.slice(0, 500)) : '';
+    const summaryNorm = (f.text || f.summary) ? normalize((f.text || f.summary).slice(0, 1500)) : '';
 
     // Match if: all doc numbers found in filename OR keyword match OR summary match
     const numbersInName = docNumbers.length > 0 && docNumbers.every(n => nameNorm.includes(n));
@@ -1999,29 +2241,37 @@ function findArticleInDrive(docId, articleStr) {
   });
 
   const bestFile = candidates[0];
-  const summary = bestFile.summary || '';
+  const summary = bestFile.text || bestFile.summary || '';
 
-  // Find article section in summary
+  // Tìm điều/khoản trên TOÀN VĂN: ưu tiên "Điều N" → "Khoản M" → cả chuỗi → các số
+  const summaryLower = summary.toLowerCase();
+  const dieuM  = articleStr.match(/Điều\s*\d+/i);
+  const khoanM = articleStr.match(/Khoản\s*\d+/i);
   const artKeywords = articleStr.toLowerCase()
     .replace(/điều|khoản|mục|tiết|phụ lục/gi, '')
-    .trim()
-    .split(/[\s,]+/)
-    .filter(k => k.length > 0);
+    .trim().split(/[\s,]+/).filter(k => k.length > 0);
+  const searchSeq = [];
+  if (dieuM)  searchSeq.push(dieuM[0]);
+  searchSeq.push(articleStr);
+  if (khoanM) searchSeq.push(khoanM[0]);
+  artKeywords.forEach(k => searchSeq.push(k));
 
   let excerpt = '';
-  const summaryLower = summary.toLowerCase();
-
-  for (const kw of [articleStr, ...artKeywords]) {
+  for (const kw of searchSeq) {
     const idx = summaryLower.indexOf(kw.toLowerCase());
     if (idx !== -1) {
-      const start = Math.max(0, idx - 50);
-      const end = Math.min(summary.length, idx + 1200);
+      const start = Math.max(0, idx - 30);
+      // kéo dài tới ranh giới "Điều" kế tiếp để lấy TRỌN điều/khoản (giới hạn 4000 ký tự)
+      let end = idx + 400;
+      const nextDieu = summary.slice(idx + 6).search(/\n\s*Điều\s+\d+/i);
+      if (nextDieu >= 0) end = idx + 6 + nextDieu;
+      end = Math.min(summary.length, Math.min(Math.max(end, idx + 400), idx + 4000));
       excerpt = summary.slice(start, end);
       break;
     }
   }
 
-  if (!excerpt) excerpt = summary.slice(0, 800);
+  if (!excerpt) excerpt = summary.slice(0, 900);
 
   return {
     file: bestFile,
