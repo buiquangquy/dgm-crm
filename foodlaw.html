@@ -1524,13 +1524,17 @@ function safeParseJSON(raw) {
 // ══════════════════════════════════════════════════════════
 // GEMINI API
 // ══════════════════════════════════════════════════════════
-async function callGemini(prompt, systemPrompt='', imageData=null) {
+async function callGemini(prompt, systemPrompt='', imageData=null, preferModel='') {
   if (!state.apiKey) {
     openSettings();
     throw new Error('Vui lòng cấu hình Gemini API key');
   }
-  // Try 2.5-flash, fallback to 1.5-flash on overload
-  const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash'];
+  // 2.0-flash đã NGỪNG HOẠT ĐỘNG (3/3/2026) → fallback sang 2.5-flash-lite (quota free cao nhất).
+  // preferModel: tác vụ nhẹ (parse ý định) truyền 'gemini-2.5-flash-lite' để tiết kiệm quota Flash.
+  let GEMINI_MODELS = preferModel
+    ? [preferModel, 'gemini-2.5-flash', 'gemini-2.5-flash-lite']
+    : ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+  GEMINI_MODELS = GEMINI_MODELS.filter((m, i) => GEMINI_MODELS.indexOf(m) === i);
   let lastGeminiErr = '';
   for (let mi = 0; mi < GEMINI_MODELS.length; mi++) {
     const model = GEMINI_MODELS[mi];
@@ -1564,6 +1568,64 @@ async function callGemini(prompt, systemPrompt='', imageData=null) {
     return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
   }
   throw new Error(lastGeminiErr || 'All Gemini models unavailable. Please retry.');
+}
+
+// ══════════════════════════════════════════════════════════
+// SEMANTIC SEARCH (tìm theo NGHĨA qua GAS · dùng quota embedding RIÊNG, không tốn quota generate)
+// ══════════════════════════════════════════════════════════
+async function semanticSearchGAS(query, k) {
+  if (!state.gasWebAppUrl || !query) return null;
+  try {
+    const url = state.gasWebAppUrl + '?action=semsearch&k=' + (k || 8) + '&q=' + encodeURIComponent(query);
+    const res = await fetch(url);
+    const j = await res.json();
+    if (j && j.ok && Array.isArray(j.results) && j.results.length) {
+      console.log('[DGM sem] ' + j.results.length + ' kết quả · ' + (j.ms || '?') + 'ms · pool=' + (j.pool || '?'));
+      return j.results;
+    }
+    if (j && j.ok === false) console.warn('[DGM sem] ' + (j.error || 'no results'));
+  } catch (e) { console.warn('[DGM sem] lỗi: ' + e.message); }
+  return null;
+}
+// Map kết quả semantic (theo id file) → object file đầy đủ trong driveIndex (có toàn văn .text)
+function mapSemToFiles(results) {
+  if (!results || !driveIndex || !driveIndex.files) return [];
+  const byId = {};
+  driveIndex.files.forEach(f => { byId[f.id] = f; });
+  const out = [];
+  results.forEach(r => {
+    const f = byId[r.id];
+    if (f) out.push(Object.assign({}, f, {
+      score: r.score || 0, _semSnippet: r.snippet || '', _semLabel: r.label || '', _semChunk: r.ci
+    }));
+  });
+  return out;
+}
+
+// ── CACHE Ý ĐỊNH (localStorage) → câu hỏi lặp KHÔNG gọi lại Gemini parse → tiết kiệm quota ──
+const INTENT_CACHE_KEY = 'dgm_intent_cache_v1';
+const INTENT_CACHE_MAX = 200;
+function _intentKey(raw) {
+  return stripDia(String(raw || '')).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+function loadIntentCache(raw) {
+  try {
+    const map = JSON.parse(localStorage.getItem(INTENT_CACHE_KEY) || '{}');
+    const hit = map[_intentKey(raw)];
+    return hit && hit.data ? hit.data : null;
+  } catch (e) { return null; }
+}
+function saveIntentCache(raw, data) {
+  try {
+    const map = JSON.parse(localStorage.getItem(INTENT_CACHE_KEY) || '{}');
+    map[_intentKey(raw)] = { t: Date.now(), data: data };
+    const keys = Object.keys(map);
+    if (keys.length > INTENT_CACHE_MAX) {                 // bỏ bớt mục cũ nhất
+      keys.sort((a, b) => (map[a].t || 0) - (map[b].t || 0));
+      keys.slice(0, keys.length - INTENT_CACHE_MAX).forEach(k => delete map[k]);
+    }
+    localStorage.setItem(INTENT_CACHE_KEY, JSON.stringify(map));
+  } catch (e) { /* localStorage đầy → bỏ qua */ }
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1669,6 +1731,7 @@ function browseFolders(folders) {
 }
 function buildLocalResult(raw, files, terms, mode) {
   const isBrowse = mode === 'browse';
+  const usedSem = files.some(f => f._semSnippet || f._semLabel);
   const citations = files.map(f => {
     const docId = [f.doc_type, (f.doc_number ? f.doc_number + (f.doc_year ? '/' + f.doc_year : '') : '')]
       .filter(Boolean).join(' ') || f.name.replace(/\.[^.]+$/, '');
@@ -1694,7 +1757,9 @@ function buildLocalResult(raw, files, terms, mode) {
        'Dưới đây là ' + files.length + ' văn bản trong nhóm liên quan để bạn mở đọc trực tiếp:\n' +
        fileLinks + '\n' +
        'Gợi ý: thử từ khoá khác hoặc số hiệu văn bản (vd "37/2026", "dung sai", "Điều 10").')
-    : ('**Chế độ Database (không dùng AI) đang hoạt động** — vì Gemini hết hạn mức hoặc bạn đã bật 📚 DB-only.\n' +
+    : ((usedSem
+         ? '**Chế độ Database · 🧠 tìm theo NGHĨA (semantic)** — không dùng quota AI generate.\n'
+         : '**Chế độ Database (không dùng AI) đang hoạt động** — vì Gemini hết hạn mức hoặc bạn đã bật 📚 DB-only.\n') +
        'Hệ thống đã tra cứu và xếp hạng ' + files.length + ' văn bản khớp nhất với câu hỏi. ' +
        'Cột trái là đoạn trích THẬT lấy từ file; bấm "📎 mở file gốc" để đọc nguyên văn điều/khoản.\n' +
        'Lưu ý: chế độ này KHÔNG diễn giải/đánh giá tự động — chỉ tra cứu & trích xuất tài liệu gốc. ' +
@@ -1712,14 +1777,25 @@ function buildLocalResult(raw, files, terms, mode) {
     _isDriveMode: true, _driveFilesFound: files, _dbOnly: true,
     _pinpoints: (isBrowse ? [] : files.slice(0, 4).map(f => {
       const full = f.text || f.summary || '';
-      const r = bestArticleForTerms(full, (terms || []).map(t => stripDia(String(t))).filter(Boolean));
+      const termsNorm = (terms || []).map(t => stripDia(String(t))).filter(Boolean);
+      // Ưu tiên đúng điều/khoản mà semantic đã định vị; nếu thiếu → dò bằng từ khoá như cũ.
+      let label = f._semLabel || '';
+      let snippet = f._semSnippet || '';
+      let body = '';
+      if (label) { try { body = findArticleByLabel(full, label) || ''; } catch (e) {} }
+      if (!label || !snippet) {
+        const r = bestArticleForTerms(full, termsNorm);
+        label = label || r.label || '';
+        snippet = snippet || r.snippet || '';
+        if (!body) body = r.label ? r.snippet : '';
+      }
+      if (!body) body = full.slice(0, 4000);
       const docName = f.name.replace(/\.[^.]+$/, '');
       const docId = [f.doc_type, (f.doc_number ? f.doc_number + (f.doc_year ? '/' + f.doc_year : '') : '')].filter(Boolean).join(' ') || docName;
       return {
         folder: f.folder || '', doc: docId, name: docName,
-        label: r.label || '', snippet: (r.snippet || '').replace(/\s+/g, ' ').slice(0, 240),
-        full: r.label ? r.snippet : full.slice(0, 4000),
-        url: f.url || '', q: raw
+        label: label, snippet: (snippet || '').replace(/\s+/g, ' ').slice(0, 240),
+        full: body, url: f.url || '', q: raw
       };
     }))
   };
@@ -1752,7 +1828,18 @@ async function localDbSearch(raw) {
     }
   }
   const intent = buildLocalIntent(raw);
-  const { files, terms } = localRankFiles(raw, intent.folders);
+  // Ưu tiên SEMANTIC (tìm theo nghĩa qua GAS · không tốn quota generate). Không có → keyword cũ.
+  let files, terms;
+  const sem = await semanticSearchGAS(raw, 6);
+  const semFiles = sem ? mapSemToFiles(sem) : [];
+  if (semFiles.length) {
+    files = semFiles;
+    const tk = localTokenize(raw);
+    terms = tk.keywords.concat(tk.numbers);
+  } else {
+    const r = localRankFiles(raw, intent.folders);
+    files = r.files; terms = r.terms;
+  }
   setLoading(false);
   if (files.length) {
     const result = buildLocalResult(raw, files, terms, 'match');
@@ -1817,9 +1904,14 @@ Trả về JSON:
   "keywords": ["nhãn phụ","cá ngừ","nhập khẩu"]
 }`;
 
-    const intentRaw = await callGemini(intentPrompt);
-    const intentJSON = safeParseJSON(intentRaw);
-    if (!intentJSON) throw new Error('Không parse được ý định. Vui lòng thử lại.');
+    // Cache trước: câu hỏi đã hỏi → KHÔNG gọi Gemini lại. Nếu chưa có → parse bằng Flash-Lite (rẻ).
+    let intentJSON = loadIntentCache(raw);
+    if (!intentJSON) {
+      const intentRaw = await callGemini(intentPrompt, '', null, 'gemini-2.5-flash-lite');
+      intentJSON = safeParseJSON(intentRaw);
+      if (!intentJSON) throw new Error('Không parse được ý định. Vui lòng thử lại.');
+      saveIntentCache(raw, intentJSON);
+    }
 
     state.currentIntent = intentJSON;
     state.currentQuery = raw;
@@ -1864,10 +1956,16 @@ async function confirmIntent() {
         ...(intent.related_docs || []),
         ...(chips || [])
       ];
-      driveFilesFound = searchDriveIndex(searchKeywords, intent.folders);
+      // 1) Ưu tiên SEMANTIC (đưa AI đúng điều/khoản hơn → trích dẫn chuẩn, đỡ hỏi lại)
+      const semQuery = [intent.intent_vi, intent.intent_en, state.currentQuery].filter(Boolean).join(' · ');
+      const sem = await semanticSearchGAS(semQuery, 5);
+      const semFiles = sem ? mapSemToFiles(sem) : [];
+      // 2) Không có embeddings / không khớp → quay về keyword cũ
+      driveFilesFound = semFiles.length ? semFiles : searchDriveIndex(searchKeywords, intent.folders);
       if (driveFilesFound.length > 0) {
         driveContentCtx = buildDriveContext(driveFilesFound, searchKeywords);
-        document.getElementById('statusText').textContent = `📄 Tìm thấy ${driveFilesFound.length} văn bản · Đang phân tích...`;
+        document.getElementById('statusText').textContent =
+          `📄 ${semFiles.length ? '🧠 ' : ''}Tìm thấy ${driveFilesFound.length} văn bản · Đang phân tích...`;
       }
     }
     // ─────────────────────────────────────────────────────────────────────
@@ -2750,10 +2848,10 @@ Add "product_type": "DOMESTIC|IMPORTED|OEM_IMPORT|UNKNOWN" to the root of your J
     parts.push({ text: combinedPrompt });
 
     // ── CALL with model fallback + retry ──────────────────────────────────
-    // Strategy: try 2.5-flash first, fallback to 2.0-flash on overload
+    // Strategy: try 2.5-flash first, fallback to 2.5-flash-lite on overload (2.0-flash đã ngừng 3/3/2026)
     const MODEL_SEQUENCE = [
       'gemini-2.5-flash',
-      'gemini-2.0-flash'
+      'gemini-2.5-flash-lite'
     ];
     let data = null;
     let lastErr = null;
@@ -2822,7 +2920,7 @@ Add "product_type": "DOMESTIC|IMPORTED|OEM_IMPORT|UNKNOWN" to the root of your J
     }
 
     if (!data) throw new Error(lastErr || 'Gemini không phản hồi sau 3 model. Vui lòng thử lại sau vài phút.');
-    if (usedModel && usedModel !== 'gemini-2.5-flash' && usedModel !== 'gemini-2.0-flash') {
+    if (usedModel && usedModel !== 'gemini-2.5-flash' && usedModel !== 'gemini-2.5-flash-lite') {
       console.log('Used fallback model:', usedModel);
     }
 
