@@ -174,6 +174,14 @@ textarea.fi{resize:vertical;min-height:56px}
 .sui:hover .sud{opacity:1}
 .asr{display:flex;gap:6px;margin-top:6px}
 .asr input{flex:1;font-size:12px;padding:5px 8px;border:.5px solid var(--bd2);border-radius:var(--r)}
+/* SUBTASK COMMENTS */
+.scbtn{font-size:10px;color:var(--t3);background:var(--s2);border:.5px solid var(--bd2);padding:1px 6px;border-radius:5px;cursor:pointer;line-height:1.4}
+.scbtn.on{background:var(--blt);color:var(--bdk);border-color:var(--blue)}
+.scl{margin-top:6px;padding:6px 8px;background:var(--s2);border-radius:var(--r);display:flex;flex-direction:column;gap:6px}
+.sc-i{display:flex;gap:6px}
+.sc-b{flex:1;background:var(--s);border-radius:0 var(--rl) var(--rl) var(--rl);padding:5px 8px}
+.scir{display:flex;gap:6px}
+.scir input{flex:1;border:.5px solid var(--bd2);border-radius:var(--r)}
 /* PIC CHIPS */
 .pmc{display:flex;flex-wrap:wrap;gap:6px;padding:6px 0}
 .pch{display:flex;align-items:center;gap:5px;font-size:11px;padding:3px 8px;border:.5px solid var(--bd2);border-radius:10px;background:var(--s);cursor:pointer}
@@ -604,6 +612,61 @@ function getPics(t){
   let ids=Array.isArray(t.pic_ids)?t.pic_ids:String(t.pic_ids||'').split(',').filter(Boolean);
   if(!ids.length&&t.pic_id)ids=[t.pic_id];
   return ids.map(id=>getUser(id)).filter(Boolean);
+}
+// ✅ v10: subtask hỗ trợ nhiều PIC + comment riêng
+// Lấy danh sách PIC ids của 1 subtask (tương thích ngược: pic_id cũ dạng chuỗi)
+function subPicIds(s){
+  if(Array.isArray(s.pic_ids))return s.pic_ids.filter(Boolean);
+  if(s.pic_ids)return String(s.pic_ids).split(',').filter(Boolean);
+  if(s.pic_id)return [s.pic_id];
+  return [];
+}
+// Bộ nhớ tạm: subtask nào đang mở khung comment (theo tid:sid)
+window._subCmtOpen=window._subCmtOpen||new Set();
+// Hàng "Thêm subtask" với chọn nhiều PIC bằng chip
+function renderSubAddRow(t){
+  return `<div class="asr" style="flex-wrap:wrap;gap:4px">
+  <input id="ns-${t.id}" class="fi" style="font-size:12px;padding:5px 8px;flex:2;min-width:120px" placeholder="Thêm subtask..." onkeydown="if(event.key==='Enter')addSub('${t.id}')">
+  <input type="date" id="ns-dl-${t.id}" class="fi" style="font-size:11px;padding:4px 6px;flex:1;min-width:110px" ${t.deadline?'max="'+t.deadline+'"':''} title="Deadline subtask">
+  <button class="btn btn-sm" onclick="addSub('${t.id}')">+ Thêm</button>
+</div>
+<div class="pmc" id="ns-pics-${t.id}" style="padding:4px 0">
+  <span style="font-size:10px;color:var(--t3);align-self:center;margin-right:2px">👤 PIC:</span>
+  ${aUsers().map(u=>`<div class="pch" data-uid="${u.id}" onclick="this.classList.toggle('sel')"><div class="av avs">${u.initials||u.name[0]}</div>${u.name}</div>`).join('')}
+</div>`;
+}
+// Render 1 subtask (gồm PIC nhiều người + nút comment + khung comment khi mở)
+function renderSubItem(t,s){
+  const picUsers=subPicIds(s).map(id=>getUser(id)).filter(Boolean);
+  const subDlDays=s.deadline?daysFrom(s.deadline):null;
+  const subOv=s.deadline&&!s.done&&subDlDays!==null&&subDlDays<0;
+  const cms=Array.isArray(s.comments)?s.comments:[];
+  const open=window._subCmtOpen.has(t.id+':'+s.id);
+  return `<div class="sui">
+  <input type="checkbox" ${s.done?'checked':''} onchange="togSub('${t.id}','${s.id}',this.checked)">
+  <div style="flex:1;min-width:0">
+    <span class="sut ${s.done?'done':''}">${s.text}</span>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;align-items:center">
+      ${picUsers.map(u=>`<span style="font-size:10px;color:var(--bdk);background:var(--blt);padding:1px 5px;border-radius:5px">👤 ${u.name}</span>`).join('')}
+      ${s.deadline?`<span style="font-size:10px;color:${subOv?'var(--red)':'var(--t3)'};background:${subOv?'var(--rlt)':'var(--s2)'};padding:1px 5px;border-radius:5px">${subOv?'⚠':''} 📅 ${fmtD(s.deadline)}</span>`:''}
+      <button class="scbtn ${open?'on':''}" onclick="toggleSubCmt('${t.id}','${s.id}')">💬 ${cms.length||''}</button>
+    </div>
+    ${open?renderSubCmtThread(t,s,cms):''}
+  </div>
+  <button class="sud" onclick="delSub('${t.id}','${s.id}')">×</button>
+</div>`;
+}
+// Khung comment của 1 subtask
+function renderSubCmtThread(t,s,cms){
+  return `<div class="scl">
+  ${cms.length?cms.map(cm=>`<div class="sc-i"><div class="av avs">${(getUser(cm.author)||{}).initials||(cm.author||'?')[0]}</div>
+    <div class="sc-b"><div style="display:flex;justify-content:space-between;gap:6px"><span class="ca">${cm.author}</span><span class="ctm">${fmtDT(cm.time)}</span></div>
+    <div class="ctx">${cm.text}</div></div></div>`).join(''):'<div style="font-size:11px;color:var(--t3)">Chưa có cập nhật nào</div>'}
+  <div class="scir">
+    <input id="sci-${t.id}-${s.id}" class="fi" style="font-size:12px;padding:5px 8px" placeholder="Cập nhật / ghi chú cho subtask này..." onkeydown="if(event.key==='Enter')postSubCmt('${t.id}','${s.id}')">
+    <button class="btn btn-p btn-sm" onclick="postSubCmt('${t.id}','${s.id}')">Gửi</button>
+  </div>
+</div>`;
 }
 function toast(msg,type='ok'){
   const el=document.createElement('div');
@@ -1249,32 +1312,61 @@ async function addSub(tid){
   const inp=$('ns-'+tid);if(!inp||!inp.value.trim())return;
   const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
   if(!Array.isArray(t.subtasks))t.subtasks=[];
-  // ✅ v8: subtask có pic_id + deadline, validate deadline <= task deadline
-  const subPicEl=document.getElementById('ns-pic-'+tid);
+  const subText=inp.value.trim();
+  // ✅ v10: subtask hỗ trợ NHIỀU PIC (chip) + deadline, validate deadline <= task deadline
+  const picBox=document.getElementById('ns-pics-'+tid);
+  const subPicIdList=picBox?[...picBox.querySelectorAll('.pch.sel')].map(el=>el.getAttribute('data-uid')).filter(Boolean):[];
   const subDlEl=document.getElementById('ns-dl-'+tid);
-  const subPicId=subPicEl?subPicEl.value:'';
   const subDl=subDlEl?subDlEl.value:'';
   // Validate deadline subtask không vượt task chính
   if(subDl&&t.deadline&&subDl>t.deadline){
     toast('Deadline subtask không được quá deadline task chính ('+fmtD(t.deadline)+')','warn');
     return;
   }
-  t.subtasks.push({id:Date.now(),text:inp.value.trim(),done:false,pic_id:subPicId,deadline:subDl});
+  t.subtasks.push({id:Date.now(),text:subText,done:false,pic_ids:subPicIdList,deadline:subDl,comments:[]});
   inp.value='';
-  if(subPicEl)subPicEl.value='';
   if(subDlEl)subDlEl.value='';
   openDetail(tid);renderKanban();await saveTask(t);
-  // ✅ v8: Gửi thông báo cho PIC được assign subtask
-  if(subPicId){
-    const assignedUser=getUser(subPicId);
-    if(assignedUser&&assignedUser.id!==state.currentUser?.id){
-      pushNotif(subPicId,'📋 Subtask mới','Bạn được assign subtask: "'+inp.value.trim()+'" trong task "'+t.title+'"',tid);
+  // ✅ v10: Gửi thông báo cho TẤT CẢ PIC được assign subtask
+  subPicIdList.forEach(pid=>{
+    const u=getUser(pid);
+    if(u&&u.id!==state.currentUser?.id){
+      pushNotif(pid,'📋 Subtask mới','Bạn được giao subtask: "'+subText+'" trong task "'+t.title+'"',tid);
     }
-  }
+  });
 }
 async function delSub(tid,sid){
   const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
   t.subtasks=(t.subtasks||[]).filter(x=>String(x.id)!==String(sid));
+  window._subCmtOpen.delete(tid+':'+sid);
+  openDetail(tid);renderKanban();await saveTask(t);
+}
+// ✅ v10: Mở/đóng khung comment của 1 subtask
+function toggleSubCmt(tid,sid){
+  const key=tid+':'+sid;
+  if(window._subCmtOpen.has(key))window._subCmtOpen.delete(key);
+  else window._subCmtOpen.add(key);
+  openDetail(tid);
+  // focus ô nhập khi vừa mở
+  setTimeout(()=>{const el=$('sci-'+tid+'-'+sid);if(el)el.focus();},30);
+}
+// ✅ v10: Thêm comment vào 1 subtask cụ thể
+async function postSubCmt(tid,sid){
+  const inp=$('sci-'+tid+'-'+sid);if(!inp)return;
+  const txt=inp.value.trim();if(!txt)return;
+  const t=state.tasks.find(x=>String(x.id)===String(tid));if(!t)return;
+  const s=(t.subtasks||[]).find(x=>String(x.id)===String(sid));if(!s)return;
+  if(!Array.isArray(s.comments))s.comments=[];
+  s.comments.push({id:Date.now(),text:txt,author:state.currentUser?.name||'?',time:new Date().toISOString()});
+  inp.value='';
+  window._subCmtOpen.add(tid+':'+sid);
+  // Notify: PIC của subtask + PIC của task (trừ người vừa gõ)
+  const targets=new Set([...subPicIds(s),...getPicIds(t)]);
+  targets.forEach(pid=>{
+    if(pid&&pid!==state.currentUser?.id){
+      pushNotif(pid,'💬 Cập nhật subtask',state.currentUser.name+' (subtask "'+s.text.slice(0,30)+'"): '+txt.slice(0,50)+(txt.length>50?'...':''),tid);
+    }
+  });
   openDetail(tid);renderKanban();await saveTask(t);
 }
 async function updStep(tid,step){
@@ -1415,42 +1507,9 @@ ${steps.length?`<div class="ds"><div class="dst">Flow / Bước hiện tại</di
 }).join('')}</div></div>`:''}
 ${sp?`<div class="ds"><div class="dst">Tiến độ subtasks — ${sp.done}/${sp.total} (${sp.pct}%)</div>
 <div class="spb" style="height:6px"><div class="spf" style="width:${sp.pct}%"></div></div></div>`:''}
-${subs.length?`<div class="ds"><div class="dst">Subtasks</div>
-<div>${subs.map(s=>{
-  const subPicUser=s.pic_id?getUser(s.pic_id):null;
-  const subDlDays=s.deadline?daysFrom(s.deadline):null;
-  const subOv=s.deadline&&!s.done&&subDlDays!==null&&subDlDays<0;
-  return`<div class="sui">
-  <input type="checkbox" ${s.done?'checked':''} onchange="togSub('${t.id}','${s.id}',this.checked)">
-  <div style="flex:1;min-width:0">
-    <span class="sut ${s.done?'done':''}">${s.text}</span>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px">
-      ${subPicUser?`<span style="font-size:10px;color:var(--bdk);background:var(--blt);padding:1px 5px;border-radius:5px">👤 ${subPicUser.name}</span>`:''}
-      ${s.deadline?`<span style="font-size:10px;color:${subOv?'var(--red)':'var(--t3)'};background:${subOv?'var(--rlt)':'var(--s2)'};padding:1px 5px;border-radius:5px">${subOv?'⚠':''} 📅 ${fmtD(s.deadline)}</span>`:''}
-    </div>
-  </div>
-  <button class="sud" onclick="delSub('${t.id}','${s.id}')">×</button>
-</div>`;
-}).join('')}</div>
-<div class="asr" style="flex-wrap:wrap;gap:4px">
-  <input id="ns-${t.id}" class="fi" style="font-size:12px;padding:5px 8px;flex:2;min-width:120px" placeholder="Thêm subtask...">
-  <select id="ns-pic-${t.id}" class="fi" style="font-size:11px;padding:4px 6px;flex:1;min-width:90px">
-    <option value="">👤 PIC</option>
-    ${aUsers().map(u=>`<option value="${u.id}">${u.name}</option>`).join('')}
-  </select>
-  <input type="date" id="ns-dl-${t.id}" class="fi" style="font-size:11px;padding:4px 6px;flex:1;min-width:110px" ${t.deadline?'max="'+t.deadline+'"':''} title="Deadline subtask">
-  <button class="btn btn-sm" onclick="addSub('${t.id}')">+ Thêm</button>
-</div></div>`:
-`<div class="ds"><div class="dst">Subtasks</div>
-<div class="asr" style="flex-wrap:wrap;gap:4px">
-  <input id="ns-${t.id}" class="fi" style="font-size:12px;padding:5px 8px;flex:2;min-width:120px" placeholder="Thêm subtask...">
-  <select id="ns-pic-${t.id}" class="fi" style="font-size:11px;padding:4px 6px;flex:1;min-width:90px">
-    <option value="">👤 PIC</option>
-    ${aUsers().map(u=>`<option value="${u.id}">${u.name}</option>`).join('')}
-  </select>
-  <input type="date" id="ns-dl-${t.id}" class="fi" style="font-size:11px;padding:4px 6px;flex:1;min-width:110px" ${t.deadline?'max="'+t.deadline+'"':''} title="Deadline subtask">
-  <button class="btn btn-sm" onclick="addSub('${t.id}')">+ Thêm</button>
-</div></div>`}
+<div class="ds"><div class="dst">Subtasks${subs.length?` (${subs.length})`:''}</div>
+${subs.length?`<div>${subs.map(s=>renderSubItem(t,s)).join('')}</div>`:''}
+${renderSubAddRow(t)}</div>
 <div class="ds"><div class="dst">Comments (${cms.filter(x=>!x.isSystem).length})</div>
 <div class="cl">${cms.map(cm=>cm.isSystem?
   `<div class="sys-cm"><span>${cm.text}</span></div>`:
