@@ -888,6 +888,33 @@ let state = {
 };
 
 // ══════════════════════════════════════════════════════════
+// CẤU HÌNH MODEL — SỬA 1 CHỖ DUY NHẤT KHI GOOGLE ĐỔI/NGƯNG MODEL
+// ══════════════════════════════════════════════════════════
+// LỊCH SỬ: gemini-2.0-flash ngưng 3/3/2026 · gemini-2.5-* trả 404 "no longer available" từ ~9/7/2026
+// (dù trang deprecation ghi 16/10/2026 — Google rút sớm). Mọi tên model gom về đây để không sập lần nữa.
+//
+// GEN_MODELS  = chuỗi model trả lời chính (thử lần lượt tới khi có model sống).
+// LITE_MODELS = model nhẹ cho parse ý định (bể quota rộng hơn).
+// Khi Google đổi model: chỉ cần sửa 2 mảng dưới đây, KHÔNG phải lùng khắp file.
+const GEN_MODELS  = ['gemini-3-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
+const LITE_MODELS = ['gemini-3.1-flash-lite', 'gemini-3-flash', 'gemini-flash-latest'];
+
+// Nhận diện lỗi "model đã chết" (404/NOT_FOUND/no longer available) — KHÁC với lỗi key sai hay hết quota.
+function isModelDeadError(errMsg, httpStatus) {
+  const m = String(errMsg || '').toLowerCase();
+  return httpStatus === 404 || m.includes('no longer available') ||
+         m.includes('not_found') || m.includes('is not found') ||
+         m.includes('not supported') || m.includes('call listmodels');
+}
+// Lỗi quá tải / hết quota tạm thời → nên thử model kế hoặc chờ rồi thử lại.
+function isOverloadError(errMsg, httpStatus) {
+  const m = String(errMsg || '').toLowerCase();
+  return httpStatus === 429 || httpStatus === 503 ||
+         m.includes('high demand') || m.includes('overloaded') ||
+         m.includes('unavailable') || m.includes('quota') || m.includes('resource_exhausted');
+}
+
+// ══════════════════════════════════════════════════════════
 // DRIVE INDEX (loaded from GAS)
 // ══════════════════════════════════════════════════════════
 let driveIndex = null;          // Full JSON index from GAS
@@ -1529,13 +1556,13 @@ async function callGemini(prompt, systemPrompt='', imageData=null, preferModel='
     openSettings();
     throw new Error('Vui lòng cấu hình Gemini API key');
   }
-  // 2.0-flash đã NGỪNG HOẠT ĐỘNG (3/3/2026) → fallback sang 2.5-flash-lite (quota free cao nhất).
-  // preferModel: tác vụ nhẹ (parse ý định) truyền 'gemini-2.5-flash-lite' để tiết kiệm quota Flash.
+  // Tên model gom ở GEN_MODELS / LITE_MODELS (đầu file). preferModel = tác vụ nhẹ → ưu tiên LITE.
   let GEMINI_MODELS = preferModel
-    ? [preferModel, 'gemini-2.5-flash', 'gemini-2.5-flash-lite']
-    : ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+    ? [preferModel].concat(LITE_MODELS).concat(GEN_MODELS)
+    : GEN_MODELS.concat(LITE_MODELS);
   GEMINI_MODELS = GEMINI_MODELS.filter((m, i) => GEMINI_MODELS.indexOf(m) === i);
   let lastGeminiErr = '';
+  let deadCount = 0;
   for (let mi = 0; mi < GEMINI_MODELS.length; mi++) {
     const model = GEMINI_MODELS[mi];
     const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + state.apiKey;
@@ -1555,10 +1582,12 @@ async function callGemini(prompt, systemPrompt='', imageData=null, preferModel='
     const data = await res.json();
     if (data.error) {
       const errMsg = data.error.message || '';
-      const isOverload = errMsg.includes('high demand') || errMsg.includes('overloaded') ||
-                         errMsg.includes('UNAVAILABLE') || errMsg.includes('quota') ||
-                         res.status === 429 || res.status === 503;
-      if (isOverload && mi < GEMINI_MODELS.length - 1) {
+      // Model chết (404) → nhảy NGAY sang model kế, không chờ (không phải lỗi tạm thời).
+      if (isModelDeadError(errMsg, res.status)) {
+        deadCount++;
+        lastGeminiErr = errMsg;
+        if (mi < GEMINI_MODELS.length - 1) continue;
+      } else if (isOverloadError(errMsg, res.status) && mi < GEMINI_MODELS.length - 1) {
         lastGeminiErr = errMsg;
         await new Promise(r => setTimeout(r, 1500));
         continue;
@@ -1566,6 +1595,11 @@ async function callGemini(prompt, systemPrompt='', imageData=null, preferModel='
       throw new Error(errMsg);
     }
     return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
+  // Nếu TẤT CẢ model đều chết → thông báo rõ để biết cần cập nhật GEN_MODELS, không phải lỗi key.
+  if (deadCount === GEMINI_MODELS.length) {
+    throw new Error('⚠ Tất cả model AI đã ngừng hoạt động (Google đổi model). '
+      + 'Cần cập nhật danh sách GEN_MODELS/LITE_MODELS ở đầu file. Chi tiết: ' + lastGeminiErr);
   }
   throw new Error(lastGeminiErr || 'All Gemini models unavailable. Please retry.');
 }
@@ -1907,7 +1941,7 @@ Trả về JSON:
     // Cache trước: câu hỏi đã hỏi → KHÔNG gọi Gemini lại. Nếu chưa có → parse bằng Flash-Lite (rẻ).
     let intentJSON = loadIntentCache(raw);
     if (!intentJSON) {
-      const intentRaw = await callGemini(intentPrompt, '', null, 'gemini-2.5-flash-lite');
+      const intentRaw = await callGemini(intentPrompt, '', null, LITE_MODELS[0]);
       intentJSON = safeParseJSON(intentRaw);
       if (!intentJSON) throw new Error('Không parse được ý định. Vui lòng thử lại.');
       saveIntentCache(raw, intentJSON);
@@ -2848,11 +2882,9 @@ Add "product_type": "DOMESTIC|IMPORTED|OEM_IMPORT|UNKNOWN" to the root of your J
     parts.push({ text: combinedPrompt });
 
     // ── CALL with model fallback + retry ──────────────────────────────────
-    // Strategy: try 2.5-flash first, fallback to 2.5-flash-lite on overload (2.0-flash đã ngừng 3/3/2026)
-    const MODEL_SEQUENCE = [
-      'gemini-2.5-flash',
-      'gemini-2.5-flash-lite'
-    ];
+    // Tên model gom ở GEN_MODELS (đầu file). Đổi model chỉ sửa 1 chỗ đó.
+    const MODEL_SEQUENCE = GEN_MODELS.concat(LITE_MODELS)
+      .filter((m, i, a) => a.indexOf(m) === i);
     let data = null;
     let lastErr = null;
     let usedModel = '';
@@ -2883,6 +2915,11 @@ Add "product_type": "DOMESTIC|IMPORTED|OEM_IMPORT|UNKNOWN" to the root of your J
 
           if (d.error) {
             const errMsg = d.error.message || '';
+            // Model chết (404) → bỏ QUA cả 2 attempt của model này, sang model kế NGAY.
+            if (isModelDeadError(errMsg, res.status)) {
+              lastErr = errMsg;
+              break; // thoát vòng attempt → for model kế
+            }
             const is429 = res.status === 429 || errMsg.includes('quota') || errMsg.includes('RESOURCE_EXHAUSTED');
             const isOverload = errMsg.includes('high demand') || errMsg.includes('overloaded') ||
                                errMsg.includes('UNAVAILABLE') || errMsg.includes('503') || res.status === 503;
@@ -2919,8 +2956,14 @@ Add "product_type": "DOMESTIC|IMPORTED|OEM_IMPORT|UNKNOWN" to the root of your J
       if (modelSuccess) break;
     }
 
-    if (!data) throw new Error(lastErr || 'Gemini không phản hồi sau 3 model. Vui lòng thử lại sau vài phút.');
-    if (usedModel && usedModel !== 'gemini-2.5-flash' && usedModel !== 'gemini-2.5-flash-lite') {
+    if (!data) {
+      if (lastErr && isModelDeadError(lastErr, 404)) {
+        throw new Error('⚠ Model AI đã ngừng hoạt động (Google đổi model). '
+          + 'Cần cập nhật GEN_MODELS ở đầu file. Chi tiết: ' + lastErr);
+      }
+      throw new Error(lastErr || 'Gemini không phản hồi sau các model. Vui lòng thử lại sau vài phút.');
+    }
+    if (usedModel && usedModel !== GEN_MODELS[0]) {
       console.log('Used fallback model:', usedModel);
     }
 
@@ -3758,25 +3801,58 @@ async function testAndSaveKey() {
   btn.textContent = 'Dang kiem tra... / Testing...';
   showObMsg('Dang ket noi Gemini API...', 'loading');
   try {
-    // Try models in order for key validation
-    let url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + key;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        contents:[{role:'user',parts:[{text:'Say OK'}]}],
-        generationConfig:{maxOutputTokens:5,responseMimeType:'text/plain'}
-      })
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    if (reply) {
+    // Validate key: thử LẦN LƯỢT các model sống (GEN_MODELS + LITE_MODELS).
+    // Nếu 1 model chết (404) → thử model kế, KHÔNG vội báo "key sai".
+    // Chỉ báo key sai khi lỗi thật sự là về key (API_KEY_INVALID / PERMISSION_DENIED).
+    const VALIDATE_MODELS = GEN_MODELS.concat(LITE_MODELS).filter((m,i,a)=>a.indexOf(m)===i);
+    let reply = '';
+    let keyError = '';     // lỗi liên quan KEY (mới là lý do chặn)
+    let allDead = true;
+    for (let vi = 0; vi < VALIDATE_MODELS.length; vi++) {
+      const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + VALIDATE_MODELS[vi] + ':generateContent?key=' + key;
+      let data;
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({
+            contents:[{role:'user',parts:[{text:'Say OK'}]}],
+            generationConfig:{maxOutputTokens:5,responseMimeType:'text/plain'}
+          })
+        });
+        data = await res.json();
+        if (data.error) {
+          const em = data.error.message || '';
+          if (isModelDeadError(em, res.status)) { continue; }         // model chết → thử model kế
+          allDead = false;
+          const emL = em.toLowerCase();
+          if (emL.includes('api_key') || emL.includes('api key') ||
+              emL.includes('permission') || emL.includes('invalid') || res.status === 400 || res.status === 403) {
+            keyError = em;                                            // lỗi KEY thật → dừng luôn
+            break;
+          }
+          keyError = em;                                             // lỗi khác (quota...) → vẫn ghi lại, thử tiếp
+          continue;
+        }
+        allDead = false;
+        reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'OK';
+        break;                                                       // thành công
+      } catch (netErr) {
+        allDead = false;
+        keyError = netErr.message;
+      }
+    }
+    if (!reply && allDead) {
+      throw new Error('Tat ca model AI dang khong kha dung (Google doi model). '
+        + 'Vui long thu lai sau, hoac bao admin cap nhat GEN_MODELS. / All AI models unavailable — try later.');
+    }
+    if (!reply) throw new Error(keyError || 'Key khong hop le / Invalid key');
+    {
       showObMsg('Key hop le! Dang luu... / Valid! Saving...', 'ok');
       state.apiKey = key;
       saveState(); updateStatus();
       setTimeout(() => hideOnboarding(), 1000);
-    } else { throw new Error('No response from Gemini'); }
+    }
   } catch(e) {
     const msg = e.message.includes('API_KEY_INVALID') ? 'Key khong hop le / Invalid API key' :
                 e.message.includes('PERMISSION_DENIED') ? 'Key bi tu choi / Key permission denied' :
