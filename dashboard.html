@@ -149,6 +149,18 @@
   }
   .modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:8px;}
   .btn-plain{background:none; border:none; color:#8A8577; font-size:13.5px; cursor:pointer;}
+  .pic-chips{display:flex; flex-wrap:wrap; gap:6px;}
+  .pic-chip{
+    display:flex; align-items:center; gap:6px; border:1px solid var(--line); border-radius:20px;
+    padding:5px 10px 5px 5px; font-size:12.5px; cursor:pointer; background:#fff; transition:all .15s;
+  }
+  .pic-chip:hover{border-color:var(--gold);}
+  .pic-chip.sel{background:var(--navy); border-color:var(--navy); color:#fff;}
+  .pic-chip .av{
+    width:20px; height:20px; border-radius:50%; background:var(--gold); color:var(--navy-dark);
+    font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .pic-chip.sel .av{background:#fff; color:var(--navy);}
   .result-box{
     margin-top:14px; padding:12px 14px; background:#FBFAF6; border:1px solid var(--line);
     border-radius:8px; font-size:12.5px; max-height:180px; overflow-y:auto;
@@ -211,8 +223,9 @@
     <h3>Bắt đầu họp tuần này</h3>
     <p class="hint">Hệ thống sẽ tự quét toàn bộ task chưa Done, +1 carry-over và đưa vào danh sách review đầu buổi họp.</p>
     <div class="field">
-      <label>Người tham dự (cách nhau bằng dấu phẩy)</label>
-      <input type="text" id="fAttendees" placeholder="Quý, Sales A, Sales B">
+      <label>Người tham dự</label>
+      <div class="pic-chips" id="attendeeChips"></div>
+      <input type="text" id="fAttendeesExtra" placeholder="Khác (nếu có khách mời ngoài team, cách nhau bằng dấu phẩy)" style="margin-top:8px;">
     </div>
     <div class="field">
       <label>Quyết định chính trong buổi họp</label>
@@ -238,7 +251,7 @@ const CONFIG = {
   WEBAPP_URL: 'PASTE_YOUR_GAS_WEBAPP_URL_HERE', // https://script.google.com/macros/s/XXXXXXXXXXXX/exec
 };
 
-let STATE = { weekly: [], offenders: [], meetings: [], selectedWeek: null };
+let STATE = { weekly: [], offenders: [], meetings: [], users: [], selectedWeek: null };
 
 async function apiGet(action, extra = {}) {
   const url = new URL(CONFIG.WEBAPP_URL);
@@ -269,11 +282,12 @@ async function loadAll() {
   statusEl.textContent = 'Đang tải dữ liệu…';
   statusEl.classList.remove('err');
   try {
-    const stats = await apiGet('weeklyStats');
+    const [stats, allData] = await Promise.all([apiGet('weeklyStats'), apiGet('all')]);
     if (!stats.ok) throw new Error(stats.error || 'weeklyStats lỗi');
     STATE.weekly = stats.weekly || [];
     STATE.offenders = stats.offenders || [];
     STATE.meetings = (stats.meetings || []).sort((a, b) => (a.week_no < b.week_no ? 1 : -1));
+    STATE.users = (allData.ok && allData.data && allData.data.users) ? allData.data.users : [];
     STATE.selectedWeek = STATE.weekly.length ? STATE.weekly[STATE.weekly.length - 1].week_no : null;
 
     renderLedger();
@@ -281,6 +295,7 @@ async function loadAll() {
     renderPicTable();
     renderOffenders();
     renderMeetingLog();
+    renderAttendeeChips();
 
     statusEl.textContent = 'Cập nhật lúc ' + new Date(stats.generated_at || Date.now()).toLocaleString('vi-VN');
   } catch (e) {
@@ -406,17 +421,38 @@ function renderMeetingLog() {
   });
 }
 
+// ---------- Attendee chips (từ CRM_Users) ----------
+function renderAttendeeChips() {
+  const wrap = document.getElementById('attendeeChips');
+  if (!wrap) return;
+  const activeUsers = (STATE.users || []).filter(u => u.status === 'Active' || !u.status);
+  if (!activeUsers.length) {
+    wrap.innerHTML = '<div class="empty-note">Chưa tải được danh sách team — dùng ô "Khác" bên dưới.</div>';
+    return;
+  }
+  wrap.innerHTML = activeUsers.map(u => `<div class="pic-chip" data-name="${(u.name || '').replace(/"/g, '&quot;')}">
+    <span class="av">${u.initials || (u.name || '?')[0]}</span>${u.name || '(?)'}
+  </div>`).join('');
+  wrap.querySelectorAll('.pic-chip').forEach(chip => {
+    chip.addEventListener('click', () => chip.classList.toggle('sel'));
+  });
+}
+
 // ---------- Modal: start meeting ----------
 const overlay = document.getElementById('overlay');
 document.getElementById('startMeetingBtn').addEventListener('click', () => {
   document.getElementById('modalResult').style.display = 'none';
+  document.getElementById('fAttendeesExtra').value = '';
+  renderAttendeeChips(); // reset lựa chọn mỗi lần mở modal
   overlay.classList.add('open');
 });
 document.getElementById('cancelModal').addEventListener('click', () => overlay.classList.remove('open'));
 overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
 
 document.getElementById('submitMeeting').addEventListener('click', async () => {
-  const attendees = document.getElementById('fAttendees').value.split(',').map(s => s.trim()).filter(Boolean);
+  const chipNames = [...document.querySelectorAll('#attendeeChips .pic-chip.sel')].map(c => c.dataset.name);
+  const extraNames = document.getElementById('fAttendeesExtra').value.split(',').map(s => s.trim()).filter(Boolean);
+  const attendees = [...chipNames, ...extraNames];
   const key_decisions = document.getElementById('fDecisions').value.trim();
   const created_by = document.getElementById('fCreatedBy').value.trim();
   const btn = document.getElementById('submitMeeting');
