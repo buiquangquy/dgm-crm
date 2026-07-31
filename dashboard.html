@@ -383,7 +383,13 @@ let STATE = {
   bodTasks: [], bodMeetings: [], bodTotals: { total: 0, open: 0, done: 0, offenders: [] },
 };
 
+function _checkConfig() {
+  if (!CONFIG.WEBAPP_URL || CONFIG.WEBAPP_URL.includes('PASTE_YOUR')) {
+    throw new Error('Chưa cấu hình WEBAPP_URL — dán URL Web App GAS (Deploy → Manage deployments) vào CONFIG ở đầu file dashboard.html.');
+  }
+}
 async function apiGet(action, extra = {}) {
+  _checkConfig();
   const url = new URL(CONFIG.WEBAPP_URL);
   url.searchParams.set('action', action);
   Object.entries(extra).forEach(([k, v]) => url.searchParams.set(k, v));
@@ -391,6 +397,7 @@ async function apiGet(action, extra = {}) {
   return res.json();
 }
 async function apiWrite(body) {
+  _checkConfig();
   const url = new URL(CONFIG.WEBAPP_URL);
   url.searchParams.set('method', 'post');
   url.searchParams.set('payload', encodeURIComponent(JSON.stringify(body)));
