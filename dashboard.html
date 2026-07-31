@@ -161,6 +161,41 @@
     font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0;
   }
   .pic-chip.sel .av{background:#fff; color:var(--navy);}
+
+  /* ---------- View tabs (Team / BOD) ---------- */
+  .view-tabs{max-width:1180px; margin:0 auto; padding:14px 20px 0; display:flex; gap:4px;}
+  .vtab{
+    background:none; border:none; padding:10px 16px; font-size:13.5px; font-weight:600;
+    color:#8A8577; cursor:pointer; border-bottom:3px solid transparent;
+    font-family:'Space Grotesk',sans-serif; border-radius:8px 8px 0 0;
+  }
+  .vtab.active{color:var(--navy); border-bottom-color:var(--gold);}
+  .vtab:hover{color:var(--navy); background:#FBFAF6;}
+
+  /* ---------- BOD task rows ---------- */
+  .bod-row{border-bottom:1px solid var(--line); padding:12px 2px;}
+  .bod-row:last-child{border-bottom:none;}
+  .bod-row-main{display:flex; gap:10px; align-items:flex-start;}
+  .bod-row-main input[type=checkbox]{margin-top:3px; width:16px; height:16px; flex-shrink:0; cursor:pointer;}
+  .bod-row-body{flex:1; min-width:0;}
+  .bod-title{font-size:13.5px; font-weight:600; color:var(--gray);}
+  .bod-title.done{text-decoration:line-through; color:#B7B2A2;}
+  .bod-meta{display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top:4px;}
+  .bod-meta span{font-size:11px; padding:2px 8px; border-radius:8px; background:var(--cream); color:#8A8577;}
+  .bod-meta .ov{background:#FBE1E4; color:var(--red);}
+  .bod-notes{font-size:12.5px; color:#8A8577; margin-top:4px; white-space:pre-wrap;}
+  .bod-cmt-btn{font-size:11px; border:1px solid var(--line); background:#fff; padding:2px 8px; border-radius:8px; cursor:pointer; color:#8A8577;}
+  .bod-row-actions{display:flex; gap:2px; flex-shrink:0;}
+  .bod-row-actions button{background:none; border:none; cursor:pointer; font-size:14px; color:#8A8577; padding:2px 5px;}
+  .bod-row-actions button:hover{color:var(--navy);}
+  .bod-cmt-thread{margin-top:8px; background:var(--cream); border-radius:8px; padding:10px;}
+  .bod-cmt-item{display:flex; justify-content:space-between; gap:8px; font-size:12px; padding:4px 0; border-bottom:1px solid var(--line);}
+  .bod-cmt-item:last-child{border-bottom:none;}
+  .bod-cmt-item .ca{font-weight:600; color:var(--navy);}
+  .bod-cmt-item .ctm{color:#8A8577; font-size:10.5px; white-space:nowrap;}
+  .bod-cmt-input{display:flex; gap:6px; margin-top:8px;}
+  .bod-cmt-input input{flex:1; border:1px solid var(--line); border-radius:6px; padding:6px 9px; font-size:12.5px; font-family:'Inter',sans-serif;}
+
   .result-box{
     margin-top:14px; padding:12px 14px; background:#FBFAF6; border:1px solid var(--line);
     border-radius:8px; font-size:12.5px; max-height:180px; overflow-y:auto;
@@ -172,18 +207,26 @@
 <header>
   <div class="title-block">
     <h1>DGM Weekly Meeting &amp; Task Tracker</h1>
-    <p>CRM_Meetings · CRM_Tasks — Denis G.M. / Ayam Brand Vietnam</p>
+    <p>Team Sales &amp; BOD — Denis G.M. / Ayam Brand Vietnam</p>
   </div>
   <div class="actions">
     <a href="index.html" class="btn btn-outline btn-sm" style="text-decoration:none; display:inline-flex; align-items:center;">← Về CRM</a>
     <button class="btn btn-outline btn-sm" id="refreshBtn">↻ Làm mới</button>
     <button class="btn btn-gold" id="startMeetingBtn">+ Bắt đầu họp tuần này</button>
+    <button class="btn btn-outline btn-sm" id="addBODTaskBtn" style="display:none;">+ Thêm việc cần làm</button>
+    <button class="btn btn-gold" id="startBODMeetingBtn" style="display:none;">+ Bắt đầu họp BOD</button>
   </div>
 </header>
+
+<div class="view-tabs">
+  <button class="vtab active" id="tabTeamBtn">📊 Weekly Team Tracker</button>
+  <button class="vtab" id="tabBODBtn">🏛️ BOD Meeting Minutes</button>
+</div>
 
 <main>
   <div class="status-line" id="statusLine">Đang tải dữ liệu…</div>
 
+  <div id="teamView" class="view">
   <div class="kpi-row" id="kpiRow">
     <div class="kpi-card"><div class="label">Tuần hiện tại</div><div class="value" id="kpiWeek">–</div><div class="sub" id="kpiWeekTotal">– task</div></div>
     <div class="kpi-card accent-green"><div class="label">Hoàn thành</div><div class="value" id="kpiDone">–</div><div class="sub">so với tổng task tuần</div></div>
@@ -215,6 +258,28 @@
     <p class="desc">Quyết định chính từng tuần — bấm để mở rộng.</p>
     <div class="panel"><div id="meetingLog"></div></div>
   </section>
+  </div>
+
+  <div id="bodView" class="view" style="display:none;">
+    <div class="kpi-row">
+      <div class="kpi-card"><div class="label">Tổng việc cần làm</div><div class="value" id="bodKpiTotal">–</div><div class="sub">từ trước đến nay</div></div>
+      <div class="kpi-card accent-gold"><div class="label">Đang mở</div><div class="value" id="bodKpiOpen">–</div><div class="sub">chưa hoàn thành</div></div>
+      <div class="kpi-card accent-green"><div class="label">Hoàn thành</div><div class="value" id="bodKpiDone">–</div><div class="sub">đã Done</div></div>
+      <div class="kpi-card accent-red"><div class="label">Trễ nhiều lần (≥2)</div><div class="value" id="bodKpiOffenders">–</div><div class="sub">cần escalate</div></div>
+    </div>
+
+    <section>
+      <h2>Việc cần làm sau họp BOD</h2>
+      <p class="desc">PIC mặc định là bạn — có thể đổi thành tên/viết tắt của sếp phụ trách theo dõi việc đó.</p>
+      <div class="panel"><div id="bodTasksWrap"></div></div>
+    </section>
+
+    <section>
+      <h2>Lịch sử biên bản họp BOD</h2>
+      <p class="desc">Quyết định chính từng buổi họp — bấm để mở rộng.</p>
+      <div class="panel"><div id="bodMeetingLog"></div></div>
+    </section>
+  </div>
 </main>
 
 <!-- Modal: Start Meeting -->
@@ -243,15 +308,80 @@
   </div>
 </div>
 
+<!-- Modal: Start BOD Meeting -->
+<div class="overlay" id="bodOverlay">
+  <div class="modal">
+    <h3>Bắt đầu họp BOD</h3>
+    <p class="hint">Hệ thống sẽ tự quét toàn bộ việc chưa Done từ các họp BOD trước, +1 carry-over.</p>
+    <div class="field">
+      <label>Ngày họp</label>
+      <input type="date" id="bodDate">
+    </div>
+    <div class="field">
+      <label>Người tham dự (BOD)</label>
+      <input type="text" id="bodAttendees" placeholder="VD: CEO, GĐ Kinh doanh, GĐ Tài chính... (cách nhau bằng dấu phẩy)">
+    </div>
+    <div class="field">
+      <label>Quyết định chính trong buổi họp</label>
+      <textarea id="bodDecisions" rows="3" placeholder="VD: Duyệt ngân sách Q3; yêu cầu báo cáo GM hàng tháng..."></textarea>
+    </div>
+    <div class="field">
+      <label>Người tạo</label>
+      <input type="text" id="bodCreatedBy">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-plain" id="bodCancelModal">Huỷ</button>
+      <button class="btn btn-gold" id="bodSubmitMeeting">Tạo & Quét carry-over</button>
+    </div>
+    <div class="result-box" id="bodModalResult" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- Modal: Add/Edit BOD Task -->
+<div class="overlay" id="bodTaskOverlay">
+  <div class="modal">
+    <h3 id="bodTaskModalTitle">Thêm việc cần làm</h3>
+    <input type="hidden" id="bodTaskId">
+    <div class="field">
+      <label>Nội dung công việc</label>
+      <input type="text" id="bodTaskTitle" placeholder="VD: Gửi báo cáo GM tháng 7 cho BOD">
+    </div>
+    <div class="field">
+      <label>Người theo dõi (PIC)</label>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input type="text" id="bodTaskPic" style="flex:1;">
+        <button type="button" class="btn btn-outline btn-sm" id="bodPicMeBtn" style="white-space:nowrap; color:var(--navy); border-color:var(--line);">Chính tôi</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Deadline</label>
+      <input type="date" id="bodTaskDeadline">
+    </div>
+    <div class="field">
+      <label>Ghi chú</label>
+      <textarea id="bodTaskNotes" rows="2" placeholder="Ghi chú thêm (tuỳ chọn)..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-plain" id="bodTaskCancelModal">Huỷ</button>
+      <button class="btn btn-gold" id="bodTaskSubmit">💾 Lưu</button>
+    </div>
+    <div class="result-box" id="bodTaskModalResult" style="display:none;"></div>
+  </div>
+</div>
+
 <script>
 // ============================================================
 // CONFIG — dán URL Web App (GAS) đã deploy vào đây
 // ============================================================
 const CONFIG = {
   WEBAPP_URL: 'PASTE_YOUR_GAS_WEBAPP_URL_HERE', // https://script.google.com/macros/s/XXXXXXXXXXXX/exec
+  MY_NAME: 'Quý', // Tên/viết tắt mặc định cho PIC việc BOD + người tạo họp — đổi nếu cần
 };
 
-let STATE = { weekly: [], offenders: [], meetings: [], users: [], selectedWeek: null };
+let STATE = {
+  weekly: [], offenders: [], meetings: [], users: [], selectedWeek: null,
+  bodTasks: [], bodMeetings: [], bodTotals: { total: 0, open: 0, done: 0, offenders: [] },
+};
 
 async function apiGet(action, extra = {}) {
   const url = new URL(CONFIG.WEBAPP_URL);
@@ -282,13 +412,21 @@ async function loadAll() {
   statusEl.textContent = 'Đang tải dữ liệu…';
   statusEl.classList.remove('err');
   try {
-    const [stats, allData] = await Promise.all([apiGet('weeklyStats'), apiGet('all')]);
+    const [stats, allData, bodStats] = await Promise.all([apiGet('weeklyStats'), apiGet('all'), apiGet('bodStats')]);
     if (!stats.ok) throw new Error(stats.error || 'weeklyStats lỗi');
     STATE.weekly = stats.weekly || [];
     STATE.offenders = stats.offenders || [];
     STATE.meetings = (stats.meetings || []).sort((a, b) => (a.week_no < b.week_no ? 1 : -1));
     STATE.users = (allData.ok && allData.data && allData.data.users) ? allData.data.users : [];
     STATE.selectedWeek = STATE.weekly.length ? STATE.weekly[STATE.weekly.length - 1].week_no : null;
+    if (bodStats.ok) {
+      STATE.bodTasks = bodStats.tasks || [];
+      STATE.bodMeetings = bodStats.meetings || [];
+      STATE.bodTotals = {
+        total: bodStats.total_count || 0, open: bodStats.open_count || 0,
+        done: bodStats.done_count || 0, offenders: bodStats.offenders || [],
+      };
+    }
 
     renderLedger();
     renderKPIs();
@@ -296,12 +434,31 @@ async function loadAll() {
     renderOffenders();
     renderMeetingLog();
     renderAttendeeChips();
+    renderBODKPIs();
+    renderBODTasks();
+    renderBODMeetingLog();
 
     statusEl.textContent = 'Cập nhật lúc ' + new Date(stats.generated_at || Date.now()).toLocaleString('vi-VN');
   } catch (e) {
     statusEl.textContent = '⚠ Lỗi tải dữ liệu: ' + e.message;
     statusEl.classList.add('err');
   }
+}
+
+// Tải lại riêng phần BOD (dùng sau các thao tác trong tab BOD, tránh reload toàn bộ)
+async function refreshBODOnly() {
+  const bodStats = await apiGet('bodStats');
+  if (bodStats.ok) {
+    STATE.bodTasks = bodStats.tasks || [];
+    STATE.bodMeetings = bodStats.meetings || [];
+    STATE.bodTotals = {
+      total: bodStats.total_count || 0, open: bodStats.open_count || 0,
+      done: bodStats.done_count || 0, offenders: bodStats.offenders || [],
+    };
+  }
+  renderBODKPIs();
+  renderBODTasks();
+  renderBODMeetingLog();
 }
 
 // ---------- Ledger strip ----------
@@ -437,6 +594,267 @@ function renderAttendeeChips() {
     chip.addEventListener('click', () => chip.classList.toggle('sel'));
   });
 }
+
+// ============================================================
+// ✅ BOD MEETING MINUTES — tách riêng khỏi Weekly Team Tracker
+// ============================================================
+const BOD_CLOSED = ['Done', 'Cancelled', 'Hoàn thành', 'Huỷ'];
+window._bodCmtOpen = window._bodCmtOpen || new Set();
+
+function fmtVN(d) {
+  if (!d) return '';
+  const dt = new Date(d);
+  return isNaN(dt) ? d : dt.toLocaleDateString('vi-VN');
+}
+function isOverdueBOD(t) {
+  if (!t.deadline || BOD_CLOSED.includes(String(t.status || '').trim())) return false;
+  return new Date(t.deadline) < new Date(new Date().toDateString());
+}
+
+function renderBODKPIs() {
+  const t = STATE.bodTotals;
+  document.getElementById('bodKpiTotal').textContent = t.total;
+  document.getElementById('bodKpiOpen').textContent = t.open;
+  document.getElementById('bodKpiDone').textContent = t.done;
+  document.getElementById('bodKpiOffenders').textContent = (t.offenders || []).length;
+}
+
+function renderBODTasks() {
+  const wrap = document.getElementById('bodTasksWrap');
+  const tasks = STATE.bodTasks || [];
+  if (!tasks.length) {
+    wrap.innerHTML = '<div class="empty-note">Chưa có việc cần làm nào. Bấm "+ Thêm việc cần làm" để tạo.</div>';
+    return;
+  }
+  const sorted = [...tasks].sort((a, b) => {
+    const aClosed = BOD_CLOSED.includes(String(a.status || '').trim());
+    const bClosed = BOD_CLOSED.includes(String(b.status || '').trim());
+    if (aClosed !== bClosed) return aClosed ? 1 : -1;
+    return (a.deadline || '9999-99-99').localeCompare(b.deadline || '9999-99-99');
+  });
+  wrap.innerHTML = sorted.map(renderBODTaskRow).join('');
+
+  wrap.querySelectorAll('.bod-check').forEach(cb => cb.addEventListener('change', () => toggleBODDone(cb.dataset.id, cb.checked)));
+  wrap.querySelectorAll('.bod-edit-btn').forEach(b => b.addEventListener('click', () => openBODTaskModal(b.dataset.id)));
+  wrap.querySelectorAll('.bod-cancel-btn').forEach(b => b.addEventListener('click', () => cancelBODTask(b.dataset.id)));
+  wrap.querySelectorAll('.bod-cmt-btn').forEach(b => b.addEventListener('click', () => {
+    const key = String(b.dataset.id);
+    if (window._bodCmtOpen.has(key)) window._bodCmtOpen.delete(key); else window._bodCmtOpen.add(key);
+    renderBODTasks();
+  }));
+  wrap.querySelectorAll('.bod-cmt-send').forEach(b => b.addEventListener('click', () => postBODComment(b.dataset.id)));
+  wrap.querySelectorAll('.bod-cmt-inp').forEach(inp => inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') postBODComment(inp.dataset.id);
+  }));
+}
+
+function renderBODTaskRow(t) {
+  const isDone = ['Done', 'Hoàn thành'].includes(String(t.status || '').trim());
+  const isCancelled = ['Cancelled', 'Huỷ'].includes(String(t.status || '').trim());
+  const co = parseInt(t.carry_over_count, 10) || 0;
+  const ov = isOverdueBOD(t);
+  const cms = Array.isArray(t.comments) ? t.comments : [];
+  const cmtOpen = window._bodCmtOpen.has(String(t.id));
+  return `<div class="bod-row">
+    <div class="bod-row-main">
+      <input type="checkbox" class="bod-check" data-id="${t.id}" ${isDone ? 'checked' : ''} ${isCancelled ? 'disabled' : ''}>
+      <div class="bod-row-body">
+        <div class="bod-title ${isDone || isCancelled ? 'done' : ''}">${t.title || '(không tên)'} ${isCancelled ? '<span style="color:var(--red);font-weight:600;">— Đã huỷ</span>' : ''}</div>
+        <div class="bod-meta">
+          <span>👤 ${t.pic_name || '—'}</span>
+          ${t.deadline ? `<span class="${ov ? 'ov' : ''}">${ov ? '⚠ ' : ''}📅 ${fmtVN(t.deadline)}</span>` : ''}
+          ${co >= 2 ? `<span class="badge ${co >= 3 ? 'co3' : 'co2'}">×${co} carry-over</span>` : ''}
+          <button class="bod-cmt-btn" data-id="${t.id}">💬 ${cms.length || ''}</button>
+        </div>
+        ${t.notes ? `<div class="bod-notes">${t.notes}</div>` : ''}
+        ${cmtOpen ? renderBODCommentThread(t, cms) : ''}
+      </div>
+      <div class="bod-row-actions">
+        <button class="bod-edit-btn" data-id="${t.id}" title="Sửa">✏️</button>
+        ${!isDone && !isCancelled ? `<button class="bod-cancel-btn" data-id="${t.id}" title="Huỷ việc này">🚫</button>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderBODCommentThread(t, cms) {
+  return `<div class="bod-cmt-thread">
+    ${cms.length ? cms.map(c => `<div class="bod-cmt-item"><div><span class="ca">${c.author}</span> — ${c.text}</div><span class="ctm">${new Date(c.time).toLocaleString('vi-VN')}</span></div>`).join('') : '<div style="font-size:11.5px;color:#8A8577;">Chưa có ghi chú nào</div>'}
+    <div class="bod-cmt-input">
+      <input type="text" class="bod-cmt-inp" data-id="${t.id}" placeholder="Ghi chú cập nhật...">
+      <button class="btn btn-gold btn-sm bod-cmt-send" data-id="${t.id}">Gửi</button>
+    </div>
+  </div>`;
+}
+
+async function toggleBODDone(id, checked) {
+  const t = STATE.bodTasks.find(x => String(x.id) === String(id));
+  if (!t) return;
+  t.status = checked ? 'Done' : 'Open';
+  t.updated_at = new Date().toISOString();
+  await apiWrite({ action: 'upsert', sheet: 'BODTasks', data: t });
+  await refreshBODOnly();
+}
+
+async function cancelBODTask(id) {
+  if (!confirm('Huỷ việc này?')) return;
+  const t = STATE.bodTasks.find(x => String(x.id) === String(id));
+  if (!t) return;
+  t.status = 'Cancelled';
+  t.updated_at = new Date().toISOString();
+  await apiWrite({ action: 'upsert', sheet: 'BODTasks', data: t });
+  await refreshBODOnly();
+}
+
+async function postBODComment(id) {
+  const inp = document.querySelector('.bod-cmt-inp[data-id="' + id + '"]');
+  if (!inp || !inp.value.trim()) return;
+  const t = STATE.bodTasks.find(x => String(x.id) === String(id));
+  if (!t) return;
+  if (!Array.isArray(t.comments)) t.comments = [];
+  t.comments.push({ id: Date.now(), text: inp.value.trim(), author: CONFIG.MY_NAME, time: new Date().toISOString() });
+  t.updated_at = new Date().toISOString();
+  window._bodCmtOpen.add(String(id));
+  await apiWrite({ action: 'upsert', sheet: 'BODTasks', data: t });
+  await refreshBODOnly();
+}
+
+function renderBODMeetingLog() {
+  const wrap = document.getElementById('bodMeetingLog');
+  const meetings = STATE.bodMeetings || [];
+  if (!meetings.length) {
+    wrap.innerHTML = '<div class="empty-note">Chưa có biên bản họp BOD nào. Bấm "+ Bắt đầu họp BOD" để tạo.</div>';
+    return;
+  }
+  wrap.innerHTML = meetings.map((m, i) => {
+    const attendees = Array.isArray(m.attendees) ? m.attendees.join(', ') : (m.attendees || '—');
+    return `<div class="meeting-item">
+      <div class="meeting-head" data-idx="${i}">
+        <span class="wk">${fmtVN(m.meeting_date)}</span>
+        <span class="date">${attendees}</span>
+      </div>
+      <div class="meeting-body" id="bmbody-${i}">
+        <div class="row"><div class="k">Quyết định chính</div>${m.key_decisions || '—'}</div>
+        <div class="row"><div class="k">Tạo bởi</div>${m.created_by || '—'}</div>
+      </div>
+    </div>`;
+  }).join('');
+  wrap.querySelectorAll('.meeting-head').forEach(h => {
+    h.addEventListener('click', () => {
+      document.getElementById('bmbody-' + h.dataset.idx).classList.toggle('open');
+    });
+  });
+}
+
+// ---------- BOD Task modal (thêm/sửa) ----------
+function openBODTaskModal(editId) {
+  const t = editId ? STATE.bodTasks.find(x => String(x.id) === String(editId)) : null;
+  document.getElementById('bodTaskModalTitle').textContent = t ? 'Sửa việc cần làm' : 'Thêm việc cần làm';
+  document.getElementById('bodTaskId').value = t ? t.id : '';
+  document.getElementById('bodTaskTitle').value = t ? (t.title || '') : '';
+  document.getElementById('bodTaskPic').value = t ? (t.pic_name || CONFIG.MY_NAME) : CONFIG.MY_NAME;
+  document.getElementById('bodTaskDeadline').value = t ? (t.deadline || '') : '';
+  document.getElementById('bodTaskNotes').value = t ? (t.notes || '') : '';
+  document.getElementById('bodTaskModalResult').style.display = 'none';
+  bodTaskOverlay.classList.add('open');
+}
+
+const bodTaskOverlay = document.getElementById('bodTaskOverlay');
+document.getElementById('addBODTaskBtn').addEventListener('click', () => openBODTaskModal(null));
+document.getElementById('bodTaskCancelModal').addEventListener('click', () => bodTaskOverlay.classList.remove('open'));
+bodTaskOverlay.addEventListener('click', e => { if (e.target === bodTaskOverlay) bodTaskOverlay.classList.remove('open'); });
+document.getElementById('bodPicMeBtn').addEventListener('click', () => {
+  document.getElementById('bodTaskPic').value = CONFIG.MY_NAME;
+});
+
+document.getElementById('bodTaskSubmit').addEventListener('click', async () => {
+  const title = document.getElementById('bodTaskTitle').value.trim();
+  if (!title) { alert('Vui lòng nhập nội dung công việc'); return; }
+  const editId = document.getElementById('bodTaskId').value;
+  const existing = editId ? STATE.bodTasks.find(x => String(x.id) === String(editId)) : null;
+  const data = {
+    id: existing ? existing.id : ('bt' + Date.now()),
+    title,
+    pic_name: document.getElementById('bodTaskPic').value.trim() || CONFIG.MY_NAME,
+    deadline: document.getElementById('bodTaskDeadline').value || '',
+    notes: document.getElementById('bodTaskNotes').value.trim(),
+    status: existing ? existing.status : 'Open',
+    comments: existing ? (existing.comments || []) : [],
+    meeting_id: existing ? (existing.meeting_id || '') : (STATE.bodMeetings[0] ? STATE.bodMeetings[0].id : ''),
+    carry_over_count: existing ? (existing.carry_over_count || 0) : 0,
+    last_reviewed_meeting_id: existing ? (existing.last_reviewed_meeting_id || '') : '',
+    created_by: existing ? (existing.created_by || CONFIG.MY_NAME) : CONFIG.MY_NAME,
+    created_at: existing ? (existing.created_at || new Date().toISOString()) : new Date().toISOString(),
+  };
+  const btn = document.getElementById('bodTaskSubmit');
+  btn.disabled = true; btn.textContent = 'Đang lưu…';
+  try {
+    const res = await apiWrite({ action: 'upsert', sheet: 'BODTasks', data });
+    if (!res.ok) throw new Error(res.error || 'Lỗi không xác định');
+    bodTaskOverlay.classList.remove('open');
+    await refreshBODOnly();
+  } catch (e) {
+    const rb = document.getElementById('bodTaskModalResult');
+    rb.style.display = 'block'; rb.innerHTML = '⚠ ' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 Lưu';
+  }
+});
+
+// ---------- BOD Meeting modal (bắt đầu họp BOD) ----------
+const bodOverlay = document.getElementById('bodOverlay');
+document.getElementById('startBODMeetingBtn').addEventListener('click', () => {
+  document.getElementById('bodModalResult').style.display = 'none';
+  document.getElementById('bodDate').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('bodAttendees').value = '';
+  document.getElementById('bodDecisions').value = '';
+  document.getElementById('bodCreatedBy').value = CONFIG.MY_NAME;
+  bodOverlay.classList.add('open');
+});
+document.getElementById('bodCancelModal').addEventListener('click', () => bodOverlay.classList.remove('open'));
+bodOverlay.addEventListener('click', e => { if (e.target === bodOverlay) bodOverlay.classList.remove('open'); });
+
+document.getElementById('bodSubmitMeeting').addEventListener('click', async () => {
+  const meeting_date = document.getElementById('bodDate').value || undefined;
+  const attendees = document.getElementById('bodAttendees').value.split(',').map(s => s.trim()).filter(Boolean);
+  const key_decisions = document.getElementById('bodDecisions').value.trim();
+  const created_by = document.getElementById('bodCreatedBy').value.trim() || CONFIG.MY_NAME;
+  const btn = document.getElementById('bodSubmitMeeting');
+  const resultBox = document.getElementById('bodModalResult');
+  btn.disabled = true; btn.textContent = 'Đang xử lý…';
+  try {
+    const res = await apiWrite({ action: 'startBODMeeting', data: { meeting_date, attendees, key_decisions, created_by } });
+    if (!res.ok) throw new Error(res.error || 'Lỗi không xác định');
+    resultBox.style.display = 'block';
+    resultBox.innerHTML = `✅ Đã tạo họp BOD ngày <b>${fmtVN(res.meeting.meeting_date)}</b>.<br>
+      ${res.carried_over_count} việc chưa Done được đánh dấu carry-over.`;
+    await refreshBODOnly();
+  } catch (e) {
+    resultBox.style.display = 'block';
+    resultBox.innerHTML = '⚠ ' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Tạo & Quét carry-over';
+  }
+});
+
+// ---------- View tab switcher ----------
+const tabTeamBtn = document.getElementById('tabTeamBtn');
+const tabBODBtn = document.getElementById('tabBODBtn');
+const teamViewEl = document.getElementById('teamView');
+const bodViewEl = document.getElementById('bodView');
+function switchView(view) {
+  const isTeam = view === 'team';
+  teamViewEl.style.display = isTeam ? 'block' : 'none';
+  bodViewEl.style.display = isTeam ? 'none' : 'block';
+  tabTeamBtn.classList.toggle('active', isTeam);
+  tabBODBtn.classList.toggle('active', !isTeam);
+  document.getElementById('startMeetingBtn').style.display = isTeam ? 'inline-flex' : 'none';
+  document.getElementById('addBODTaskBtn').style.display = isTeam ? 'none' : 'inline-flex';
+  document.getElementById('startBODMeetingBtn').style.display = isTeam ? 'none' : 'inline-flex';
+}
+tabTeamBtn.addEventListener('click', () => switchView('team'));
+tabBODBtn.addEventListener('click', () => switchView('bod'));
+switchView('team');
 
 // ---------- Modal: start meeting ----------
 const overlay = document.getElementById('overlay');
