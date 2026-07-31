@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DGM Weekly Meeting & Task Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1B3A57;
+    --navy-dark:#122a41;
+    --gold:#C9B037;
+    --cream:#F8F6F0;
+    --gray:#3E4A59;
+    --green:#0E7544;
+    --amber:#B8860B;
+    --red:#C8102E;
+    --line:#E4E0D3;
+    --card:#FFFFFF;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--cream); color:var(--gray);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    font-size:14px; line-height:1.5;
+  }
+  h1,h2,h3,.mono-label{font-family:'Space Grotesk',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  /* ---------- Header ---------- */
+  header{
+    background:var(--navy); color:#fff;
+    padding:20px 28px; display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:14px;
+    border-bottom:3px solid var(--gold);
+  }
+  header .title-block h1{margin:0; font-size:20px; font-weight:700; letter-spacing:.2px;}
+  header .title-block p{margin:4px 0 0; font-size:12.5px; color:#C9D2DC; font-family:'IBM Plex Mono',monospace;}
+  header .actions{display:flex; gap:10px; align-items:center;}
+  .btn{
+    border:none; border-radius:8px; padding:10px 16px; font-size:13.5px; font-weight:600;
+    cursor:pointer; font-family:'Inter',sans-serif; transition:opacity .15s;
+  }
+  .btn:hover{opacity:.88;}
+  .btn-gold{background:var(--gold); color:var(--navy-dark);}
+  .btn-outline{background:transparent; color:#fff; border:1px solid rgba(255,255,255,.4);}
+  .btn-sm{padding:6px 12px; font-size:12.5px;}
+
+  main{max-width:1180px; margin:0 auto; padding:26px 20px 60px;}
+  .status-line{font-size:12.5px; color:#8A8577; margin-bottom:18px; font-family:'IBM Plex Mono',monospace;}
+  .status-line.err{color:var(--red);}
+
+  /* ---------- KPI row ---------- */
+  .kpi-row{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:28px;}
+  .kpi-card{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px 18px; position:relative; overflow:hidden;
+  }
+  .kpi-card .label{font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:#8A8577; font-weight:600;}
+  .kpi-card .value{font-size:28px; font-weight:700; font-family:'Space Grotesk',sans-serif; color:var(--navy); margin-top:4px;}
+  .kpi-card .sub{font-size:12px; color:#8A8577; margin-top:2px;}
+  .kpi-card.accent-green .value{color:var(--green);}
+  .kpi-card.accent-red .value{color:var(--red);}
+  .kpi-card.accent-gold .value{color:var(--amber);}
+
+  /* ---------- Section shell ---------- */
+  section{margin-bottom:32px;}
+  section > h2{
+    font-size:15px; font-weight:700; color:var(--navy); margin:0 0 4px;
+    display:flex; align-items:center; gap:8px;
+  }
+  section > .desc{font-size:12.5px; color:#8A8577; margin:0 0 14px;}
+  .panel{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px;}
+
+  /* ---------- Weekly Ledger Strip (signature element) ---------- */
+  .ledger-strip{display:flex; gap:14px; overflow-x:auto; padding:6px 2px 14px;}
+  .ledger-chip{
+    flex:0 0 auto; width:104px; text-align:center; cursor:pointer;
+    border:1px solid transparent; border-radius:10px; padding:10px 6px;
+    transition:border-color .15s, background .15s;
+  }
+  .ledger-chip:hover{background:#FBFAF6;}
+  .ledger-chip.active{border-color:var(--gold); background:#FFFDF4;}
+  .ring{
+    width:58px; height:58px; border-radius:50%; margin:0 auto 8px;
+    display:flex; align-items:center; justify-content:center; position:relative;
+  }
+  .ring::before{
+    content:''; position:absolute; inset:6px; background:var(--card); border-radius:50%;
+  }
+  .ring span{position:relative; font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; color:var(--navy);}
+  .ledger-chip .wk{font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; color:var(--navy);}
+  .ledger-chip .cnt{font-size:11px; color:#8A8577; margin-top:2px;}
+
+  /* ---------- Tables ---------- */
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{
+    text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.05em;
+    color:#8A8577; font-weight:600; padding:8px 10px; border-bottom:2px solid var(--line);
+  }
+  td{padding:10px 10px; border-bottom:1px solid var(--line); vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  .delta{font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:12.5px;}
+  .delta.up{color:var(--green);}
+  .delta.down{color:var(--red);}
+  .delta.flat{color:#8A8577;}
+  .bar-track{background:var(--line); border-radius:4px; height:6px; width:100%; overflow:hidden;}
+  .bar-fill{height:100%; background:var(--navy); border-radius:4px;}
+
+  .badge{
+    display:inline-block; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:600;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .badge.co2{background:#FFF3D6; color:var(--amber);}
+  .badge.co3{background:#FBE1E4; color:var(--red);}
+
+  .two-col{display:grid; grid-template-columns:1.3fr 1fr; gap:16px; align-items:start;}
+  @media (max-width:820px){.two-col{grid-template-columns:1fr;} .kpi-row{grid-template-columns:1fr 1fr;}}
+
+  .empty-note{color:#8A8577; font-size:13px; padding:10px 2px;}
+
+  /* ---------- Meeting log accordion ---------- */
+  .meeting-item{border-bottom:1px solid var(--line); padding:12px 2px;}
+  .meeting-item:last-child{border-bottom:none;}
+  .meeting-head{display:flex; justify-content:space-between; align-items:center; cursor:pointer; gap:10px;}
+  .meeting-head .wk{font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--navy); font-size:13px;}
+  .meeting-head .date{font-size:12px; color:#8A8577;}
+  .meeting-body{display:none; margin-top:8px; font-size:13px;}
+  .meeting-body.open{display:block;}
+  .meeting-body .row{margin-bottom:6px;}
+  .meeting-body .k{color:#8A8577; font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; font-weight:600;}
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    display:none; position:fixed; inset:0; background:rgba(19,30,42,.55);
+    align-items:center; justify-content:center; z-index:50; padding:20px;
+  }
+  .overlay.open{display:flex;}
+  .modal{background:#fff; border-radius:12px; padding:24px; width:100%; max-width:460px;}
+  .modal h3{margin:0 0 4px; color:var(--navy);}
+  .modal p.hint{margin:0 0 16px; font-size:12.5px; color:#8A8577;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:12px; font-weight:600; color:var(--gray); margin-bottom:5px;}
+  .field input, .field textarea{
+    width:100%; border:1px solid var(--line); border-radius:8px; padding:9px 11px;
+    font-family:'Inter',sans-serif; font-size:13.5px; resize:vertical;
+  }
+  .modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:8px;}
+  .btn-plain{background:none; border:none; color:#8A8577; font-size:13.5px; cursor:pointer;}
+  .result-box{
+    margin-top:14px; padding:12px 14px; background:#FBFAF6; border:1px solid var(--line);
+    border-radius:8px; font-size:12.5px; max-height:180px; overflow-y:auto;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-block">
+    <h1>DGM Weekly Meeting &amp; Task Tracker</h1>
+    <p>CRM_Meetings · CRM_Tasks — Denis G.M. / Ayam Brand Vietnam</p>
+  </div>
+  <div class="actions">
+    <a href="index.html" class="btn btn-outline btn-sm" style="text-decoration:none; display:inline-flex; align-items:center;">← Về CRM</a>
+    <button class="btn btn-outline btn-sm" id="refreshBtn">↻ Làm mới</button>
+    <button class="btn btn-gold" id="startMeetingBtn">+ Bắt đầu họp tuần này</button>
+  </div>
+</header>
+
+<main>
+  <div class="status-line" id="statusLine">Đang tải dữ liệu…</div>
+
+  <div class="kpi-row" id="kpiRow">
+    <div class="kpi-card"><div class="label">Tuần hiện tại</div><div class="value" id="kpiWeek">–</div><div class="sub" id="kpiWeekTotal">– task</div></div>
+    <div class="kpi-card accent-green"><div class="label">Hoàn thành</div><div class="value" id="kpiDone">–</div><div class="sub">so với tổng task tuần</div></div>
+    <div class="kpi-card accent-gold"><div class="label">Tồn đọng (carry-over)</div><div class="value" id="kpiOpen">–</div><div class="sub">chưa đóng, mang sang tuần sau</div></div>
+    <div class="kpi-card accent-red"><div class="label">Trễ nhiều lần (≥2)</div><div class="value" id="kpiOffenders">–</div><div class="sub">cần escalate</div></div>
+  </div>
+
+  <section>
+    <h2>Sổ theo dõi theo tuần</h2>
+    <p class="desc">Mỗi ô là 1 tuần họp — vòng tròn thể hiện % task hoàn thành. Bấm để lọc bảng bên dưới theo tuần đó.</p>
+    <div class="panel"><div class="ledger-strip" id="ledgerStrip"></div></div>
+  </section>
+
+  <section class="two-col">
+    <div>
+      <h2>So sánh theo người phụ trách — <span id="picWeekLabel" class="mono"></span></h2>
+      <p class="desc">Tỉ lệ hoàn thành tuần đang chọn so với tuần trước đó.</p>
+      <div class="panel"><div id="picTableWrap"></div></div>
+    </div>
+    <div>
+      <h2>Task trễ nhiều lần</h2>
+      <p class="desc">Carry-over ≥ 2 tuần, chưa đóng — ưu tiên xử lý.</p>
+      <div class="panel"><div id="offendersWrap"></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Lịch sử biên bản họp</h2>
+    <p class="desc">Quyết định chính từng tuần — bấm để mở rộng.</p>
+    <div class="panel"><div id="meetingLog"></div></div>
+  </section>
+</main>
+
+<!-- Modal: Start Meeting -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3>Bắt đầu họp tuần này</h3>
+    <p class="hint">Hệ thống sẽ tự quét toàn bộ task chưa Done, +1 carry-over và đưa vào danh sách review đầu buổi họp.</p>
+    <div class="field">
+      <label>Người tham dự (cách nhau bằng dấu phẩy)</label>
+      <input type="text" id="fAttendees" placeholder="Quý, Sales A, Sales B">
+    </div>
+    <div class="field">
+      <label>Quyết định chính trong buổi họp</label>
+      <textarea id="fDecisions" rows="3" placeholder="VD: Chốt kế hoạch NCD65 tuần này; ưu tiên MT trước GT..."></textarea>
+    </div>
+    <div class="field">
+      <label>Người tạo</label>
+      <input type="text" id="fCreatedBy" placeholder="Quý">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-plain" id="cancelModal">Huỷ</button>
+      <button class="btn btn-gold" id="submitMeeting">Tạo & Quét carry-over</button>
+    </div>
+    <div class="result-box" id="modalResult" style="display:none;"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIG — dán URL Web App (GAS) đã deploy vào đây
+// ============================================================
+const CONFIG = {
+  WEBAPP_URL: 'PASTE_YOUR_GAS_WEBAPP_URL_HERE', // https://script.google.com/macros/s/XXXXXXXXXXXX/exec
+};
+
+let STATE = { weekly: [], offenders: [], meetings: [], selectedWeek: null };
+
+async function apiGet(action, extra = {}) {
+  const url = new URL(CONFIG.WEBAPP_URL);
+  url.searchParams.set('action', action);
+  Object.entries(extra).forEach(([k, v]) => url.searchParams.set(k, v));
+  const res = await fetch(url.toString());
+  return res.json();
+}
+async function apiWrite(body) {
+  const url = new URL(CONFIG.WEBAPP_URL);
+  url.searchParams.set('method', 'post');
+  url.searchParams.set('payload', encodeURIComponent(JSON.stringify(body)));
+  const res = await fetch(url.toString());
+  return res.json();
+}
+
+function pct(done, total) { return total > 0 ? Math.round((done / total) * 100) : 0; }
+function ringColor(p) { return p >= 80 ? '#0E7544' : p >= 50 ? '#C9B037' : '#C8102E'; }
+
+// ---------- Load ----------
+async function loadAll() {
+  const statusEl = document.getElementById('statusLine');
+  if (CONFIG.WEBAPP_URL.includes('PASTE_YOUR')) {
+    statusEl.textContent = '⚠ Chưa cấu hình WEBAPP_URL trong file — dán URL Web App GAS vào CONFIG ở đầu <script>.';
+    statusEl.classList.add('err');
+    return;
+  }
+  statusEl.textContent = 'Đang tải dữ liệu…';
+  statusEl.classList.remove('err');
+  try {
+    const stats = await apiGet('weeklyStats');
+    if (!stats.ok) throw new Error(stats.error || 'weeklyStats lỗi');
+    STATE.weekly = stats.weekly || [];
+    STATE.offenders = stats.offenders || [];
+    STATE.meetings = (stats.meetings || []).sort((a, b) => (a.week_no < b.week_no ? 1 : -1));
+    STATE.selectedWeek = STATE.weekly.length ? STATE.weekly[STATE.weekly.length - 1].week_no : null;
+
+    renderLedger();
+    renderKPIs();
+    renderPicTable();
+    renderOffenders();
+    renderMeetingLog();
+
+    statusEl.textContent = 'Cập nhật lúc ' + new Date(stats.generated_at || Date.now()).toLocaleString('vi-VN');
+  } catch (e) {
+    statusEl.textContent = '⚠ Lỗi tải dữ liệu: ' + e.message;
+    statusEl.classList.add('err');
+  }
+}
+
+// ---------- Ledger strip ----------
+function renderLedger() {
+  const wrap = document.getElementById('ledgerStrip');
+  if (!STATE.weekly.length) { wrap.innerHTML = '<div class="empty-note">Chưa có task nào được gắn tuần.</div>'; return; }
+  wrap.innerHTML = STATE.weekly.map(w => {
+    const p = pct(w.done, w.total);
+    const active = w.week_no === STATE.selectedWeek ? 'active' : '';
+    return `<div class="ledger-chip ${active}" data-week="${w.week_no}">
+      <div class="ring" style="background:conic-gradient(${ringColor(p)} ${p * 3.6}deg, ${'#E4E0D3'} 0)">
+        <span>${p}%</span>
+      </div>
+      <div class="wk">${w.week_no}</div>
+      <div class="cnt">${w.total} task</div>
+    </div>`;
+  }).join('');
+  wrap.querySelectorAll('.ledger-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      STATE.selectedWeek = chip.dataset.week;
+      renderLedger(); renderKPIs(); renderPicTable();
+    });
+  });
+}
+
+// ---------- KPI ----------
+function currentWeekData() { return STATE.weekly.find(w => w.week_no === STATE.selectedWeek); }
+function prevWeekData() {
+  const idx = STATE.weekly.findIndex(w => w.week_no === STATE.selectedWeek);
+  return idx > 0 ? STATE.weekly[idx - 1] : null;
+}
+function renderKPIs() {
+  const w = currentWeekData();
+  document.getElementById('kpiWeek').textContent = STATE.selectedWeek || '–';
+  document.getElementById('kpiWeekTotal').textContent = (w ? w.total : 0) + ' task';
+  document.getElementById('kpiDone').textContent = w ? pct(w.done, w.total) + '%' : '–';
+  document.getElementById('kpiOpen').textContent = w ? w.open : '–';
+  document.getElementById('kpiOffenders').textContent = STATE.offenders.length;
+}
+
+// ---------- PIC comparison table ----------
+function renderPicTable() {
+  document.getElementById('picWeekLabel').textContent = STATE.selectedWeek || '';
+  const wrap = document.getElementById('picTableWrap');
+  const cur = currentWeekData(), prev = prevWeekData();
+  if (!cur) { wrap.innerHTML = '<div class="empty-note">Chưa có dữ liệu tuần này.</div>'; return; }
+  const names = Object.keys(cur.byPic || {});
+  if (!names.length) { wrap.innerHTML = '<div class="empty-note">Chưa có task được gán người phụ trách.</div>'; return; }
+
+  const rows = names.map(name => {
+    const c = cur.byPic[name];
+    const p = pct(c.done, c.total);
+    const prevPic = prev && prev.byPic ? prev.byPic[name] : null;
+    const prevP = prevPic ? pct(prevPic.done, prevPic.total) : null;
+    let deltaHtml = '<span class="delta flat">—</span>';
+    if (prevP !== null) {
+      const diff = p - prevP;
+      const cls = diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat';
+      const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '＝';
+      deltaHtml = `<span class="delta ${cls}">${arrow} ${Math.abs(diff)}%</span>`;
+    }
+    return `<tr>
+      <td>${name}</td>
+      <td>${c.done}/${c.total}</td>
+      <td style="width:140px;"><div class="bar-track"><div class="bar-fill" style="width:${p}%"></div></div></td>
+      <td class="mono">${p}%</td>
+      <td>${deltaHtml}</td>
+    </tr>`;
+  }).join('');
+
+  wrap.innerHTML = `<table>
+    <thead><tr><th>Người phụ trách</th><th>Done/Tổng</th><th>Tỉ lệ</th><th></th><th>So tuần trước</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+// ---------- Offenders ----------
+function renderOffenders() {
+  const wrap = document.getElementById('offendersWrap');
+  if (!STATE.offenders.length) { wrap.innerHTML = '<div class="empty-note">Không có task nào bị trễ ≥ 2 tuần 👍</div>'; return; }
+  wrap.innerHTML = `<table>
+    <thead><tr><th>Task</th><th>PIC</th><th>Carry-over</th></tr></thead>
+    <tbody>${STATE.offenders.map(o => {
+      const pics = Array.isArray(o.pic_ids) ? o.pic_ids.join(', ') : (o.pic_ids || '—');
+      const cls = o.carry_over_count >= 3 ? 'co3' : 'co2';
+      return `<tr>
+        <td>${o.title || '(không tên)'}</td>
+        <td>${pics}</td>
+        <td><span class="badge ${cls}">×${o.carry_over_count}</span></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+
+// ---------- Meeting log ----------
+function renderMeetingLog() {
+  const wrap = document.getElementById('meetingLog');
+  if (!STATE.meetings.length) { wrap.innerHTML = '<div class="empty-note">Chưa có biên bản họp nào. Bấm "Bắt đầu họp tuần này" để tạo.</div>'; return; }
+  wrap.innerHTML = STATE.meetings.map((m, i) => {
+    const attendees = Array.isArray(m.attendees) ? m.attendees.join(', ') : (m.attendees || '—');
+    const dateStr = m.meeting_date ? new Date(m.meeting_date).toLocaleDateString('vi-VN') : '';
+    return `<div class="meeting-item">
+      <div class="meeting-head" data-idx="${i}">
+        <span class="wk">${m.week_no}</span>
+        <span class="date">${dateStr} · ${attendees}</span>
+      </div>
+      <div class="meeting-body" id="mbody-${i}">
+        <div class="row"><div class="k">Quyết định chính</div>${m.key_decisions || '—'}</div>
+        <div class="row"><div class="k">Tạo bởi</div>${m.created_by || '—'}</div>
+      </div>
+    </div>`;
+  }).join('');
+  wrap.querySelectorAll('.meeting-head').forEach(h => {
+    h.addEventListener('click', () => {
+      document.getElementById('mbody-' + h.dataset.idx).classList.toggle('open');
+    });
+  });
+}
+
+// ---------- Modal: start meeting ----------
+const overlay = document.getElementById('overlay');
+document.getElementById('startMeetingBtn').addEventListener('click', () => {
+  document.getElementById('modalResult').style.display = 'none';
+  overlay.classList.add('open');
+});
+document.getElementById('cancelModal').addEventListener('click', () => overlay.classList.remove('open'));
+overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+
+document.getElementById('submitMeeting').addEventListener('click', async () => {
+  const attendees = document.getElementById('fAttendees').value.split(',').map(s => s.trim()).filter(Boolean);
+  const key_decisions = document.getElementById('fDecisions').value.trim();
+  const created_by = document.getElementById('fCreatedBy').value.trim();
+  const btn = document.getElementById('submitMeeting');
+  const resultBox = document.getElementById('modalResult');
+  btn.disabled = true; btn.textContent = 'Đang xử lý…';
+  try {
+    const res = await apiWrite({ action: 'startMeeting', data: { attendees, key_decisions, created_by } });
+    if (!res.ok) throw new Error(res.error || 'Lỗi không xác định');
+    resultBox.style.display = 'block';
+    resultBox.innerHTML = `✅ Đã tạo họp tuần <b>${res.meeting.week_no}</b>.<br>
+      ${res.carried_over_count} task chưa Done được đánh dấu carry-over và sẵn sàng để review.`;
+    await loadAll();
+  } catch (e) {
+    resultBox.style.display = 'block';
+    resultBox.innerHTML = '⚠ ' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Tạo & Quét carry-over';
+  }
+});
+
+document.getElementById('refreshBtn').addEventListener('click', loadAll);
+
+// Nếu đang chạy nhúng trong index.html (iframe) thì ẩn nút "Về CRM" —
+// vì lúc đó chuyển tab đã có sẵn ở nav chính của CRM.
+if (window.self !== window.top) {
+  const backLink = document.querySelector('a[href="index.html"]');
+  if (backLink) backLink.style.display = 'none';
+}
+
+loadAll();
+</script>
+</body>
+</html>

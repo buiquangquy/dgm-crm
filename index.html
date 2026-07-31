@@ -361,6 +361,7 @@ table tbody td::before{content:attr(data-label);font-size:10px;color:var(--t3);f
 <button class="nb" onclick="showPage('leads',this)">🤝 CRM Chào hàng</button>
 <button class="nb" onclick="showPage('customers',this)">🏢 Khách hàng</button>
 <button class="nb" onclick="showPage('products',this)">📦 Sản phẩm</button>
+<button class="nb" onclick="showPage('meetings',this)">📊 Weekly Dashboard</button>
 <button class="nb mgr-only" onclick="showPage('users',this)">👥 Team</button>
 <button class="nb mgr-only" onclick="showPage('config',this)">⚙️ Cấu hình</button>
 </div>
@@ -405,6 +406,11 @@ table tbody td::before{content:attr(data-label);font-size:10px;color:var(--t3);f
 <thead><tr><th>Tên sản phẩm</th><th>Brand</th><th>Danh mục</th><th>SKU</th><th>Đơn vị</th><th>Trạng thái</th><th></th></tr></thead>
 <tbody id="ptb"></tbody>
 </table></div>
+</div>
+
+<div class="pg" id="pg-meetings" style="padding:0">
+<iframe id="meetings-frame" src="dashboard.html" title="Weekly Meeting & Task Tracker"
+  style="width:100%;height:calc(100vh - 52px);border:none;display:block"></iframe>
 </div>
 
 <div class="pg" id="pg-users">
@@ -991,6 +997,7 @@ function showPage(nm,btn){
     renderUsers();
   }
   else if(nm==='config'){if(isMgr())renderConfig();else toast('Chỉ Manager','warn');}
+  else if(nm==='meetings'){ /* Dashboard tự tải dữ liệu qua iframe, không cần render thêm */ }
   else renderKanban();
 }
 
@@ -1002,6 +1009,7 @@ function mobileNav(nm,btn){
     menu.style.cssText='position:fixed;bottom:70px;right:12px;background:var(--s);border:.5px solid var(--bd2);border-radius:var(--rl);padding:8px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:300;min-width:150px';
     menu.innerHTML='<div style="font-size:11px;color:var(--t3);padding:4px 8px;font-weight:600">Thêm</div>'+
       '<button onclick="showPage(\'leads\',null);this.parentNode.remove()" style="display:block;width:100%;text-align:left;padding:8px;font-size:13px;background:none;border:none;cursor:pointer;border-radius:var(--r)">🤝 CRM Chào hàng</button>'+
+      '<button onclick="showPage(\'meetings\',null);this.parentNode.remove()" style="display:block;width:100%;text-align:left;padding:8px;font-size:13px;background:none;border:none;cursor:pointer;border-radius:var(--r)">📊 Weekly Dashboard</button>'+
       (isMgr()?'<button onclick="showPage(\'users\',null);this.parentNode.remove()" style="display:block;width:100%;text-align:left;padding:8px;font-size:13px;background:none;border:none;cursor:pointer;border-radius:var(--r)">👥 Team</button>':'') +
       (isMgr()?'<button onclick="showPage(\'config\',null);this.parentNode.remove()" style="display:block;width:100%;text-align:left;padding:8px;font-size:13px;background:none;border:none;cursor:pointer;border-radius:var(--r)">⚙️ Cấu hình</button>':'') +
       (!isMgr()?'<button onclick="openMyProfile();this.parentNode.remove()" style="display:block;width:100%;text-align:left;padding:8px;font-size:13px;background:none;border:none;cursor:pointer;border-radius:var(--r)">👤 Hồ sơ</button>':'') +
