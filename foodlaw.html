@@ -419,6 +419,10 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
 .result-mode-tab:hover:not(.active){color:var(--text2)}
 .mode-results-panel{display:none}
 .mode-results-panel.active{display:block}
+
+    .nip-subtab{font-size:12px;padding:7px 12px;border:1px solid var(--border,#2a3f55);border-radius:20px;background:transparent;color:inherit;cursor:pointer;opacity:.7;transition:all .15s}
+    .nip-subtab:hover{opacity:1}
+    .nip-subtab.active{background:var(--accent,#C9B037);color:#1B3A57;border-color:var(--accent,#C9B037);font-weight:700;opacity:1}
 </style>
 </head>
 <body>
@@ -533,6 +537,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
       <div class="search-mode-tabs">
         <button class="tab active" id="tabText" onclick="switchTab('text')">💬 Từ khoá / Câu hỏi</button>
         <button class="tab" id="tabImage" onclick="switchTab('image')">📷 Upload ảnh nhãn</button>
+        <button class="tab" id="tabNip" onclick="switchTab('nip')">🔐 NIP Checker</button>
       </div>
 
       <!-- Text search -->
@@ -600,6 +605,34 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
             <button class="btn-refine" onclick="clearUploadAll()">✕ Xoá tất cả</button>
           </div>
         </div>
+
+      <!-- ============ NIP CHECKER PANEL (password-gated) ============ -->
+      <div id="nipPanel" style="display:none">
+        <div id="nipLock" style="max-width:420px;margin:24px auto;text-align:center;padding:28px;border:1px solid var(--border,#2a3f55);border-radius:14px;background:rgba(255,255,255,0.02)">
+          <div style="font-size:34px;margin-bottom:8px">🔐</div>
+          <div style="font-weight:700;font-size:17px;margin-bottom:4px">NIP Compliance Checker</div>
+          <div style="font-size:12px;opacity:.7;margin-bottom:16px">Khu vực nội bộ · Nhập mật khẩu để tiếp tục</div>
+          <input type="password" id="nipPass" placeholder="Mật khẩu" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:14px"
+            onkeydown="if(event.key==='Enter')nipUnlock()">
+          <div id="nipPassMsg" style="color:#e06;font-size:12px;height:16px;margin-top:6px"></div>
+          <button onclick="nipUnlock()" style="margin-top:8px;width:100%;padding:11px;border:0;border-radius:8px;background:var(--accent,#C9B037);color:#1B3A57;font-weight:700;font-size:14px;cursor:pointer">Mở khoá</button>
+        </div>
+        <div id="nipContent" style="display:none">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
+            <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
+            <span style="font-size:11px;opacity:.6">· dữ liệu: v3.1 (2026-07) · Việc 1: kiểm tra nhất quán nội bộ</span>
+            <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
+          </div>
+          <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+            <button class="nip-subtab active" data-nt="overview" onclick="nipSub('overview')">📊 Tổng quan</button>
+            <button class="nip-subtab" data-nt="basis" onclick="nipSub('basis')">⚖️ Rủi ro Basis</button>
+            <button class="nip-subtab" data-nt="mandatory" onclick="nipSub('mandatory')">📋 Thiếu chỉ tiêu</button>
+            <button class="nip-subtab" data-nt="claim" onclick="nipSub('claim')">🏷️ Claim</button>
+            <button class="nip-subtab" data-nt="compare" onclick="nipSub('compare')">🔬 So sánh NIP</button>
+          </div>
+          <div id="nipBody" style="font-size:13px;line-height:1.55"></div>
+        </div>
+      </div>
 
       </div>
     </div>
@@ -980,6 +1013,7 @@ function goHome() {
   // Reset to keyword mode
   setMode('keyword');
   switchTab('text');
+  try{ var _pw=sessionStorage.getItem('nip_pw'); if(_pw){ nipReauth(_pw).then(function(ok){ if(ok){ var lc=document.getElementById('nipLock'); var ct=document.getElementById('nipContent'); if(lc&&ct){lc.style.display='none';ct.style.display='';nipSub('overview');} } }); } }catch(e){}
   // Clear search
   const si = document.getElementById('searchInput');
   if (si) si.value = '';
@@ -1138,10 +1172,13 @@ function switchTab(tab) {
   state.activeTab = tab;
   document.getElementById('tabText').classList.toggle('active', tab==='text');
   document.getElementById('tabImage').classList.toggle('active', tab==='image');
+  var tn=document.getElementById('tabNip'); if(tn) tn.classList.toggle('active', tab==='nip');
   document.getElementById('tabText').classList.toggle('inactive', tab!=='text');
   document.getElementById('tabImage').classList.toggle('inactive', tab!=='image');
+  if(tn) tn.classList.toggle('inactive', tab!=='nip');
   document.getElementById('textSearchPanel').style.display = tab==='text' ? '' : 'none';
   document.getElementById('imagePanel').style.display = tab==='image' ? '' : 'none';
+  var np=document.getElementById('nipPanel'); if(np) np.style.display = tab==='nip' ? '' : 'none';
 }
 /* ===================== GUIDE / KNOWLEDGE BASE ===================== */
 const GUIDE = {
@@ -3886,6 +3923,126 @@ if (!state.apiKey) {
 if (state.gasWebAppUrl) {
   setTimeout(() => loadDriveIndex(false), 1000);
 }
+
+/* ================= NIP CHECKER ================= */
+let NIP_DATA = null;   // dữ liệu lấy từ server (GAS) sau khi đúng mật khẩu — KHÔNG nhúng trong HTML
+let nipUnlocked = false;
+async function nipUnlock(){
+  var v=(document.getElementById('nipPass')||{}).value||'';
+  var m=document.getElementById('nipPassMsg'); if(m) m.textContent='Đang kiểm tra...';
+  if(!state.gasWebAppUrl){ if(m) m.textContent='Chưa cấu hình GAS URL trong Cài đặt'; return; }
+  try{
+    var res=await fetch(state.gasWebAppUrl,{
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:'action=nipdata&pw='+encodeURIComponent(v)
+    });
+    var j=await res.json();
+    if(j && j.ok && j.data){
+      nipUnlocked=true; NIP_DATA=j.data;
+      try{ sessionStorage.setItem('nip_pw', v); }catch(e){}
+      document.getElementById('nipLock').style.display='none';
+      document.getElementById('nipContent').style.display='';
+      if(m) m.textContent='';
+      nipSub('overview');
+    } else {
+      if(m) m.textContent = (j && j.error==='auth') ? 'Sai mật khẩu' : ('Lỗi: '+((j&&j.error)||'không rõ'));
+    }
+  }catch(e){
+    if(m) m.textContent='Không kết nối được server (kiểm tra mạng/extension)';
+  }
+}
+// nạp lại dữ liệu từ server nếu phiên còn mật khẩu (dùng lại khi mở lại tab)
+async function nipReauth(pw){
+  if(!state.gasWebAppUrl) return false;
+  try{
+    var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=nipdata&pw='+encodeURIComponent(pw)});
+    var j=await res.json();
+    if(j&&j.ok&&j.data){ NIP_DATA=j.data; nipUnlocked=true; return true; }
+  }catch(e){}
+  return false;
+}
+function nipLock(){ nipUnlocked=false; NIP_DATA=null;
+  try{ sessionStorage.removeItem('nip_pw'); }catch(e){}
+  document.getElementById('nipContent').style.display='none';
+  var l=document.getElementById('nipLock'); if(l) l.style.display='';
+  var p=document.getElementById('nipPass'); if(p) p.value='';
+}
+function nipSub(which){
+  document.querySelectorAll('.nip-subtab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-nt')===which); });
+  var el=document.getElementById('nipBody'); if(!el) return;
+  if(!NIP_DATA){ el.innerHTML='<div style="opacity:.6;padding:20px;text-align:center">Chưa có dữ liệu. Vui lòng nhập lại mật khẩu.</div>'; return; }
+  var c=NIP_DATA.checks||{}, sk=NIP_DATA.skus||{};
+  function card(color,title,body){ return '<div style="border-left:4px solid '+color+';background:rgba(255,255,255,.03);padding:12px 14px;border-radius:8px;margin-bottom:10px"><div style="font-weight:700;margin-bottom:6px">'+title+'</div>'+body+'</div>'; }
+  function tbl(rows){ return '<table style="width:100%;border-collapse:collapse;font-size:12px">'+rows+'</table>'; }
+  if(which==='overview'){
+    var n_sku=Object.keys(sk).length, n_nip=Object.keys(NIP_DATA.nip||{}).length;
+    el.innerHTML =
+      card('#2F7898','📦 Dữ liệu hiện có',
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'
+        +'<div>• SKU: <b>'+n_sku+'</b></div><div>• SKU có NIP nhãn: <b>'+n_nip+'</b></div>'
+        +'<div>• Nguồn hiện có: <b>NHÃN</b></div><div>• Chờ bổ sung: <b>LAB VN, Nhà máy</b></div></div>')
+      + card('#C8102E','⚠️ Kết quả Việc 1 — cần xử lý',
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'
+        +'<div>⚖️ Rủi ro basis: <b>'+(c.basis||[]).length+' SKU</b></div>'
+        +'<div>📋 Thiếu chỉ tiêu BB: <b>'+(c.mandatory||[]).length+' SKU</b></div>'
+        +'<div>🏷️ Có claim cần rà: <b>'+(c.claim||[]).length+' SKU</b></div>'
+        +'<div>🍬 Thiếu đường (sốt cà): <b>'+(c.sugar||[]).length+' SKU</b></div></div>')
+      + card('#0E7544','▶️ Bước tiếp theo','Bổ sung test report (LAB VN + Nhà máy) vào tab "So sánh NIP" để chạy đối chiếu đa nguồn & chấm dung sai ±20% / sàn 70%.');
+  }
+  else if(which==='basis'){
+    var rows='<tr style="background:rgba(255,255,255,.05)"><th style="text-align:left;padding:6px">SKU</th><th style="text-align:left">Tên</th><th>Net</th><th>Ráo nước</th><th>Tỷ lệ</th></tr>';
+    (c.basis||[]).forEach(function(x){ rows+='<tr style="border-top:1px solid rgba(255,255,255,.08)"><td style="padding:6px">'+x.sku+'</td><td>'+x.name+'</td><td style="text-align:center">'+x.net+'</td><td style="text-align:center">'+x.drained+'</td><td style="text-align:center;color:#e0a">'+x.ratio+'</td></tr>'; });
+    el.innerHTML=card('#C8102E','⚖️ '+(c.basis||[]).length+' SKU có rủi ro cơ sở tính (basis)',
+      '<div style="font-size:12px;opacity:.85;margin-bottom:8px">NIP ghi theo <b>toàn khối (whole)</b> nhưng sản phẩm có phần ráo nước. Nếu lab test phần <b>cái</b> → lệch giá trị mà KHÔNG phải vi phạm. Cần xác nhận nhãn công bố theo whole hay drained trước khi so sánh.</div>'+tbl(rows));
+  }
+  else if(which==='mandatory'){
+    var rows='<tr style="background:rgba(255,255,255,.05)"><th style="text-align:left;padding:6px">SKU</th><th style="text-align:left">Tên</th><th style="text-align:left">Chỉ tiêu thiếu</th></tr>';
+    (c.mandatory||[]).forEach(function(x){ rows+='<tr style="border-top:1px solid rgba(255,255,255,.08)"><td style="padding:6px">'+x.sku+'</td><td>'+x.name+'</td><td style="color:#e0a">'+x.missing.join(', ')+'</td></tr>'; });
+    el.innerHTML=card('#FFBC18','📋 '+(c.mandatory||[]).length+' SKU thiếu chỉ tiêu NIP bắt buộc',
+      '<div style="font-size:12px;opacity:.85;margin-bottom:8px">TT 29/2023 yêu cầu tối thiểu 5 chỉ tiêu: Năng lượng, Chất đạm, Carbohydrate, Chất béo, Natri. (Lưu ý: cá ngâm dầu/nước có thể miễn Carbohydrate nếu =0 — cần xác nhận.)</div>'+tbl(rows));
+  }
+  else if(which==='claim'){
+    var body='<div style="font-size:12px;opacity:.85;margin-bottom:8px">Sản phẩm có claim "ít béo / light" phải đạt điều kiện dùng claim + có sản phẩm gốc để so sánh mức giảm.</div>';
+    (c.claim||[]).forEach(function(x){ body+='<div style="padding:6px 0;border-top:1px solid rgba(255,255,255,.08)"><b>'+x.sku+'</b> '+x.name+' — chất béo nhãn = <b>'+(x.fat==null?'?':x.fat)+' g</b></div>'; });
+    // include olive-oil high-fat for contrast
+    el.innerHTML=card('#2F7898','🏷️ Rà soát claim dinh dưỡng',body);
+  }
+  else if(which==='compare'){
+    // build SKU picker
+    var opts=Object.keys(NIP_DATA.nip).sort().map(function(s){ return '<option value="'+s+'">'+s+' — '+(sk[s]?sk[s].name:'')+'</option>'; }).join('');
+    el.innerHTML=card('#0E7544','🔬 So sánh NIP đa nguồn',
+      '<div style="font-size:12px;opacity:.85;margin-bottom:10px">Chọn SKU để xem NIP theo từng nguồn. Hiện mới có nguồn <b>NHÃN</b>. Khi bổ sung LAB VN & Nhà máy vào Google Sheet, cột so sánh + verdict dung sai sẽ hiện ở đây.</div>'
+      +'<select id="nipSkuPick" onchange="nipShowCompare(this.value)" style="width:100%;padding:9px;border-radius:8px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:13px"><option value="">— Chọn SKU —</option>'+opts+'</select>'
+      +'<div id="nipCompareOut" style="margin-top:12px"></div>');
+  }
+}
+function nipShowCompare(sku){
+  var out=document.getElementById('nipCompareOut'); if(!out) return;
+  if(!sku){ out.innerHTML=''; return; }
+  var nd=NIP_DATA.nip[sku]||{}, sk=NIP_DATA.skus[sku]||{};
+  var srcOrder=['LABEL','LAB_VN','MFR','COA','THEORY'];
+  var srcName={LABEL:'Nhãn',LAB_VN:'Lab VN',MFR:'Nhà máy',COA:'CoA',THEORY:'Lý thuyết'};
+  var present=srcOrder.filter(function(s){ return Object.keys(nd).some(function(n){ return nd[n][s]; }); });
+  var head='<tr style="background:rgba(255,255,255,.06)"><th style="text-align:left;padding:6px">Chỉ tiêu</th>'+present.map(function(s){return '<th style="padding:6px">'+srcName[s]+'</th>';}).join('')+'<th>Đối chiếu</th></tr>';
+  var rows='';
+  Object.keys(nd).forEach(function(nut){
+    var cells='', vals={};
+    present.forEach(function(s){ var d=nd[nut][s]; var v=d?d.v:null; vals[s]=v; cells+='<td style="text-align:center;padding:6px">'+(v==null?'—':v+(d&&d.u?(' '+d.u):''))+'</td>'; });
+    // verdict placeholder: if only LABEL, note "chờ lab"
+    var verdict='<span style="opacity:.5">chờ lab</span>';
+    if(vals.LAB_VN!=null && vals.LABEL!=null && vals.LABEL!=0){
+      var diff=(vals.LAB_VN-vals.LABEL)/Math.abs(vals.LABEL)*100;
+      var ad=Math.abs(diff);
+      var col = ad<=20?'#0E7544':(ad<=42.8?'#FFBC18':'#C8102E'); // 70% floor ≈ -30%..; simplified
+      verdict='<b style="color:'+col+'">'+(diff>0?'+':'')+diff.toFixed(0)+'%</b>';
+    }
+    rows+='<tr style="border-top:1px solid rgba(255,255,255,.08)"><td style="padding:6px">'+nut+'</td>'+cells+'<td style="text-align:center">'+verdict+'</td></tr>';
+  });
+  var basisNote = sk.drained ? '<div style="font-size:11px;color:#e0a;margin-bottom:6px">⚠️ SKU này có ráo nước ('+sk.drained+'/'+sk.net+'). Kiểm tra basis trước khi tin verdict.</div>' : '';
+  out.innerHTML=basisNote+'<table style="width:100%;border-collapse:collapse;font-size:12px">'+head+rows+'</table>';
+}
+
 </script>
 
 <!-- ── ONBOARDING POPUP ── -->
