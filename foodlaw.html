@@ -630,6 +630,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
             <button class="nip-subtab" data-nt="mandatory" onclick="nipSub('mandatory')">📋 Thiếu chỉ tiêu</button>
             <button class="nip-subtab" data-nt="claim" onclick="nipSub('claim')">🏷️ Claim</button>
             <button class="nip-subtab" data-nt="compare" onclick="nipSub('compare')">🔬 So sánh NIP</button>
+            <button class="nip-subtab" data-nt="entry" onclick="nipSub('entry')">➕ Nhập dữ liệu</button>
           </div>
           <div id="nipBody" style="font-size:13px;line-height:1.55"></div>
         </div>
@@ -4016,6 +4017,95 @@ function nipSub(which){
       +'<select id="nipSkuPick" onchange="nipShowCompare(this.value)" style="width:100%;padding:9px;border-radius:8px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:13px"><option value="">— Chọn SKU —</option>'+opts+'</select>'
       +'<div id="nipCompareOut" style="margin-top:12px"></div>');
   }
+  else if(which==='entry'){
+    var opts=Object.keys(sk).sort().map(function(s){ return '<option value="'+s+'">'+s+' — '+(sk[s]?sk[s].name:'')+'</option>'; }).join('');
+    var nutrients=['Nang luong','Chat dam','Carbohydrate','Chat beo','Chat beo bao hoa','Duong tong so','Chat xo','Natri','Muoi'];
+    var units={'Nang luong':'kcal','Chat dam':'g','Carbohydrate':'g','Chat beo':'g','Chat beo bao hoa':'g','Duong tong so':'g','Chat xo':'g','Natri':'mg','Muoi':'g'};
+    var nutRows=nutrients.map(function(n){
+      return '<tr><td style="padding:4px 6px;font-size:12px">'+n+'</td>'
+        +'<td style="padding:4px"><input type="number" step="any" id="nt_'+n.replace(/\s/g,'_')+'" style="width:90px;padding:5px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"></td>'
+        +'<td style="padding:4px 6px;font-size:12px;opacity:.7">'+units[n]+'</td></tr>';
+    }).join('');
+    el.innerHTML=card('#C9B037','➕ Nhập dữ liệu NIP + tài liệu (ghi ngược vào Google Sheet)',
+      '<div style="font-size:12px;opacity:.85;margin-bottom:10px">Chọn SKU, nguồn, upload file report rồi nhập giá trị. Bấm <b>Xem lại</b> trước khi ghi.</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+      +'<div><label style="font-size:11px;opacity:.7">SKU *</label><select id="e_sku" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"><option value="">— Chọn —</option>'+opts+'</select></div>'
+      +'<div><label style="font-size:11px;opacity:.7">Nguồn *</label><select id="e_source" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"><option value="LABEL">Nhãn</option><option value="LAB_VN">Lab VN</option><option value="MFR">Nhà máy</option></select></div>'
+      +'<div><label style="font-size:11px;opacity:.7">Cơ sở tính (basis) *</label><select id="e_basis" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"><option value="">— Chọn —</option><option value="whole">whole (100g/ml tổng)</option><option value="drained">drained (phần cái ráo)</option><option value="as_sold">as_sold</option></select></div>'
+      +'<div><label style="font-size:11px;opacity:.7">per (100 g/ml)</label><input type="number" id="e_per" value="100" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"></div>'
+      +'<div><label style="font-size:11px;opacity:.7">Ngày test</label><input type="date" id="e_date" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"></div>'
+      +'<div><label style="font-size:11px;opacity:.7">Số lô</label><input type="text" id="e_batch" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"></div>'
+      +'<div><label style="font-size:11px;opacity:.7">Lab / Nguồn</label><input type="text" id="e_lab" placeholder="Eurofins / CASE / Nhà máy" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"></div>'
+      +'<div><label style="font-size:11px;opacity:.7">Là nguồn CĂN CỨ CÔNG BỐ?</label><select id="e_declared" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"><option value="N">Không</option><option value="Y">Có — đánh dấu nguồn công bố</option></select></div>'
+      +'</div>'
+      +'<div style="margin-bottom:10px"><label style="font-size:11px;opacity:.7">📎 File report (PDF/ảnh, &lt;15MB)</label><input type="file" id="e_file" accept=".pdf,.jpg,.jpeg,.png" style="width:100%;padding:6px;font-size:12px"><div id="e_fileMsg" style="font-size:11px;opacity:.7;margin-top:4px"></div></div>'
+      +'<div style="font-weight:600;font-size:12px;margin:6px 0">Giá trị NIP:</div>'
+      +'<table style="width:100%;border-collapse:collapse"><tr style="background:rgba(255,255,255,.05);font-size:11px"><td style="padding:4px 6px">Chỉ tiêu</td><td style="padding:4px">Giá trị</td><td style="padding:4px 6px">Đơn vị</td></tr>'+nutRows+'</table>'
+      +'<label style="font-size:11px;display:block;margin-top:8px"><input type="checkbox" id="e_overwrite"> Ghi đè nếu đã tồn tại (cùng SKU+nguồn+chỉ tiêu+ngày)</label>'
+      +'<div style="display:flex;gap:8px;margin-top:12px"><button onclick="nipReview()" style="flex:1;padding:10px;border:0;border-radius:8px;background:var(--accent,#C9B037);color:#1B3A57;font-weight:700;cursor:pointer">👁 Xem lại</button></div>'
+      +'<div id="e_review" style="margin-top:12px"></div>');
+  }
+}
+// đọc file → base64, upload lên Drive
+async function nipDoUpload(){
+  var fi=document.getElementById('e_file'); var msg=document.getElementById('e_fileMsg');
+  if(!fi||!fi.files||!fi.files[0]) return null;
+  var f=fi.files[0];
+  if(f.size>15*1024*1024){ if(msg) msg.textContent='File quá 15MB, hãy nén trước'; return null; }
+  if(msg) msg.textContent='Đang tải file lên Drive...';
+  var b64=await new Promise(function(res,rej){ var r=new FileReader(); r.onload=function(){res(r.result.split(',')[1]);}; r.onerror=rej; r.readAsDataURL(f); });
+  var pw=sessionStorage.getItem('nip_pw')||'';
+  var body='action=nipdata&sub=upload&pw='+encodeURIComponent(pw)
+    +'&filedata='+encodeURIComponent(b64)+'&filename='+encodeURIComponent(f.name)+'&filemime='+encodeURIComponent(f.type||'application/octet-stream');
+  var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body});
+  var j=await res.json();
+  if(j&&j.ok){ if(msg) msg.innerHTML='✓ Đã tải: <a href="'+j.url+'" target="_blank" style="color:var(--accent,#C9B037)">'+j.name+'</a>'; return j.url; }
+  if(msg) msg.textContent='Lỗi tải file: '+((j&&j.error)||'?'); return null;
+}
+function nipCollectPayload(){
+  var nutrients=['Nang luong','Chat dam','Carbohydrate','Chat beo','Chat beo bao hoa','Duong tong so','Chat xo','Natri','Muoi'];
+  var units={'Nang luong':'kcal','Chat dam':'g','Carbohydrate':'g','Chat beo':'g','Chat beo bao hoa':'g','Duong tong so':'g','Chat xo':'g','Natri':'mg','Muoi':'g'};
+  var nt=[];
+  nutrients.forEach(function(n){ var v=document.getElementById('nt_'+n.replace(/\s/g,'_')).value; if(v!=='') nt.push({nutrient:n,value:parseFloat(v),unit:units[n]}); });
+  return {
+    sku:document.getElementById('e_sku').value, source:document.getElementById('e_source').value,
+    basis:document.getElementById('e_basis').value, per_amount:parseFloat(document.getElementById('e_per').value)||100,
+    test_date:document.getElementById('e_date').value, batch_no:document.getElementById('e_batch').value,
+    lab_name:document.getElementById('e_lab').value, is_declared:document.getElementById('e_declared').value==='Y',
+    overwrite:document.getElementById('e_overwrite').checked, entry_method:'manual', nutrients:nt
+  };
+}
+function nipReview(){
+  var p=nipCollectPayload(); var out=document.getElementById('e_review');
+  var errs=[];
+  if(!p.sku) errs.push('Chưa chọn SKU'); if(!p.basis) errs.push('Chưa chọn basis'); if(!p.nutrients.length) errs.push('Chưa nhập chỉ tiêu nào');
+  if(errs.length){ out.innerHTML='<div style="color:#e06;font-size:12px">⚠ '+errs.join(' · ')+'</div>'; return; }
+  var rows=p.nutrients.map(function(n){ return '<tr><td style="padding:3px 6px">'+n.nutrient+'</td><td style="padding:3px 6px;text-align:right"><b>'+n.value+'</b> '+n.unit+'</td></tr>'; }).join('');
+  var warnBasis = (p.basis==='whole' && NIP_DATA.skus[p.sku] && NIP_DATA.skus[p.sku].drained) ? '<div style="color:#e0a;font-size:11px;margin-top:6px">⚠ SKU này có ráo nước — chắc chắn nhãn/lab đo theo <b>whole</b>?</div>' : '';
+  out.innerHTML='<div style="border:1px solid var(--accent,#C9B037);border-radius:8px;padding:12px">'
+    +'<div style="font-weight:700;margin-bottom:6px">Xem lại: '+p.sku+' · '+p.source+' · basis='+p.basis+(p.is_declared?' · <span style="color:#0E7544">NGUỒN CÔNG BỐ</span>':'')+'</div>'
+    +'<table style="width:100%;font-size:12px">'+rows+'</table>'+warnBasis
+    +'<div style="display:flex;gap:8px;margin-top:10px"><button onclick="nipCommit()" style="flex:1;padding:9px;border:0;border-radius:6px;background:#0E7544;color:#fff;font-weight:700;cursor:pointer">✓ Xác nhận & Ghi</button><button onclick="document.getElementById(\'e_review\').innerHTML=\'\'" style="padding:9px 14px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">Huỷ</button></div></div>';
+}
+async function nipCommit(){
+  var out=document.getElementById('e_review');
+  out.innerHTML='<div style="opacity:.7">Đang xử lý...</div>';
+  var url=await nipDoUpload();          // upload file trước (nếu có)
+  var p=nipCollectPayload(); p.drive_url=url||'';
+  p.doc_type=p.source+' report';
+  var pw=sessionStorage.getItem('nip_pw')||'';
+  var body='action=nipdata&sub=save&pw='+encodeURIComponent(pw)+'&payload='+encodeURIComponent(JSON.stringify(p));
+  try{
+    var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body});
+    var j=await res.json();
+    if(j&&j.ok){
+      out.innerHTML='<div style="color:#0E7544;font-weight:600">✓ Đã ghi '+j.written+' chỉ tiêu'
+        +(j.overwritten?(' · ghi đè '+j.overwritten):'')+(j.skipped?(' · bỏ qua '+j.skipped):'')+'.</div>'
+        +(j.note?'<div style="font-size:11px;opacity:.8;margin-top:4px">'+j.note+'</div>':'')
+        +'<div style="font-size:11px;margin-top:6px">Tải lại dữ liệu để thấy so sánh cập nhật:</div>'
+        +'<button onclick="nipReauth(sessionStorage.getItem(\'nip_pw\')).then(function(){nipSub(\'compare\')})" style="margin-top:6px;padding:8px 14px;border:0;border-radius:6px;background:var(--accent,#C9B037);color:#1B3A57;font-weight:700;cursor:pointer">↻ Tải lại & xem So sánh</button>';
+    } else { out.innerHTML='<div style="color:#e06">Lỗi: '+((j&&j.error)||'?')+'</div>'; }
+  }catch(e){ out.innerHTML='<div style="color:#e06">Không kết nối được server</div>'; }
 }
 function nipShowCompare(sku){
   var out=document.getElementById('nipCompareOut'); if(!out) return;
