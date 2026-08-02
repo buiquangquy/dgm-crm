@@ -538,6 +538,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <button class="tab active" id="tabText" onclick="switchTab('text')">💬 Từ khoá / Câu hỏi</button>
         <button class="tab" id="tabImage" onclick="switchTab('image')">📷 Upload ảnh nhãn</button>
         <button class="tab" id="tabNip" onclick="switchTab('nip')">🔐 NIP Checker</button>
+        <button class="tab" id="tabGuide2" onclick="switchTab('guide2')">📋 Hồ sơ chuẩn</button>
       </div>
 
       <!-- Text search -->
@@ -634,6 +635,21 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
           </div>
           <div id="nipBody" style="font-size:13px;line-height:1.55"></div>
         </div>
+      </div>
+
+      <!-- ============ HỒ SƠ CHUẨN PANEL ============ -->
+      <div id="guide2Panel" style="display:none">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
+          <div style="font-weight:700;font-size:15px">📋 Hồ sơ chuẩn</div>
+          <span style="font-size:11px;opacity:.6">· Nhãn · HSCB · Spec — đọc từ Google Drive + note tuân thủ của bạn</span>
+          <button onclick="state._guide2Loaded=false;guide2Load()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">↻ Tải lại</button>
+        </div>
+        <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+          <button class="nip-subtab active" data-g2="nhan" onclick="guide2Show('nhan')">🏷️ Nhãn</button>
+          <button class="nip-subtab" data-g2="hscb" onclick="guide2Show('hscb')">📑 HSCB</button>
+          <button class="nip-subtab" data-g2="spec" onclick="guide2Show('spec')">🔬 Spec</button>
+        </div>
+        <div id="guide2Body" style="font-size:13px;line-height:1.5">Đang tải...</div>
       </div>
 
     </div>
@@ -1180,6 +1196,9 @@ function switchTab(tab) {
   document.getElementById('textSearchPanel').style.display = tab==='text' ? '' : 'none';
   document.getElementById('imagePanel').style.display = tab==='image' ? '' : 'none';
   var np=document.getElementById('nipPanel'); if(np) np.style.display = tab==='nip' ? '' : 'none';
+  var g2t=document.getElementById('tabGuide2'); if(g2t) g2t.classList.toggle('active', tab==='guide2');
+  if(g2t) g2t.classList.toggle('inactive', tab!=='guide2');
+  var g2=document.getElementById('guide2Panel'); if(g2){ g2.style.display = tab==='guide2' ? '' : 'none'; if(tab==='guide2' && !state._guide2Loaded){ state._guide2Loaded=true; guide2Load(); } }
 }
 /* ===================== GUIDE / KNOWLEDGE BASE ===================== */
 const GUIDE = {
@@ -4131,6 +4150,86 @@ function nipShowCompare(sku){
   });
   var basisNote = sk.drained ? '<div style="font-size:11px;color:#e0a;margin-bottom:6px">⚠️ SKU này có ráo nước ('+sk.drained+'/'+sk.net+'). Kiểm tra basis trước khi tin verdict.</div>' : '';
   out.innerHTML=basisNote+'<table style="width:100%;border-collapse:collapse;font-size:12px">'+head+rows+'</table>';
+}
+
+/* ===================== HỒ SƠ CHUẨN (Guide 2) ===================== */
+let GUIDE2_DATA=null;
+async function guide2Load(){
+  var body=document.getElementById('guide2Body'); if(body) body.innerHTML='Đang tải từ Google Drive...';
+  var pw=sessionStorage.getItem('nip_pw')||'';
+  if(!pw){ if(body) body.innerHTML='<div style="opacity:.7">Cần mở khoá NIP Checker trước (nhập mật khẩu) để xem Hồ sơ chuẩn.</div>'; return; }
+  try{
+    var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=nipdata&sub=guide&pw='+encodeURIComponent(pw)});
+    var j=await res.json();
+    if(j&&j.ok&&j.guide){ GUIDE2_DATA=j.guide; guide2Show('nhan'); }
+    else { if(body) body.innerHTML='<div style="color:#e06">Lỗi: '+((j&&j.error)||'?')+'</div>'; }
+  }catch(e){ if(body) body.innerHTML='<div style="color:#e06">Không kết nối được server</div>'; }
+}
+function guide2Show(which){
+  document.querySelectorAll('[data-g2]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-g2')===which); });
+  var body=document.getElementById('guide2Body'); if(!body) return;
+  if(!GUIDE2_DATA){ body.innerHTML='Chưa có dữ liệu.'; return; }
+  var d=GUIDE2_DATA[which]||{rows:[],files:[]};
+  var stColor={'✅':'#0E7544','⚠️':'#FFBC18','❌':'#C8102E','➖':'#888'};
+  function stBadge(s){ var k=(s||'').charAt(0); var c=stColor[k]||'#888'; return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;background:'+c+'22;color:'+c+';font-size:11px;font-weight:700;white-space:nowrap">'+(s||'—')+'</span>'; }
+  // group filter
+  var groups=Array.from(new Set(d.rows.map(function(r){return r.group;}).filter(Boolean)));
+  var gsel='<select id="g2group" onchange="guide2Render(\''+which+'\')" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:12px"><option value="">Tất cả nhóm ('+d.rows.length+')</option>'+groups.map(function(g){return '<option value="'+g+'">'+g+'</option>';}).join('')+'</select>';
+  // summary counts
+  var cnt={'✅':0,'⚠️':0,'❌':0,'➖':0};
+  d.rows.forEach(function(r){ var k=(r.status||'').charAt(0); if(cnt[k]!=null)cnt[k]++; });
+  var summary='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;font-size:12px">'
+    +'<span style="color:#0E7544">✅ '+cnt['✅']+' hợp lệ</span>'
+    +'<span style="color:#FFBC18">⚠️ '+cnt['⚠️']+' cần lưu ý</span>'
+    +'<span style="color:#C8102E">❌ '+cnt['❌']+' chưa đạt</span>'
+    +'<span style="opacity:.6">➖ '+cnt['➖']+' N/A</span>'
+    +'<span style="opacity:.6">· 📎 '+(d.files||[]).length+' file trên Drive</span></div>';
+  body.innerHTML='<div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">'+gsel+'</div>'+summary+'<div id="g2rows"></div>';
+  guide2Render(which);
+}
+function guide2Render(which){
+  var d=GUIDE2_DATA[which]||{rows:[]};
+  var filt=(document.getElementById('g2group')||{}).value||'';
+  var rows=d.rows.filter(function(r){ return !filt || r.group===filt; });
+  var stColor={'✅':'#0E7544','⚠️':'#FFBC18','❌':'#C8102E','➖':'#888'};
+  function stBadge(s){ var k=(s||'').charAt(0); var c=stColor[k]||'#888'; return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;background:'+c+'22;color:'+c+';font-size:11px;font-weight:700;white-space:nowrap">'+(s||'—')+'</span>'; }
+  var html=rows.map(function(r,idx){
+    var meta=[];
+    if(r.updated) meta.push('cập nhật '+r.updated);
+    if(r.by) meta.push('bởi '+r.by);
+    if(r.ver && r.ver!=='-') meta.push('phiên bản '+r.ver);
+    var pdfBtn = (r.pdf && r.pdf.indexOf('http')===0) ? '<a href="'+r.pdf+'" target="_blank" style="font-size:11px;color:var(--accent,#C9B037);text-decoration:none">📎 Mở PDF</a>' : '';
+    var legalBtn = r.legal ? '<span style="font-size:10px;opacity:.6">📖 '+r.legal+'</span>' : '';
+    return '<div style="border:1px solid var(--border,#2a3f55);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:rgba(255,255,255,.02)">'
+      +'<div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap">'
+      +'<div style="flex:1;min-width:200px"><div style="font-weight:700;font-size:13px">'+r.title+' <span style="font-size:10px;opacity:.5">'+r.group+'</span></div>'
+      +'<div style="font-size:12px;opacity:.8;margin-top:2px">'+r.req+'</div></div>'
+      +'<div style="text-align:right">'+stBadge(r.status)+'</div></div>'
+      +(r.note?'<div style="margin-top:8px;padding:8px 10px;background:rgba(201,176,55,.08);border-radius:6px;font-size:12px"><b style="opacity:.7">Ghi chú của bạn:</b> '+r.note+'</div>':'')
+      +'<div style="display:flex;gap:12px;align-items:center;margin-top:8px;flex-wrap:wrap">'+pdfBtn+legalBtn
+      +'<span style="font-size:10px;opacity:.5">'+meta.join(' · ')+'</span>'
+      +'<button onclick="guide2AiHint(\''+which+'\','+idx+')" style="margin-left:auto;font-size:11px;padding:4px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">💡 AI gợi ý</button></div>'
+      +'<div id="g2ai_'+which+'_'+idx+'" style="margin-top:8px"></div></div>';
+  }).join('');
+  var el=document.getElementById('g2rows'); if(el) el.innerHTML=html||'<div style="opacity:.6;padding:20px;text-align:center">Chưa có mục nào. Điền vào tab '+({nhan:'14_Guide_Nhan',hscb:'15_Guide_HSCB',spec:'16_Guide_Spec'}[which])+' trong Google Sheet.</div>';
+}
+async function guide2AiHint(which,idx){
+  var r=(GUIDE2_DATA[which].rows.filter(function(x){return !((document.getElementById('g2group')||{}).value) || x.group===document.getElementById('g2group').value;}))[idx];
+  var box=document.getElementById('g2ai_'+which+'_'+idx);
+  if(!box) return; box.innerHTML='<div style="opacity:.6;font-size:12px">Đang hỏi AI...</div>';
+  if(!state.apiKey){ box.innerHTML='<div style="color:#e06;font-size:12px">Cần nhập API key ở đầu app</div>'; return; }
+  var pw=sessionStorage.getItem('nip_pw')||'';
+  var body='action=nipdata&sub=aihint&pw='+encodeURIComponent(pw)
+    +'&title='+encodeURIComponent(r.title)+'&req='+encodeURIComponent(r.req)+'&legal='+encodeURIComponent(r.legal)+'&apikey='+encodeURIComponent(state.apiKey);
+  try{
+    var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body});
+    var j=await res.json();
+    if(j&&j.ok){
+      box.innerHTML='<div style="border-left:3px solid #C8102E;background:rgba(200,16,46,.06);padding:8px 10px;border-radius:0 6px 6px 0;font-size:12px">'
+        +'<div style="color:#e06;font-weight:700;font-size:10px;margin-bottom:4px">⚠️ GỢI Ý THAM KHẢO TỪ AI — KHÔNG THAY THẾ ĐÁNH GIÁ CHUYÊN MÔN</div>'
+        +(j.hint||'').replace(/\n/g,'<br>')+'</div>';
+    } else { box.innerHTML='<div style="color:#e06;font-size:12px">Lỗi: '+((j&&j.error)||'?')+'</div>'; }
+  }catch(e){ box.innerHTML='<div style="color:#e06;font-size:12px">Không kết nối được</div>'; }
 }
 
 </script>
