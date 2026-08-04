@@ -511,7 +511,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <button class="tab active" id="tabText" onclick="switchTab('text')">💬 Từ khoá / Câu hỏi</button>
         <button class="tab" id="tabImage" onclick="switchTab('image')">📷 Upload ảnh nhãn</button>
         <button class="tab" id="tabNip" onclick="switchTab('nip')">🔐 NIP Checker</button>
-        <button class="tab" id="tabGuide2" onclick="switchTab('guide2')">📋 Hồ sơ chuẩn</button>
+        <button class="tab" id="tabGuide2" onclick="switchTab('guide2')">📚 Thư viện chuẩn</button>
       </div>
 
       <!-- Text search -->
@@ -597,7 +597,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.0 (2026-08) · Dashboard tuân thủ: Nhãn · NIP · Tên SP · Test · HSCB</span>
+            <span style="font-size:11px;opacity:.6">· v4.1 (2026-08) · Dashboard tuân thủ + Thư viện chuẩn</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -612,8 +612,8 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
       <!-- ============ HỒ SƠ CHUẨN PANEL ============ -->
       <div id="guide2Panel" style="display:none">
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
-          <div style="font-weight:700;font-size:15px">📋 Hồ sơ chuẩn</div>
-          <span style="font-size:11px;opacity:.6">· Nhãn · HSCB · Spec — đọc từ Google Drive + note tuân thủ của bạn</span>
+          <div style="font-weight:700;font-size:15px">📚 Thư viện chuẩn</div>
+          <span style="font-size:11px;opacity:.6">· Thư viện chuẩn: checklist chuẩn mực Nhãn · HSCB · Spec — dùng khi mở SKU mới / training team · status &amp; note của bạn lưu trong Sheet</span>
           <button onclick="state._guide2Loaded=false;guide2Load()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">↻ Tải lại</button>
         </div>
         <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -4564,7 +4564,7 @@ let GUIDE2_DATA=null;
 async function guide2Load(){
   var body=document.getElementById('guide2Body'); if(body) body.innerHTML='Đang tải từ Google Drive...';
   var pw=sessionStorage.getItem('nip_pw')||'';
-  if(!pw){ if(body) body.innerHTML='<div style="opacity:.7">Cần mở khoá NIP Checker trước (nhập mật khẩu) để xem Hồ sơ chuẩn.</div>'; return; }
+  if(!pw){ if(body) body.innerHTML='<div style="opacity:.7">Cần mở khoá NIP Checker trước (nhập mật khẩu) để xem Thư viện chuẩn.</div>'; return; }
   try{
     var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=nipdata&sub=guide&pw='+encodeURIComponent(pw)});
     var j=await res.json();
@@ -4618,7 +4618,7 @@ function guide2Render(which){
       +'<button onclick="guide2AiHint(\''+which+'\','+idx+')" style="margin-left:auto;font-size:11px;padding:4px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">💡 AI gợi ý</button></div>'
       +'<div id="g2ai_'+which+'_'+idx+'" style="margin-top:8px"></div></div>';
   }).join('');
-  var el=document.getElementById('g2rows'); if(el) el.innerHTML=html||'<div style="opacity:.6;padding:20px;text-align:center">Chưa có mục nào. Điền vào tab '+({nhan:'14_Guide_Nhan',hscb:'15_Guide_HSCB',spec:'16_Guide_Spec'}[which])+' trong Google Sheet.</div>';
+  var el=document.getElementById('g2rows'); if(el) el.innerHTML=html||'<div style="opacity:.6;padding:20px;text-align:center">Chưa có mục nào. Tạo tab '+({nhan:'16_Guide_Nhan',hscb:'17_Guide_HSCB',spec:'18_Guide_Spec'}[which])+' trong DGM_NIP_DB và dán nội dung từ file ThuVienChuan_Guide_Paste.xlsx, sau đó bấm ↻ Tải lại.</div>';
 }
 async function guide2AiHint(which,idx){
   var r=(GUIDE2_DATA[which].rows.filter(function(x){return !((document.getElementById('g2group')||{}).value) || x.group===document.getElementById('g2group').value;}))[idx];
