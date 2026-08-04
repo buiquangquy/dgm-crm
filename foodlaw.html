@@ -3997,11 +3997,12 @@ function nipSub(which){
   function tbl(rows){ return '<table style="width:100%;border-collapse:collapse;font-size:12px">'+rows+'</table>'; }
   if(which==='overview'){
     var n_sku=Object.keys(sk).length, n_nip=Object.keys(NIP_DATA.nip||{}).length;
+    var n_hscb=Object.values(NIP_DATA.nip||{}).filter(function(nd){ return Object.keys(nd).some(function(nu){ return nd[nu].HSCB; }); }).length;
     el.innerHTML =
       card('#2F7898','📦 Dữ liệu hiện có',
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'
         +'<div>• SKU: <b>'+n_sku+'</b></div><div>• SKU có NIP nhãn: <b>'+n_nip+'</b></div>'
-        +'<div>• Nguồn hiện có: <b>NHÃN</b></div><div>• Chờ bổ sung: <b>LAB VN, Nhà máy</b></div></div>')
+        +'<div>• SKU có đối chiếu HSCB: <b>'+n_hscb+'</b></div><div>• Nguồn: <b>Nhãn + HSCB</b> (2 khối song song)</div></div>')
       + card('#C8102E','⚠️ Kết quả Việc 1 — cần xử lý',
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'
         +'<div>⚖️ Rủi ro basis: <b>'+(c.basis||[]).length+' SKU</b></div>'
@@ -4031,15 +4032,15 @@ function nipSub(which){
   else if(which==='compare'){
     // build SKU picker
     var opts=Object.keys(NIP_DATA.nip).sort().map(function(s){ return '<option value="'+s+'">'+s+' — '+(sk[s]?sk[s].name:'')+'</option>'; }).join('');
-    el.innerHTML=card('#0E7544','🔬 So sánh NIP đa nguồn',
-      '<div style="font-size:12px;opacity:.85;margin-bottom:10px">Chọn SKU để xem NIP theo từng nguồn. Hiện mới có nguồn <b>NHÃN</b>. Khi bổ sung LAB VN & Nhà máy vào Google Sheet, cột so sánh + verdict dung sai sẽ hiện ở đây.</div>'
+    el.innerHTML=card('#0E7544','🔬 So sánh NIP — Nhãn vs HSCB',
+      '<div style="font-size:12px;opacity:.85;margin-bottom:10px">Chọn SKU để đối chiếu số liệu NIP trên <b>Nhãn</b> với số liệu trong <b>HSCB</b> (hồ sơ tự công bố). Cột "Đối chiếu" tự tính % lệch — trên 20% (vàng) hoặc trên ~43% (đỏ) nên rà lại trước khi dùng.</div>'
       +'<select id="nipSkuPick" onchange="nipShowCompare(this.value)" style="width:100%;padding:9px;border-radius:8px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:13px"><option value="">— Chọn SKU —</option>'+opts+'</select>'
       +'<div id="nipCompareOut" style="margin-top:12px"></div>');
   }
   else if(which==='entry'){
     var opts=Object.keys(sk).sort().map(function(s){ return '<option value="'+s+'">'+s+' — '+(sk[s]?sk[s].name:'')+'</option>'; }).join('');
-    var nutrients=['Nang luong','Chat dam','Carbohydrate','Chat beo','Chat beo bao hoa','Duong tong so','Chat xo','Natri','Muoi'];
-    var units={'Nang luong':'kcal','Chat dam':'g','Carbohydrate':'g','Chat beo':'g','Chat beo bao hoa':'g','Duong tong so':'g','Chat xo':'g','Natri':'mg','Muoi':'g'};
+    var nutrients=['Nang luong','Chat dam','Chat beo','Chat beo bao hoa','Carbohydrate','Duong tong so','Chat xo','Natri','Cholesterol'];
+    var units={'Nang luong':'kcal','Chat dam':'g','Chat beo':'g','Chat beo bao hoa':'g','Carbohydrate':'g','Duong tong so':'g','Chat xo':'g','Natri':'mg','Cholesterol':'mg'};
     var nutRows=nutrients.map(function(n){
       return '<tr><td style="padding:4px 6px;font-size:12px">'+n+'</td>'
         +'<td style="padding:4px"><input type="number" step="any" id="nt_'+n.replace(/\s/g,'_')+'" style="width:90px;padding:5px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"></td>'
@@ -4049,7 +4050,7 @@ function nipSub(which){
       '<div style="font-size:12px;opacity:.85;margin-bottom:10px">Chọn SKU, nguồn, upload file report rồi nhập giá trị. Bấm <b>Xem lại</b> trước khi ghi.</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
       +'<div><label style="font-size:11px;opacity:.7">SKU *</label><select id="e_sku" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"><option value="">— Chọn —</option>'+opts+'</select></div>'
-      +'<div><label style="font-size:11px;opacity:.7">Nguồn *</label><select id="e_source" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"><option value="LABEL">Nhãn</option><option value="LAB_VN">Lab VN</option><option value="MFR">Nhà máy</option></select></div>'
+      +'<div><label style="font-size:11px;opacity:.7">Nguồn *</label><select id="e_source" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"><option value="LABEL">Nhãn (nhãn chính / nhãn phụ)</option><option value="HSCB">HSCB (lab VN / lab nước ngoài / nhãn đính kèm hồ sơ)</option></select></div>'
       +'<div><label style="font-size:11px;opacity:.7">Cơ sở tính (basis) *</label><select id="e_basis" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"><option value="">— Chọn —</option><option value="whole">whole (100g/ml tổng)</option><option value="drained">drained (phần cái ráo)</option><option value="as_sold">as_sold</option></select></div>'
       +'<div><label style="font-size:11px;opacity:.7">per (100 g/ml)</label><input type="number" id="e_per" value="100" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"></div>'
       +'<div><label style="font-size:11px;opacity:.7">Ngày test</label><input type="date" id="e_date" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"></div>'
@@ -4082,8 +4083,8 @@ async function nipDoUpload(){
   if(msg) msg.textContent='Lỗi tải file: '+((j&&j.error)||'?'); return null;
 }
 function nipCollectPayload(){
-  var nutrients=['Nang luong','Chat dam','Carbohydrate','Chat beo','Chat beo bao hoa','Duong tong so','Chat xo','Natri','Muoi'];
-  var units={'Nang luong':'kcal','Chat dam':'g','Carbohydrate':'g','Chat beo':'g','Chat beo bao hoa':'g','Duong tong so':'g','Chat xo':'g','Natri':'mg','Muoi':'g'};
+  var nutrients=['Nang luong','Chat dam','Chat beo','Chat beo bao hoa','Carbohydrate','Duong tong so','Chat xo','Natri','Cholesterol'];
+  var units={'Nang luong':'kcal','Chat dam':'g','Chat beo':'g','Chat beo bao hoa':'g','Carbohydrate':'g','Duong tong so':'g','Chat xo':'g','Natri':'mg','Cholesterol':'mg'};
   var nt=[];
   nutrients.forEach(function(n){ var v=document.getElementById('nt_'+n.replace(/\s/g,'_')).value; if(v!=='') nt.push({nutrient:n,value:parseFloat(v),unit:units[n]}); });
   return {
@@ -4130,18 +4131,18 @@ function nipShowCompare(sku){
   var out=document.getElementById('nipCompareOut'); if(!out) return;
   if(!sku){ out.innerHTML=''; return; }
   var nd=NIP_DATA.nip[sku]||{}, sk=NIP_DATA.skus[sku]||{};
-  var srcOrder=['LABEL','LAB_VN','MFR','COA','THEORY'];
-  var srcName={LABEL:'Nhãn',LAB_VN:'Lab VN',MFR:'Nhà máy',COA:'CoA',THEORY:'Lý thuyết'};
+  var srcOrder=['LABEL','HSCB'];
+  var srcName={LABEL:'Nhãn',HSCB:'HSCB'};
   var present=srcOrder.filter(function(s){ return Object.keys(nd).some(function(n){ return nd[n][s]; }); });
   var head='<tr style="background:rgba(255,255,255,.06)"><th style="text-align:left;padding:6px">Chỉ tiêu</th>'+present.map(function(s){return '<th style="padding:6px">'+srcName[s]+'</th>';}).join('')+'<th>Đối chiếu</th></tr>';
   var rows='';
   Object.keys(nd).forEach(function(nut){
     var cells='', vals={};
     present.forEach(function(s){ var d=nd[nut][s]; var v=d?d.v:null; vals[s]=v; cells+='<td style="text-align:center;padding:6px">'+(v==null?'—':v+(d&&d.u?(' '+d.u):''))+'</td>'; });
-    // verdict placeholder: if only LABEL, note "chờ lab"
-    var verdict='<span style="opacity:.5">chờ lab</span>';
-    if(vals.LAB_VN!=null && vals.LABEL!=null && vals.LABEL!=0){
-      var diff=(vals.LAB_VN-vals.LABEL)/Math.abs(vals.LABEL)*100;
+    // verdict: so sánh HSCB vs LABEL (2 khối duy nhất trong schema hiện tại)
+    var verdict='<span style="opacity:.5">chưa đủ 2 nguồn</span>';
+    if(vals.HSCB!=null && vals.LABEL!=null && vals.LABEL!=0){
+      var diff=(vals.HSCB-vals.LABEL)/Math.abs(vals.LABEL)*100;
       var ad=Math.abs(diff);
       var col = ad<=20?'#0E7544':(ad<=42.8?'#FFBC18':'#C8102E'); // 70% floor ≈ -30%..; simplified
       verdict='<b style="color:'+col+'">'+(diff>0?'+':'')+diff.toFixed(0)+'%</b>';
