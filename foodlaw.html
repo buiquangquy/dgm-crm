@@ -485,34 +485,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
           <div class="folder-badge" style="background:rgba(201,168,76,.2);color:var(--gold)">∑</div>
           <div style="flex:1"><div class="folder-name">Tất cả văn bản</div></div>
         </div>
-        <div class="folder-item" onclick="filterFolder('A')" id="f-A">
-          <div class="folder-badge badge-a">A</div>
-          <div style="flex:1"><div class="folder-name">Luật nền tảng</div><div class="folder-count">4 files</div></div>
-        </div>
-        <div class="folder-item" onclick="filterFolder('B')" id="f-B">
-          <div class="folder-badge badge-b">B</div>
-          <div style="flex:1"><div class="folder-name">Nghị định chính</div><div class="folder-count">8 files</div></div>
-        </div>
-        <div class="folder-item" onclick="filterFolder('C')" id="f-C">
-          <div class="folder-badge badge-c">C</div>
-          <div style="flex:1"><div class="folder-name">Nghị quyết</div><div class="folder-count">3 files</div></div>
-        </div>
-        <div class="folder-item" onclick="filterFolder('D')" id="f-D">
-          <div class="folder-badge badge-d">D</div>
-          <div style="flex:1"><div class="folder-name">Ghi nhãn hàng hóa</div><div class="folder-count">6 files</div></div>
-        </div>
-        <div class="folder-item" onclick="filterFolder('E')" id="f-E">
-          <div class="folder-badge badge-e">E</div>
-          <div style="flex:1"><div class="folder-name">Kiểm nghiệm / Test</div><div class="folder-count">10 files</div></div>
-        </div>
-        <div class="folder-item" onclick="filterFolder('F')" id="f-F">
-          <div class="folder-badge badge-f">F</div>
-          <div style="flex:1"><div class="folder-name">Claim / QC nhãn</div><div class="folder-count">5 files</div></div>
-        </div>
-        <div class="folder-item" onclick="filterFolder('Other')" id="f-Other">
-          <div class="folder-badge" style="background:rgba(160,200,160,0.2);color:#80c880">＋</div>
-          <div style="flex:1"><div class="folder-name">Văn bản mới</div><div class="folder-count">0 files</div></div>
-        </div>
+        <div id="folderListDynamic"><!-- render bởi renderFolderList() — KHÔNG viết cứng, luôn khớp Drive thật --></div>
         <div style="padding:6px 10px;margin-top:4px">
           <button onclick="reloadDriveIndex()" style="width:100%;padding:6px 10px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.25);border-radius:6px;color:var(--gold);font-size:10px;font-weight:500;cursor:pointer;letter-spacing:.5px;transition:all .2s" onmouseover="this.style.background='rgba(201,168,76,0.2)'" onmouseout="this.style.background='rgba(201,168,76,0.1)'">
             🔄 Reload Drive DB
@@ -548,11 +521,13 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
             placeholder="Nhập từ khoá... vd: nhãn phụ cá ngừ NK · histamine test report · organic claim điều kiện..."
             onkeydown="if(event.key==='Enter')doSearch()"
             oninput="updateChips()"
-            autocomplete="off"
+            autocomplete="new-password"
             autocorrect="off"
             autocapitalize="off"
             spellcheck="false"
-            name="dgm-law-search">
+            data-lpignore="true"
+            data-1p-ignore
+            data-form-type="other">
           <button class="search-btn" onclick="doSearch()">→</button>
         </div>
         <div id="chipContainer" class="keyword-chips"></div>
@@ -2194,21 +2169,39 @@ async function reloadDriveIndex() {
   );
 }
 
-function updateFolderCounts() {
-  if (!driveIndex || !driveIndex.folders) return;
-  Object.entries(driveIndex.folders).forEach(([key, folder]) => {
-    const countEl = document.querySelector(`#f-${key} .folder-count`);
-    if (countEl) {
-      countEl.textContent = (folder.file_count || 0) + ' files' + (folder.error ? ' ⚠️' : '');
-    }
-  });
-  // Update "Other" if present
-  if (driveIndex.folders.Other) {
-    const otherEl = document.querySelector('#f-Other .folder-count');
-    if (otherEl) {
-      otherEl.textContent = (driveIndex.folders.Other.file_count || 0) + ' files';
-    }
+function renderFolderList() {
+  const container = document.getElementById('folderListDynamic');
+  if (!container) return;
+  const folders = (driveIndex && driveIndex.folders) ? driveIndex.folders : null;
+  if (!folders) {
+    // Chưa tải được Drive index lần nào (vd mất mạng lần đầu) → hiện tạm theo FOLDER_META làm placeholder,
+    // KHÔNG coi đây là số liệu thật.
+    container.innerHTML = Object.keys(FOLDER_META).map(key => {
+      const m = FOLDER_META[key];
+      const badgeClass = 'ABCDEF'.includes(key) ? 'badge-' + key.toLowerCase() : '';
+      return `<div class="folder-item" onclick="filterFolder('${key}')" id="f-${key}">
+        <div class="folder-badge ${badgeClass}" ${badgeClass ? '' : 'style="background:rgba(160,200,160,0.2);color:#80c880"'}>${badgeClass ? key : '＋'}</div>
+        <div style="flex:1"><div class="folder-name">${m.name_vi}</div><div class="folder-count">— (chưa tải)</div></div>
+      </div>`;
+    }).join('');
+    return;
   }
+  // Nguồn thật: đúng những folder GAS vừa quét được trên Drive, tên/khoá lấy thẳng từ đó — luôn khớp thực tế.
+  const keys = Object.keys(folders);
+  container.innerHTML = keys.map(key => {
+    const f = folders[key] || {};
+    const badgeClass = 'ABCDEF'.includes(key) ? 'badge-' + key.toLowerCase() : '';
+    const name = f.name_vi || (FOLDER_META[key] && FOLDER_META[key].name_vi) || key;
+    return `<div class="folder-item" onclick="filterFolder('${key}')" id="f-${key}">
+      <div class="folder-badge ${badgeClass}" ${badgeClass ? '' : 'style="background:rgba(160,200,160,0.2);color:#80c880"'}>${badgeClass ? key : '＋'}</div>
+      <div style="flex:1"><div class="folder-name">${name}</div><div class="folder-count">${f.file_count || 0} files${f.error ? ' ⚠️' : ''}</div></div>
+    </div>`;
+  }).join('');
+}
+function updateFolderCounts() {
+  // Đổi tên gọi thành renderFolderList() — không chỉ cập nhật số, mà vẽ lại TOÀN BỘ danh sách folder
+  // (thêm/xoá/đổi tên đều tự khớp theo Drive thật, không còn phụ thuộc danh sách viết cứng trong HTML).
+  renderFolderList();
 }
 
 // Search the Drive index for files matching keywords
@@ -3927,13 +3920,22 @@ loadState();
 updateStatus();
 renderHistory();
 renderBookmarks();
+renderFolderList();
 // Apply saved language
 applyAppLang();
-// Clear search input on load (prevent browser autofill showing email)
-setTimeout(() => {
+// Chống browser autofill điền email vào ô tìm kiếm (VD sau khi refresh trang).
+// Lỗi cũ: chỉ xoá si.value 1 lần sau 100ms, và KHÔNG xoá "chip" đi kèm — set .value bằng JS
+// không tự bắn sự kiện input nên chip render từ autofill trước đó vẫn còn treo trên UI.
+function clearSearchAutofill() {
   const si = document.getElementById('searchInput');
   if (si) si.value = '';
-}, 100);
+  chips = [];
+  renderChips();
+}
+clearSearchAutofill();                                   // chạy ngay, không đợi
+[50, 150, 300, 600, 1000, 1500].forEach(ms => setTimeout(clearSearchAutofill, ms)); // autofill có thể điền trễ hơn 1 lần
+window.addEventListener('pageshow', clearSearchAutofill); // xử lý khi trang phục hồi từ bfcache (nút Back/Forward) —
+                                                            // trường hợp này script KHÔNG chạy lại từ đầu nên phải bắt riêng
 if (!state.apiKey) {
   setTimeout(() => showOnboarding(), 350);
 } else {
