@@ -597,14 +597,11 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· dữ liệu: v3.1 (2026-07) · Việc 1: kiểm tra nhất quán nội bộ</span>
+            <span style="font-size:11px;opacity:.6">· v4.0 (2026-08) · Dashboard tuân thủ: Nhãn · NIP · Tên SP · Test · HSCB</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-            <button class="nip-subtab active" data-nt="overview" onclick="nipSub('overview')">📊 Tổng quan</button>
-            <button class="nip-subtab" data-nt="basis" onclick="nipSub('basis')">⚖️ Rủi ro Basis</button>
-            <button class="nip-subtab" data-nt="mandatory" onclick="nipSub('mandatory')">📋 Thiếu chỉ tiêu</button>
-            <button class="nip-subtab" data-nt="claim" onclick="nipSub('claim')">🏷️ Claim</button>
+            <button class="nip-subtab active" data-nt="dash" onclick="nipSub('dash')">📊 Dashboard</button>
             <button class="nip-subtab" data-nt="compare" onclick="nipSub('compare')">🔬 So sánh NIP</button>
             <button class="nip-subtab" data-nt="entry" onclick="nipSub('entry')">➕ Nhập dữ liệu</button>
           </div>
@@ -1005,7 +1002,7 @@ function goHome() {
   // Reset to keyword mode
   setMode('keyword');
   switchTab('text');
-  try{ var _pw=sessionStorage.getItem('nip_pw'); if(_pw){ nipReauth(_pw).then(function(ok){ if(ok){ var lc=document.getElementById('nipLock'); var ct=document.getElementById('nipContent'); if(lc&&ct){lc.style.display='none';ct.style.display='';nipSub('overview');} } }); } }catch(e){}
+  try{ var _pw=sessionStorage.getItem('nip_pw'); if(_pw){ nipReauth(_pw).then(function(ok){ if(ok){ var lc=document.getElementById('nipLock'); var ct=document.getElementById('nipContent'); if(lc&&ct){lc.style.display='none';ct.style.display='';nipSub('dash');} } }); } }catch(e){}
   // Clear search
   const si = document.getElementById('searchInput');
   if (si) si.value = '';
@@ -3947,128 +3944,559 @@ if (state.gasWebAppUrl) {
 }
 
 /* ================= NIP CHECKER ================= */
-let NIP_DATA = null;   // dữ liệu lấy từ server (GAS) sau khi đúng mật khẩu — KHÔNG nhúng trong HTML
+/* v4.0 — Dashboard tuân thủ: chấm điểm Nhãn/NIP/Tên SP/Test/HSCB theo SKU,
+   xem hình tài liệu từ Drive (private, qua GAS), ghi chú lỗi kèm căn cứ pháp lý + mức nghiêm trọng.
+   Nguyên tắc: KHÔNG có dữ liệu → hiện "⬜ Chưa có tài liệu", không suy đoán, không trừ điểm. */
+let NIP_DATA = null;
 let nipUnlocked = false;
+let NIP_SCORES = null;          // cache điểm theo SKU
+let NIP_IMG_CACHE = {};         // cache ảnh base64 theo fileId
+var NIP_NUTS = ['Nang luong','Chat dam','Chat beo','Chat beo bao hoa','Carbohydrate','Duong tong so','Chat xo','Natri','Cholesterol'];
+var NIP_UNITS = {'Nang luong':'kcal','Chat dam':'g','Chat beo':'g','Chat beo bao hoa':'g','Carbohydrate':'g','Duong tong so':'g','Chat xo':'g','Natri':'mg','Cholesterol':'mg'};
+var NIP_VN = {'Nang luong':'Năng lượng','Chat dam':'Chất đạm','Chat beo':'Chất béo','Chat beo bao hoa':'Chất béo bão hoà','Carbohydrate':'Carbohydrate','Duong tong so':'Đường tổng số','Chat xo':'Chất xơ','Natri':'Natri','Cholesterol':'Cholesterol'};
+var NIP_MODULES = [
+  {key:'label', icon:'🏷️', name:'Nhãn & Nhãn phụ', docTypes:['LABEL','SUBLABEL']},
+  {key:'nip',   icon:'📊', name:'NIP đối chiếu',   docTypes:['NIP','LABEL']},
+  {key:'name',  icon:'📛', name:'Tên sản phẩm',    docTypes:['LABEL','HSCB']},
+  {key:'safety',icon:'🧪', name:'Test report',     docTypes:['TEST']},
+  {key:'hscb',  icon:'📄', name:'HSCB',            docTypes:['HSCB']}
+];
+
 async function nipUnlock(){
   var v=(document.getElementById('nipPass')||{}).value||'';
   var m=document.getElementById('nipPassMsg'); if(m) m.textContent='Đang kiểm tra...';
   if(!state.gasWebAppUrl){ if(m) m.textContent='Chưa cấu hình GAS URL trong Cài đặt'; return; }
   try{
-    var res=await fetch(state.gasWebAppUrl,{
-      method:'POST',
-      headers:{'Content-Type':'application/x-www-form-urlencoded'},
-      body:'action=nipdata&pw='+encodeURIComponent(v)
-    });
+    var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=nipdata&pw='+encodeURIComponent(v)});
     var j=await res.json();
     if(j && j.ok && j.data){
-      nipUnlocked=true; NIP_DATA=j.data;
+      nipUnlocked=true; NIP_DATA=j.data; NIP_SCORES=null;
       try{ sessionStorage.setItem('nip_pw', v); }catch(e){}
       document.getElementById('nipLock').style.display='none';
       document.getElementById('nipContent').style.display='';
       if(m) m.textContent='';
-      nipSub('overview');
+      nipSub('dash');
     } else {
       if(m) m.textContent = (j && j.error==='auth') ? 'Sai mật khẩu' : ('Lỗi: '+((j&&j.error)||'không rõ'));
     }
-  }catch(e){
-    if(m) m.textContent='Không kết nối được server (kiểm tra mạng/extension)';
-  }
+  }catch(e){ if(m) m.textContent='Không kết nối được server (kiểm tra mạng/extension)'; }
 }
-// nạp lại dữ liệu từ server nếu phiên còn mật khẩu (dùng lại khi mở lại tab)
 async function nipReauth(pw){
   if(!state.gasWebAppUrl) return false;
   try{
     var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=nipdata&pw='+encodeURIComponent(pw)});
     var j=await res.json();
-    if(j&&j.ok&&j.data){ NIP_DATA=j.data; nipUnlocked=true; return true; }
+    if(j&&j.ok&&j.data){ NIP_DATA=j.data; NIP_SCORES=null; nipUnlocked=true; return true; }
   }catch(e){}
   return false;
 }
-function nipLock(){ nipUnlocked=false; NIP_DATA=null;
+function nipLock(){ nipUnlocked=false; NIP_DATA=null; NIP_SCORES=null;
   try{ sessionStorage.removeItem('nip_pw'); }catch(e){}
   document.getElementById('nipContent').style.display='none';
   var l=document.getElementById('nipLock'); if(l) l.style.display='';
   var p=document.getElementById('nipPass'); if(p) p.value='';
 }
+
+/* ---------- helpers ---------- */
+function nipEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function nipNorm(s){ try{ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim(); }catch(e){ return String(s||'').toLowerCase().trim(); } }
+function nipRuleFor(nut,cat){
+  var rs=(NIP_DATA&&NIP_DATA.rules)||[]; var best=null;
+  for(var i=0;i<rs.length;i++){ var r=rs[i]; if(r.nutrient!==nut) continue;
+    if(cat && r.cat && r.cat===cat) return r;
+    if(!best && (!r.cat || r.cat==='DEFAULT' || r.cat==='')) best=r;
+    if(!best) best=r; }
+  return best || {nutrient:nut,mandatory:'N',dir:'high',t2:20,floor:70,legal:'TT 29/2023/TT-BYT'};
+}
+function nipMandatoryList(cat){
+  var out=[]; NIP_NUTS.forEach(function(n){ var r=nipRuleFor(n,cat); if(String(r.mandatory||'').toUpperCase()==='Y') out.push(n); });
+  return out.length?out:['Nang luong','Chat dam','Chat beo','Carbohydrate','Natri'];
+}
+// so sánh giá trị nhãn vs giá trị tham chiếu theo dung sai
+function nipTol(labelV,refV,rule){
+  if(labelV==null||refV==null||typeof labelV!=='number'||typeof refV!=='number') return null;
+  if(labelV===0){ return {diff:null, code:(refV===0?'ok':'warn'), why:(refV===0?'':'Nhãn ghi 0 nhưng tham chiếu ≠ 0')}; }
+  var diff=(refV-labelV)/Math.abs(labelV)*100;
+  var t2=(typeof rule.t2==='number')?rule.t2:20;
+  var fl=(typeof rule.floor==='number'&&rule.floor>0)?rule.floor:70;
+  var warnCap=(10000/fl)-100;                     // floor 70% → ~42.9%
+  var ad=Math.abs(diff);
+  var code='ok', why='';
+  if(ad<=t2){ code='ok'; }
+  else{
+    var adverseSide = (rule.dir==='low') ? (diff<0) : (diff>0);   // lệch về phía RỦI RO?
+    if(!adverseSide){ code='warn'; why='Lệch '+diff.toFixed(0)+'% nhưng về phía an toàn ('+(rule.dir==='low'?'chất có lợi cao hơn công bố':'chất bất lợi thấp hơn công bố')+') — vẫn nên rà số liệu.'; }
+    else if(ad<=warnCap){ code='warn'; why='Vượt dung sai ±'+t2+'% về phía bất lợi — cần rà soát.'; }
+    else{ code='bad'; why='Vượt xa dung sai (quá ngưỡng sàn '+fl+'%) — rủi ro cao khi hậu kiểm.'; }
+  }
+  return {diff:diff, code:code, why:why};
+}
+function nipGrade(pct){ return pct>=90?'A':pct>=75?'B':pct>=60?'C':'D'; }
+function nipGradeColor(g){ return g==='A'?'#0E7544':g==='B'?'#7cb56b':g==='C'?'#FFBC18':'#C8102E'; }
+function nipStIcon(st){ return st==='pass'?'✅':st==='warn'?'⚠️':st==='fail'?'🔴':'⬜'; }
+function nipStColor(st){ return st==='pass'?'#0E7544':st==='warn'?'#FFBC18':st==='fail'?'#C8102E':'#8a94a3'; }
+function nipSevBadge(sev){
+  var m={high:['🔴 Cao','#C8102E'],med:['🟡 Trung bình','#FFBC18'],low:['⚪ Thấp','#8a94a3']};
+  var x=m[sev]||m.low;
+  return '<span style="font-size:10px;font-weight:700;color:'+x[1]+'">'+x[0]+'</span>';
+}
+function nipDocsOf(sku,types){
+  var all=((NIP_DATA||{}).docs||{})[sku]||[];
+  if(!types||!types.length) return all;
+  return all.filter(function(d){ return types.indexOf(d.type)>=0; });
+}
+function nipItem(st,w,t,legal,sev,act){ return {st:st,w:w,t:t,legal:legal||'',sev:sev||'low',act:act||''}; }
+function nipModScore(items){
+  var app=items.filter(function(it){return it.st!=='nd';});
+  var tw=0,sc=0; app.forEach(function(it){ tw+=it.w; sc+= it.st==='pass'?it.w : it.st==='warn'?it.w*0.5 : 0; });
+  var pct = tw>0 ? Math.round(sc/tw*100) : null;
+  var st = items.some(function(i){return i.st==='fail';}) ? 'fail'
+         : items.some(function(i){return i.st==='warn';}) ? 'warn'
+         : app.length ? 'pass' : 'nd';
+  var ndCount=items.filter(function(i){return i.st==='nd';}).length;
+  return {items:items, pct:pct, grade:(pct==null?null:nipGrade(pct)), st:st, nd:ndCount};
+}
+
+/* ---------- CHẤM ĐIỂM 5 MODULE ---------- */
+function nipNutOf(sku,nut,src){ var n=((NIP_DATA.nip||{})[sku]||{})[nut]; return n&&n[src]?n[src]:null; }
+function nipHasBlock(sku,src){ var nd=(NIP_DATA.nip||{})[sku]||{}; return Object.keys(nd).some(function(n){ return n!=='_meta' && nd[n][src]; }); }
+
+function nipTolAggregate(sku){
+  var sk=NIP_DATA.skus[sku]||{}; var rows=[]; var worst='ok';
+  NIP_NUTS.forEach(function(nut){
+    var L=nipNutOf(sku,nut,'LABEL'), H=nipNutOf(sku,nut,'HSCB');
+    var rule=nipRuleFor(nut,sk.cat);
+    var tv=(L&&H)?nipTol(L.v,H.v,rule):null;
+    rows.push({nut:nut,L:L,H:H,rule:rule,tv:tv});
+    if(tv){ if(tv.code==='bad') worst='bad'; else if(tv.code==='warn'&&worst==='ok') worst='warn'; }
+  });
+  return {rows:rows,worst:worst};
+}
+
+function nipBuildLabel(sku){
+  var sk=NIP_DATA.skus[sku]||{}; var items=[];
+  var dl=nipDocsOf(sku,['LABEL']);
+  items.push(nipItem(dl.length?'pass':'nd',4,'Lưu trữ hình/nhãn gốc trong folder tài liệu','Quản trị hồ sơ nội bộ DGM','low', dl.length?'':'Upload hình nhãn vào Drive: SKU/LABEL'));
+  if(String(sk.imp||'').toUpperCase()==='Y'){
+    var ds=nipDocsOf(sku,['SUBLABEL']);
+    items.push(nipItem(ds.length?'pass':'nd',4,'Lưu trữ nhãn phụ tiếng Việt (SP nhập khẩu)','NĐ 37/2026 — hàng NK phải có nhãn phụ','med', ds.length?'':'Upload nhãn phụ vào Drive: SKU/SUBLABEL'));
+  }
+  items.push(nipItem(sk.name?'pass':'fail',8,'Tên hàng hoá thể hiện trên nhãn','NĐ 37/2026 — tên hàng hoá là nội dung bắt buộc','high', sk.name?'':'Bổ sung ten_tren_nhan (cột D, 01_SKU_Master)'));
+
+  var mand=nipMandatoryList(sk.cat);
+  var missing=mand.filter(function(n){ return !nipNutOf(sku,n,'LABEL'); });
+  var hasAnyLabel=nipHasBlock(sku,'LABEL');
+  if(!hasAnyLabel) items.push(nipItem('nd',15,'NIP trên nhãn — chưa có dữ liệu (khối Nhãn tab 05 trống)','TT 29/2023/TT-BYT — NIP bắt buộc từ 01/01/2026','high','Nhập NIP nhãn vào tab 05 hoặc dùng tab "Nhập dữ liệu"'));
+  else items.push(nipItem(missing.length?'fail':'pass',15,'NIP đủ chỉ tiêu bắt buộc ('+mand.map(function(n){return NIP_VN[n];}).join(', ')+')'+(missing.length?' — THIẾU: '+missing.map(function(n){return NIP_VN[n];}).join(', '):''),'TT 29/2023/TT-BYT — bắt buộc 100% SKU từ 01/01/2026','high', missing.length?'Bổ sung chỉ tiêu thiếu lên nhãn + tab 05':''));
+
+  var hasRef=nipHasBlock(sku,'HSCB');
+  if(hasRef){
+    var agg=nipTolAggregate(sku);
+    items.push(nipItem(agg.worst==='bad'?'fail':agg.worst==='warn'?'warn':'pass',15,'Số liệu NIP nhãn nằm trong dung sai so với nguồn tham chiếu','TT 29/2023 — dung sai giá trị công bố','high', agg.worst!=='ok'?'Mở module "NIP đối chiếu" để xem chỉ tiêu lệch, cân nhắc test lại hoặc điều chỉnh nhãn':''));
+  } else {
+    items.push(nipItem('nd',15,'Đối chiếu dung sai — chưa có data tham chiếu (test report/HSCB)','TT 29/2023 — số liệu cần căn cứ kiểm nghiệm','med','Bổ sung khối HSCB tab 05 hoặc upload test report'));
+  }
+  if(sk.drained && sk.basis==='whole') items.push(nipItem('warn',5,'Cơ sở tính (basis): nhãn ghi whole nhưng SP có phần ráo nước ('+sk.drained+'/'+sk.net+'g)','TT 29/2023 — cơ sở tính phải nhất quán với cách kiểm nghiệm','med','Xác nhận nhãn công bố theo whole hay drained trước khi so sánh lab'));
+  else if(!sk.basis) items.push(nipItem('nd',5,'Cơ sở tính (basis) — chưa khai báo','TT 29/2023','low','Điền label_nip_basis (cột M, 01_SKU_Master)'));
+  else items.push(nipItem('pass',5,'Cơ sở tính (basis) rõ ràng: '+sk.basis,'TT 29/2023','low',''));
+
+  var l7=(NIP_DATA.label7||{})[sku];
+  if(!l7||!l7.length) items.push(nipItem('nd',12,'Đối chiếu 3 chiều nhãn gốc / nhãn phụ / hồ sơ — chưa có dữ liệu (07_Label_Content)','NĐ 37/2026 — nhãn phụ phải phản ánh đúng nhãn gốc & hồ sơ','med','Trích nội dung nhãn vào tab 07'));
+  else{
+    var bad7=l7.filter(function(r){ var s=(r.match+' '+r.viol).toUpperCase(); return /KHONG|KHÔNG|MISMATCH|❌|SAI|VI PHAM|VI PHẠM/.test(s); });
+    var concluded=l7.some(function(r){ return String(r.match||'').trim()!==''; });
+    if(bad7.length) items.push(nipItem('fail',12,'Nội dung nhãn KHÔNG khớp ở '+bad7.length+' trường: '+bad7.map(function(r){return r.field;}).join(', '),'NĐ 37/2026 — nội dung nhãn phụ/hồ sơ phải thống nhất','high','Rà từng trường lệch trong tab 07 và sửa nhãn/hồ sơ'));
+    else if(!concluded) items.push(nipItem('warn',12,'Đã trích '+l7.length+' trường nội dung nhãn nhưng CHƯA kết luận khớp/không (cột match_status trống)','NĐ 37/2026','low','Điền match_status trong tab 07 sau khi đối chiếu'));
+    else items.push(nipItem('pass',12,'Nội dung nhãn đối chiếu 3 chiều: khớp ('+l7.length+' trường)','NĐ 37/2026','low',''));
+  }
+
+  var kw=nipNameRiskWords(sk);
+  if(kw.length) items.push(nipItem('warn',8,'Tên/nhãn chứa từ ngữ cần căn cứ chứng minh: "'+kw.join('", "')+'"','NĐ 37/2026 + TT 29/2023 — thông tin không được gây hiểu nhầm; claim phải chứng minh được','med','Chuẩn bị hồ sơ chứng minh hoặc điều chỉnh từ ngữ (tham khảo case NCD "Tự Nhiên")'));
+
+  var d0=((NIP_DATA.decl||{})[sku]||[])[0];
+  if(!d0) items.push(nipItem('nd',8,'Xuất xứ nhãn vs hồ sơ công bố — chưa có hồ sơ để đối chiếu','NĐ 37/2026 — xuất xứ là nội dung bắt buộc','med','Bổ sung dòng SKU vào 10_Declaration'));
+  else{
+    var okO = nipNorm(sk.origin)===nipNorm(d0.origin) || nipNorm(sk.origin).indexOf(nipNorm(d0.origin))>=0 || nipNorm(d0.origin).indexOf(nipNorm(sk.origin))>=0;
+    items.push(nipItem(okO?'pass':'fail',8,'Xuất xứ: nhãn "'+(sk.origin||'?')+'" vs hồ sơ "'+(d0.origin||'?')+'"','NĐ 37/2026 — xuất xứ phải đúng hồ sơ','high', okO?'':'Xác minh xuất xứ thật và sửa bên sai'));
+  }
+  return nipModScore(items);
+}
+
+function nipNameRiskWords(sk){
+  var hay=nipNorm((sk.name||'')+' '+(sk.name_hscb||''));
+  var words=[['tu nhien','Tự Nhiên'],['nguyen chat','Nguyên Chất'],['natural','Natural'],['pure','Pure'],['organic','Organic'],['huu co','Hữu cơ'],['light','Light'],['it beo','Ít béo'],['khong duong','Không đường'],['no sugar','No sugar'],['khong chat bao quan','Không chất bảo quản']];
+  var out=[]; words.forEach(function(w){ if(hay.indexOf(w[0])>=0) out.push(w[1]); });
+  return out;
+}
+
+function nipBuildNip(sku){
+  var sk=NIP_DATA.skus[sku]||{}; var items=[];
+  var mand=nipMandatoryList(sk.cat);
+  var hasL=nipHasBlock(sku,'LABEL'), hasH=nipHasBlock(sku,'HSCB');
+  if(!hasL) items.push(nipItem('nd',15,'NIP trên nhãn — chưa có dữ liệu','TT 29/2023/TT-BYT','high','Nhập khối Nhãn tab 05'));
+  else{
+    var missing=mand.filter(function(n){ return !nipNutOf(sku,n,'LABEL'); });
+    items.push(nipItem(missing.length?'fail':'pass',15,'Đủ chỉ tiêu bắt buộc trên nhãn'+(missing.length?' — thiếu: '+missing.map(function(n){return NIP_VN[n];}).join(', '):''),'TT 29/2023/TT-BYT','high',missing.length?'Bổ sung lên nhãn + tab 05':''));
+  }
+  items.push(nipItem(hasH?'pass':'nd',10,hasH?'Có nguồn tham chiếu (test report / HSCB): '+((((NIP_DATA.nip||{})[sku]||{})._meta||{}).src_hscb||'HSCB'):'CHƯA CÓ DATA THAM CHIẾU — không thể kết luận dung sai','TT 29/2023 — số liệu công bố cần căn cứ lab (ưu tiên ISO 17025)','med', hasH?'':'Bổ sung khối HSCB tab 05 / upload test report vào SKU/TEST-REPORT'));
+  if(hasL&&hasH){
+    var agg=nipTolAggregate(sku);
+    var badN=agg.rows.filter(function(r){return r.tv&&r.tv.code==='bad';}).map(function(r){return NIP_VN[r.nut];});
+    var warnN=agg.rows.filter(function(r){return r.tv&&r.tv.code==='warn';}).map(function(r){return NIP_VN[r.nut];});
+    var msg = badN.length?('VƯỢT XA dung sai: '+badN.join(', ')+(warnN.length?' · vượt nhẹ: '+warnN.join(', '):'')) : warnN.length?('Vượt dung sai nhẹ: '+warnN.join(', ')) : 'Tất cả chỉ tiêu trong dung sai';
+    items.push(nipItem(agg.worst==='bad'?'fail':agg.worst==='warn'?'warn':'pass',20,'Chênh lệch Nhãn vs nguồn tham chiếu — '+msg,'TT 29/2023 — dung sai (mặc định ±20%, sàn 70% — chỉnh trong 08_NIP_Rules)','high', agg.worst!=='ok'?'Xem bảng chi tiết bên dưới; cân nhắc test lại lô mới hoặc điều chỉnh nhãn':''));
+  }
+  var meta=(((NIP_DATA.nip||{})[sku]||{})._meta)||{};
+  items.push(nipItem(meta.apdung?'pass':'warn',5,meta.apdung?('Nguồn đang áp dụng cho công bố: '+meta.apdung):'Chưa đánh dấu nguồn đang áp dụng (nguon_dang_ap_dung)','Quy ước nội bộ — luôn biết số nào là số "chính thức"','low', meta.apdung?'':'Điền cột nguon_dang_ap_dung tab 05'));
+  if(sk.drained && sk.basis==='whole') items.push(nipItem('warn',5,'Rủi ro basis: whole vs phần ráo nước','TT 29/2023','med','Xác nhận cơ sở tính trước khi so sánh'));
+  var s=nipModScore(items); s.detail=nipTolAggregate(sku); return s;
+}
+
+function nipBuildName(sku){
+  var sk=NIP_DATA.skus[sku]||{}; var items=[];
+  items.push(nipItem(sk.name?'pass':'fail',8,'Có tên trên nhãn: "'+(sk.name||'—')+'"','NĐ 37/2026 — tên hàng hoá bắt buộc, phải mô tả đúng bản chất SP','high', sk.name?'':'Bổ sung cột D 01_SKU_Master'));
+  var d0=((NIP_DATA.decl||{})[sku]||[])[0];
+  if(!d0) items.push(nipItem('nd',12,'Tên trên hồ sơ công bố — chưa có hồ sơ để đối chiếu','NĐ 15/2018 — tên SP phải khớp hồ sơ tự công bố','high','Bổ sung 10_Declaration'));
+  else if(!sk.name_hscb) items.push(nipItem('nd',12,'name_hscb trống — chưa đối chiếu được với tên công bố "'+d0.name+'"','NĐ 15/2018','med','Điền cột C 01_SKU_Master'));
+  else{
+    var a=nipNorm(sk.name_hscb), b=nipNorm(d0.name);
+    var okN = a===b || a.indexOf(b)>=0 || b.indexOf(a)>=0;
+    items.push(nipItem(okN?'pass':'fail',12,'Tên HSCB nội bộ "'+sk.name_hscb+'" vs tên công bố "'+d0.name+'"'+(okN?' — khớp':' — KHÔNG KHỚP'),'NĐ 15/2018 — tên trên nhãn/hồ sơ phải thống nhất; sai tên = rủi ro hậu kiểm','high', okN?'':'Xác minh tên đúng (case SKU-030 Napoletana vs Onion & Basil) và đồng bộ'));
+  }
+  var kw=nipNameRiskWords(sk);
+  if(kw.length) items.push(nipItem('warn',10,'Từ ngữ cần chứng minh trong tên: "'+kw.join('", "')+'"','NĐ 37/2026 (không gây hiểu nhầm) + TT 29/2023 (claim dinh dưỡng có điều kiện)','med','Chuẩn bị căn cứ (spec, test) hoặc đổi từ ngữ như đã làm với NCD65'));
+  else items.push(nipItem('pass',10,'Không phát hiện từ ngữ claim rủi ro trong tên','NĐ 37/2026','low',''));
+  var s=nipModScore(items);
+  s.names={label:sk.name||'', hscb:sk.name_hscb||'', decl:(d0?d0.name:''), thuonggoi:sk.name_thuong_goi||''};
+  return s;
+}
+
+function nipSpecFor(sku){
+  var num=parseInt(String(sku).replace(/\D/g,''),10);
+  return ((NIP_DATA.spec)||[]).filter(function(r){
+    var s=String(r.skus||''); if(!s) return false;
+    var segs=s.split(',');
+    for(var i=0;i<segs.length;i++){
+      var ns=segs[i].match(/\d{1,3}/g)||[];
+      if(ns.length>=2){ var a=parseInt(ns[0],10), b=parseInt(ns[ns.length-1],10); if(num>=Math.min(a,b)&&num<=Math.max(a,b)) return true; }
+      else if(ns.length===1 && parseInt(ns[0],10)===num) return true;
+    }
+    return false;
+  });
+}
+function nipBuildSafety(sku){
+  var rows=(NIP_DATA.safety||{})[sku]||[]; var items=[];
+  var specRows=nipSpecFor(sku);
+  if(!rows.length){
+    items.push(nipItem('nd',20,'Chưa có tài liệu — chưa nhập kết quả kiểm nghiệm an toàn (tab 06 trống cho SKU này)','QCVN 8-1/8-2:2011/BYT (kim loại nặng) · QĐ 46/2007 & QCVN vi sinh theo nhóm SP','med','Nhập kết quả từ test report vào 06_Safety_Values; upload file vào SKU/TEST-REPORT'));
+    if(specRows.length) items.push(nipItem('nd',5,'Nhóm SP này có '+specRows.length+' chỉ tiêu spec cần theo dõi (15_Spec_ByGroup) — chưa có số liệu đối chiếu','Theo 15_Spec_ByGroup','low',''));
+  } else {
+    var fails=[],warns=[];
+    rows.forEach(function(r){
+      var st='pass';
+      var v=(typeof r.val==='number')?r.val:null, lim=(typeof r.limit==='number')?r.limit:null;
+      var vd=String(r.verdict||'').toUpperCase();
+      if(/KHONG DAT|KHÔNG ĐẠT|FAIL|VUOT|VƯỢT/.test(vd)) st='fail';
+      else if(v!=null&&lim!=null){
+        var op=(r.op||'<=').trim();
+        if(op==='<='||op==='<'){ if(v>lim) st='fail'; else if(v>lim*0.8) st='warn'; }
+        else if(op==='>='||op==='>'){ if(v<lim) st='fail'; }
+      }
+      if(st==='fail') fails.push(r.ind); else if(st==='warn') warns.push(r.ind);
+      items.push(nipItem(st,10,r.ind+': '+(v==null?'—':v)+' '+(r.unit||'')+' / giới hạn '+(r.op||'≤')+' '+(lim==null?'?':lim)+(st==='warn'?' — sát ngưỡng (>80% giới hạn)':''), r.legal||'Giới hạn theo tab 06/09','high', st==='pass'?'':'Rà lại lô, cân nhắc test lại; nếu vượt giới hạn pháp lý → dừng lưu thông lô và xử lý theo quy trình'));
+      if(r.test_date){ var y=parseInt(String(r.test_date).slice(0,4),10); var now=new Date().getFullYear();
+        if(y&&now-y>=3) items.push(nipItem('warn',4,'Kết quả test '+r.ind+' từ năm '+y+' — đã cũ ('+(now-y)+' năm)','Thực hành tốt: cập nhật kiểm nghiệm định kỳ / khi tái công bố','med','Xin bản test mới (tương tự case SKU-009 lab 2013)')); }
+    });
+    if(specRows.length){
+      var tested=rows.map(function(r){return nipNorm(r.ind);});
+      var miss=specRows.filter(function(sr){ return tested.indexOf(nipNorm(sr.ind))<0; });
+      if(miss.length) items.push(nipItem('warn',6,'Thiếu '+miss.length+'/'+specRows.length+' chỉ tiêu spec của nhóm SP chưa có kết quả: '+miss.slice(0,5).map(function(m){return m.ind;}).join(', ')+(miss.length>5?'…':''),'15_Spec_ByGroup — chỉ tiêu đặc thù theo nhóm','low','Bổ sung khi đặt test lần tới'));
+    }
+  }
+  var s=nipModScore(items); s.rows=rows; s.spec=specRows; return s;
+}
+
+function nipBuildHscb(sku){
+  var sk=NIP_DATA.skus[sku]||{}; var ds=(NIP_DATA.decl||{})[sku]||[]; var items=[];
+  var df=nipDocsOf(sku,['HSCB']);
+  if(!ds.length){
+    items.push(nipItem('nd',15,'Chưa có hồ sơ công bố trong hệ thống (10_Declaration)','NĐ 15/2018 — SP phải tự công bố trước khi lưu thông','high','Bổ sung dòng SKU vào 10_Declaration + upload hồ sơ vào SKU/HSCB'));
+  } else {
+    var d0=ds[0];
+    items.push(nipItem(String(d0.status||'').toUpperCase()==='ACTIVE'?'pass':'fail',12,'Số công bố '+d0.no+' ('+(d0.date||'?')+') — trạng thái: '+(d0.status||'?'),'NĐ 15/2018','high', String(d0.status||'').toUpperCase()==='ACTIVE'?'':'Kiểm tra hiệu lực / tái công bố'));
+    var nt=String(d0.notes||'');
+    if(/TT29.*(Đã cập nhật|da cap nhat)/i.test(nt)) items.push(nipItem('pass',8,'Đã cập nhật NIP theo TT 29/2023 vào hồ sơ','TT 29/2023 — hồ sơ cần phản ánh NIP mới','med',''));
+    else if(/TT29/i.test(nt)) items.push(nipItem('warn',8,'Ghi chú TT29 chưa rõ trạng thái: "'+nt+'"','TT 29/2023','med','Xác nhận đã bổ sung NIP vào hồ sơ chưa'));
+    else items.push(nipItem('nd',8,'Chưa ghi nhận trạng thái cập nhật TT 29/2023 cho hồ sơ','TT 29/2023 — NIP bắt buộc từ 01/01/2026','med','Ghi chú "TT29: Đã cập nhật" vào 10_Declaration sau khi bổ sung'));
+    if(d0.date){ var y=parseInt(String(d0.date).slice(0,4),10); var now=new Date().getFullYear();
+      if(y&&now-y>=5) items.push(nipItem('warn',5,'Hồ sơ công bố từ '+y+' ('+(now-y)+' năm) — rà soát nếu SP/nhãn đã thay đổi','NĐ 15/2018 — thay đổi SP phải công bố lại','med','Đối chiếu nhãn hiện hành vs hồ sơ gốc')); }
+    if(sk.name_hscb&&d0.name){
+      var okN=nipNorm(sk.name_hscb)===nipNorm(d0.name)||nipNorm(d0.name).indexOf(nipNorm(sk.name_hscb))>=0||nipNorm(sk.name_hscb).indexOf(nipNorm(d0.name))>=0;
+      items.push(nipItem(okN?'pass':'fail',10,'Tên SP khớp hồ sơ: "'+sk.name_hscb+'" vs "'+d0.name+'"','NĐ 15/2018','high', okN?'':'Đồng bộ tên (xem module Tên SP)'));
+    }
+    if(sk.origin&&d0.origin){
+      var okO=nipNorm(sk.origin)===nipNorm(d0.origin)||nipNorm(sk.origin).indexOf(nipNorm(d0.origin))>=0||nipNorm(d0.origin).indexOf(nipNorm(sk.origin))>=0;
+      items.push(nipItem(okO?'pass':'fail',8,'Xuất xứ khớp hồ sơ: "'+sk.origin+'" vs "'+d0.origin+'"','NĐ 37/2026 + NĐ 15/2018','high', okO?'':'Xác minh & sửa bên sai'));
+    }
+    if(ds.length>1) items.push(nipItem('warn',3,'Có '+ds.length+' hồ sơ công bố cho SKU này — xác nhận hồ sơ nào đang hiệu lực','NĐ 15/2018','low','Đánh dấu status các hồ sơ cũ'));
+  }
+  items.push(nipItem(df.length?'pass':'nd',5,df.length?('Có '+df.length+' file HSCB trong folder tài liệu'):'Chưa có file HSCB trong folder tài liệu','Quản trị hồ sơ nội bộ','low', df.length?'':'Upload hồ sơ vào Drive: SKU/HSCB'));
+  var s=nipModScore(items); s.decls=ds; return s;
+}
+
+function nipScoreAll(){
+  if(NIP_SCORES) return NIP_SCORES;
+  NIP_SCORES={};
+  Object.keys((NIP_DATA||{}).skus||{}).sort().forEach(function(sku){
+    var m={ label:nipBuildLabel(sku), nip:nipBuildNip(sku), name:nipBuildName(sku), safety:nipBuildSafety(sku), hscb:nipBuildHscb(sku) };
+    var sts=['label','nip','name','safety','hscb'].map(function(k){return m[k].st;});
+    m.overall = sts.indexOf('fail')>=0?'fail' : sts.indexOf('warn')>=0?'warn' : sts.some(function(s){return s==='pass';})?'pass':'nd';
+    NIP_SCORES[sku]=m;
+  });
+  return NIP_SCORES;
+}
+
+/* ---------- SUB-TAB ROUTER ---------- */
 function nipSub(which){
   document.querySelectorAll('.nip-subtab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-nt')===which); });
   var el=document.getElementById('nipBody'); if(!el) return;
   if(!NIP_DATA){ el.innerHTML='<div style="opacity:.6;padding:20px;text-align:center">Chưa có dữ liệu. Vui lòng nhập lại mật khẩu.</div>'; return; }
-  var c=NIP_DATA.checks||{}, sk=NIP_DATA.skus||{};
-  function card(color,title,body){ return '<div style="border-left:4px solid '+color+';background:rgba(255,255,255,.03);padding:12px 14px;border-radius:8px;margin-bottom:10px"><div style="font-weight:700;margin-bottom:6px">'+title+'</div>'+body+'</div>'; }
-  function tbl(rows){ return '<table style="width:100%;border-collapse:collapse;font-size:12px">'+rows+'</table>'; }
-  if(which==='overview'){
-    var n_sku=Object.keys(sk).length, n_nip=Object.keys(NIP_DATA.nip||{}).length;
-    var n_hscb=Object.values(NIP_DATA.nip||{}).filter(function(nd){ return Object.keys(nd).some(function(nu){ return nd[nu].HSCB; }); }).length;
-    el.innerHTML =
-      card('#2F7898','📦 Dữ liệu hiện có',
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'
-        +'<div>• SKU: <b>'+n_sku+'</b></div><div>• SKU có NIP nhãn: <b>'+n_nip+'</b></div>'
-        +'<div>• SKU có đối chiếu HSCB: <b>'+n_hscb+'</b></div><div>• Nguồn: <b>Nhãn + HSCB</b> (2 khối song song)</div></div>')
-      + card('#C8102E','⚠️ Kết quả Việc 1 — cần xử lý',
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'
-        +'<div>⚖️ Rủi ro basis: <b>'+(c.basis||[]).length+' SKU</b></div>'
-        +'<div>📋 Thiếu chỉ tiêu BB: <b>'+(c.mandatory||[]).length+' SKU</b></div>'
-        +'<div>🏷️ Có claim cần rà: <b>'+(c.claim||[]).length+' SKU</b></div>'
-        +'<div>🍬 Thiếu đường (sốt cà): <b>'+(c.sugar||[]).length+' SKU</b></div></div>')
-      + card('#0E7544','▶️ Bước tiếp theo','Bổ sung test report (LAB VN + Nhà máy) vào tab "So sánh NIP" để chạy đối chiếu đa nguồn & chấm dung sai ±20% / sàn 70%.');
-  }
-  else if(which==='basis'){
-    var rows='<tr style="background:rgba(255,255,255,.05)"><th style="text-align:left;padding:6px">SKU</th><th style="text-align:left">Tên</th><th>Net</th><th>Ráo nước</th><th>Tỷ lệ</th></tr>';
-    (c.basis||[]).forEach(function(x){ rows+='<tr style="border-top:1px solid rgba(255,255,255,.08)"><td style="padding:6px">'+x.sku+'</td><td>'+x.name+'</td><td style="text-align:center">'+x.net+'</td><td style="text-align:center">'+x.drained+'</td><td style="text-align:center;color:#e0a">'+x.ratio+'</td></tr>'; });
-    el.innerHTML=card('#C8102E','⚖️ '+(c.basis||[]).length+' SKU có rủi ro cơ sở tính (basis)',
-      '<div style="font-size:12px;opacity:.85;margin-bottom:8px">NIP ghi theo <b>toàn khối (whole)</b> nhưng sản phẩm có phần ráo nước. Nếu lab test phần <b>cái</b> → lệch giá trị mà KHÔNG phải vi phạm. Cần xác nhận nhãn công bố theo whole hay drained trước khi so sánh.</div>'+tbl(rows));
-  }
-  else if(which==='mandatory'){
-    var rows='<tr style="background:rgba(255,255,255,.05)"><th style="text-align:left;padding:6px">SKU</th><th style="text-align:left">Tên</th><th style="text-align:left">Chỉ tiêu thiếu</th></tr>';
-    (c.mandatory||[]).forEach(function(x){ rows+='<tr style="border-top:1px solid rgba(255,255,255,.08)"><td style="padding:6px">'+x.sku+'</td><td>'+x.name+'</td><td style="color:#e0a">'+x.missing.join(', ')+'</td></tr>'; });
-    el.innerHTML=card('#FFBC18','📋 '+(c.mandatory||[]).length+' SKU thiếu chỉ tiêu NIP bắt buộc',
-      '<div style="font-size:12px;opacity:.85;margin-bottom:8px">TT 29/2023 yêu cầu tối thiểu 5 chỉ tiêu: Năng lượng, Chất đạm, Carbohydrate, Chất béo, Natri. (Lưu ý: cá ngâm dầu/nước có thể miễn Carbohydrate nếu =0 — cần xác nhận.)</div>'+tbl(rows));
-  }
-  else if(which==='claim'){
-    var body='<div style="font-size:12px;opacity:.85;margin-bottom:8px">Sản phẩm có claim "ít béo / light" phải đạt điều kiện dùng claim + có sản phẩm gốc để so sánh mức giảm.</div>';
-    (c.claim||[]).forEach(function(x){ body+='<div style="padding:6px 0;border-top:1px solid rgba(255,255,255,.08)"><b>'+x.sku+'</b> '+x.name+' — chất béo nhãn = <b>'+(x.fat==null?'?':x.fat)+' g</b></div>'; });
-    // include olive-oil high-fat for contrast
-    el.innerHTML=card('#2F7898','🏷️ Rà soát claim dinh dưỡng',body);
-  }
-  else if(which==='compare'){
-    // build SKU picker
-    var opts=Object.keys(NIP_DATA.nip).sort().map(function(s){ return '<option value="'+s+'">'+s+' — '+(sk[s]?sk[s].name:'')+'</option>'; }).join('');
-    el.innerHTML=card('#0E7544','🔬 So sánh NIP — Nhãn vs HSCB',
-      '<div style="font-size:12px;opacity:.85;margin-bottom:10px">Chọn SKU để đối chiếu số liệu NIP trên <b>Nhãn</b> với số liệu trong <b>HSCB</b> (hồ sơ tự công bố). Cột "Đối chiếu" tự tính % lệch — trên 20% (vàng) hoặc trên ~43% (đỏ) nên rà lại trước khi dùng.</div>'
-      +'<select id="nipSkuPick" onchange="nipShowCompare(this.value)" style="width:100%;padding:9px;border-radius:8px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:13px"><option value="">— Chọn SKU —</option>'+opts+'</select>'
-      +'<div id="nipCompareOut" style="margin-top:12px"></div>');
-  }
-  else if(which==='entry'){
-    var opts=Object.keys(sk).sort().map(function(s){ return '<option value="'+s+'">'+s+' — '+(sk[s]?sk[s].name:'')+'</option>'; }).join('');
-    var nutrients=['Nang luong','Chat dam','Chat beo','Chat beo bao hoa','Carbohydrate','Duong tong so','Chat xo','Natri','Cholesterol'];
-    var units={'Nang luong':'kcal','Chat dam':'g','Chat beo':'g','Chat beo bao hoa':'g','Carbohydrate':'g','Duong tong so':'g','Chat xo':'g','Natri':'mg','Cholesterol':'mg'};
-    var nutRows=nutrients.map(function(n){
-      return '<tr><td style="padding:4px 6px;font-size:12px">'+n+'</td>'
-        +'<td style="padding:4px"><input type="number" step="any" id="nt_'+n.replace(/\s/g,'_')+'" style="width:90px;padding:5px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"></td>'
-        +'<td style="padding:4px 6px;font-size:12px;opacity:.7">'+units[n]+'</td></tr>';
-    }).join('');
-    el.innerHTML=card('#C9B037','➕ Nhập dữ liệu NIP + tài liệu (ghi ngược vào Google Sheet)',
-      '<div style="font-size:12px;opacity:.85;margin-bottom:10px">Chọn SKU, nguồn, upload file report rồi nhập giá trị. Bấm <b>Xem lại</b> trước khi ghi.</div>'
-      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
-      +'<div><label style="font-size:11px;opacity:.7">SKU *</label><select id="e_sku" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"><option value="">— Chọn —</option>'+opts+'</select></div>'
-      +'<div><label style="font-size:11px;opacity:.7">Nguồn *</label><select id="e_source" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"><option value="LABEL">Nhãn (nhãn chính / nhãn phụ)</option><option value="HSCB">HSCB (lab VN / lab nước ngoài / nhãn đính kèm hồ sơ)</option></select></div>'
-      +'<div><label style="font-size:11px;opacity:.7">Cơ sở tính (basis) *</label><select id="e_basis" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"><option value="">— Chọn —</option><option value="whole">whole (100g/ml tổng)</option><option value="drained">drained (phần cái ráo)</option><option value="as_sold">as_sold</option></select></div>'
-      +'<div><label style="font-size:11px;opacity:.7">per (100 g/ml)</label><input type="number" id="e_per" value="100" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"></div>'
-      +'<div><label style="font-size:11px;opacity:.7">Ngày test</label><input type="date" id="e_date" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"></div>'
-      +'<div><label style="font-size:11px;opacity:.7">Số lô</label><input type="text" id="e_batch" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"></div>'
-      +'<div><label style="font-size:11px;opacity:.7">Lab / Nguồn</label><input type="text" id="e_lab" placeholder="Eurofins / CASE / Nhà máy" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"></div>'
-      +'<div><label style="font-size:11px;opacity:.7">Là nguồn CĂN CỨ CÔNG BỐ?</label><select id="e_declared" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"><option value="N">Không</option><option value="Y">Có — đánh dấu nguồn công bố</option></select></div>'
-      +'</div>'
-      +'<div style="margin-bottom:10px"><label style="font-size:11px;opacity:.7">📎 File report (PDF/ảnh, &lt;15MB)</label><input type="file" id="e_file" accept=".pdf,.jpg,.jpeg,.png" style="width:100%;padding:6px;font-size:12px"><div id="e_fileMsg" style="font-size:11px;opacity:.7;margin-top:4px"></div></div>'
-      +'<div style="font-weight:600;font-size:12px;margin:6px 0">Giá trị NIP:</div>'
-      +'<table style="width:100%;border-collapse:collapse"><tr style="background:rgba(255,255,255,.05);font-size:11px"><td style="padding:4px 6px">Chỉ tiêu</td><td style="padding:4px">Giá trị</td><td style="padding:4px 6px">Đơn vị</td></tr>'+nutRows+'</table>'
-      +'<label style="font-size:11px;display:block;margin-top:8px"><input type="checkbox" id="e_overwrite"> Ghi đè nếu đã tồn tại (cùng SKU+nguồn+chỉ tiêu+ngày)</label>'
-      +'<div style="display:flex;gap:8px;margin-top:12px"><button onclick="nipReview()" style="flex:1;padding:10px;border:0;border-radius:8px;background:var(--accent,#C9B037);color:#1B3A57;font-weight:700;cursor:pointer">👁 Xem lại</button></div>'
-      +'<div id="e_review" style="margin-top:12px"></div>');
-  }
+  if(which==='dash') return nipRenderDash(el);
+  if(which==='compare') return nipRenderCompare(el);
+  if(which==='entry') return nipRenderEntry(el);
+  nipRenderDash(el);
 }
-// đọc file → base64, upload lên Drive
+
+/* ---------- DASHBOARD ---------- */
+function nipRenderDash(el){
+  var S=nipScoreAll(); var sk=NIP_DATA.skus||{};
+  var cnt={pass:0,warn:0,fail:0,nd:0};
+  Object.keys(S).forEach(function(s){ cnt[S[s].overall]=(cnt[S[s].overall]||0)+1; });
+  var nFiles=0,nSkuDoc=0; var docs=NIP_DATA.docs||{};
+  Object.keys(docs).forEach(function(k){ if(k.indexOf('SKU-')===0){ nSkuDoc++; nFiles+=docs[k].length; } });
+  function kpi(c,t,v){ return '<div style="flex:1;min-width:110px;border:1px solid var(--border,#2a3f55);border-left:4px solid '+c+';border-radius:10px;padding:10px 12px;background:rgba(255,255,255,.02)"><div style="font-size:22px;font-weight:800;color:'+c+'">'+v+'</div><div style="font-size:11px;opacity:.75">'+t+'</div></div>'; }
+  var kpis='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'
+    +kpi('#2F7898','Tổng SKU',Object.keys(sk).length)
+    +kpi('#0E7544','✅ Đạt',cnt.pass||0)+kpi('#FFBC18','⚠️ Lưu ý',cnt.warn||0)
+    +kpi('#C8102E','🔴 Rủi ro',cnt.fail||0)+kpi('#8a94a3','⬜ Chưa đủ tài liệu',cnt.nd||0)
+    +kpi('#C9B037','📎 File tài liệu',nFiles+' <span style="font-size:11px;font-weight:400">('+nSkuDoc+' SKU)</span>')
+    +'</div>';
+  var tools='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">'
+    +'<input type="text" id="nipDashFilter" placeholder="🔎 Lọc SKU / tên..." oninput="nipDashTable()" style="flex:1;min-width:160px;padding:8px 10px;border-radius:8px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:12px">'
+    +'<select id="nipDashSt" onchange="nipDashTable()" style="padding:8px;border-radius:8px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:12px"><option value="">Tất cả trạng thái</option><option value="fail">🔴 Rủi ro</option><option value="warn">⚠️ Lưu ý</option><option value="pass">✅ Đạt</option><option value="nd">⬜ Chưa đủ tài liệu</option></select>'
+    +'<button onclick="nipRefreshDocsUI()" title="Quét lại folder Drive (sau khi vừa upload file mới)" style="font-size:11px;padding:7px 10px;border:1px solid var(--border,#2a3f55);border-radius:8px;background:transparent;color:inherit;cursor:pointer">📂 Quét lại folder</button>'
+    +'<button onclick="nipReauth(sessionStorage.getItem(\'nip_pw\')).then(function(){nipSub(\'dash\')})" title="Tải lại toàn bộ dữ liệu từ Google Sheet" style="font-size:11px;padding:7px 10px;border:1px solid var(--border,#2a3f55);border-radius:8px;background:transparent;color:inherit;cursor:pointer">↻ Tải lại dữ liệu</button>'
+    +'</div>';
+  var legend='<div style="font-size:11px;opacity:.65;margin-bottom:8px">Bấm vào từng ô để xem <b>hình tài liệu + bảng chấm điểm chi tiết</b> (mỗi lỗi kèm căn cứ pháp lý, mức nghiêm trọng đề xuất và hành động). Điểm nhãn: A ≥90 · B 75–89 · C 60–74 · D &lt;60. ⬜ = chưa có tài liệu (không trừ điểm).</div>';
+  el.innerHTML=kpis+tools+legend+'<div id="nipDashTbl"></div>';
+  nipDashTable();
+}
+function nipDashCell(sku,mkey,mod){
+  var inner;
+  if(mod.st==='nd') inner='<span style="opacity:.55">⬜</span>';
+  else if(mkey==='label'||mkey==='nip'){ var g=mod.grade; inner='<span style="font-weight:800;color:'+nipGradeColor(g)+'">'+g+'</span> <span style="font-size:10px;opacity:.6">'+mod.pct+'</span> '+(mod.st!=='pass'?nipStIcon(mod.st):''); }
+  else inner=nipStIcon(mod.st);
+  return '<td onclick="nipDetail(\''+sku+'\',\''+mkey+'\')" style="text-align:center;padding:7px 4px;cursor:pointer" title="Bấm để xem chi tiết">'+inner+'</td>';
+}
+function nipDashTable(){
+  var box=document.getElementById('nipDashTbl'); if(!box) return;
+  var S=nipScoreAll(); var sk=NIP_DATA.skus||{};
+  var f=nipNorm((document.getElementById('nipDashFilter')||{}).value||'');
+  var fst=(document.getElementById('nipDashSt')||{}).value||'';
+  var head='<tr style="background:rgba(255,255,255,.06);font-size:11px"><th style="text-align:left;padding:7px 8px">SKU · Tên trên nhãn</th>'
+    +NIP_MODULES.map(function(m){return '<th style="padding:7px 4px;white-space:nowrap">'+m.icon+' '+m.name.split(' ')[0]+'</th>';}).join('')
+    +'<th style="padding:7px 4px">Tổng</th></tr>';
+  var rows='';
+  Object.keys(S).forEach(function(sku){
+    var d=sk[sku]||{}, m=S[sku];
+    if(f && nipNorm(sku+' '+d.name+' '+d.name_hscb).indexOf(f)<0) return;
+    if(fst && m.overall!==fst) return;
+    var nDoc=(((NIP_DATA.docs||{})[sku])||[]).length;
+    rows+='<tr style="border-top:1px solid rgba(255,255,255,.08)">'
+      +'<td style="padding:7px 8px;cursor:pointer" onclick="nipDetail(\''+sku+'\',\'label\')"><b>'+sku+'</b> <span style="font-size:10px;opacity:.55">'+(nDoc?('📎'+nDoc):'')+'</span><div style="font-size:11px;opacity:.8">'+nipEsc(d.name||d.name_hscb||'—')+'</div></td>'
+      +NIP_MODULES.map(function(mm){return nipDashCell(sku,mm.key,m[mm.key]);}).join('')
+      +'<td style="text-align:center;font-size:15px">'+nipStIcon(m.overall)+'</td></tr>';
+  });
+  box.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'+head+(rows||'<tr><td colspan="7" style="padding:16px;text-align:center;opacity:.6">Không có SKU khớp bộ lọc</td></tr>')+'</table></div>';
+}
+async function nipRefreshDocsUI(){
+  var pw=sessionStorage.getItem('nip_pw')||'';
+  try{
+    var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=nipdata&sub=refreshdocs&pw='+encodeURIComponent(pw)});
+    var j=await res.json();
+    if(j&&j.ok){ NIP_DATA.docs=j.docs; NIP_SCORES=null; NIP_IMG_CACHE={}; nipSub('dash'); }
+    else alert('Lỗi quét folder: '+((j&&j.error)||'?'));
+  }catch(e){ alert('Không kết nối được server'); }
+}
+
+/* ---------- MODAL CHI TIẾT SKU ---------- */
+function nipEnsureModal(){
+  if(document.getElementById('nipModal')) return;
+  var d=document.createElement('div');
+  d.id='nipModal';
+  d.style.cssText='display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.65);overflow:auto;padding:20px 10px';
+  d.innerHTML='<div id="nipModalBox" style="max-width:960px;margin:0 auto;background:var(--bg,#0f1c2b);border:1px solid var(--border,#2a3f55);border-radius:14px;padding:16px 18px;color:inherit"></div>';
+  d.onclick=function(e){ if(e.target===d) nipCloseModal(); };
+  document.body.appendChild(d);
+}
+function nipCloseModal(){ var d=document.getElementById('nipModal'); if(d) d.style.display='none'; }
+function nipDetail(sku,mkey){
+  nipEnsureModal();
+  var S=nipScoreAll(); var m=S[sku]; var sk=NIP_DATA.skus[sku]||{};
+  if(!m) return;
+  var box=document.getElementById('nipModalBox');
+  var tabs=NIP_MODULES.map(function(mm){
+    var act=mm.key===mkey;
+    return '<button onclick="nipDetail(\''+sku+'\',\''+mm.key+'\')" style="font-size:11px;padding:6px 10px;border-radius:8px;border:1px solid '+(act?'var(--accent,#C9B037)':'var(--border,#2a3f55)')+';background:'+(act?'rgba(201,176,55,.15)':'transparent')+';color:inherit;cursor:pointer;font-weight:'+(act?'700':'400')+'">'+mm.icon+' '+mm.name+' '+nipStIcon(m[mm.key].st)+'</button>';
+  }).join(' ');
+  var mod=m[mkey]; var mmeta=NIP_MODULES.filter(function(x){return x.key===mkey;})[0];
+  var scoreHead = mod.pct==null
+    ? '<span style="font-size:13px;color:#8a94a3">⬜ Chưa đủ tài liệu để chấm điểm</span>'
+    : '<span style="font-size:20px;font-weight:800;color:'+nipGradeColor(mod.grade)+'">'+mod.grade+'</span> <span style="font-size:13px;opacity:.8">'+mod.pct+'/100</span> <span style="margin-left:6px">'+nipStIcon(mod.st)+'</span>'+(mod.nd?' <span style="font-size:11px;opacity:.6">· '+mod.nd+' mục chưa có tài liệu</span>':'');
+  var itemsHtml=mod.items.map(function(it){
+    var c=nipStColor(it.st);
+    return '<div style="border:1px solid rgba(255,255,255,.08);border-left:4px solid '+c+';border-radius:8px;padding:9px 11px;margin-bottom:7px;background:rgba(255,255,255,.02)">'
+      +'<div style="display:flex;gap:8px;align-items:flex-start"><div>'+nipStIcon(it.st)+'</div><div style="flex:1">'
+      +'<div style="font-size:12.5px">'+it.t+(it.st==='nd'?' <span style="color:#8a94a3;font-weight:700;font-size:11px">· CHƯA CÓ TÀI LIỆU</span>':'')+'</div>'
+      +'<div style="font-size:10.5px;opacity:.6;margin-top:3px">📖 '+nipEsc(it.legal)+(it.st!=='pass'?' &nbsp;·&nbsp; Mức đề xuất: '+nipSevBadge(it.sev):'')+'</div>'
+      +(it.act&&it.st!=='pass'?'<div style="font-size:11px;margin-top:4px;color:var(--accent,#C9B037)">➜ '+nipEsc(it.act)+'</div>':'')
+      +'</div></div></div>';
+  }).join('');
+  var extra='';
+  if(mkey==='nip') extra=nipDetailNipTable(sku,mod);
+  if(mkey==='name') extra=nipDetailNames(mod);
+  if(mkey==='hscb') extra=nipDetailDecl(mod);
+  if(mkey==='safety') extra=nipDetailSpec(mod);
+  var docsHtml=nipDetailDocs(sku,mmeta.docTypes);
+  box.innerHTML='<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
+    +'<div style="font-weight:800;font-size:15px">'+sku+'</div><div style="font-size:12px;opacity:.8;flex:1">'+nipEsc(sk.name||'')+(sk.name_hscb?' · '+nipEsc(sk.name_hscb):'')+'</div>'
+    +'<button onclick="nipCloseModal()" style="font-size:16px;border:0;background:transparent;color:inherit;cursor:pointer;padding:4px 8px">✕</button></div>'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">'+tabs+'</div>'
+    +'<div style="display:flex;gap:14px;flex-wrap:wrap">'
+    +'<div style="flex:1;min-width:260px"><div style="margin-bottom:8px">'+scoreHead+'</div>'+itemsHtml+extra+'</div>'
+    +'<div style="width:300px;min-width:240px">'+docsHtml+'</div>'
+    +'</div>';
+  document.getElementById('nipModal').style.display='';
+}
+function nipDetailDocs(sku,types){
+  var docs=nipDocsOf(sku,types);
+  var h='<div style="font-weight:700;font-size:12px;margin-bottom:6px">📎 Tài liệu ('+types.join(' / ')+')</div>';
+  if(!docs.length) return h+'<div style="border:1px dashed var(--border,#2a3f55);border-radius:10px;padding:16px;text-align:center;font-size:11px;opacity:.6">⬜ Chưa có tài liệu trong folder Drive<br><span style="font-size:10px">Upload vào: '+sku+'/'+types[0]+'</span></div>';
+  return h+docs.map(function(d,i){
+    var vid='nipDoc_'+sku+'_'+i;
+    return '<div style="border:1px solid var(--border,#2a3f55);border-radius:10px;padding:8px;margin-bottom:8px;background:rgba(255,255,255,.02)">'
+      +'<div style="font-size:11px;margin-bottom:5px"><span style="font-size:9px;font-weight:700;background:rgba(201,176,55,.15);color:var(--accent,#C9B037);padding:1px 6px;border-radius:8px">'+d.type+'</span> '+nipEsc(d.name)+' <span style="opacity:.5">('+d.kb+'KB)</span></div>'
+      +'<div id="'+vid+'">'
+      +(d.img?'<button onclick="nipViewDoc(\''+d.id+'\',\''+vid+'\')" style="font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🖼 Xem hình</button> ':'')
+      +'<a href="'+d.url+'" target="_blank" style="font-size:11px;color:var(--accent,#C9B037);text-decoration:none">↗ Mở trên Drive</a>'
+      +'</div></div>';
+  }).join('');
+}
+async function nipViewDoc(fileId,boxId){
+  var box=document.getElementById(boxId); if(!box) return;
+  if(NIP_IMG_CACHE[fileId]){ box.innerHTML=NIP_IMG_CACHE[fileId]; return; }
+  box.innerHTML='<div style="font-size:11px;opacity:.6">Đang tải hình từ Drive...</div>';
+  var pw=sessionStorage.getItem('nip_pw')||'';
+  try{
+    var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=nipdata&sub=docimg&pw='+encodeURIComponent(pw)+'&fileid='+encodeURIComponent(fileId)});
+    var j=await res.json();
+    if(j&&j.ok&&j.isimg){
+      var html='<img src="data:'+j.mime+';base64,'+j.b64+'" style="width:100%;border-radius:8px;cursor:zoom-in" onclick="window.open(this.src)" alt="'+nipEsc(j.name)+'">';
+      NIP_IMG_CACHE[fileId]=html; box.innerHTML=html;
+    } else if(j&&j.ok){ box.innerHTML='<a href="'+j.url+'" target="_blank" style="font-size:11px;color:var(--accent,#C9B037)">↗ '+nipEsc(j.name)+' — mở trên Drive'+(j.note?' ('+nipEsc(j.note)+')':'')+'</a>'; }
+    else box.innerHTML='<div style="font-size:11px;color:#e06">Lỗi: '+((j&&j.error)||'?')+'</div>';
+  }catch(e){ box.innerHTML='<div style="font-size:11px;color:#e06">Không kết nối được server</div>'; }
+}
+function nipDetailNipTable(sku,mod){
+  var agg=mod.detail||nipTolAggregate(sku);
+  var meta=(((NIP_DATA.nip||{})[sku]||{})._meta)||{};
+  var head='<tr style="background:rgba(255,255,255,.06);font-size:11px"><th style="text-align:left;padding:6px">Chỉ tiêu</th><th>NIP nhãn</th><th>Tham chiếu</th><th>Lệch</th></tr>';
+  var rows=agg.rows.map(function(r){
+    var lv=r.L?(r.L.v+' '+NIP_UNITS[r.nut]):'<span style="opacity:.4">—</span>';
+    var hv=r.H?(r.H.v+' '+NIP_UNITS[r.nut]):'<span style="opacity:.45;font-size:10px">chưa có data tham chiếu</span>';
+    var dv='<span style="opacity:.4">—</span>';
+    if(r.tv&&r.tv.diff!=null){
+      var c=r.tv.code==='ok'?'#0E7544':r.tv.code==='warn'?'#FFBC18':'#C8102E';
+      dv='<b style="color:'+c+'" title="'+nipEsc(r.tv.why||('Trong dung sai ±'+r.rule.t2+'%'))+'">'+(r.tv.diff>0?'+':'')+r.tv.diff.toFixed(0)+'%</b>';
+    } else if(r.tv){ dv='<span style="color:#FFBC18;font-size:10px">'+nipEsc(r.tv.why)+'</span>'; }
+    return '<tr style="border-top:1px solid rgba(255,255,255,.08)"><td style="padding:5px 6px">'+NIP_VN[r.nut]+'</td><td style="text-align:center">'+lv+'</td><td style="text-align:center">'+hv+'</td><td style="text-align:center">'+dv+'</td></tr>';
+  }).join('');
+  var src=meta.src_hscb?('Nguồn tham chiếu: <b>'+nipEsc(meta.src_hscb)+'</b>'):'';
+  var ap=meta.apdung?(' · Nguồn đang áp dụng: <b>'+nipEsc(meta.apdung)+'</b>'):'';
+  return '<div style="margin-top:10px"><div style="font-weight:700;font-size:12px;margin-bottom:4px">🔬 Bảng đối chiếu NIP</div>'
+    +'<div style="font-size:10.5px;opacity:.7;margin-bottom:5px">'+src+ap+' · Dung sai đọc từ 08_NIP_Rules (mặc định ±20%, sàn 70% — TT 29/2023)</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:12px">'+head+rows+'</table></div>';
+}
+function nipDetailNames(mod){
+  var n=mod.names||{};
+  function row(t,v){ return '<tr style="border-top:1px solid rgba(255,255,255,.08)"><td style="padding:5px 6px;opacity:.7;white-space:nowrap">'+t+'</td><td style="padding:5px 6px">'+(v?nipEsc(v):'<span style="opacity:.4">— chưa có —</span>')+'</td></tr>'; }
+  return '<div style="margin-top:10px"><div style="font-weight:700;font-size:12px;margin-bottom:4px">📛 Đối chiếu tên</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:12px">'
+    +row('Trên nhãn (D)',n.label)+row('HSCB nội bộ (C)',n.hscb)+row('Trên hồ sơ công bố',n.decl)+row('Tên thường gọi (B)',n.thuonggoi)
+    +'</table></div>';
+}
+function nipDetailDecl(mod){
+  var ds=mod.decls||[]; if(!ds.length) return '';
+  var head='<tr style="background:rgba(255,255,255,.06);font-size:11px"><th style="text-align:left;padding:6px">Số công bố</th><th>Ngày</th><th>Trạng thái</th><th style="text-align:left">Ghi chú</th></tr>';
+  var rows=ds.map(function(d){
+    return '<tr style="border-top:1px solid rgba(255,255,255,.08)"><td style="padding:5px 6px">'+nipEsc(d.no)+'</td><td style="text-align:center">'+nipEsc(d.date)+'</td><td style="text-align:center">'+nipEsc(d.status)+'</td><td style="padding:5px 6px;font-size:11px;opacity:.8">'+nipEsc(d.notes)+'</td></tr>';
+  }).join('');
+  return '<div style="margin-top:10px"><div style="font-weight:700;font-size:12px;margin-bottom:4px">📄 Hồ sơ công bố</div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'+head+rows+'</table></div></div>';
+}
+function nipDetailSpec(mod){
+  var sp=mod.spec||[]; if(!sp.length) return '';
+  var head='<tr style="background:rgba(255,255,255,.06);font-size:11px"><th style="text-align:left;padding:6px">Chỉ tiêu nhóm SP</th><th>Giới hạn pháp lý</th><th style="text-align:left">Nguồn</th></tr>';
+  var rows=sp.map(function(r){
+    return '<tr style="border-top:1px solid rgba(255,255,255,.08)"><td style="padding:5px 6px">'+nipEsc(r.ind)+(r.unit?' <span style="opacity:.5">('+nipEsc(r.unit)+')</span>':'')+'</td><td style="text-align:center">'+(r.limit?nipEsc(r.limit):'<span style="opacity:.4">—</span>')+'</td><td style="padding:5px 6px;font-size:11px;opacity:.8">'+nipEsc(r.src)+'</td></tr>';
+  }).join('');
+  return '<div style="margin-top:10px"><div style="font-weight:700;font-size:12px;margin-bottom:4px">📐 Chỉ tiêu spec theo nhóm ('+nipEsc(sp[0].group)+')</div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'+head+rows+'</table></div></div>';
+}
+
+/* ---------- SO SÁNH NIP (giữ chức năng cũ, bỏ qua _meta) ---------- */
+function nipRenderCompare(el){
+  var sk=NIP_DATA.skus||{};
+  var opts=Object.keys(NIP_DATA.nip||{}).filter(function(s){return /^SKU-/.test(s);}).sort().map(function(s){ return '<option value="'+s+'">'+s+' — '+(sk[s]?sk[s].name:'')+'</option>'; }).join('');
+  el.innerHTML='<div style="border-left:4px solid #0E7544;background:rgba(255,255,255,.03);padding:12px 14px;border-radius:8px"><div style="font-weight:700;margin-bottom:6px">🔬 So sánh NIP — Nhãn vs nguồn tham chiếu</div>'
+    +'<div style="font-size:12px;opacity:.85;margin-bottom:10px">Chọn SKU để đối chiếu số liệu NIP trên <b>Nhãn</b> với <b>nguồn tham chiếu</b> (test report / HSCB). Dung sai theo 08_NIP_Rules.</div>'
+    +'<select id="nipSkuPick" onchange="nipShowCompare(this.value)" style="width:100%;padding:9px;border-radius:8px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:13px"><option value="">— Chọn SKU —</option>'+opts+'</select>'
+    +'<div id="nipCompareOut" style="margin-top:12px"></div></div>';
+}
+function nipShowCompare(sku){
+  var out=document.getElementById('nipCompareOut'); if(!out) return;
+  if(!sku){ out.innerHTML=''; return; }
+  var agg=nipTolAggregate(sku); var sk=NIP_DATA.skus[sku]||{};
+  var basisNote = sk.drained ? '<div style="font-size:11px;color:#e0a;margin-bottom:6px">⚠️ SKU này có ráo nước ('+sk.drained+'/'+sk.net+'). Kiểm tra basis trước khi tin verdict.</div>' : '';
+  out.innerHTML=basisNote+nipDetailNipTable(sku,{detail:agg});
+}
+
+/* ---------- NHẬP DỮ LIỆU (giữ nguyên logic cũ + upload đúng folder SKU) ---------- */
+function nipRenderEntry(el){
+  var sk=NIP_DATA.skus||{};
+  var opts=Object.keys(sk).sort().map(function(s){ return '<option value="'+s+'">'+s+' — '+(sk[s]?sk[s].name:'')+'</option>'; }).join('');
+  var nutRows=NIP_NUTS.map(function(n){
+    return '<tr><td style="padding:4px 6px;font-size:12px">'+NIP_VN[n]+'</td>'
+      +'<td style="padding:4px"><input type="number" step="any" id="nt_'+n.replace(/\s/g,'_')+'" style="width:90px;padding:5px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"></td>'
+      +'<td style="padding:4px 6px;font-size:12px;opacity:.7">'+NIP_UNITS[n]+'</td></tr>';
+  }).join('');
+  el.innerHTML='<div style="border-left:4px solid #C9B037;background:rgba(255,255,255,.03);padding:12px 14px;border-radius:8px"><div style="font-weight:700;margin-bottom:6px">➕ Nhập dữ liệu NIP + tài liệu (ghi ngược vào Google Sheet)</div>'
+    +'<div style="font-size:12px;opacity:.85;margin-bottom:10px">Chọn SKU, nguồn, upload file report rồi nhập giá trị. File sẽ được lưu vào đúng folder <b>SKU/loại tài liệu</b> trên Drive. Bấm <b>Xem lại</b> trước khi ghi.</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+    +'<div><label style="font-size:11px;opacity:.7">SKU *</label><select id="e_sku" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"><option value="">— Chọn —</option>'+opts+'</select></div>'
+    +'<div><label style="font-size:11px;opacity:.7">Nguồn *</label><select id="e_source" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"><option value="LABEL">Nhãn (nhãn chính / nhãn phụ)</option><option value="HSCB">HSCB / Test report (lab VN / lab nhà máy)</option></select></div>'
+    +'<div><label style="font-size:11px;opacity:.7">Cơ sở tính (basis) *</label><select id="e_basis" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"><option value="">— Chọn —</option><option value="whole">whole (100g/ml tổng)</option><option value="drained">drained (phần cái ráo)</option><option value="as_sold">as_sold</option></select></div>'
+    +'<div><label style="font-size:11px;opacity:.7">per (100 g/ml)</label><input type="number" id="e_per" value="100" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"></div>'
+    +'<div><label style="font-size:11px;opacity:.7">Ngày test</label><input type="date" id="e_date" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"></div>'
+    +'<div><label style="font-size:11px;opacity:.7">Số lô</label><input type="text" id="e_batch" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"></div>'
+    +'<div><label style="font-size:11px;opacity:.7">Lab / Nguồn</label><input type="text" id="e_lab" placeholder="Eurofins / CASE / Nhà máy" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"></div>'
+    +'<div><label style="font-size:11px;opacity:.7">Là nguồn CĂN CỨ CÔNG BỐ?</label><select id="e_declared" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"><option value="N">Không</option><option value="Y">Có — đánh dấu nguồn công bố</option></select></div>'
+    +'</div>'
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;opacity:.7">📎 File report (PDF/ảnh, &lt;15MB)</label><input type="file" id="e_file" accept=".pdf,.jpg,.jpeg,.png" style="width:100%;padding:6px;font-size:12px"><div id="e_fileMsg" style="font-size:11px;opacity:.7;margin-top:4px"></div></div>'
+    +'<div style="font-weight:600;font-size:12px;margin:6px 0">Giá trị NIP:</div>'
+    +'<table style="width:100%;border-collapse:collapse"><tr style="background:rgba(255,255,255,.05);font-size:11px"><td style="padding:4px 6px">Chỉ tiêu</td><td style="padding:4px">Giá trị</td><td style="padding:4px 6px">Đơn vị</td></tr>'+nutRows+'</table>'
+    +'<label style="font-size:11px;display:block;margin-top:8px"><input type="checkbox" id="e_overwrite"> Ghi đè nếu đã tồn tại</label>'
+    +'<div style="display:flex;gap:8px;margin-top:12px"><button onclick="nipReview()" style="flex:1;padding:10px;border:0;border-radius:8px;background:var(--accent,#C9B037);color:#1B3A57;font-weight:700;cursor:pointer">👁 Xem lại</button></div>'
+    +'<div id="e_review" style="margin-top:12px"></div></div>';
+}
 async function nipDoUpload(){
   var fi=document.getElementById('e_file'); var msg=document.getElementById('e_fileMsg');
   if(!fi||!fi.files||!fi.files[0]) return null;
@@ -4077,18 +4505,20 @@ async function nipDoUpload(){
   if(msg) msg.textContent='Đang tải file lên Drive...';
   var b64=await new Promise(function(res,rej){ var r=new FileReader(); r.onload=function(){res(r.result.split(',')[1]);}; r.onerror=rej; r.readAsDataURL(f); });
   var pw=sessionStorage.getItem('nip_pw')||'';
+  var sku=(document.getElementById('e_sku')||{}).value||'';
+  var src=(document.getElementById('e_source')||{}).value||'LABEL';
+  var doctype = src==='HSCB' ? 'TEST' : 'NIP';
   var body='action=nipdata&sub=upload&pw='+encodeURIComponent(pw)
-    +'&filedata='+encodeURIComponent(b64)+'&filename='+encodeURIComponent(f.name)+'&filemime='+encodeURIComponent(f.type||'application/octet-stream');
+    +'&filedata='+encodeURIComponent(b64)+'&filename='+encodeURIComponent(f.name)+'&filemime='+encodeURIComponent(f.type||'application/octet-stream')
+    +'&sku='+encodeURIComponent(sku)+'&doctype='+encodeURIComponent(doctype);
   var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body});
   var j=await res.json();
-  if(j&&j.ok){ if(msg) msg.innerHTML='✓ Đã tải: <a href="'+j.url+'" target="_blank" style="color:var(--accent,#C9B037)">'+j.name+'</a>'; return j.url; }
+  if(j&&j.ok){ if(msg) msg.innerHTML='✓ Đã tải vào '+sku+'/'+(doctype==='TEST'?'TEST-REPORT':doctype)+': <a href="'+j.url+'" target="_blank" style="color:var(--accent,#C9B037)">'+j.name+'</a>'; return j.url; }
   if(msg) msg.textContent='Lỗi tải file: '+((j&&j.error)||'?'); return null;
 }
 function nipCollectPayload(){
-  var nutrients=['Nang luong','Chat dam','Chat beo','Chat beo bao hoa','Carbohydrate','Duong tong so','Chat xo','Natri','Cholesterol'];
-  var units={'Nang luong':'kcal','Chat dam':'g','Chat beo':'g','Chat beo bao hoa':'g','Carbohydrate':'g','Duong tong so':'g','Chat xo':'g','Natri':'mg','Cholesterol':'mg'};
   var nt=[];
-  nutrients.forEach(function(n){ var v=document.getElementById('nt_'+n.replace(/\s/g,'_')).value; if(v!=='') nt.push({nutrient:n,value:parseFloat(v),unit:units[n]}); });
+  NIP_NUTS.forEach(function(n){ var v=document.getElementById('nt_'+n.replace(/\s/g,'_')).value; if(v!=='') nt.push({nutrient:n,value:parseFloat(v),unit:NIP_UNITS[n]}); });
   return {
     sku:document.getElementById('e_sku').value, source:document.getElementById('e_source').value,
     basis:document.getElementById('e_basis').value, per_amount:parseFloat(document.getElementById('e_per').value)||100,
@@ -4102,7 +4532,7 @@ function nipReview(){
   var errs=[];
   if(!p.sku) errs.push('Chưa chọn SKU'); if(!p.basis) errs.push('Chưa chọn basis'); if(!p.nutrients.length) errs.push('Chưa nhập chỉ tiêu nào');
   if(errs.length){ out.innerHTML='<div style="color:#e06;font-size:12px">⚠ '+errs.join(' · ')+'</div>'; return; }
-  var rows=p.nutrients.map(function(n){ return '<tr><td style="padding:3px 6px">'+n.nutrient+'</td><td style="padding:3px 6px;text-align:right"><b>'+n.value+'</b> '+n.unit+'</td></tr>'; }).join('');
+  var rows=p.nutrients.map(function(n){ return '<tr><td style="padding:3px 6px">'+NIP_VN[n.nutrient]+'</td><td style="padding:3px 6px;text-align:right"><b>'+n.value+'</b> '+n.unit+'</td></tr>'; }).join('');
   var warnBasis = (p.basis==='whole' && NIP_DATA.skus[p.sku] && NIP_DATA.skus[p.sku].drained) ? '<div style="color:#e0a;font-size:11px;margin-top:6px">⚠ SKU này có ráo nước — chắc chắn nhãn/lab đo theo <b>whole</b>?</div>' : '';
   out.innerHTML='<div style="border:1px solid var(--accent,#C9B037);border-radius:8px;padding:12px">'
     +'<div style="font-weight:700;margin-bottom:6px">Xem lại: '+p.sku+' · '+p.source+' · basis='+p.basis+(p.is_declared?' · <span style="color:#0E7544">NGUỒN CÔNG BỐ</span>':'')+'</div>'
@@ -4112,7 +4542,7 @@ function nipReview(){
 async function nipCommit(){
   var out=document.getElementById('e_review');
   out.innerHTML='<div style="opacity:.7">Đang xử lý...</div>';
-  var url=await nipDoUpload();          // upload file trước (nếu có)
+  var url=await nipDoUpload();
   var p=nipCollectPayload(); p.drive_url=url||'';
   p.doc_type=p.source+' report';
   var pw=sessionStorage.getItem('nip_pw')||'';
@@ -4124,37 +4554,11 @@ async function nipCommit(){
       out.innerHTML='<div style="color:#0E7544;font-weight:600">✓ Đã ghi '+j.written+' chỉ tiêu'
         +(j.overwritten?(' · ghi đè '+j.overwritten):'')+(j.skipped?(' · bỏ qua '+j.skipped):'')+'.</div>'
         +(j.note?'<div style="font-size:11px;opacity:.8;margin-top:4px">'+j.note+'</div>':'')
-        +'<div style="font-size:11px;margin-top:6px">Tải lại dữ liệu để thấy so sánh cập nhật:</div>'
-        +'<button onclick="nipReauth(sessionStorage.getItem(\'nip_pw\')).then(function(){nipSub(\'compare\')})" style="margin-top:6px;padding:8px 14px;border:0;border-radius:6px;background:var(--accent,#C9B037);color:#1B3A57;font-weight:700;cursor:pointer">↻ Tải lại & xem So sánh</button>';
+        +'<div style="font-size:11px;margin-top:6px">Tải lại dữ liệu để dashboard cập nhật điểm:</div>'
+        +'<button onclick="nipReauth(sessionStorage.getItem(\'nip_pw\')).then(function(){nipSub(\'dash\')})" style="margin-top:6px;padding:8px 14px;border:0;border-radius:6px;background:var(--accent,#C9B037);color:#1B3A57;font-weight:700;cursor:pointer">↻ Tải lại & xem Dashboard</button>';
     } else { out.innerHTML='<div style="color:#e06">Lỗi: '+((j&&j.error)||'?')+'</div>'; }
   }catch(e){ out.innerHTML='<div style="color:#e06">Không kết nối được server</div>'; }
 }
-function nipShowCompare(sku){
-  var out=document.getElementById('nipCompareOut'); if(!out) return;
-  if(!sku){ out.innerHTML=''; return; }
-  var nd=NIP_DATA.nip[sku]||{}, sk=NIP_DATA.skus[sku]||{};
-  var srcOrder=['LABEL','HSCB'];
-  var srcName={LABEL:'Nhãn',HSCB:'HSCB'};
-  var present=srcOrder.filter(function(s){ return Object.keys(nd).some(function(n){ return nd[n][s]; }); });
-  var head='<tr style="background:rgba(255,255,255,.06)"><th style="text-align:left;padding:6px">Chỉ tiêu</th>'+present.map(function(s){return '<th style="padding:6px">'+srcName[s]+'</th>';}).join('')+'<th>Đối chiếu</th></tr>';
-  var rows='';
-  Object.keys(nd).forEach(function(nut){
-    var cells='', vals={};
-    present.forEach(function(s){ var d=nd[nut][s]; var v=d?d.v:null; vals[s]=v; cells+='<td style="text-align:center;padding:6px">'+(v==null?'—':v+(d&&d.u?(' '+d.u):''))+'</td>'; });
-    // verdict: so sánh HSCB vs LABEL (2 khối duy nhất trong schema hiện tại)
-    var verdict='<span style="opacity:.5">chưa đủ 2 nguồn</span>';
-    if(vals.HSCB!=null && vals.LABEL!=null && vals.LABEL!=0){
-      var diff=(vals.HSCB-vals.LABEL)/Math.abs(vals.LABEL)*100;
-      var ad=Math.abs(diff);
-      var col = ad<=20?'#0E7544':(ad<=42.8?'#FFBC18':'#C8102E'); // 70% floor ≈ -30%..; simplified
-      verdict='<b style="color:'+col+'">'+(diff>0?'+':'')+diff.toFixed(0)+'%</b>';
-    }
-    rows+='<tr style="border-top:1px solid rgba(255,255,255,.08)"><td style="padding:6px">'+nut+'</td>'+cells+'<td style="text-align:center">'+verdict+'</td></tr>';
-  });
-  var basisNote = sk.drained ? '<div style="font-size:11px;color:#e0a;margin-bottom:6px">⚠️ SKU này có ráo nước ('+sk.drained+'/'+sk.net+'). Kiểm tra basis trước khi tin verdict.</div>' : '';
-  out.innerHTML=basisNote+'<table style="width:100%;border-collapse:collapse;font-size:12px">'+head+rows+'</table>';
-}
-
 /* ===================== HỒ SƠ CHUẨN (Guide 2) ===================== */
 let GUIDE2_DATA=null;
 async function guide2Load(){
