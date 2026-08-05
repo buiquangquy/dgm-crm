@@ -597,7 +597,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.2 (2026-08) · Dashboard tuân thủ + Thư viện chuẩn (6 mục)</span>
+            <span style="font-size:11px;opacity:.6">· v4.3 (2026-08) · Dashboard tuân thủ + Thư viện chuẩn + Ghi chú SKU</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -4290,7 +4290,7 @@ function nipRenderDash(el){
     +'<button onclick="nipRefreshDocsUI()" title="Quét lại folder Drive (sau khi vừa upload file mới)" style="font-size:11px;padding:7px 10px;border:1px solid var(--border,#2a3f55);border-radius:8px;background:transparent;color:inherit;cursor:pointer">📂 Quét lại folder</button>'
     +'<button onclick="nipReauth(sessionStorage.getItem(\'nip_pw\')).then(function(){nipSub(\'dash\')})" title="Tải lại toàn bộ dữ liệu từ Google Sheet" style="font-size:11px;padding:7px 10px;border:1px solid var(--border,#2a3f55);border-radius:8px;background:transparent;color:inherit;cursor:pointer">↻ Tải lại dữ liệu</button>'
     +'</div>';
-  var legend='<div style="font-size:11px;opacity:.65;margin-bottom:8px">Bấm vào từng ô để xem <b>hình tài liệu + bảng chấm điểm chi tiết</b> (mỗi lỗi kèm căn cứ pháp lý, mức nghiêm trọng đề xuất và hành động). Điểm nhãn: A ≥90 · B 75–89 · C 60–74 · D &lt;60. ⬜ = chưa có tài liệu (không trừ điểm).</div>';
+  var legend='<div style="font-size:11px;opacity:.65;margin-bottom:8px">Bấm vào từng ô để xem <b>hình tài liệu + bảng chấm điểm chi tiết</b> (mỗi lỗi kèm căn cứ pháp lý, mức nghiêm trọng đề xuất và hành động). Điểm nhãn: A ≥90 · B 75–89 · C 60–74 · D &lt;60. ⬜ = chưa có tài liệu (không trừ điểm). Ghi chú của anh nằm cuối popup, có lưu ngày tạo/sửa — SKU đã có ghi chú hiện badge 📝.</div>';
   el.innerHTML=kpis+tools+legend+'<div id="nipDashTbl"></div>';
   nipDashTable();
 }
@@ -4315,8 +4315,10 @@ function nipDashTable(){
     if(f && nipNorm(sku+' '+d.name+' '+d.name_hscb).indexOf(f)<0) return;
     if(fst && m.overall!==fst) return;
     var nDoc=(((NIP_DATA.docs||{})[sku])||[]).length;
+    var nNote=(((NIP_DATA.notes||{})[sku])||[]).length;
+    var noteBadge=nNote?(' <span title="'+nipEsc((((NIP_DATA.notes||{})[sku])||[])[0].text).slice(0,120)+'" style="font-size:10px;color:var(--accent,#C9B037)">📝'+nNote+'</span>'):'';
     rows+='<tr style="border-top:1px solid rgba(255,255,255,.08)">'
-      +'<td style="padding:7px 8px;cursor:pointer" onclick="nipDetail(\''+sku+'\',\'label\')"><b>'+sku+'</b> <span style="font-size:10px;opacity:.55">'+(nDoc?('📎'+nDoc):'')+'</span><div style="font-size:11px;opacity:.8">'+nipEsc(d.name||d.name_hscb||'—')+'</div></td>'
+      +'<td style="padding:7px 8px;cursor:pointer" onclick="nipDetail(\''+sku+'\',\'label\')"><b>'+sku+'</b> <span style="font-size:10px;opacity:.55">'+(nDoc?('📎'+nDoc):'')+'</span>'+noteBadge+'<div style="font-size:11px;opacity:.8">'+nipEsc(d.name||d.name_hscb||'—')+'</div></td>'
       +NIP_MODULES.map(function(mm){return nipDashCell(sku,mm.key,m[mm.key]);}).join('')
       +'<td style="text-align:center;font-size:15px">'+nipStIcon(m.overall)+'</td></tr>';
   });
@@ -4343,8 +4345,9 @@ function nipEnsureModal(){
   document.body.appendChild(d);
 }
 function nipCloseModal(){ var d=document.getElementById('nipModal'); if(d) d.style.display='none'; }
+var NIP_CUR_MOD='label';
 function nipDetail(sku,mkey){
-  nipEnsureModal();
+  nipEnsureModal(); NIP_CUR_MOD=mkey;
   var S=nipScoreAll(); var m=S[sku]; var sk=NIP_DATA.skus[sku]||{};
   if(!m) return;
   var box=document.getElementById('nipModalBox');
@@ -4377,9 +4380,78 @@ function nipDetail(sku,mkey){
     +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">'+tabs+'</div>'
     +'<div style="display:flex;gap:14px;flex-wrap:wrap">'
     +'<div style="flex:1;min-width:260px"><div style="margin-bottom:8px">'+scoreHead+'</div>'+itemsHtml+extra+'</div>'
-    +'<div style="width:300px;min-width:240px">'+docsHtml+'</div>'
+    +'<div style="width:300px;min-width:240px">'+docsHtml+'<div id="nipNoteBox" style="margin-top:14px"></div></div>'
     +'</div>';
   document.getElementById('nipModal').style.display='';
+  nipRenderNotes(sku,mkey);
+}
+
+/* ---------- GHI CHÚ THEO SKU (lưu vào tab 19_SKU_Notes) ---------- */
+function nipNotesOf(sku){ return ((NIP_DATA||{}).notes||{})[sku]||[]; }
+function nipNoteBy(){ try{ return localStorage.getItem('nip_note_by')||''; }catch(e){ return ''; } }
+function nipNoteSetBy(v){ try{ localStorage.setItem('nip_note_by', v||''); }catch(e){} }
+function nipModName(k){ var m=NIP_MODULES.filter(function(x){return x.key===k;})[0]; return m?(m.icon+' '+m.name):''; }
+function nipRenderNotes(sku,mkey){
+  var box=document.getElementById('nipNoteBox'); if(!box) return;
+  var list=nipNotesOf(sku);
+  var items=list.map(function(n){
+    var edited=(n.updated&&n.created&&n.updated!==n.created)?(' · sửa '+nipEsc(n.updated)):'';
+    return '<div id="nipNoteRow_'+n.id+'" style="border:1px solid var(--border,#2a3f55);border-left:3px solid var(--accent,#C9B037);border-radius:8px;padding:8px 10px;margin-bottom:7px;background:rgba(201,176,55,.05)">'
+      +'<div id="nipNoteTxt_'+n.id+'" style="font-size:12px;white-space:pre-wrap">'+nipEsc(n.text)+'</div>'
+      +'<div style="display:flex;gap:8px;align-items:center;margin-top:5px;flex-wrap:wrap">'
+      +'<span style="font-size:10px;opacity:.55">🕒 '+nipEsc(n.created)+edited+(n.by?(' · '+nipEsc(n.by)):'')+(n.mod?(' · '+nipEsc(nipModName(n.mod))):'')+'</span>'
+      +'<span style="margin-left:auto"></span>'
+      +'<button onclick="nipNoteEditUI(\''+sku+'\',\''+n.id+'\')" style="font-size:10px;padding:3px 8px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">✏️ Sửa</button>'
+      +'<button onclick="nipNoteDel(\''+sku+'\',\''+n.id+'\')" style="font-size:10px;padding:3px 8px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:#e06;cursor:pointer">🗑 Xoá</button>'
+      +'</div></div>';
+  }).join('');
+  box.innerHTML='<div style="font-weight:700;font-size:12px;margin-bottom:6px">📝 Ghi chú SKU'+(list.length?(' ('+list.length+')'):'')+'</div>'
+    +(items||'<div style="font-size:11px;opacity:.5;margin-bottom:7px">Chưa có ghi chú nào cho SKU này.</div>')
+    +'<textarea id="nipNoteNew" rows="2" placeholder="Ghi chú cần nhớ cho SKU này..." style="width:100%;box-sizing:border-box;padding:7px 9px;border-radius:8px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:12px;font-family:inherit;resize:vertical"></textarea>'
+    +'<div style="display:flex;gap:6px;margin-top:6px;align-items:center">'
+    +'<input id="nipNoteByIn" value="'+nipEsc(nipNoteBy())+'" placeholder="Người ghi" style="width:96px;padding:6px 8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:11px">'
+    +'<button onclick="nipNoteAdd(\''+sku+'\',\''+mkey+'\')" style="flex:1;padding:7px;border:0;border-radius:6px;background:var(--accent,#C9B037);color:#1B3A57;font-weight:700;font-size:12px;cursor:pointer">+ Lưu ghi chú</button></div>'
+    +'<div id="nipNoteMsg" style="font-size:11px;margin-top:5px;min-height:14px"></div>';
+}
+async function nipNoteApi(body,sku,mkey){
+  var msg=document.getElementById('nipNoteMsg'); if(msg) msg.innerHTML='<span style="opacity:.6">Đang lưu...</span>';
+  var pw=sessionStorage.getItem('nip_pw')||'';
+  try{
+    var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=nipdata&sub=note&pw='+encodeURIComponent(pw)+'&'+body});
+    var j=await res.json();
+    if(j&&j.ok){
+      NIP_DATA.notes=j.notes||{};
+      nipRenderNotes(sku,mkey);
+      nipDashTable();
+      return true;
+    }
+    if(msg) msg.innerHTML='<span style="color:#e06">Lỗi: '+((j&&j.error)||'?')+'</span>';
+  }catch(e){ if(msg) msg.innerHTML='<span style="color:#e06">Không kết nối được server</span>'; }
+  return false;
+}
+function nipNoteAdd(sku,mkey){
+  var ta=document.getElementById('nipNoteNew'); var t=(ta&&ta.value||'').trim();
+  var by=(document.getElementById('nipNoteByIn')||{}).value||'';
+  if(!t){ var m=document.getElementById('nipNoteMsg'); if(m) m.innerHTML='<span style="color:#e06">Chưa nhập nội dung</span>'; return; }
+  nipNoteSetBy(by);
+  nipNoteApi('op=add&sku='+encodeURIComponent(sku)+'&mod='+encodeURIComponent(mkey)+'&text='+encodeURIComponent(t)+'&by='+encodeURIComponent(by),sku,mkey);
+}
+function nipNoteEditUI(sku,id){
+  var n=nipNotesOf(sku).filter(function(x){return x.id===id;})[0]; if(!n) return;
+  var el=document.getElementById('nipNoteTxt_'+id); if(!el) return;
+  el.innerHTML='<textarea id="nipNoteEd_'+id+'" rows="3" style="width:100%;box-sizing:border-box;padding:6px 8px;border-radius:6px;border:1px solid var(--accent,#C9B037);background:rgba(0,0,0,.25);color:inherit;font-size:12px;font-family:inherit"></textarea>'
+    +'<div style="display:flex;gap:6px;margin-top:5px"><button onclick="nipNoteSave(\''+sku+'\',\''+id+'\')" style="padding:5px 10px;border:0;border-radius:6px;background:#0E7544;color:#fff;font-size:11px;font-weight:700;cursor:pointer">✓ Lưu</button>'
+    +'<button onclick="nipRenderNotes(\''+sku+'\',NIP_CUR_MOD)" style="padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;font-size:11px;cursor:pointer">Huỷ</button></div>';
+  var ta=document.getElementById('nipNoteEd_'+id); if(ta){ ta.value=n.text; ta.focus(); }
+}
+function nipNoteSave(sku,id){
+  var ta=document.getElementById('nipNoteEd_'+id); var t=(ta&&ta.value||'').trim();
+  if(!t) return;
+  nipNoteApi('op=edit&noteid='+encodeURIComponent(id)+'&text='+encodeURIComponent(t)+'&by='+encodeURIComponent(nipNoteBy()),sku,NIP_CUR_MOD);
+}
+function nipNoteDel(sku,id){
+  if(!confirm('Xoá ghi chú này? (dòng vẫn được giữ trong Sheet với trạng thái deleted)')) return;
+  nipNoteApi('op=del&noteid='+encodeURIComponent(id),sku,NIP_CUR_MOD);
 }
 function nipDetailDocs(sku,types){
   var docs=nipDocsOf(sku,types);
