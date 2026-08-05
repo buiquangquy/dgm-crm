@@ -597,7 +597,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.1 (2026-08) · Dashboard tuân thủ + Thư viện chuẩn</span>
+            <span style="font-size:11px;opacity:.6">· v4.2 (2026-08) · Dashboard tuân thủ + Thư viện chuẩn (6 mục)</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -613,11 +613,14 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
       <div id="guide2Panel" style="display:none">
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
           <div style="font-weight:700;font-size:15px">📚 Thư viện chuẩn</div>
-          <span style="font-size:11px;opacity:.6">· Thư viện chuẩn: checklist chuẩn mực Nhãn · HSCB · Spec — dùng khi mở SKU mới / training team · status &amp; note của bạn lưu trong Sheet</span>
+          <span style="font-size:11px;opacity:.6">· Checklist chuẩn mực: Nhãn · Nhãn phụ · Claim · Quảng cáo &amp; Nhãn hiệu · HSCB · Spec — dùng khi mở SKU mới, duyệt artwork, brief KOL, training team</span>
           <button onclick="state._guide2Loaded=false;guide2Load()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">↻ Tải lại</button>
         </div>
         <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
           <button class="nip-subtab active" data-g2="nhan" onclick="guide2Show('nhan')">🏷️ Nhãn</button>
+          <button class="nip-subtab" data-g2="sublabel" onclick="guide2Show('sublabel')">🈯 Nhãn phụ</button>
+          <button class="nip-subtab" data-g2="claim" onclick="guide2Show('claim')">✨ Claim</button>
+          <button class="nip-subtab" data-g2="ads" onclick="guide2Show('ads')">📣 Quảng cáo &amp; Nhãn hiệu</button>
           <button class="nip-subtab" data-g2="hscb" onclick="guide2Show('hscb')">📑 HSCB</button>
           <button class="nip-subtab" data-g2="spec" onclick="guide2Show('spec')">🔬 Spec</button>
         </div>
@@ -4561,6 +4564,7 @@ async function nipCommit(){
 }
 /* ===================== HỒ SƠ CHUẨN (Guide 2) ===================== */
 let GUIDE2_DATA=null;
+var G2_TAB={nhan:'16_Guide_Nhan',hscb:'17_Guide_HSCB',spec:'18_Guide_Spec',sublabel:'18_Guide_Spec (item_id P…)',claim:'18_Guide_Spec (item_id C…)',ads:'18_Guide_Spec (item_id Q…)'};
 async function guide2Load(){
   var body=document.getElementById('guide2Body'); if(body) body.innerHTML='Đang tải từ Google Drive...';
   var pw=sessionStorage.getItem('nip_pw')||'';
@@ -4618,7 +4622,7 @@ function guide2Render(which){
       +'<button onclick="guide2AiHint(\''+which+'\','+idx+')" style="margin-left:auto;font-size:11px;padding:4px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">💡 AI gợi ý</button></div>'
       +'<div id="g2ai_'+which+'_'+idx+'" style="margin-top:8px"></div></div>';
   }).join('');
-  var el=document.getElementById('g2rows'); if(el) el.innerHTML=html||'<div style="opacity:.6;padding:20px;text-align:center">Chưa có mục nào. Tạo tab '+({nhan:'16_Guide_Nhan',hscb:'17_Guide_HSCB',spec:'18_Guide_Spec'}[which])+' trong DGM_NIP_DB và dán nội dung từ file ThuVienChuan_Guide_Paste.xlsx, sau đó bấm ↻ Tải lại.</div>';
+  var el=document.getElementById('g2rows'); if(el) el.innerHTML=html||'<div style="opacity:.6;padding:20px;text-align:center">Chưa có mục nào. Dán nội dung vào tab '+(G2_TAB[which]||'18_Guide_Spec')+' trong DGM_NIP_DB (mục này lấy từ file paste tương ứng), sau đó bấm ↻ Tải lại.</div>';
 }
 async function guide2AiHint(which,idx){
   var r=(GUIDE2_DATA[which].rows.filter(function(x){return !((document.getElementById('g2group')||{}).value) || x.group===document.getElementById('g2group').value;}))[idx];
