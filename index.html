@@ -312,6 +312,27 @@ table tbody td::before{content:attr(data-label);font-size:10px;color:var(--t3);f
 .bottom-nav{display:none!important}
 .nm{display:flex}
 }
+
+/* ✅ v12 — VIỆC CẦN LÀM TRONG LEAD (CRM Chào hàng) */
+.ltw{display:flex;flex-direction:column;gap:5px}
+.lti{display:flex;gap:8px;align-items:flex-start;padding:7px 8px;background:var(--s2);border-radius:var(--r);border-left:3px solid var(--bd2)}
+.lti.ov{border-left-color:var(--red);background:var(--rlt)}
+.lti.soon{border-left-color:var(--amb);background:var(--alt)}
+.lti.dn{border-left-color:var(--grn);background:var(--s2);opacity:.72}
+.lti input[type=checkbox]{margin-top:2px;width:15px;height:15px;flex-shrink:0;cursor:pointer}
+.ltt{font-size:12.5px;font-weight:500;line-height:1.35;word-break:break-word}
+.ltt.done{text-decoration:line-through;color:var(--t3);font-weight:400}
+.ltm{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:3px}
+.ltm span{font-size:10px;padding:1px 6px;border-radius:5px;background:var(--s);color:var(--t3)}
+.ltm .pc{background:var(--blt);color:var(--bdk)}
+.ltm .dl{background:var(--s);color:var(--t2)}
+.ltm .dl.ov{background:var(--rlt);color:var(--red);font-weight:600}
+.ltm .dl.soon{background:var(--alt);color:var(--amb);font-weight:600}
+.lta{display:flex;gap:1px;flex-shrink:0}
+.lta button{background:none;border:none;cursor:pointer;font-size:12px;color:var(--t3);padding:1px 4px;border-radius:4px}
+.lta button:hover{background:var(--s);color:var(--t)}
+.ltadd{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:8px;padding-top:8px;border-top:.5px dashed var(--bd)}
+.ltsum{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px}
 </style>
 </head>
 <body>
@@ -879,7 +900,10 @@ function mapLead(row){
   if(typeof prodIds==='string'){try{prodIds=JSON.parse(prodIds);}catch(e){prodIds=prodIds.split(',').filter(Boolean);}}
   let comms=row.comments||[];
   if(typeof comms==='string'){try{comms=JSON.parse(comms);}catch(e){comms=[];}}
-  return{...row,product_ids:Array.isArray(prodIds)?prodIds:[],comments:comms};
+  // ✅ v12: việc cần làm trong lead
+  let lts=row.tasks||[];
+  if(typeof lts==='string'){try{lts=JSON.parse(lts);}catch(e){lts=[];}}
+  return{...row,product_ids:Array.isArray(prodIds)?prodIds:[],comments:comms,tasks:Array.isArray(lts)?lts:[]};
 }
 
 async function syncAll(){
@@ -963,7 +987,9 @@ async function saveTask(task){
     ...task,
     subtasks:JSON.stringify(Array.isArray(task.subtasks)?task.subtasks:[]),
     comments:JSON.stringify(Array.isArray(task.comments)?task.comments:[]),
-    pic_ids:Array.isArray(task.pic_ids)?task.pic_ids.join(','):task.pic_ids||'',
+    // ✅ v12 [FIX] Trước đây .join(',') → Sheet lưu 'u1,u7' khiến Dashboard
+    // không tách được người phụ trách. Nay ghi JSON chuẩn như subtasks/comments.
+    pic_ids:JSON.stringify(Array.isArray(task.pic_ids)?task.pic_ids:String(task.pic_ids||'').split(',').filter(Boolean)),
     product_ids:JSON.stringify(Array.isArray(task.product_ids)?task.product_ids:[]),
   }};
   const ok=await apiPost(payload);
@@ -977,6 +1003,7 @@ async function saveLead(lead){
     ...lead,
     product_ids:JSON.stringify(Array.isArray(lead.product_ids)?lead.product_ids:[]),
     comments:JSON.stringify(Array.isArray(lead.comments)?lead.comments:[]),
+    tasks:JSON.stringify(Array.isArray(lead.tasks)?lead.tasks:[]),   // ✅ v12
   }};
   const ok=await apiPost(payload);
   if(ok){state.lastSync=new Date();setSS('ok');}
@@ -1862,6 +1889,8 @@ function rLeadCard(l){
   const prods=(Array.isArray(l.product_ids)?l.product_ids:[]).map(p=>getProd(p)).filter(Boolean);
   const pic=l.pic_id?getUser(l.pic_id):null;
   const done=l.result==='success'||l.result==='fail';
+  const lts=ltStat(l);   // ✅ v12
+  const ltBadge=lts.total?`<span class="b ${lts.done===lts.total?'bok':'bgr'}">✅ ${lts.done}/${lts.total} việc</span>`+(lts.ov?`<span class="b bnotok">⚠ ${lts.ov} trễ</span>`:''):'';
   const resBadge=done?`<span class="b ${l.result==='success'?'bok':'bnotok'}">${l.result==='success'?'✅ Thành công':'❌ Không TC'}</span>`:'';
   const respBadge=l.response==='OK'?'<span class="b bok">👍 OK</span>':(l.response==='NOT_OK'?'<span class="b bnotok">👎 Không OK</span>':'');
   return`<div class="tc" id="lcard-${l.id}" draggable="true" ondragstart="ldrs(event,'${l.id}')" onclick="openLeadDetail('${l.id}')">
@@ -1869,6 +1898,7 @@ function rLeadCard(l){
 <div class="tb2">
   <span class="b b${l.channel||'ALL'}">${l.channel||'ALL'}</span>
   ${prods.length?`<span class="b bgr">📦 ${prods.length} SP</span>`:''}
+  ${ltBadge}
   ${respBadge}${resBadge}
 </div>
 ${l.email||l.phone?`<div style="font-size:10px;color:var(--t3);margin-top:3px">${l.phone?'📞 '+l.phone:''} ${l.email?' ✉ '+l.email:''}</div>`:''}
@@ -1989,6 +2019,7 @@ async function saveLeadForm(tp,editId){
     created_by:existing?.created_by||state.currentUser.id,
     notes:document.getElementById('lf-notes')?.value||'',
     comments:existing?.comments||[],
+    tasks:existing?.tasks||[],   // ✅ v12: không mất việc cần làm khi sửa lead
     created_at:existing?.created_at||new Date().toISOString(),
     updated_at:new Date().toISOString(),
   };
@@ -1996,6 +2027,157 @@ async function saveLeadForm(tp,editId){
   else state.leads.unshift(lead);
   CM();renderLeads();toast('Đã lưu lead ✓');
   await saveLead(lead);
+}
+
+
+// ============================================================
+// ✅ v12 — VIỆC CẦN LÀM TRONG LEAD (task + deadline mỗi lead)
+// Lưu dạng JSON trong cột CRM_Leads.tasks
+// ============================================================
+window._ltEdit=window._ltEdit||new Set();   // lead task nào đang mở form sửa (lid:tid)
+
+function ltList(l){return Array.isArray(l.tasks)?l.tasks:[];}
+function ltIsDone(x){return x.done===true||x.done==='true'||x.done==='1';}
+function ltStat(l){
+  const arr=ltList(l);
+  const done=arr.filter(ltIsDone).length;
+  const ov=arr.filter(x=>!ltIsDone(x)&&x.deadline&&daysFrom(x.deadline)<0).length;
+  return{total:arr.length,done,ov,open:arr.length-done};
+}
+// Trạng thái deadline: '' | 'soon' (<=3 ngày) | 'ov' (quá hạn)
+function ltDlState(x){
+  if(ltIsDone(x)||!x.deadline)return'';
+  const d=daysFrom(x.deadline);
+  if(d<0)return'ov';
+  if(d<=3)return'soon';
+  return'';
+}
+
+function renderLeadTaskBlock(l){
+  const arr=ltList(l).slice().sort((a,b)=>{
+    const ad=ltIsDone(a)?1:0,bd=ltIsDone(b)?1:0;
+    if(ad!==bd)return ad-bd;                                  // chưa xong lên trên
+    if(a.deadline&&b.deadline)return a.deadline<b.deadline?-1:1;
+    if(a.deadline)return -1;
+    if(b.deadline)return 1;
+    return 0;
+  });
+  const st=ltStat(l);
+  const rows=arr.length?arr.map(x=>renderLeadTaskRow(l,x)).join(''):
+    '<div style="font-size:12px;color:var(--t3);padding:6px 2px">Chưa có việc nào. Thêm bên dưới để theo dõi tiến độ lead này.</div>';
+  return `<div class="ds"><div class="dst">Việc cần làm (${st.done}/${st.total})</div>
+${st.total?`<div class="ltsum">
+  <span class="b bgr">✅ ${st.done} xong</span>
+  <span class="b bgr">🕐 ${st.open} đang mở</span>
+  ${st.ov?`<span class="b bnotok">⚠ ${st.ov} quá hạn</span>`:''}
+</div>`:''}
+<div class="ltw">${rows}</div>
+<div class="ltadd">
+  <input id="lt-t-${l.id}" class="fi" style="font-size:12px;padding:5px 8px;flex:2;min-width:150px" placeholder="Thêm việc cần làm..." onkeydown="if(event.key==='Enter')addLeadTask('${l.id}')">
+  <select id="lt-pic-${l.id}" class="fi" style="font-size:11px;padding:5px 6px;flex:1;min-width:120px">
+    ${aUsers().map(u=>`<option value="${u.id}" ${u.id===(state.currentUser?.id)?'selected':''}>${u.name}</option>`).join('')}
+  </select>
+  <input type="date" id="lt-dl-${l.id}" class="fi" style="font-size:11px;padding:4px 6px;flex:1;min-width:120px" title="Deadline">
+  <button class="btn btn-p btn-sm" onclick="addLeadTask('${l.id}')">+ Thêm</button>
+</div></div>`;
+}
+
+function renderLeadTaskRow(l,x){
+  if(window._ltEdit.has(l.id+':'+x.id))return renderLeadTaskEditRow(l,x);
+  const dn=ltIsDone(x);
+  const dls=ltDlState(x);
+  const pic=x.pic_id?getUser(x.pic_id):null;
+  const cls=dn?'dn':(dls==='ov'?'ov':(dls==='soon'?'soon':''));
+  return `<div class="lti ${cls}">
+  <input type="checkbox" ${dn?'checked':''} onchange="togLeadTask('${l.id}','${x.id}',this.checked)">
+  <div style="flex:1;min-width:0">
+    <div class="ltt ${dn?'done':''}">${x.title}</div>
+    <div class="ltm">
+      ${pic?`<span class="pc">👤 ${pic.name}</span>`:''}
+      ${x.deadline?`<span class="dl ${dls}">${dls==='ov'?'⚠ ':(dls==='soon'?'⏰ ':'')}📅 ${fmtD(x.deadline)}</span>`:''}
+      ${dn&&x.done_at?`<span>✅ ${fmtD(x.done_at)}${x.done_by?' · '+(getUser(x.done_by)?.name||''):''}</span>`:''}
+    </div>
+    ${x.note?`<div style="font-size:11px;color:var(--t2);margin-top:3px">${x.note}</div>`:''}
+  </div>
+  <div class="lta">
+    <button onclick="toggleLeadTaskEdit('${l.id}','${x.id}')" title="Sửa">✏️</button>
+    <button onclick="delLeadTask('${l.id}','${x.id}')" title="Xoá">×</button>
+  </div>
+</div>`;
+}
+
+function renderLeadTaskEditRow(l,x){
+  return `<div class="lti" style="flex-wrap:wrap;background:var(--blt)">
+  <input id="lte-t-${l.id}-${x.id}" class="fi" style="font-size:12px;padding:5px 8px;flex:2;min-width:150px" value="${(x.title||'').replace(/"/g,'&quot;')}" onkeydown="if(event.key==='Enter')saveLeadTaskEdit('${l.id}','${x.id}')">
+  <select id="lte-pic-${l.id}-${x.id}" class="fi" style="font-size:11px;padding:5px 6px;flex:1;min-width:120px">
+    ${aUsers().map(u=>`<option value="${u.id}" ${u.id===x.pic_id?'selected':''}>${u.name}</option>`).join('')}
+  </select>
+  <input type="date" id="lte-dl-${l.id}-${x.id}" class="fi" style="font-size:11px;padding:4px 6px;flex:1;min-width:120px" value="${x.deadline||''}">
+  <input id="lte-n-${l.id}-${x.id}" class="fi" style="font-size:11px;padding:5px 8px;width:100%" placeholder="Ghi chú (tuỳ chọn)" value="${(x.note||'').replace(/"/g,'&quot;')}">
+  <div style="display:flex;gap:6px;width:100%;justify-content:flex-end">
+    <button class="btn btn-sm" onclick="toggleLeadTaskEdit('${l.id}','${x.id}')">Huỷ</button>
+    <button class="btn btn-p btn-sm" onclick="saveLeadTaskEdit('${l.id}','${x.id}')">💾 Lưu</button>
+  </div>
+</div>`;
+}
+
+async function addLeadTask(lid){
+  const l=state.leads.find(x=>String(x.id)===String(lid));if(!l)return;
+  const inp=document.getElementById('lt-t-'+lid);
+  const title=inp?.value.trim();
+  if(!title){toast('Nhập nội dung việc cần làm','warn');return;}
+  const pic=document.getElementById('lt-pic-'+lid)?.value||state.currentUser?.id||'';
+  const dl=document.getElementById('lt-dl-'+lid)?.value||'';
+  if(!Array.isArray(l.tasks))l.tasks=[];
+  l.tasks.push({id:'lt'+Date.now(),title,pic_id:pic,deadline:dl,done:false,done_at:'',done_by:'',note:'',
+    created_by:state.currentUser?.id||'',created_at:new Date().toISOString()});
+  if(!Array.isArray(l.comments))l.comments=[];
+  l.comments.push({id:Date.now(),text:'📌 Thêm việc: "'+title+'"'+(dl?' — hạn '+fmtD(dl):'')+' — '+(getUser(pic)?.name||'')+' (bởi '+(state.currentUser?.name||'')+')',author:'System',time:new Date().toISOString(),isSystem:true});
+  openLeadDetail(lid);renderLeads();toast('Đã thêm việc ✓');
+  await saveLead(l);
+}
+
+async function togLeadTask(lid,tid,checked){
+  const l=state.leads.find(x=>String(x.id)===String(lid));if(!l)return;
+  const x=ltList(l).find(y=>String(y.id)===String(tid));if(!x)return;
+  x.done=!!checked;
+  x.done_at=checked?new Date().toISOString():'';
+  x.done_by=checked?(state.currentUser?.id||''):'';
+  if(!Array.isArray(l.comments))l.comments=[];
+  l.comments.push({id:Date.now(),text:(checked?'✅ Hoàn thành việc: "':'↩ Mở lại việc: "')+x.title+'" — '+(state.currentUser?.name||''),author:'System',time:new Date().toISOString(),isSystem:true});
+  openLeadDetail(lid);renderLeads();
+  await saveLead(l);
+}
+
+function toggleLeadTaskEdit(lid,tid){
+  const k=lid+':'+tid;
+  if(window._ltEdit.has(k))window._ltEdit.delete(k);else window._ltEdit.add(k);
+  openLeadDetail(lid);
+}
+
+async function saveLeadTaskEdit(lid,tid){
+  const l=state.leads.find(x=>String(x.id)===String(lid));if(!l)return;
+  const x=ltList(l).find(y=>String(y.id)===String(tid));if(!x)return;
+  const nt=document.getElementById('lte-t-'+lid+'-'+tid)?.value.trim();
+  if(!nt){toast('Nội dung không được để trống','warn');return;}
+  x.title=nt;
+  x.pic_id=document.getElementById('lte-pic-'+lid+'-'+tid)?.value||x.pic_id;
+  x.deadline=document.getElementById('lte-dl-'+lid+'-'+tid)?.value||'';
+  x.note=document.getElementById('lte-n-'+lid+'-'+tid)?.value.trim()||'';
+  window._ltEdit.delete(lid+':'+tid);
+  openLeadDetail(lid);renderLeads();toast('Đã cập nhật việc ✓');
+  await saveLead(l);
+}
+
+async function delLeadTask(lid,tid){
+  const l=state.leads.find(x=>String(x.id)===String(lid));if(!l)return;
+  const x=ltList(l).find(y=>String(y.id)===String(tid));if(!x)return;
+  if(!confirm('Xoá việc "'+x.title+'"?'))return;
+  l.tasks=ltList(l).filter(y=>String(y.id)!==String(tid));
+  if(!Array.isArray(l.comments))l.comments=[];
+  l.comments.push({id:Date.now(),text:'🗑 Xoá việc: "'+x.title+'" — '+(state.currentUser?.name||''),author:'System',time:new Date().toISOString(),isSystem:true});
+  openLeadDetail(lid);renderLeads();toast('Đã xoá việc','warn');
+  await saveLead(l);
 }
 
 function openLeadDetail(id){
@@ -2036,6 +2218,7 @@ ${prods.length?`<div class="ds"><div class="dst">Sản phẩm chào (${prods.len
   const cur=(l.stage||stages[0])===s;const don=i<curIdx;
   return`<button class="fn ${cur?'cur':don?'don':''}" onclick="advLeadStage('${l.id}','${s.replace(/'/g,"&#39;")}')">${s}</button>`;
 }).join('')}</div></div>
+${renderLeadTaskBlock(l)}
 ${isListing&&!done?`<div class="ds"><div class="dst">Phản hồi khách hàng</div>
 <div class="fa">
   <button class="btn ${l.response==='OK'?'btn-g':''}" onclick="setLeadResponse('${l.id}','OK')">👍 OK</button>

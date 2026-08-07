@@ -200,6 +200,72 @@
     margin-top:14px; padding:12px 14px; background:#FBFAF6; border:1px solid var(--line);
     border-radius:8px; font-size:12.5px; max-height:180px; overflow-y:auto;
   }
+
+  /* ============================================================
+     ✅ v12 — TASK TUẦN NÀY (thao tác trực tiếp trong biên bản họp)
+     ============================================================ */
+  .wt-toolbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px;
+    padding-bottom:12px; border-bottom:1px solid var(--line);}
+  .wt-chip{font-size:12px; padding:5px 12px; border-radius:20px; border:1px solid var(--line);
+    background:#fff; color:#8A8577; cursor:pointer; font-weight:500;}
+  .wt-chip.on{background:var(--navy); color:#fff; border-color:var(--navy);}
+  .wt-toolbar select{border:1px solid var(--line); border-radius:8px; padding:5px 9px;
+    font-size:12px; font-family:'Inter',sans-serif; color:var(--gray); background:#fff;}
+  .wt-count{font-size:11.5px; color:#8A8577; font-family:'IBM Plex Mono',monospace; margin-left:auto;}
+
+  .wt-row{display:flex; gap:10px; align-items:flex-start; padding:11px 12px; margin-bottom:7px;
+    border:1px solid var(--line); border-left:4px solid #D9D4C4; border-radius:9px; background:#fff;}
+  .wt-row.done{background:#F1F8F3; border-left-color:var(--green);}     /* ✅ Hoàn thành */
+  .wt-row.fail{background:#FBF2F3; border-left-color:#9B7B7F;}          /* ❌ Không thành công */
+  .wt-row.ov{border-left-color:var(--red); background:#FDF7F7;}         /* ⚠ Quá hạn */
+  .wt-row.confirm{border-left-color:var(--gold); background:#FDFBF2;}   /* Chờ xác nhận */
+  .wt-row input[type=checkbox]{margin-top:3px; width:16px; height:16px; flex-shrink:0; cursor:pointer;}
+  .wt-body{flex:1; min-width:0;}
+  .wt-title{font-size:13.5px; font-weight:600; color:var(--gray); line-height:1.4; word-break:break-word;}
+  .wt-title.strike{text-decoration:line-through; color:#A9A496; font-weight:500;}
+  .wt-meta{display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top:5px;}
+  .wt-meta span{font-size:10.5px; padding:2px 8px; border-radius:8px; background:var(--cream); color:#8A8577;}
+  .wt-meta .pic{background:#E8EEF5; color:var(--navy);}
+  .wt-meta .dl.ov{background:#FBE1E4; color:var(--red); font-weight:600;}
+  .wt-meta .dl.soon{background:#FFF3D6; color:var(--amber); font-weight:600;}
+  .wt-pill{font-size:10.5px; padding:2px 9px; border-radius:8px; font-weight:600;}
+  .wt-pill.todo{background:#EDEBE3; color:#6E6A5E;}
+  .wt-pill.inprogress{background:#E8EEF5; color:var(--navy);}
+  .wt-pill.confirm{background:#FFF3D6; color:var(--amber);}
+  .wt-pill.done{background:#DCEFE3; color:var(--green);}
+  .wt-pill.fail{background:#FBE1E4; color:var(--red);}
+  .wt-acts{display:flex; gap:2px; flex-shrink:0;}
+  .wt-acts button{background:none; border:1px solid transparent; cursor:pointer; font-size:13px;
+    color:#8A8577; padding:3px 6px; border-radius:6px;}
+  .wt-acts button:hover{background:var(--cream); color:var(--navy);}
+  .wt-acts button.on{background:var(--navy); color:#fff;}
+
+  .wt-panel{margin-top:9px; background:var(--cream); border-radius:8px; padding:10px;}
+  .wt-sub{display:flex; gap:8px; align-items:flex-start; padding:5px 0; border-bottom:1px dashed var(--line);}
+  .wt-sub:last-of-type{border-bottom:none;}
+  .wt-sub input[type=checkbox]{width:14px; height:14px; margin-top:2px;}
+  .wt-sub .tx{font-size:12.5px; flex:1;}
+  .wt-sub .tx.strike{text-decoration:line-through; color:#A9A496;}
+  .wt-sub .sm{font-size:10.5px; color:#8A8577; white-space:nowrap;}
+  .wt-inline{display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;}
+  .wt-inline input,.wt-inline select{border:1px solid var(--line); border-radius:6px; padding:6px 9px;
+    font-size:12.5px; font-family:'Inter',sans-serif;}
+  .wt-inline input[type=text]{flex:1; min-width:150px;}
+  .wt-cmt{display:flex; justify-content:space-between; gap:8px; font-size:12px; padding:5px 0;
+    border-bottom:1px solid var(--line);}
+  .wt-cmt:last-of-type{border-bottom:none;}
+  .wt-cmt .ca{font-weight:600; color:var(--navy);}
+  .wt-cmt .ctm{color:#8A8577; font-size:10.5px; white-space:nowrap;}
+  .wt-cmt.sys{color:#8A8577; font-style:italic; font-size:11.5px;}
+  .wt-legend{display:flex; gap:12px; flex-wrap:wrap; font-size:11px; color:#8A8577; margin-top:12px;}
+  .wt-legend i{display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:4px; vertical-align:-1px;}
+
+  /* Việc trong lead */
+  .lt-row{display:flex; gap:10px; align-items:flex-start; padding:9px 2px; border-bottom:1px solid var(--line);}
+  .lt-row:last-child{border-bottom:none;}
+  .lt-row .tx{flex:1; font-size:13px;}
+  .lt-row .tx.strike{text-decoration:line-through; color:#A9A496;}
+  .lt-row .lead{font-size:11px; color:var(--navy); font-weight:600;}
 </style>
 </head>
 <body>
@@ -251,6 +317,36 @@
       <p class="desc">Carry-over ≥ 2 tuần, chưa đóng — ưu tiên xử lý.</p>
       <div class="panel"><div id="offendersWrap"></div></div>
     </div>
+  </section>
+
+  <section>
+    <h2>Task tuần này — <span id="wtWeekLabel" class="mono"></span></h2>
+    <p class="desc">Toàn bộ task của tuần đang chọn. Tick để đóng task, ➕ thêm subtask, 💬 ghi chú cập nhật, 📅 đổi deadline — lưu thẳng vào CRM.</p>
+    <div class="panel">
+      <div class="wt-toolbar">
+        <button class="wt-chip on" data-f="all">Tất cả</button>
+        <button class="wt-chip" data-f="open">Chưa xong</button>
+        <button class="wt-chip" data-f="done">Hoàn thành</button>
+        <button class="wt-chip" data-f="overdue">Quá hạn</button>
+        <select id="wtPicFilter"><option value="all">Mọi người phụ trách</option></select>
+        <button class="btn btn-gold btn-sm" id="wtAddBtn">+ Thêm task</button>
+        <span class="wt-count" id="wtCount"></span>
+      </div>
+      <div id="wtWrap"></div>
+      <div class="wt-legend">
+        <span><i style="background:#D9D4C4"></i>Chưa làm / đang làm</span>
+        <span><i style="background:var(--gold)"></i>Chờ xác nhận</span>
+        <span><i style="background:var(--green)"></i>Hoàn thành</span>
+        <span><i style="background:var(--red)"></i>Quá hạn</span>
+        <span><i style="background:#9B7B7F"></i>Không thành công</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Việc cần làm trong lead (CRM Chào hàng)</h2>
+    <p class="desc">Việc gắn trong từng lead — quá hạn hiện lên đầu. Sửa nội dung trong tab CRM Chào hàng.</p>
+    <div class="panel"><div id="leadTasksWrap"></div></div>
   </section>
 
   <section>
@@ -338,6 +434,42 @@
 </div>
 
 <!-- Modal: Add/Edit BOD Task -->
+<div class="overlay" id="wtOverlay">
+  <div class="modal">
+    <h3 id="wtModalTitle">Thêm task tuần này</h3>
+    <p class="hint">Task sẽ được gắn vào tuần đang chọn và hiện ngay trên Kanban của CRM.</p>
+    <input type="hidden" id="wtTaskId">
+    <div class="fld">
+      <label>Nội dung công việc</label>
+      <input type="text" id="wtTitle" placeholder="VD: Chốt trading term Mega Market 2026">
+    </div>
+    <div class="fld">
+      <label>Kênh</label>
+      <select id="wtChannel">
+        <option value="ALL">ALL</option><option value="MT">MT</option>
+        <option value="GT">GT</option><option value="B2B">B2B</option><option value="HoReCa">HoReCa</option>
+      </select>
+    </div>
+    <div class="fld">
+      <label>Người phụ trách (chọn nhiều)</label>
+      <div class="pic-chips" id="wtPicChips"></div>
+    </div>
+    <div class="fld">
+      <label>Deadline</label>
+      <input type="date" id="wtDeadline">
+    </div>
+    <div class="fld">
+      <label>Ghi chú</label>
+      <textarea id="wtNotes" rows="2" placeholder="Ghi chú thêm (tuỳ chọn)..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-plain" id="wtCancel">Huỷ</button>
+      <button class="btn btn-gold" id="wtSubmit">💾 Lưu</button>
+    </div>
+    <div class="result-box" id="wtModalResult" style="display:none;"></div>
+  </div>
+</div>
+
 <div class="overlay" id="bodTaskOverlay">
   <div class="modal">
     <h3 id="bodTaskModalTitle">Thêm việc cần làm</h3>
@@ -375,13 +507,31 @@
 // ============================================================
 const CONFIG = {
   WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbxVBfHwL58O2hT7iAIpt-ZSk4d0eczLinvZmgwnubwNPigOeMXg79D6an8UWL2SXBih/exec',
-  MY_NAME: 'Quý', // Tên/viết tắt mặc định cho PIC việc BOD + người tạo họp — đổi nếu cần
+  MY_NAME: 'Quý',      // Tên/viết tắt mặc định cho PIC việc BOD + người tạo họp
+  MY_USER_ID: 'u1',    // ✅ v12: id trong CRM_Users dùng khi tạo task từ dashboard
 };
 
 let STATE = {
   weekly: [], offenders: [], meetings: [], users: [], selectedWeek: null,
   bodTasks: [], bodMeetings: [], bodTotals: { total: 0, open: 0, done: 0, offenders: [] },
+  // ✅ v12
+  leadTasks: [], currentWeek: null, wtFilter: 'all', wtPic: 'all',
 };
+const WEEK_UNSET = 'Chưa gắn tuần';
+window._wtPanel = window._wtPanel || {};   // taskId -> 'cmt' | 'sub' | 'dl' | null
+
+function esc(s) {
+  return String(s === null || s === undefined ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function userName(id) {
+  const u = (STATE.users || []).find(x => String(x.id) === String(id));
+  return u ? u.name : String(id || '—');
+}
 
 function _checkConfig() {
   if (!CONFIG.WEBAPP_URL || CONFIG.WEBAPP_URL.includes('PASTE_YOUR')) {
@@ -409,6 +559,8 @@ function pct(done, total) { return total > 0 ? Math.round((done / total) * 100) 
 function ringColor(p) { return p >= 80 ? '#0E7544' : p >= 50 ? '#C9B037' : '#C8102E'; }
 
 // ---------- Load ----------
+// ✅ v12: weeklyStats đã trả kèm users + lead_tasks + task đầy đủ theo tuần
+// nên không cần gọi thêm action=all cho phần team nữa.
 async function loadAll() {
   const statusEl = document.getElementById('statusLine');
   if (CONFIG.WEBAPP_URL.includes('PASTE_YOUR')) {
@@ -419,13 +571,16 @@ async function loadAll() {
   statusEl.textContent = 'Đang tải dữ liệu…';
   statusEl.classList.remove('err');
   try {
-    const [stats, allData, bodStats] = await Promise.all([apiGet('weeklyStats'), apiGet('all'), apiGet('bodStats')]);
+    const [stats, bodStats] = await Promise.all([apiGet('weeklyStats'), apiGet('bodStats')]);
     if (!stats.ok) throw new Error(stats.error || 'weeklyStats lỗi');
     STATE.weekly = stats.weekly || [];
     STATE.offenders = stats.offenders || [];
     STATE.meetings = (stats.meetings || []).sort((a, b) => (a.week_no < b.week_no ? 1 : -1));
-    STATE.users = (allData.ok && allData.data && allData.data.users) ? allData.data.users : [];
-    STATE.selectedWeek = STATE.weekly.length ? STATE.weekly[STATE.weekly.length - 1].week_no : null;
+    STATE.users = stats.users || [];
+    STATE.leadTasks = stats.lead_tasks || [];
+    STATE.currentWeek = stats.current_week || null;
+    STATE.selectedWeek = pickDefaultWeek();
+
     if (bodStats.ok) {
       STATE.bodTasks = bodStats.tasks || [];
       STATE.bodMeetings = bodStats.meetings || [];
@@ -439,6 +594,9 @@ async function loadAll() {
     renderKPIs();
     renderPicTable();
     renderOffenders();
+    renderWeekTaskPicFilter();
+    renderWeekTasks();
+    renderLeadTasks();
     renderMeetingLog();
     renderAttendeeChips();
     renderBODKPIs();
@@ -452,20 +610,30 @@ async function loadAll() {
   }
 }
 
-// Tải lại riêng phần BOD (dùng sau các thao tác trong tab BOD, tránh reload toàn bộ)
-async function refreshBODOnly() {
-  const bodStats = await apiGet('bodStats');
-  if (bodStats.ok) {
-    STATE.bodTasks = bodStats.tasks || [];
-    STATE.bodMeetings = bodStats.meetings || [];
-    STATE.bodTotals = {
-      total: bodStats.total_count || 0, open: bodStats.open_count || 0,
-      done: bodStats.done_count || 0, offenders: bodStats.offenders || [],
-    };
-  }
-  renderBODKPIs();
-  renderBODTasks();
-  renderBODMeetingLog();
+// ✅ v12 [FIX-2] Tuần mặc định = tuần ISO hiện tại nếu có dữ liệu;
+// nếu không thì tuần THẬT mới nhất — KHÔNG bao giờ mặc định vào rổ
+// "Chưa gắn tuần" (lỗi cũ: rổ này sort xuống cuối nên luôn được chọn).
+function pickDefaultWeek() {
+  if (!STATE.weekly.length) return null;
+  const real = STATE.weekly.filter(w => w.week_no !== WEEK_UNSET);
+  if (STATE.currentWeek && real.some(w => w.week_no === STATE.currentWeek)) return STATE.currentWeek;
+  if (real.length) return real[real.length - 1].week_no;
+  return STATE.weekly[STATE.weekly.length - 1].week_no;
+}
+
+// Tải lại toàn bộ phần team sau khi thao tác task (không đụng BOD)
+async function refreshTeamOnly() {
+  const stats = await apiGet('weeklyStats');
+  if (!stats.ok) return;
+  const keep = STATE.selectedWeek;
+  STATE.weekly = stats.weekly || [];
+  STATE.offenders = stats.offenders || [];
+  STATE.users = stats.users || [];
+  STATE.leadTasks = stats.lead_tasks || [];
+  STATE.currentWeek = stats.current_week || null;
+  STATE.selectedWeek = STATE.weekly.some(w => w.week_no === keep) ? keep : pickDefaultWeek();
+  renderLedger(); renderKPIs(); renderPicTable(); renderOffenders();
+  renderWeekTaskPicFilter(); renderWeekTasks(); renderLeadTasks();
 }
 
 // ---------- Ledger strip ----------
@@ -475,11 +643,13 @@ function renderLedger() {
   wrap.innerHTML = STATE.weekly.map(w => {
     const p = pct(w.done, w.total);
     const active = w.week_no === STATE.selectedWeek ? 'active' : '';
-    return `<div class="ledger-chip ${active}" data-week="${w.week_no}">
+    const label = w.week_no === WEEK_UNSET ? '⚠ Chưa gắn tuần' : w.week_no;
+    const isNow = w.week_no === STATE.currentWeek ? ' • nay' : '';
+    return `<div class="ledger-chip ${active}" data-week="${esc(w.week_no)}" title="${esc(label)}">
       <div class="ring" style="background:conic-gradient(${ringColor(p)} ${p * 3.6}deg, ${'#E4E0D3'} 0)">
         <span>${p}%</span>
       </div>
-      <div class="wk">${w.week_no}</div>
+      <div class="wk">${label}${isNow}</div>
       <div class="cnt">${w.total} task</div>
     </div>`;
   }).join('');
@@ -487,6 +657,7 @@ function renderLedger() {
     chip.addEventListener('click', () => {
       STATE.selectedWeek = chip.dataset.week;
       renderLedger(); renderKPIs(); renderPicTable();
+      renderWeekTaskPicFilter(); renderWeekTasks();
     });
   });
 }
@@ -507,18 +678,21 @@ function renderKPIs() {
 }
 
 // ---------- PIC comparison table ----------
+// ✅ v12 [FIX-1] byPic từ backend nay key theo ID người phụ trách và kèm
+// sẵn tên đã resolve — không còn hiện chuỗi thô kiểu "u1,u7".
 function renderPicTable() {
-  document.getElementById('picWeekLabel').textContent = STATE.selectedWeek || '';
+  const lbl = STATE.selectedWeek === WEEK_UNSET ? '⚠ Chưa gắn tuần' : (STATE.selectedWeek || '');
+  document.getElementById('picWeekLabel').textContent = lbl;
   const wrap = document.getElementById('picTableWrap');
   const cur = currentWeekData(), prev = prevWeekData();
   if (!cur) { wrap.innerHTML = '<div class="empty-note">Chưa có dữ liệu tuần này.</div>'; return; }
-  const names = Object.keys(cur.byPic || {});
-  if (!names.length) { wrap.innerHTML = '<div class="empty-note">Chưa có task được gán người phụ trách.</div>'; return; }
+  const ids = Object.keys(cur.byPic || {});
+  if (!ids.length) { wrap.innerHTML = '<div class="empty-note">Chưa có task được gán người phụ trách.</div>'; return; }
 
-  const rows = names.map(name => {
-    const c = cur.byPic[name];
+  const rows = ids.map(id => {
+    const c = cur.byPic[id];
     const p = pct(c.done, c.total);
-    const prevPic = prev && prev.byPic ? prev.byPic[name] : null;
+    const prevPic = prev && prev.byPic ? prev.byPic[id] : null;
     const prevP = prevPic ? pct(prevPic.done, prevPic.total) : null;
     let deltaHtml = '<span class="delta flat">—</span>';
     if (prevP !== null) {
@@ -527,8 +701,10 @@ function renderPicTable() {
       const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '＝';
       deltaHtml = `<span class="delta ${cls}">${arrow} ${Math.abs(diff)}%</span>`;
     }
+    const warn = c.known === false && c.id !== '__none__'
+      ? ' <span class="badge co2" title="ID này không khớp CRM_Users">id lạ</span>' : '';
     return `<tr>
-      <td>${name}</td>
+      <td>${esc(c.name)}${warn}</td>
       <td>${c.done}/${c.total}</td>
       <td style="width:140px;"><div class="bar-track"><div class="bar-fill" style="width:${p}%"></div></div></td>
       <td class="mono">${p}%</td>
@@ -549,7 +725,9 @@ function renderOffenders() {
   wrap.innerHTML = `<table>
     <thead><tr><th>Task</th><th>PIC</th><th>Carry-over</th></tr></thead>
     <tbody>${STATE.offenders.map(o => {
-      const pics = Array.isArray(o.pic_ids) ? o.pic_ids.join(', ') : (o.pic_ids || '—');
+      const pics = (Array.isArray(o.pic_names) && o.pic_names.length)
+        ? o.pic_names.map(esc).join(', ')
+        : (Array.isArray(o.pic_ids) ? o.pic_ids.join(', ') : (o.pic_ids || '—'));
       const cls = o.carry_over_count >= 3 ? 'co3' : 'co2';
       return `<tr>
         <td>${o.title || '(không tên)'}</td>
@@ -569,7 +747,7 @@ function renderMeetingLog() {
     const dateStr = m.meeting_date ? new Date(m.meeting_date).toLocaleDateString('vi-VN') : '';
     return `<div class="meeting-item">
       <div class="meeting-head" data-idx="${i}">
-        <span class="wk">${m.week_no}</span>
+        <span class="wk">${esc(m.week_no || '—')}</span>
         <span class="date">${dateStr} · ${attendees}</span>
       </div>
       <div class="meeting-body" id="mbody-${i}">
@@ -600,6 +778,385 @@ function renderAttendeeChips() {
   wrap.querySelectorAll('.pic-chip').forEach(chip => {
     chip.addEventListener('click', () => chip.classList.toggle('sel'));
   });
+}
+
+// ============================================================
+// ✅ v12 — TASK TUẦN NÀY: thao tác trực tiếp trong biên bản họp
+// Tick Done · thêm subtask · ghi chú cập nhật · đổi deadline · thêm task mới
+// Ghi thẳng vào CRM_Tasks qua action 'upsert' (sheet: 'Tasks')
+// ============================================================
+const WT_STATUS_LABEL = { todo: 'To Do', inprogress: 'Đang làm', confirm: 'Chờ xác nhận', done: 'Hoàn thành' };
+
+function wtTasksOfWeek() {
+  const w = currentWeekData();
+  return w && Array.isArray(w.tasks) ? w.tasks : [];
+}
+function wtIsOverdue(t) {
+  return !t._closed && t.deadline && String(t.deadline) < todayStr();
+}
+function wtDlClass(t) {
+  if (t._closed || !t.deadline) return '';
+  const d = String(t.deadline);
+  if (d < todayStr()) return 'ov';
+  const soon = new Date(); soon.setDate(soon.getDate() + 3);
+  const soonStr = soon.getFullYear() + '-' + String(soon.getMonth() + 1).padStart(2, '0') + '-' + String(soon.getDate()).padStart(2, '0');
+  return d <= soonStr ? 'soon' : '';
+}
+function wtRowClass(t) {
+  if (t._cancelled) return 'fail';
+  if (t._done) return 'done';
+  if (wtIsOverdue(t)) return 'ov';
+  if (String(t.status || '').toLowerCase() === 'confirm') return 'confirm';
+  return '';
+}
+function wtPill(t) {
+  if (t._cancelled) return '<span class="wt-pill fail">❌ Không thành công</span>';
+  if (t._done) return '<span class="wt-pill done">✅ Hoàn thành</span>';
+  const st = String(t.status || 'todo').toLowerCase();
+  return `<span class="wt-pill ${st}">${WT_STATUS_LABEL[st] || esc(t.status || 'To Do')}</span>`;
+}
+
+function renderWeekTaskPicFilter() {
+  const sel = document.getElementById('wtPicFilter');
+  if (!sel) return;
+  const keep = STATE.wtPic;
+  const w = currentWeekData();
+  const ids = w ? Object.keys(w.byPic || {}) : [];
+  sel.innerHTML = '<option value="all">Mọi người phụ trách</option>' +
+    ids.map(id => `<option value="${esc(id)}">${esc(w.byPic[id].name)}</option>`).join('');
+  sel.value = ids.indexOf(keep) >= 0 ? keep : 'all';
+  STATE.wtPic = sel.value;
+}
+
+function renderWeekTasks() {
+  const wrap = document.getElementById('wtWrap');
+  const lblEl = document.getElementById('wtWeekLabel');
+  if (!wrap) return;
+  if (lblEl) lblEl.textContent = STATE.selectedWeek === WEEK_UNSET ? '⚠ Chưa gắn tuần' : (STATE.selectedWeek || '');
+
+  let list = wtTasksOfWeek().slice();
+  const totalAll = list.length;
+
+  if (STATE.wtPic !== 'all') {
+    list = list.filter(t => (t.pic_ids || []).map(String).indexOf(String(STATE.wtPic)) >= 0
+      || (STATE.wtPic === '__none__' && !(t.pic_ids || []).length));
+  }
+  if (STATE.wtFilter === 'open') list = list.filter(t => !t._closed);
+  else if (STATE.wtFilter === 'done') list = list.filter(t => t._done);
+  else if (STATE.wtFilter === 'overdue') list = list.filter(t => wtIsOverdue(t));
+
+  // Sắp xếp: chưa đóng lên trước (theo deadline gần nhất), đã đóng xuống cuối
+  list.sort((a, b) => {
+    const ac = a._closed ? 1 : 0, bc = b._closed ? 1 : 0;
+    if (ac !== bc) return ac - bc;
+    const ad = a.deadline || '9999', bd = b.deadline || '9999';
+    if (ad !== bd) return ad < bd ? -1 : 1;
+    return String(a.title || '') < String(b.title || '') ? -1 : 1;
+  });
+
+  const cnt = document.getElementById('wtCount');
+  if (cnt) cnt.textContent = 'Hiện ' + list.length + '/' + totalAll + ' task';
+
+  if (!list.length) {
+    wrap.innerHTML = '<div class="empty-note">Không có task nào khớp bộ lọc.</div>';
+    return;
+  }
+  wrap.innerHTML = list.map(renderWeekTaskRow).join('');
+  bindWeekTaskEvents(wrap);
+}
+
+function renderWeekTaskRow(t) {
+  const id = String(t.id);
+  const panel = window._wtPanel[id] || null;
+  const subs = Array.isArray(t.subtasks) ? t.subtasks : [];
+  const cms = Array.isArray(t.comments) ? t.comments : [];
+  const subDone = subs.filter(s => s.done === true || s.done === 'true').length;
+  const picNames = (t._pic_names && t._pic_names.length) ? t._pic_names : ['Chưa gán PIC'];
+  const co = parseInt(t.carry_over_count, 10) || 0;
+  const dlc = wtDlClass(t);
+
+  return `<div class="wt-row ${wtRowClass(t)}" data-id="${esc(id)}">
+  <input type="checkbox" class="wt-check" data-id="${esc(id)}" ${t._done ? 'checked' : ''} ${t._cancelled ? 'disabled' : ''} title="Đánh dấu hoàn thành">
+  <div class="wt-body">
+    <div class="wt-title ${t._closed ? 'strike' : ''}">${esc(t.title || '(không tên)')}</div>
+    <div class="wt-meta">
+      ${wtPill(t)}
+      ${picNames.map(n => `<span class="pic">👤 ${esc(n)}</span>`).join('')}
+      ${t._customer_name ? `<span>🏢 ${esc(t._customer_name)}</span>` : ''}
+      ${t.channel ? `<span>${esc(t.channel)}</span>` : ''}
+      ${t.deadline ? `<span class="dl ${dlc}">${dlc === 'ov' ? '⚠ ' : (dlc === 'soon' ? '⏰ ' : '')}📅 ${fmtVN(t.deadline)}</span>` : '<span>📅 chưa đặt hạn</span>'}
+      ${co >= 2 ? `<span class="badge ${co >= 3 ? 'co3' : 'co2'}">×${co} carry-over</span>` : ''}
+      ${subs.length ? `<span>☑ ${subDone}/${subs.length} subtask</span>` : ''}
+    </div>
+    ${t.notes ? `<div style="font-size:11.5px;color:#8A8577;margin-top:4px;">${esc(t.notes)}</div>` : ''}
+    ${panel === 'sub' ? renderWTSubPanel(t, subs) : ''}
+    ${panel === 'cmt' ? renderWTCmtPanel(t, cms) : ''}
+    ${panel === 'dl' ? renderWTDlPanel(t) : ''}
+  </div>
+  <div class="wt-acts">
+    <button class="wt-p" data-id="${esc(id)}" data-p="sub" title="Subtask">➕</button>
+    <button class="wt-p" data-id="${esc(id)}" data-p="cmt" title="Ghi chú cập nhật">💬${cms.filter(c => !c.isSystem).length || ''}</button>
+    <button class="wt-p" data-id="${esc(id)}" data-p="dl" title="Đổi deadline">📅</button>
+  </div>
+</div>`;
+}
+
+function renderWTSubPanel(t, subs) {
+  return `<div class="wt-panel">
+  ${subs.length ? subs.map(s => {
+    const dn = (s.done === true || s.done === 'true');
+    const names = (Array.isArray(s.pic_ids) ? s.pic_ids : (s.pic_ids ? String(s.pic_ids).split(',') : []))
+      .filter(Boolean).map(userName);
+    return `<div class="wt-sub">
+      <input type="checkbox" class="wt-subchk" data-id="${esc(t.id)}" data-sid="${esc(s.id)}" ${dn ? 'checked' : ''}>
+      <span class="tx ${dn ? 'strike' : ''}">${esc(s.text || '')}</span>
+      <span class="sm">${names.length ? '👤 ' + names.map(esc).join(', ') : ''}${s.deadline ? ' · 📅 ' + fmtVN(s.deadline) : ''}</span>
+    </div>`;
+  }).join('') : '<div style="font-size:11.5px;color:#8A8577;">Chưa có subtask nào</div>'}
+  <div class="wt-inline">
+    <input type="text" class="wt-subinp" data-id="${esc(t.id)}" placeholder="Thêm subtask…">
+    <select class="wt-subpic" data-id="${esc(t.id)}">
+      ${(STATE.users || []).map(u => `<option value="${esc(u.id)}">${esc(u.name)}</option>`).join('')}
+    </select>
+    <input type="date" class="wt-subdl" data-id="${esc(t.id)}">
+    <button class="btn btn-gold btn-sm wt-subadd" data-id="${esc(t.id)}">Thêm</button>
+  </div>
+</div>`;
+}
+
+function renderWTCmtPanel(t, cms) {
+  return `<div class="wt-panel">
+  ${cms.length ? cms.slice(-12).map(c => c.isSystem
+    ? `<div class="wt-cmt sys"><div>${esc(c.text)}</div><span class="ctm">${c.time ? new Date(c.time).toLocaleString('vi-VN') : ''}</span></div>`
+    : `<div class="wt-cmt"><div><span class="ca">${esc(c.author)}</span> — ${esc(c.text)}</div><span class="ctm">${c.time ? new Date(c.time).toLocaleString('vi-VN') : ''}</span></div>`
+  ).join('') : '<div style="font-size:11.5px;color:#8A8577;">Chưa có ghi chú nào</div>'}
+  <div class="wt-inline">
+    <input type="text" class="wt-cmtinp" data-id="${esc(t.id)}" placeholder="Ghi chú cập nhật trong buổi họp…">
+    <button class="btn btn-gold btn-sm wt-cmtsend" data-id="${esc(t.id)}">Gửi</button>
+  </div>
+</div>`;
+}
+
+function renderWTDlPanel(t) {
+  return `<div class="wt-panel">
+  <div class="wt-inline">
+    <input type="date" class="wt-dlinp" data-id="${esc(t.id)}" value="${esc(t.deadline || '')}">
+    <button class="btn btn-gold btn-sm wt-dlsave" data-id="${esc(t.id)}">💾 Lưu deadline</button>
+  </div>
+</div>`;
+}
+
+function bindWeekTaskEvents(wrap) {
+  wrap.querySelectorAll('.wt-check').forEach(cb =>
+    cb.addEventListener('change', () => wtToggleDone(cb.dataset.id, cb.checked)));
+  wrap.querySelectorAll('.wt-p').forEach(b => b.addEventListener('click', () => {
+    const id = b.dataset.id;
+    window._wtPanel[id] = (window._wtPanel[id] === b.dataset.p) ? null : b.dataset.p;
+    renderWeekTasks();
+  }));
+  wrap.querySelectorAll('.wt-subchk').forEach(cb =>
+    cb.addEventListener('change', () => wtToggleSub(cb.dataset.id, cb.dataset.sid, cb.checked)));
+  wrap.querySelectorAll('.wt-subadd').forEach(b =>
+    b.addEventListener('click', () => wtAddSub(b.dataset.id)));
+  wrap.querySelectorAll('.wt-subinp').forEach(inp =>
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') wtAddSub(inp.dataset.id); }));
+  wrap.querySelectorAll('.wt-cmtsend').forEach(b =>
+    b.addEventListener('click', () => wtAddComment(b.dataset.id)));
+  wrap.querySelectorAll('.wt-cmtinp').forEach(inp =>
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') wtAddComment(inp.dataset.id); }));
+  wrap.querySelectorAll('.wt-dlsave').forEach(b =>
+    b.addEventListener('click', () => wtSaveDeadline(b.dataset.id)));
+}
+
+// ---- Ghi task về CRM_Tasks (gửi FULL object để không mất cột) ----
+function wtFindTask(id) {
+  return wtTasksOfWeek().find(t => String(t.id) === String(id));
+}
+async function wtSave(t, okMsg) {
+  const data = {};
+  Object.keys(t).forEach(k => { if (k.charAt(0) !== '_') data[k] = t[k]; });
+  data.updated_at = new Date().toISOString();
+  const res = await apiWrite({ action: 'upsert', sheet: 'Tasks', data });
+  if (!res || !res.ok) {
+    alert('⚠ Lưu thất bại: ' + ((res && res.error) || 'không rõ nguyên nhân'));
+    await refreshTeamOnly();
+    return false;
+  }
+  const st = document.getElementById('statusLine');
+  if (st && okMsg) st.textContent = okMsg + ' · ' + new Date().toLocaleTimeString('vi-VN');
+  return true;
+}
+function wtSysComment(t, text) {
+  if (!Array.isArray(t.comments)) t.comments = [];
+  t.comments.push({ id: Date.now(), text: text, author: 'System', time: new Date().toISOString(), isSystem: true });
+}
+
+async function wtToggleDone(id, checked) {
+  const t = wtFindTask(id); if (!t) return;
+  if (checked) { t.status = 'done'; t.outcome = 'success'; t.done_by = CONFIG.MY_USER_ID; }
+  else { t.status = 'inprogress'; t.outcome = ''; t.done_by = ''; }
+  t._done = !!checked; t._closed = !!checked; t._cancelled = false;
+  wtSysComment(t, (checked ? '✅ Đóng task trong buổi họp' : '↩ Mở lại task trong buổi họp') + ' — ' + CONFIG.MY_NAME);
+  renderWeekTasks();
+  if (await wtSave(t, checked ? 'Đã đóng task' : 'Đã mở lại task')) await refreshTeamOnly();
+}
+
+async function wtToggleSub(id, sid, checked) {
+  const t = wtFindTask(id); if (!t) return;
+  if (!Array.isArray(t.subtasks)) t.subtasks = [];
+  const s = t.subtasks.find(x => String(x.id) === String(sid)); if (!s) return;
+  s.done = !!checked;
+  renderWeekTasks();
+  await wtSave(t, 'Đã cập nhật subtask');
+}
+
+async function wtAddSub(id) {
+  const t = wtFindTask(id); if (!t) return;
+  const inp = document.querySelector('.wt-subinp[data-id="' + id + '"]');
+  const txt = inp && inp.value.trim();
+  if (!txt) return;
+  const pic = document.querySelector('.wt-subpic[data-id="' + id + '"]');
+  const dl = document.querySelector('.wt-subdl[data-id="' + id + '"]');
+  if (dl && dl.value && t.deadline && dl.value > t.deadline) {
+    alert('Deadline subtask không được vượt deadline task chính (' + fmtVN(t.deadline) + ')');
+    return;
+  }
+  if (!Array.isArray(t.subtasks)) t.subtasks = [];
+  t.subtasks.push({
+    id: Date.now(), text: txt, done: false,
+    pic_ids: pic && pic.value ? [pic.value] : [],
+    deadline: dl ? dl.value : '', comments: [],
+  });
+  wtSysComment(t, '➕ Thêm subtask trong buổi họp: "' + txt + '" — ' + CONFIG.MY_NAME);
+  renderWeekTasks();
+  await wtSave(t, 'Đã thêm subtask');
+}
+
+async function wtAddComment(id) {
+  const t = wtFindTask(id); if (!t) return;
+  const inp = document.querySelector('.wt-cmtinp[data-id="' + id + '"]');
+  const txt = inp && inp.value.trim();
+  if (!txt) return;
+  if (!Array.isArray(t.comments)) t.comments = [];
+  t.comments.push({ id: Date.now(), text: txt, author: CONFIG.MY_NAME, time: new Date().toISOString(), isSystem: false });
+  renderWeekTasks();
+  await wtSave(t, 'Đã lưu ghi chú');
+}
+
+async function wtSaveDeadline(id) {
+  const t = wtFindTask(id); if (!t) return;
+  const inp = document.querySelector('.wt-dlinp[data-id="' + id + '"]');
+  const old = t.deadline || '(chưa có)';
+  t.deadline = inp ? inp.value : '';
+  wtSysComment(t, '📅 Đổi deadline: ' + old + ' → ' + (t.deadline || '(bỏ hạn)') + ' — ' + CONFIG.MY_NAME);
+  window._wtPanel[String(id)] = null;
+  renderWeekTasks();
+  await wtSave(t, 'Đã đổi deadline');
+}
+
+// ---- Thanh lọc ----
+document.querySelectorAll('.wt-chip').forEach(c => c.addEventListener('click', () => {
+  document.querySelectorAll('.wt-chip').forEach(x => x.classList.remove('on'));
+  c.classList.add('on');
+  STATE.wtFilter = c.dataset.f;
+  renderWeekTasks();
+}));
+document.getElementById('wtPicFilter').addEventListener('change', e => {
+  STATE.wtPic = e.target.value; renderWeekTasks();
+});
+
+// ---- Modal thêm task tuần ----
+const wtOverlay = document.getElementById('wtOverlay');
+document.getElementById('wtAddBtn').addEventListener('click', () => {
+  document.getElementById('wtModalResult').style.display = 'none';
+  document.getElementById('wtTitle').value = '';
+  document.getElementById('wtDeadline').value = '';
+  document.getElementById('wtNotes').value = '';
+  document.getElementById('wtChannel').value = 'ALL';
+  const chips = document.getElementById('wtPicChips');
+  chips.innerHTML = (STATE.users || []).map(u =>
+    `<div class="pic-chip" data-uid="${esc(u.id)}"><span class="av">${esc(u.initials || (u.name || '?')[0])}</span>${esc(u.name)}</div>`).join('');
+  chips.querySelectorAll('.pic-chip').forEach(ch => ch.addEventListener('click', () => ch.classList.toggle('sel')));
+  wtOverlay.classList.add('open');
+});
+document.getElementById('wtCancel').addEventListener('click', () => wtOverlay.classList.remove('open'));
+wtOverlay.addEventListener('click', e => { if (e.target === wtOverlay) wtOverlay.classList.remove('open'); });
+
+document.getElementById('wtSubmit').addEventListener('click', async () => {
+  const title = document.getElementById('wtTitle').value.trim();
+  if (!title) { alert('Vui lòng nhập nội dung công việc'); return; }
+  const pics = [...document.querySelectorAll('#wtPicChips .pic-chip.sel')].map(c => c.dataset.uid);
+  if (!pics.length) { alert('Chọn ít nhất 1 người phụ trách'); return; }
+  const wk = (STATE.selectedWeek && STATE.selectedWeek !== WEEK_UNSET) ? STATE.selectedWeek : STATE.currentWeek;
+  const data = {
+    id: 't' + Date.now(),
+    title: title,
+    customer_id: '',
+    channel: document.getElementById('wtChannel').value || 'ALL',
+    pic_ids: pics,
+    flow_name: 'General Task',
+    status: 'todo',
+    step: '',
+    deadline: document.getElementById('wtDeadline').value || '',
+    notes: document.getElementById('wtNotes').value.trim(),
+    subtasks: [],
+    comments: [{ id: Date.now(), text: '📝 Tạo trong biên bản họp tuần ' + wk + ' — ' + CONFIG.MY_NAME, author: 'System', time: new Date().toISOString(), isSystem: true }],
+    product_ids: [],
+    created_by: CONFIG.MY_USER_ID,
+    outcome: '', done_by: '', cancel_reason: '',
+    meeting_id: (STATE.meetings[0] ? STATE.meetings[0].id : ''),
+    week_no: wk,
+    last_reviewed_meeting_id: '',
+    carry_over_count: 0,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  const btn = document.getElementById('wtSubmit');
+  btn.disabled = true; btn.textContent = 'Đang lưu…';
+  try {
+    const res = await apiWrite({ action: 'upsert', sheet: 'Tasks', data });
+    if (!res.ok) throw new Error(res.error || 'Lỗi không xác định');
+    wtOverlay.classList.remove('open');
+    await refreshTeamOnly();
+  } catch (e) {
+    const rb = document.getElementById('wtModalResult');
+    rb.style.display = 'block'; rb.innerHTML = '⚠ ' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 Lưu';
+  }
+});
+
+// ============================================================
+// ✅ v12 — VIỆC CẦN LÀM TRONG LEAD (chỉ đọc — sửa ở tab CRM Chào hàng)
+// ============================================================
+function renderLeadTasks() {
+  const wrap = document.getElementById('leadTasksWrap');
+  if (!wrap) return;
+  const list = (STATE.leadTasks || []).slice().sort((a, b) => {
+    if (a.overdue !== b.overdue) return a.overdue ? -1 : 1;
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    return (a.deadline || '9999') < (b.deadline || '9999') ? -1 : 1;
+  });
+  if (!list.length) {
+    wrap.innerHTML = '<div class="empty-note">Chưa có việc nào được gắn trong lead. Mở tab <b>CRM Chào hàng</b> → chọn lead → khối <b>Việc cần làm</b>.</div>';
+    return;
+  }
+  const ov = list.filter(x => x.overdue).length;
+  const dn = list.filter(x => x.done).length;
+  wrap.innerHTML = `<div style="font-size:12px;color:#8A8577;margin-bottom:10px;font-family:'IBM Plex Mono',monospace;">
+      ${list.length} việc · ${dn} xong · ${ov ? '<b style="color:var(--red)">' + ov + ' quá hạn</b>' : '0 quá hạn'}
+    </div>` +
+    list.map(x => `<div class="lt-row">
+      <span style="flex-shrink:0;">${x.done ? '✅' : (x.overdue ? '⚠️' : '🕐')}</span>
+      <div class="tx ${x.done ? 'strike' : ''}">
+        ${esc(x.title)}
+        <div style="margin-top:3px;"><span class="lead">${esc(x.lead_name)}</span>
+          <span style="font-size:11px;color:#8A8577;"> · ${esc(x.channel || '')} · ${esc(x.lead_stage || '')}</span></div>
+      </div>
+      <span style="font-size:11px;color:#8A8577;white-space:nowrap;">👤 ${esc(x.pic_name)}</span>
+      <span style="font-size:11px;white-space:nowrap;color:${x.overdue ? 'var(--red)' : '#8A8577'};font-weight:${x.overdue ? '600' : '400'};">
+        ${x.deadline ? '📅 ' + fmtVN(x.deadline) : '—'}</span>
+    </div>`).join('');
 }
 
 // ============================================================
