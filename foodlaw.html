@@ -597,7 +597,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.3 (2026-08) · Dashboard tuân thủ + Thư viện chuẩn + Ghi chú SKU</span>
+            <span style="font-size:11px;opacity:.6">· v4.4 (2026-08) · Summary Dashboard + Versioning HSCB + AI đọc file + Thư viện chuẩn</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -4116,7 +4116,7 @@ function nipBuildLabel(sku){
   var kw=nipNameRiskWords(sk);
   if(kw.length) items.push(nipItem('warn',8,'Tên/nhãn chứa từ ngữ cần căn cứ chứng minh: "'+kw.join('", "')+'"','NĐ 37/2026 + TT 29/2023 — thông tin không được gây hiểu nhầm; claim phải chứng minh được','med','Chuẩn bị hồ sơ chứng minh hoặc điều chỉnh từ ngữ (tham khảo case NCD "Tự Nhiên")'));
 
-  var d0=((NIP_DATA.decl||{})[sku]||[])[0];
+  var d0=(((NIP_DATA.decl||{})[sku]||{}).active)||null;
   if(!d0) items.push(nipItem('nd',8,'Xuất xứ nhãn vs hồ sơ công bố — chưa có hồ sơ để đối chiếu','NĐ 37/2026 — xuất xứ là nội dung bắt buộc','med','Bổ sung dòng SKU vào 10_Declaration'));
   else{
     var okO = nipNorm(sk.origin)===nipNorm(d0.origin) || nipNorm(sk.origin).indexOf(nipNorm(d0.origin))>=0 || nipNorm(d0.origin).indexOf(nipNorm(sk.origin))>=0;
@@ -4158,7 +4158,7 @@ function nipBuildNip(sku){
 function nipBuildName(sku){
   var sk=NIP_DATA.skus[sku]||{}; var items=[];
   items.push(nipItem(sk.name?'pass':'fail',8,'Có tên trên nhãn: "'+(sk.name||'—')+'"','NĐ 37/2026 — tên hàng hoá bắt buộc, phải mô tả đúng bản chất SP','high', sk.name?'':'Bổ sung cột D 01_SKU_Master'));
-  var d0=((NIP_DATA.decl||{})[sku]||[])[0];
+  var d0=(((NIP_DATA.decl||{})[sku]||{}).active)||null;
   if(!d0) items.push(nipItem('nd',12,'Tên trên hồ sơ công bố — chưa có hồ sơ để đối chiếu','NĐ 15/2018 — tên SP phải khớp hồ sơ tự công bố','high','Bổ sung 10_Declaration'));
   else if(!sk.name_hscb) items.push(nipItem('nd',12,'name_hscb trống — chưa đối chiếu được với tên công bố "'+d0.name+'"','NĐ 15/2018','med','Điền cột C 01_SKU_Master'));
   else{
@@ -4220,13 +4220,16 @@ function nipBuildSafety(sku){
 }
 
 function nipBuildHscb(sku){
-  var sk=NIP_DATA.skus[sku]||{}; var ds=(NIP_DATA.decl||{})[sku]||[]; var items=[];
+  // v2.7 — NIP_DATA.decl[sku] giờ là {all,active,superseded,updates} thay vì mảng phẳng.
+  var sk=NIP_DATA.skus[sku]||{};
+  var dc=(NIP_DATA.decl||{})[sku]||{all:[],active:null,superseded:[],updates:[]};
+  var items=[];
   var df=nipDocsOf(sku,['HSCB']);
-  if(!ds.length){
+  var d0=dc.active;
+  if(!d0){
     items.push(nipItem('nd',15,'Chưa có hồ sơ công bố trong hệ thống (10_Declaration)','NĐ 15/2018 — SP phải tự công bố trước khi lưu thông','high','Bổ sung dòng SKU vào 10_Declaration + upload hồ sơ vào SKU/HSCB'));
   } else {
-    var d0=ds[0];
-    items.push(nipItem(String(d0.status||'').toUpperCase()==='ACTIVE'?'pass':'fail',12,'Số công bố '+d0.no+' ('+(d0.date||'?')+') — trạng thái: '+(d0.status||'?'),'NĐ 15/2018','high', String(d0.status||'').toUpperCase()==='ACTIVE'?'':'Kiểm tra hiệu lực / tái công bố'));
+    items.push(nipItem('pass',12,'Số công bố đang hiệu lực: '+d0.no+' ('+(d0.date||'?')+')'+(d0.doc_role==='thay_the'?' — bản THAY THẾ':''),'NĐ 15/2018','high',''));
     var nt=String(d0.notes||'');
     if(/TT29.*(Đã cập nhật|da cap nhat)/i.test(nt)) items.push(nipItem('pass',8,'Đã cập nhật NIP theo TT 29/2023 vào hồ sơ','TT 29/2023 — hồ sơ cần phản ánh NIP mới','med',''));
     else if(/TT29/i.test(nt)) items.push(nipItem('warn',8,'Ghi chú TT29 chưa rõ trạng thái: "'+nt+'"','TT 29/2023','med','Xác nhận đã bổ sung NIP vào hồ sơ chưa'));
@@ -4241,10 +4244,11 @@ function nipBuildHscb(sku){
       var okO=nipNorm(sk.origin)===nipNorm(d0.origin)||nipNorm(sk.origin).indexOf(nipNorm(d0.origin))>=0||nipNorm(d0.origin).indexOf(nipNorm(sk.origin))>=0;
       items.push(nipItem(okO?'pass':'fail',8,'Xuất xứ khớp hồ sơ: "'+sk.origin+'" vs "'+d0.origin+'"','NĐ 37/2026 + NĐ 15/2018','high', okO?'':'Xác minh & sửa bên sai'));
     }
-    if(ds.length>1) items.push(nipItem('warn',3,'Có '+ds.length+' hồ sơ công bố cho SKU này — xác nhận hồ sơ nào đang hiệu lực','NĐ 15/2018','low','Đánh dấu status các hồ sơ cũ'));
+    if(dc.superseded.length) items.push(nipItem('warn',2,'Có '+dc.superseded.length+' bản HSCB cũ đã bị thay thế — hệ thống tự loại khỏi tính năng, chỉ giữ để tra cứu lịch sử','NĐ 15/2018','low',''));
+    if(dc.updates.length) items.push(nipItem('pass',3,'Có '+dc.updates.length+' thông báo điều chỉnh/bổ sung gắn với bản gốc — xem lịch sử bên dưới','NĐ 15/2018','low',''));
   }
   items.push(nipItem(df.length?'pass':'nd',5,df.length?('Có '+df.length+' file HSCB trong folder tài liệu'):'Chưa có file HSCB trong folder tài liệu','Quản trị hồ sơ nội bộ','low', df.length?'':'Upload hồ sơ vào Drive: SKU/HSCB'));
-  var s=nipModScore(items); s.decls=ds; return s;
+  var s=nipModScore(items); s.decl=dc; return s;
 }
 
 function nipScoreAll(){
@@ -4270,7 +4274,7 @@ function nipSub(which){
   nipRenderDash(el);
 }
 
-/* ---------- DASHBOARD ---------- */
+/* ---------- DASHBOARD = BẢNG SUMMARY (v2.7/v4.4 — thay hẳn giao diện cũ) ---------- */
 function nipRenderDash(el){
   var S=nipScoreAll(); var sk=NIP_DATA.skus||{};
   var cnt={pass:0,warn:0,fail:0,nd:0};
@@ -4290,39 +4294,86 @@ function nipRenderDash(el){
     +'<button onclick="nipRefreshDocsUI()" title="Quét lại folder Drive (sau khi vừa upload file mới)" style="font-size:11px;padding:7px 10px;border:1px solid var(--border,#2a3f55);border-radius:8px;background:transparent;color:inherit;cursor:pointer">📂 Quét lại folder</button>'
     +'<button onclick="nipReauth(sessionStorage.getItem(\'nip_pw\')).then(function(){nipSub(\'dash\')})" title="Tải lại toàn bộ dữ liệu từ Google Sheet" style="font-size:11px;padding:7px 10px;border:1px solid var(--border,#2a3f55);border-radius:8px;background:transparent;color:inherit;cursor:pointer">↻ Tải lại dữ liệu</button>'
     +'</div>';
-  var legend='<div style="font-size:11px;opacity:.65;margin-bottom:8px">Bấm vào từng ô để xem <b>hình tài liệu + bảng chấm điểm chi tiết</b> (mỗi lỗi kèm căn cứ pháp lý, mức nghiêm trọng đề xuất và hành động). Điểm nhãn: A ≥90 · B 75–89 · C 60–74 · D &lt;60. ⬜ = chưa có tài liệu (không trừ điểm). Ghi chú của anh nằm cuối popup, có lưu ngày tạo/sửa — SKU đã có ghi chú hiện badge 📝.</div>';
+  var legend='<div style="font-size:11px;opacity:.65;margin-bottom:8px">Bấm 🖼 Nhãn / 📄 HSCB / 📊 NIP / 🧪 Test report để xem chi tiết + tài liệu gốc. Điểm tổng: A ≥90 · B 75–89 · C 60–74 · D &lt;60. ⬜ = chưa có tài liệu (không trừ điểm).</div>';
   el.innerHTML=kpis+tools+legend+'<div id="nipDashTbl"></div>';
   nipDashTable();
 }
-function nipDashCell(sku,mkey,mod){
-  var inner;
-  if(mod.st==='nd') inner='<span style="opacity:.55">⬜</span>';
-  else if(mkey==='label'||mkey==='nip'){ var g=mod.grade; inner='<span style="font-weight:800;color:'+nipGradeColor(g)+'">'+g+'</span> <span style="font-size:10px;opacity:.6">'+mod.pct+'</span> '+(mod.st!=='pass'?nipStIcon(mod.st):''); }
-  else inner=nipStIcon(mod.st);
-  return '<td onclick="nipDetail(\''+sku+'\',\''+mkey+'\')" style="text-align:center;padding:7px 4px;cursor:pointer" title="Bấm để xem chi tiết">'+inner+'</td>';
+function nipThumbBox(sku,doc,idPrefix){
+  // Ô nhỏ 44x44, click để tải ảnh base64 qua sub=docimg (dùng lại NIP_IMG_CACHE)
+  var boxId=idPrefix+'_'+sku;
+  if(!doc) return '<div style="width:44px;height:44px;border:1px dashed var(--border,#2a3f55);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;opacity:.4">—</div>';
+  return '<div id="'+boxId+'" onclick="event.stopPropagation();nipThumbLoad(\''+doc.id+'\',\''+boxId+'\')" style="width:44px;height:44px;border:1px solid var(--border,#2a3f55);border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(255,255,255,.03);overflow:hidden" title="Bấm để xem — cập nhật '+nipEsc(doc.date||'')+'">🖼</div>';
+}
+async function nipThumbLoad(fileId,boxId){
+  var box=document.getElementById(boxId); if(!box) return;
+  if(NIP_IMG_CACHE[fileId]){ box.innerHTML=NIP_IMG_CACHE[fileId+'_thumb']||NIP_IMG_CACHE[fileId]; if(NIP_IMG_CACHE[fileId+'_full']) window.open(NIP_IMG_CACHE[fileId+'_full']); return; }
+  box.innerHTML='<span style="font-size:9px;opacity:.6">…</span>';
+  var pw=sessionStorage.getItem('nip_pw')||'';
+  try{
+    var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=nipdata&sub=docimg&pw='+encodeURIComponent(pw)+'&fileid='+encodeURIComponent(fileId)});
+    var j=await res.json();
+    if(j&&j.ok&&j.isimg){
+      var src='data:'+j.mime+';base64,'+j.b64;
+      var thumb='<img src="'+src+'" style="width:100%;height:100%;object-fit:cover" alt="'+nipEsc(j.name)+'">';
+      NIP_IMG_CACHE[fileId+'_thumb']=thumb; NIP_IMG_CACHE[fileId+'_full']=src; NIP_IMG_CACHE[fileId]=thumb;
+      box.innerHTML=thumb; window.open(src);
+    } else if(j&&j.ok){ box.innerHTML='<span style="font-size:9px">📄</span>'; window.open(j.url,'_blank'); }
+    else box.innerHTML='<span style="font-size:9px;color:#e06">✕</span>';
+  }catch(e){ box.innerHTML='<span style="font-size:9px;color:#e06">✕</span>'; }
+}
+function nipVersionNote(sku){
+  var sm=(((NIP_DATA.summary)||{})[sku])||{};
+  var dc=(((NIP_DATA.decl)||{})[sku])||{updates:[],all:[]};
+  if(!dc.updates.length && !sm.hscb_count) return '<span style="opacity:.4;font-size:11px">—</span>';
+  var lastU=dc.updates[0];
+  var txt=dc.updates.length ? (dc.updates.length+' thông báo cập nhật'+(lastU?(' · mới nhất '+nipEsc(lastU.date||'')):'')) : 'Chưa có cập nhật';
+  return '<div style="font-size:11px;cursor:pointer" onclick="nipDetail(\''+sku+'\',\'hscb\')" title="Bấm xem lịch sử đầy đủ">'+txt+'</div>';
 }
 function nipDashTable(){
   var box=document.getElementById('nipDashTbl'); if(!box) return;
   var S=nipScoreAll(); var sk=NIP_DATA.skus||{};
+  var summ=NIP_DATA.summary||{};
   var f=nipNorm((document.getElementById('nipDashFilter')||{}).value||'');
   var fst=(document.getElementById('nipDashSt')||{}).value||'';
-  var head='<tr style="background:rgba(255,255,255,.06);font-size:11px"><th style="text-align:left;padding:7px 8px">SKU · Tên trên nhãn</th>'
-    +NIP_MODULES.map(function(m){return '<th style="padding:7px 4px;white-space:nowrap">'+m.icon+' '+m.name.split(' ')[0]+'</th>';}).join('')
-    +'<th style="padding:7px 4px">Tổng</th></tr>';
+  var head='<tr style="background:rgba(255,255,255,.06);font-size:11px">'
+    +'<th style="text-align:left;padding:7px 8px">SKU · Tên sản phẩm</th>'
+    +'<th style="padding:7px 4px">🖼 Nhãn</th>'
+    +'<th style="padding:7px 4px">📄 HSCB</th>'
+    +'<th style="padding:7px 4px;min-width:130px">📝 Ghi chú phiên bản</th>'
+    +'<th style="padding:7px 4px">📊 NIP</th>'
+    +'<th style="padding:7px 4px;min-width:100px">🧪 Test report</th>'
+    +'<th style="padding:7px 4px">Điểm</th>'
+    +'<th style="padding:7px 4px;min-width:140px;text-align:left">Lưu ý</th></tr>';
   var rows='';
   Object.keys(S).forEach(function(sku){
-    var d=sk[sku]||{}, m=S[sku];
+    var d=sk[sku]||{}, m=S[sku]; var sm=summ[sku]||{};
     if(f && nipNorm(sku+' '+d.name+' '+d.name_hscb).indexOf(f)<0) return;
     if(fst && m.overall!==fst) return;
-    var nDoc=(((NIP_DATA.docs||{})[sku])||[]).length;
-    var nNote=(((NIP_DATA.notes||{})[sku])||[]).length;
-    var noteBadge=nNote?(' <span title="'+nipEsc((((NIP_DATA.notes||{})[sku])||[])[0].text).slice(0,120)+'" style="font-size:10px;color:var(--accent,#C9B037)">📝'+nNote+'</span>'):'';
+    var notesArr=(((NIP_DATA.notes||{})[sku])||[]);
+    var noteTxt=notesArr.length ? nipEsc(notesArr[0].text).slice(0,90)+(notesArr[0].text.length>90?'…':'') : '<span style="opacity:.35">—</span>';
+
+    var hscbCell = sm.hscb_active_doc
+      ? '<div style="cursor:pointer" onclick="nipDetail(\''+sku+'\',\'hscb\')" title="Bấm xem hồ sơ + lịch sử">'+nipStIcon(m.hscb.st)+' <span style="font-size:10px;opacity:.7">'+(sm.decl_active?nipEsc(sm.decl_active.no):'')+'</span></div>'
+      : '<span style="opacity:.5;cursor:pointer" onclick="nipDetail(\''+sku+'\',\'hscb\')">⬜</span>';
+
+    var nipCell = '<span style="cursor:pointer;font-weight:800;color:'+nipGradeColor(m.nip.grade)+'" onclick="nipDetail(\''+sku+'\',\'nip\')" title="Bấm xem bảng đối chiếu NIP">'+(m.nip.st==='nd'?'⬜':m.nip.grade)+'</span>';
+
+    var testCell = sm.test_latest
+      ? '<div style="cursor:pointer;font-size:11px" onclick="nipDetail(\''+sku+'\',\'safety\')" title="Bấm xem chi tiết kiểm nghiệm">'+nipStIcon(m.safety.st)+' <span style="opacity:.7">'+nipEsc((sm.test_latest.name||'').slice(0,16))+(sm.test_count>1?(' +'+(sm.test_count-1)):'')+'</span></div>'
+      : '<span style="opacity:.5;cursor:pointer" onclick="nipDetail(\''+sku+'\',\'safety\')">⬜</span>';
+
     rows+='<tr style="border-top:1px solid rgba(255,255,255,.08)">'
-      +'<td style="padding:7px 8px;cursor:pointer" onclick="nipDetail(\''+sku+'\',\'label\')"><b>'+sku+'</b> <span style="font-size:10px;opacity:.55">'+(nDoc?('📎'+nDoc):'')+'</span>'+noteBadge+'<div style="font-size:11px;opacity:.8">'+nipEsc(d.name||d.name_hscb||'—')+'</div></td>'
-      +NIP_MODULES.map(function(mm){return nipDashCell(sku,mm.key,m[mm.key]);}).join('')
-      +'<td style="text-align:center;font-size:15px">'+nipStIcon(m.overall)+'</td></tr>';
+      +'<td style="padding:7px 8px"><b>'+sku+'</b><div style="font-size:11px;opacity:.8">'+nipEsc(d.name||d.name_hscb||'—')+'</div></td>'
+      +'<td style="text-align:center;padding:6px 4px">'+nipThumbBox(sku,sm.label_latest,'th')+'</td>'
+      +'<td style="text-align:center;padding:6px 4px">'+hscbCell+'</td>'
+      +'<td style="padding:6px 4px">'+nipVersionNote(sku)+'</td>'
+      +'<td style="text-align:center;padding:6px 4px">'+nipCell+'</td>'
+      +'<td style="padding:6px 4px">'+testCell+'</td>'
+      +'<td style="text-align:center;padding:6px 4px;font-size:15px">'+nipStIcon(m.overall)+'</td>'
+      +'<td style="padding:6px 8px;font-size:11px">'+noteTxt+'</td>'
+      +'</tr>';
   });
-  box.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'+head+(rows||'<tr><td colspan="7" style="padding:16px;text-align:center;opacity:.6">Không có SKU khớp bộ lọc</td></tr>')+'</table></div>';
+  box.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'+head+(rows||'<tr><td colspan="8" style="padding:16px;text-align:center;opacity:.6">Không có SKU khớp bộ lọc</td></tr>')+'</table></div>';
 }
 async function nipRefreshDocsUI(){
   var pw=sessionStorage.getItem('nip_pw')||'';
@@ -4511,12 +4562,26 @@ function nipDetailNames(mod){
     +'</table></div>';
 }
 function nipDetailDecl(mod){
-  var ds=mod.decls||[]; if(!ds.length) return '';
-  var head='<tr style="background:rgba(255,255,255,.06);font-size:11px"><th style="text-align:left;padding:6px">Số công bố</th><th>Ngày</th><th>Trạng thái</th><th style="text-align:left">Ghi chú</th></tr>';
-  var rows=ds.map(function(d){
-    return '<tr style="border-top:1px solid rgba(255,255,255,.08)"><td style="padding:5px 6px">'+nipEsc(d.no)+'</td><td style="text-align:center">'+nipEsc(d.date)+'</td><td style="text-align:center">'+nipEsc(d.status)+'</td><td style="padding:5px 6px;font-size:11px;opacity:.8">'+nipEsc(d.notes)+'</td></tr>';
-  }).join('');
-  return '<div style="margin-top:10px"><div style="font-weight:700;font-size:12px;margin-bottom:4px">📄 Hồ sơ công bố</div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'+head+rows+'</table></div></div>';
+  // v2.7 — mod.decl = {all,active,superseded,updates}
+  var dc=mod.decl||{all:[],active:null,superseded:[],updates:[]};
+  if(!dc.all.length) return '';
+  var roleBadge={goc:'GỐC',thay_the:'THAY THẾ',cap_nhat:'CẬP NHẬT'};
+  var roleColor={goc:'#2F7898',thay_the:'#0E7544',cap_nhat:'#C9B037'};
+  function badge(role){ var c=roleColor[role]||'#888'; return '<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;background:'+c+'22;color:'+c+'">'+(roleBadge[role]||role)+'</span>'; }
+  var head='<tr style="background:rgba(255,255,255,.06);font-size:11px"><th style="text-align:left;padding:6px">Số công bố</th><th>Ngày</th><th>Loại</th><th style="text-align:left">Ghi chú</th></tr>';
+  function rowsOf(list,curNo){
+    return list.map(function(d){
+      var isActive = curNo && d.no===curNo;
+      return '<tr style="border-top:1px solid rgba(255,255,255,.08)'+(isActive?';background:rgba(14,117,68,.08)':'')+'">'
+        +'<td style="padding:5px 6px">'+nipEsc(d.no)+(isActive?' <span style="font-size:9px;color:#0E7544">● đang hiệu lực</span>':'')+'</td>'
+        +'<td style="text-align:center">'+nipEsc(d.date)+'</td><td style="text-align:center">'+badge(d.doc_role)+'</td>'
+        +'<td style="padding:5px 6px;font-size:11px;opacity:.8">'+nipEsc(d.notes||(d.parent_no?('→ bổ sung cho '+d.parent_no):''))+'</td></tr>';
+    }).join('');
+  }
+  var curNo=dc.active?dc.active.no:'';
+  var allSorted=dc.all.slice().sort(function(a,b){ return (a.date<b.date)?1:-1; });
+  return '<div style="margin-top:10px"><div style="font-weight:700;font-size:12px;margin-bottom:4px">📄 Hồ sơ công bố — lịch sử phiên bản ('+dc.all.length+')</div>'
+    +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'+head+rowsOf(allSorted,curNo)+'</table></div></div>';
 }
 function nipDetailSpec(mod){
   var sp=mod.spec||[]; if(!sp.length) return '';
@@ -4544,95 +4609,253 @@ function nipShowCompare(sku){
   out.innerHTML=basisNote+nipDetailNipTable(sku,{detail:agg});
 }
 
-/* ---------- NHẬP DỮ LIỆU (giữ nguyên logic cũ + upload đúng folder SKU) ---------- */
+/* ---------- v2.7/v4.4 — NHẬP DỮ LIỆU: 3 luồng Nhãn / HSCB / Test Report + AI đọc file ---------- */
+var NIP_ENTRY_TYPE='LABEL';           // LABEL | HSCB | TEST_REPORT
+var NIP_ENTRY_ROLE='cap_nhat';        // chỉ dùng khi HSCB: cap_nhat | thay_the | goc
+var NIP_ENTRY_FILE=null;              // {b64,mime,name}
+var NIP_ENTRY_EXTRACT=null;           // kết quả AI đề xuất (nếu có)
+
 function nipRenderEntry(el){
   var sk=NIP_DATA.skus||{};
   var opts=Object.keys(sk).sort().map(function(s){ return '<option value="'+s+'">'+s+' — '+(sk[s]?sk[s].name:'')+'</option>'; }).join('');
-  var nutRows=NIP_NUTS.map(function(n){
-    return '<tr><td style="padding:4px 6px;font-size:12px">'+NIP_VN[n]+'</td>'
-      +'<td style="padding:4px"><input type="number" step="any" id="nt_'+n.replace(/\s/g,'_')+'" style="width:90px;padding:5px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"></td>'
-      +'<td style="padding:4px 6px;font-size:12px;opacity:.7">'+NIP_UNITS[n]+'</td></tr>';
-  }).join('');
-  el.innerHTML='<div style="border-left:4px solid #C9B037;background:rgba(255,255,255,.03);padding:12px 14px;border-radius:8px"><div style="font-weight:700;margin-bottom:6px">➕ Nhập dữ liệu NIP + tài liệu (ghi ngược vào Google Sheet)</div>'
-    +'<div style="font-size:12px;opacity:.85;margin-bottom:10px">Chọn SKU, nguồn, upload file report rồi nhập giá trị. File sẽ được lưu vào đúng folder <b>SKU/loại tài liệu</b> trên Drive. Bấm <b>Xem lại</b> trước khi ghi.</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
-    +'<div><label style="font-size:11px;opacity:.7">SKU *</label><select id="e_sku" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"><option value="">— Chọn —</option>'+opts+'</select></div>'
-    +'<div><label style="font-size:11px;opacity:.7">Nguồn *</label><select id="e_source" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"><option value="LABEL">Nhãn (nhãn chính / nhãn phụ)</option><option value="HSCB">HSCB / Test report (lab VN / lab nhà máy)</option></select></div>'
-    +'<div><label style="font-size:11px;opacity:.7">Cơ sở tính (basis) *</label><select id="e_basis" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"><option value="">— Chọn —</option><option value="whole">whole (100g/ml tổng)</option><option value="drained">drained (phần cái ráo)</option><option value="as_sold">as_sold</option></select></div>'
-    +'<div><label style="font-size:11px;opacity:.7">per (100 g/ml)</label><input type="number" id="e_per" value="100" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"></div>'
-    +'<div><label style="font-size:11px;opacity:.7">Ngày test</label><input type="date" id="e_date" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"></div>'
-    +'<div><label style="font-size:11px;opacity:.7">Số lô</label><input type="text" id="e_batch" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"></div>'
-    +'<div><label style="font-size:11px;opacity:.7">Lab / Nguồn</label><input type="text" id="e_lab" placeholder="Eurofins / CASE / Nhà máy" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"></div>'
-    +'<div><label style="font-size:11px;opacity:.7">Là nguồn CĂN CỨ CÔNG BỐ?</label><select id="e_declared" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit"><option value="N">Không</option><option value="Y">Có — đánh dấu nguồn công bố</option></select></div>'
+  NIP_ENTRY_FILE=null; NIP_ENTRY_EXTRACT=null;
+  el.innerHTML='<div style="border-left:4px solid #C9B037;background:rgba(255,255,255,.03);padding:12px 14px;border-radius:8px">'
+    +'<div style="font-weight:700;margin-bottom:6px">➕ Cập nhật tài liệu (upload → đúng folder Drive → ghi ngược Google Sheet)</div>'
+    +'<div style="font-size:12px;opacity:.85;margin-bottom:10px">Chọn loại tài liệu trước — mỗi loại có luồng xử lý & versioning khác nhau.</div>'
+    +'<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">'
+    +'<button class="et-type" data-t="LABEL" onclick="nipEntrySetType(\'LABEL\')" style="flex:1;min-width:100px;padding:9px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700">🏷️ Nhãn</button>'
+    +'<button class="et-type" data-t="HSCB" onclick="nipEntrySetType(\'HSCB\')" style="flex:1;min-width:100px;padding:9px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700">📄 HSCB</button>'
+    +'<button class="et-type" data-t="TEST_REPORT" onclick="nipEntrySetType(\'TEST_REPORT\')" style="flex:1;min-width:100px;padding:9px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700">🧪 Test Report</button>'
     +'</div>'
-    +'<div style="margin-bottom:10px"><label style="font-size:11px;opacity:.7">📎 File report (PDF/ảnh, &lt;15MB)</label><input type="file" id="e_file" accept=".pdf,.jpg,.jpeg,.png" style="width:100%;padding:6px;font-size:12px"><div id="e_fileMsg" style="font-size:11px;opacity:.7;margin-top:4px"></div></div>'
-    +'<div style="font-weight:600;font-size:12px;margin:6px 0">Giá trị NIP:</div>'
-    +'<table style="width:100%;border-collapse:collapse"><tr style="background:rgba(255,255,255,.05);font-size:11px"><td style="padding:4px 6px">Chỉ tiêu</td><td style="padding:4px">Giá trị</td><td style="padding:4px 6px">Đơn vị</td></tr>'+nutRows+'</table>'
-    +'<label style="font-size:11px;display:block;margin-top:8px"><input type="checkbox" id="e_overwrite"> Ghi đè nếu đã tồn tại</label>'
-    +'<div style="display:flex;gap:8px;margin-top:12px"><button onclick="nipReview()" style="flex:1;padding:10px;border:0;border-radius:8px;background:var(--accent,#C9B037);color:#1B3A57;font-weight:700;cursor:pointer">👁 Xem lại</button></div>'
-    +'<div id="e_review" style="margin-top:12px"></div></div>';
+    +'<div><label style="font-size:11px;opacity:.7">SKU *</label><select id="e_sku" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;margin-bottom:10px"><option value="">— Chọn —</option>'+opts+'</select></div>'
+    +'<div id="e_body"></div></div>';
+  nipEntrySetType('LABEL');
 }
-async function nipDoUpload(){
+function nipEntryTypeBtnStyle(){
+  document.querySelectorAll('.et-type').forEach(function(b){
+    var active=b.getAttribute('data-t')===NIP_ENTRY_TYPE;
+    b.style.border=active?'2px solid var(--accent,#C9B037)':'1px solid var(--border,#2a3f55)';
+    b.style.background=active?'rgba(201,176,55,.12)':'transparent';
+    b.style.color='inherit';
+  });
+}
+function nipEntrySetType(t){
+  NIP_ENTRY_TYPE=t; NIP_ENTRY_FILE=null; NIP_ENTRY_EXTRACT=null; NIP_ENTRY_ROLE='cap_nhat';
+  nipEntryTypeBtnStyle();
+  var body=document.getElementById('e_body'); if(!body) return;
+  if(t==='LABEL'){
+    body.innerHTML='<div style="font-size:12px;opacity:.85;margin-bottom:10px">Ảnh nhãn mới upload sẽ <b>tự động là bản mới nhất</b>, thay thế bản cũ trong mọi tính năng hiển thị (không xoá file cũ trên Drive, chỉ đổi bản đang dùng).</div>'
+      +'<label style="font-size:11px;opacity:.7">📎 Ảnh nhãn (JPG/PNG, &lt;15MB)</label><input type="file" id="e_file" accept=".jpg,.jpeg,.png,.webp" style="width:100%;padding:6px;font-size:12px" onchange="nipEntryFilePicked()">'
+      +'<div id="e_fileMsg" style="font-size:11px;opacity:.7;margin-top:4px"></div>'
+      +'<button onclick="nipEntryCommitLabel()" style="margin-top:12px;width:100%;padding:10px;border:0;border-radius:8px;background:var(--accent,#C9B037);color:#1B3A57;font-weight:700;cursor:pointer">⬆️ Tải lên — dùng làm bản mới nhất</button>'
+      +'<div id="e_result" style="margin-top:12px"></div>';
+  } else if(t==='HSCB'){
+    body.innerHTML='<div style="font-size:12px;opacity:.85;margin-bottom:8px">Chọn <b>loại cập nhật</b> trước khi upload:</div>'
+      +'<div style="display:flex;gap:6px;margin-bottom:10px">'
+      +'<button id="e_role_capnhat" onclick="nipEntrySetRole(\'cap_nhat\')" style="flex:1;padding:9px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700">🔄 Thông báo cập nhật<div style="font-weight:400;font-size:10px;opacity:.75;margin-top:2px">giữ nguyên bản gốc đang hiệu lực</div></button>'
+      +'<button id="e_role_thaythe" onclick="nipEntrySetRole(\'thay_the\')" style="flex:1;padding:9px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700;color:#C8102E">🔴 Thay thế hoàn toàn<div style="font-weight:400;font-size:10px;opacity:.75;margin-top:2px">bác bản gốc cũ, dùng bản này</div></button>'
+      +'</div>'
+      +'<label style="font-size:11px;opacity:.7">📎 File HSCB / Thông báo (PDF/ảnh, &lt;15MB)</label><input type="file" id="e_file" accept=".pdf,.jpg,.jpeg,.png" style="width:100%;padding:6px;font-size:12px" onchange="nipEntryFilePicked()">'
+      +'<div id="e_fileMsg" style="font-size:11px;opacity:.7;margin-top:4px"></div>'
+      +'<button onclick="nipEntryExtract()" style="margin-top:10px;width:100%;padding:9px;border:1px solid var(--accent,#C9B037);border-radius:8px;background:transparent;color:var(--accent,#C9B037);font-weight:700;cursor:pointer" id="e_aiBtn">🤖 Đọc AI (điền sẵn thông tin — vẫn cần xác nhận)</button>'
+      +'<div id="e_extractBox" style="margin-top:10px"></div>'
+      +'<div id="e_result" style="margin-top:12px"></div>';
+    nipEntrySetRole('cap_nhat');
+  } else { // TEST_REPORT
+    body.innerHTML='<div style="font-size:12px;opacity:.85;margin-bottom:8px">File sẽ lưu vào <b>SKU/TEST-REPORT</b>. AI đọc chỉ tiêu + kết quả, bạn xác nhận rồi mới ghi vào 06_Safety_Values.</div>'
+      +'<label style="font-size:11px;opacity:.7">📎 File test report (PDF/ảnh, &lt;15MB)</label><input type="file" id="e_file" accept=".pdf,.jpg,.jpeg,.png" style="width:100%;padding:6px;font-size:12px" onchange="nipEntryFilePicked()">'
+      +'<div id="e_fileMsg" style="font-size:11px;opacity:.7;margin-top:4px"></div>'
+      +'<button onclick="nipEntryExtract()" style="margin-top:10px;width:100%;padding:9px;border:1px solid var(--accent,#C9B037);border-radius:8px;background:transparent;color:var(--accent,#C9B037);font-weight:700;cursor:pointer" id="e_aiBtn">🤖 Đọc AI (điền sẵn bảng chỉ tiêu — vẫn cần xác nhận)</button>'
+      +'<div id="e_extractBox" style="margin-top:10px"></div>'
+      +'<div id="e_result" style="margin-top:12px"></div>';
+  }
+}
+function nipEntrySetRole(r){
+  NIP_ENTRY_ROLE=r;
+  var b1=document.getElementById('e_role_capnhat'), b2=document.getElementById('e_role_thaythe');
+  if(b1&&b2){
+    b1.style.border=(r==='cap_nhat')?'2px solid var(--accent,#C9B037)':'1px solid var(--border,#2a3f55)';
+    b1.style.background=(r==='cap_nhat')?'rgba(201,176,55,.12)':'transparent';
+    b2.style.border=(r==='thay_the')?'2px solid #C8102E':'1px solid var(--border,#2a3f55)';
+    b2.style.background=(r==='thay_the')?'rgba(200,16,46,.10)':'transparent';
+  }
+}
+async function nipEntryFilePicked(){
   var fi=document.getElementById('e_file'); var msg=document.getElementById('e_fileMsg');
-  if(!fi||!fi.files||!fi.files[0]) return null;
+  NIP_ENTRY_FILE=null; NIP_ENTRY_EXTRACT=null;
+  var box=document.getElementById('e_extractBox'); if(box) box.innerHTML='';
+  var res=document.getElementById('e_result'); if(res) res.innerHTML='';
+  if(!fi||!fi.files||!fi.files[0]) return;
   var f=fi.files[0];
-  if(f.size>15*1024*1024){ if(msg) msg.textContent='File quá 15MB, hãy nén trước'; return null; }
-  if(msg) msg.textContent='Đang tải file lên Drive...';
-  var b64=await new Promise(function(res,rej){ var r=new FileReader(); r.onload=function(){res(r.result.split(',')[1]);}; r.onerror=rej; r.readAsDataURL(f); });
-  var pw=sessionStorage.getItem('nip_pw')||'';
-  var sku=(document.getElementById('e_sku')||{}).value||'';
-  var src=(document.getElementById('e_source')||{}).value||'LABEL';
-  var doctype = src==='HSCB' ? 'TEST' : 'NIP';
-  var body='action=nipdata&sub=upload&pw='+encodeURIComponent(pw)
-    +'&filedata='+encodeURIComponent(b64)+'&filename='+encodeURIComponent(f.name)+'&filemime='+encodeURIComponent(f.type||'application/octet-stream')
-    +'&sku='+encodeURIComponent(sku)+'&doctype='+encodeURIComponent(doctype);
-  var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body});
-  var j=await res.json();
-  if(j&&j.ok){ if(msg) msg.innerHTML='✓ Đã tải vào '+sku+'/'+(doctype==='TEST'?'TEST-REPORT':doctype)+': <a href="'+j.url+'" target="_blank" style="color:var(--accent,#C9B037)">'+j.name+'</a>'; return j.url; }
-  if(msg) msg.textContent='Lỗi tải file: '+((j&&j.error)||'?'); return null;
-}
-function nipCollectPayload(){
-  var nt=[];
-  NIP_NUTS.forEach(function(n){ var v=document.getElementById('nt_'+n.replace(/\s/g,'_')).value; if(v!=='') nt.push({nutrient:n,value:parseFloat(v),unit:NIP_UNITS[n]}); });
-  return {
-    sku:document.getElementById('e_sku').value, source:document.getElementById('e_source').value,
-    basis:document.getElementById('e_basis').value, per_amount:parseFloat(document.getElementById('e_per').value)||100,
-    test_date:document.getElementById('e_date').value, batch_no:document.getElementById('e_batch').value,
-    lab_name:document.getElementById('e_lab').value, is_declared:document.getElementById('e_declared').value==='Y',
-    overwrite:document.getElementById('e_overwrite').checked, entry_method:'manual', nutrients:nt
-  };
-}
-function nipReview(){
-  var p=nipCollectPayload(); var out=document.getElementById('e_review');
-  var errs=[];
-  if(!p.sku) errs.push('Chưa chọn SKU'); if(!p.basis) errs.push('Chưa chọn basis'); if(!p.nutrients.length) errs.push('Chưa nhập chỉ tiêu nào');
-  if(errs.length){ out.innerHTML='<div style="color:#e06;font-size:12px">⚠ '+errs.join(' · ')+'</div>'; return; }
-  var rows=p.nutrients.map(function(n){ return '<tr><td style="padding:3px 6px">'+NIP_VN[n.nutrient]+'</td><td style="padding:3px 6px;text-align:right"><b>'+n.value+'</b> '+n.unit+'</td></tr>'; }).join('');
-  var warnBasis = (p.basis==='whole' && NIP_DATA.skus[p.sku] && NIP_DATA.skus[p.sku].drained) ? '<div style="color:#e0a;font-size:11px;margin-top:6px">⚠ SKU này có ráo nước — chắc chắn nhãn/lab đo theo <b>whole</b>?</div>' : '';
-  out.innerHTML='<div style="border:1px solid var(--accent,#C9B037);border-radius:8px;padding:12px">'
-    +'<div style="font-weight:700;margin-bottom:6px">Xem lại: '+p.sku+' · '+p.source+' · basis='+p.basis+(p.is_declared?' · <span style="color:#0E7544">NGUỒN CÔNG BỐ</span>':'')+'</div>'
-    +'<table style="width:100%;font-size:12px">'+rows+'</table>'+warnBasis
-    +'<div style="display:flex;gap:8px;margin-top:10px"><button onclick="nipCommit()" style="flex:1;padding:9px;border:0;border-radius:6px;background:#0E7544;color:#fff;font-weight:700;cursor:pointer">✓ Xác nhận & Ghi</button><button onclick="document.getElementById(\'e_review\').innerHTML=\'\'" style="padding:9px 14px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">Huỷ</button></div></div>';
-}
-async function nipCommit(){
-  var out=document.getElementById('e_review');
-  out.innerHTML='<div style="opacity:.7">Đang xử lý...</div>';
-  var url=await nipDoUpload();
-  var p=nipCollectPayload(); p.drive_url=url||'';
-  p.doc_type=p.source+' report';
-  var pw=sessionStorage.getItem('nip_pw')||'';
-  var body='action=nipdata&sub=save&pw='+encodeURIComponent(pw)+'&payload='+encodeURIComponent(JSON.stringify(p));
+  if(f.size>15*1024*1024){ if(msg) msg.textContent='⚠ File quá 15MB, hãy nén trước'; return; }
+  if(msg) msg.textContent='Đang đọc file...';
   try{
+    var b64=await new Promise(function(res2,rej){ var r=new FileReader(); r.onload=function(){res2(r.result.split(',')[1]);}; r.onerror=rej; r.readAsDataURL(f); });
+    NIP_ENTRY_FILE={b64:b64,mime:f.type||'application/octet-stream',name:f.name};
+    if(msg) msg.innerHTML='✓ Sẵn sàng: '+nipEsc(f.name)+' ('+Math.round(f.size/1024)+'KB)';
+  }catch(e){ if(msg) msg.textContent='Lỗi đọc file'; }
+}
+async function nipUploadCurrentFile(sku,doctype){
+  if(!NIP_ENTRY_FILE) return null;
+  var pw=sessionStorage.getItem('nip_pw')||'';
+  var body='action=nipdata&sub=upload&pw='+encodeURIComponent(pw)
+    +'&filedata='+encodeURIComponent(NIP_ENTRY_FILE.b64)+'&filename='+encodeURIComponent(NIP_ENTRY_FILE.name)
+    +'&filemime='+encodeURIComponent(NIP_ENTRY_FILE.mime)+'&sku='+encodeURIComponent(sku)+'&doctype='+encodeURIComponent(doctype);
+  var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body});
+  return await res.json();
+}
+/* ---- LABEL: đơn giản — upload xong là xong, nipScanDocs_ tự coi file mới nhất là bản dùng ---- */
+async function nipEntryCommitLabel(){
+  var sku=(document.getElementById('e_sku')||{}).value||'';
+  var out=document.getElementById('e_result');
+  if(!sku){ out.innerHTML='<div style="color:#e06;font-size:12px">⚠ Chưa chọn SKU</div>'; return; }
+  if(!NIP_ENTRY_FILE){ out.innerHTML='<div style="color:#e06;font-size:12px">⚠ Chưa chọn ảnh</div>'; return; }
+  out.innerHTML='<div style="opacity:.7;font-size:12px">Đang tải lên...</div>';
+  var j=await nipUploadCurrentFile(sku,'LABEL');
+  if(j&&j.ok){
+    out.innerHTML='<div style="color:#0E7544;font-weight:600;font-size:12px">✓ Đã tải nhãn mới cho '+sku+' — đây sẽ là bản hiển thị mặc định.</div>'
+      +'<button onclick="nipRefreshDocsUI()" style="margin-top:8px;padding:8px 14px;border:0;border-radius:6px;background:var(--accent,#C9B037);color:#1B3A57;font-weight:700;cursor:pointer">↻ Quét lại folder & xem Dashboard</button>';
+  } else out.innerHTML='<div style="color:#e06;font-size:12px">Lỗi: '+((j&&j.error)||'không kết nối được')+'</div>';
+}
+/* ---- AI đọc file (dùng chung cho HSCB & TEST_REPORT) ---- */
+async function nipEntryExtract(){
+  var box=document.getElementById('e_extractBox'); var btn=document.getElementById('e_aiBtn');
+  if(!NIP_ENTRY_FILE){ if(box) box.innerHTML='<div style="color:#e06;font-size:12px">⚠ Chưa chọn file</div>'; return; }
+  if(!state.apiKey){ if(box) box.innerHTML='<div style="color:#e06;font-size:12px">⚠ Chưa có Gemini API key (⚙️ Cài đặt) — bỏ qua bước AI, điền tay bên dưới.</div>'; nipEntryShowManualForm(); return; }
+  if(btn) btn.disabled=true;
+  box.innerHTML='<div style="font-size:12px;opacity:.7">🤖 Đang đọc file...</div>';
+  var doctype = NIP_ENTRY_TYPE==='HSCB' ? (NIP_ENTRY_ROLE==='cap_nhat'?'HSCB_UPDATE':'HSCB') : 'TEST_REPORT';
+  try{
+    var pw=sessionStorage.getItem('nip_pw')||'';
+    var body='action=nipdata&sub=extract&pw='+encodeURIComponent(pw)+'&apikey='+encodeURIComponent(state.apiKey)
+      +'&doctype='+encodeURIComponent(doctype)+'&filedata='+encodeURIComponent(NIP_ENTRY_FILE.b64)+'&filemime='+encodeURIComponent(NIP_ENTRY_FILE.mime);
     var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body});
     var j=await res.json();
-    if(j&&j.ok){
-      out.innerHTML='<div style="color:#0E7544;font-weight:600">✓ Đã ghi '+j.written+' chỉ tiêu'
-        +(j.overwritten?(' · ghi đè '+j.overwritten):'')+(j.skipped?(' · bỏ qua '+j.skipped):'')+'.</div>'
-        +(j.note?'<div style="font-size:11px;opacity:.8;margin-top:4px">'+j.note+'</div>':'')
-        +'<div style="font-size:11px;margin-top:6px">Tải lại dữ liệu để dashboard cập nhật điểm:</div>'
-        +'<button onclick="nipReauth(sessionStorage.getItem(\'nip_pw\')).then(function(){nipSub(\'dash\')})" style="margin-top:6px;padding:8px 14px;border:0;border-radius:6px;background:var(--accent,#C9B037);color:#1B3A57;font-weight:700;cursor:pointer">↻ Tải lại & xem Dashboard</button>';
-    } else { out.innerHTML='<div style="color:#e06">Lỗi: '+((j&&j.error)||'?')+'</div>'; }
-  }catch(e){ out.innerHTML='<div style="color:#e06">Không kết nối được server</div>'; }
+    if(btn) btn.disabled=false;
+    if(j&&j.ok&&j.extracted){ NIP_ENTRY_EXTRACT=j.data; nipEntryShowManualForm(); }
+    else{
+      box.innerHTML='<div style="color:#e0a;font-size:12px;padding:8px;border:1px dashed #e0a;border-radius:6px">⚠ AI không đọc được nội dung file ('+nipEsc((j&&j.reason)||'?')+') — <b>vui lòng điền tay</b> bên dưới, vẫn qua bước xác nhận như bình thường.</div>';
+      nipEntryShowManualForm();
+    }
+  }catch(e){ if(btn) btn.disabled=false; box.innerHTML='<div style="color:#e06;font-size:12px">Không kết nối được server — điền tay bên dưới.</div>'; nipEntryShowManualForm(); }
+}
+function nipEntrySafetyRowsHtml(items){
+  items=items&&items.length?items:[{chi_tieu:'',gia_tri:'',don_vi:''}];
+  return items.map(function(it,i){
+    return '<tr>'
+      +'<td style="padding:3px"><input class="sf_ind" data-i="'+i+'" value="'+nipEsc(it.chi_tieu||'')+'" placeholder="Pb / Cd / AFB1..." style="width:100%;padding:5px;border-radius:5px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:11px"></td>'
+      +'<td style="padding:3px"><input class="sf_val" data-i="'+i+'" value="'+nipEsc(it.gia_tri||it.ket_qua||'')+'" style="width:100%;padding:5px;border-radius:5px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:11px"></td>'
+      +'<td style="padding:3px"><input class="sf_unit" data-i="'+i+'" value="'+nipEsc(it.don_vi||'')+'" style="width:70px;padding:5px;border-radius:5px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:11px"></td>'
+      +'</tr>';
+  }).join('');
+}
+function nipEntryAddSafetyRow(){
+  var tb=document.getElementById('sf_tbody'); if(!tb) return;
+  var n=tb.querySelectorAll('tr').length;
+  tb.innerHTML+=nipEntrySafetyRowsHtml([{chi_tieu:'',gia_tri:'',don_vi:''}]).replace(/data-i="0"/g,'data-i="'+n+'"');
+}
+function nipEntryReadSafetyRows(){
+  var rows=[]; var inds=document.querySelectorAll('.sf_ind'), vals=document.querySelectorAll('.sf_val'), units=document.querySelectorAll('.sf_unit');
+  for(var i=0;i<inds.length;i++){
+    var ind=(inds[i].value||'').trim(), val=(vals[i].value||'').trim(), unit=(units[i].value||'').trim();
+    if(ind&&val!=='') rows.push({ind:ind,val:val,unit:unit});
+  }
+  return rows;
+}
+/* ---- Form xem lại/sửa tay — dùng chung HSCB & TEST_REPORT, hiển thị field khác nhau theo loại ---- */
+function nipEntryShowManualForm(){
+  var box=document.getElementById('e_extractBox'); if(!box) return;
+  var ex=NIP_ENTRY_EXTRACT||{};
+  var html='<div style="border:1px solid var(--accent,#C9B037);border-radius:8px;padding:10px;margin-top:6px">'
+    +'<div style="font-weight:700;font-size:12px;margin-bottom:8px">'+(NIP_ENTRY_EXTRACT?'✓ AI đã đề xuất — kiểm tra & sửa nếu cần':'✎ Điền thông tin tay')+'</div>';
+  if(NIP_ENTRY_TYPE==='HSCB'){
+    html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
+      +'<div><label style="font-size:10px;opacity:.7">Số công bố</label><input id="e_no" value="'+nipEsc(ex.so_cong_bo||'')+'" style="width:100%;padding:7px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:12px"></div>'
+      +'<div><label style="font-size:10px;opacity:.7">Ngày công bố</label><input type="date" id="e_no_date" value="'+nipEsc(ex.ngay_cong_bo||'')+'" style="width:100%;padding:7px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:12px"></div>'
+      +'<div><label style="font-size:10px;opacity:.7">Tên sản phẩm</label><input id="e_no_name" value="'+nipEsc(ex.ten_san_pham||'')+'" style="width:100%;padding:7px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:12px"></div>'
+      +'<div><label style="font-size:10px;opacity:.7">Xuất xứ</label><input id="e_no_origin" value="'+nipEsc(ex.xuat_xu||'')+'" style="width:100%;padding:7px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:12px"></div>'
+      +'</div>'
+      +'<label style="font-size:10px;opacity:.7">Nội dung thay đổi / ghi chú</label><textarea id="e_no_notes" rows="2" style="width:100%;box-sizing:border-box;padding:7px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:12px;font-family:inherit">'+nipEsc(ex.noi_dung_thay_doi||'')+'</textarea>';
+  }
+  html+='<div style="font-weight:600;font-size:11px;margin:8px 0 4px">Chỉ tiêu an toàn đọc được (có thể sửa/thêm dòng — sẽ ghi vào 06_Safety_Values nếu chọn ghi):</div>'
+    +'<table style="width:100%;border-collapse:collapse"><tr style="font-size:10px;opacity:.7"><td style="padding:3px">Chỉ tiêu</td><td style="padding:3px">Giá trị</td><td style="padding:3px">Đơn vị</td></tr><tbody id="sf_tbody">'+nipEntrySafetyRowsHtml((ex.safety||ex.items||[]).map(function(x){return {chi_tieu:x.chi_tieu,gia_tri:x.gia_tri,don_vi:x.don_vi,ket_qua:x.ket_qua};}))+'</tbody></table>'
+    +'<button onclick="nipEntryAddSafetyRow()" style="margin-top:4px;font-size:10px;padding:4px 8px;border:1px solid var(--border,#2a3f55);border-radius:5px;background:transparent;color:inherit;cursor:pointer">+ Thêm dòng</button>';
+  if(NIP_ENTRY_TYPE==='TEST_REPORT'){
+    html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">'
+      +'<div><label style="font-size:10px;opacity:.7">Lab</label><input id="e_lab" value="'+nipEsc(ex.lab_name||'')+'" style="width:100%;padding:7px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:12px"></div>'
+      +'<div><label style="font-size:10px;opacity:.7">Ngày test</label><input type="date" id="e_test_date" value="'+nipEsc(ex.test_date||'')+'" style="width:100%;padding:7px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:12px"></div>'
+      +'</div>';
+  }
+  html+='<button onclick="nipEntryReview()" style="margin-top:10px;width:100%;padding:9px;border:0;border-radius:6px;background:var(--accent,#C9B037);color:#1B3A57;font-weight:700;cursor:pointer">👁 Xem lại</button></div>';
+  box.innerHTML=html;
+  document.getElementById('e_result').innerHTML='';
+}
+function nipEntryReview(){
+  var sku=(document.getElementById('e_sku')||{}).value||'';
+  var out=document.getElementById('e_result');
+  if(!sku){ out.innerHTML='<div style="color:#e06;font-size:12px">⚠ Chưa chọn SKU</div>'; return; }
+  var rows=nipEntryReadSafetyRows();
+  var summaryHtml='<div style="border:1px solid #0E7544;border-radius:8px;padding:10px;font-size:12px">';
+  if(NIP_ENTRY_TYPE==='HSCB'){
+    var role=NIP_ENTRY_ROLE;
+    summaryHtml+='<div style="font-weight:700;margin-bottom:6px">Xác nhận: '+sku+' · '+(role==='thay_the'?'<span style="color:#C8102E">THAY THẾ HOÀN TOÀN bản gốc cũ</span>':'Thông báo cập nhật (giữ bản gốc)')+'</div>'
+      +'<div>Số: <b>'+nipEsc((document.getElementById('e_no')||{}).value||'(tự sinh)')+'</b> · Ngày: '+nipEsc((document.getElementById('e_no_date')||{}).value||'?')+'</div>'
+      +'<div>Tên SP: '+nipEsc((document.getElementById('e_no_name')||{}).value||'?')+' · Xuất xứ: '+nipEsc((document.getElementById('e_no_origin')||{}).value||'?')+'</div>';
+    if(role==='thay_the'){
+      var dc=(((NIP_DATA.decl)||{})[sku])||{active:null};
+      if(dc.active) summaryHtml+='<div style="color:#C8102E;margin-top:6px">⚠ Bản gốc hiện tại (<b>'+nipEsc(dc.active.no)+'</b>) sẽ không còn là bản hiệu lực sau khi xác nhận.</div>';
+    }
+  } else {
+    summaryHtml+='<div style="font-weight:700;margin-bottom:6px">Xác nhận Test Report: '+sku+'</div>'
+      +'<div>Lab: '+nipEsc((document.getElementById('e_lab')||{}).value||'?')+' · Ngày: '+nipEsc((document.getElementById('e_test_date')||{}).value||'?')+'</div>';
+  }
+  summaryHtml+='<div style="margin-top:6px">'+rows.length+' chỉ tiêu sẽ ghi vào 06_Safety_Values'+(rows.length?(': '+rows.map(function(r){return r.ind+'='+r.val;}).join(', ')):'')+'</div>'
+    +'<div style="display:flex;gap:8px;margin-top:10px"><button onclick="nipEntryCommit()" style="flex:1;padding:9px;border:0;border-radius:6px;background:#0E7544;color:#fff;font-weight:700;cursor:pointer">✓ Xác nhận & Ghi</button>'
+    +'<button onclick="document.getElementById(\'e_result\').innerHTML=\'\'" style="padding:9px 14px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">Huỷ</button></div></div>';
+  out.innerHTML=summaryHtml;
+}
+async function nipEntryCommit(){
+  var sku=(document.getElementById('e_sku')||{}).value||'';
+  var out=document.getElementById('e_result');
+  out.innerHTML='<div style="opacity:.7;font-size:12px">Đang xử lý — tải file, ghi Sheet...</div>';
+  var pw=sessionStorage.getItem('nip_pw')||'';
+  var by=nipNoteBy()||'app';
+  try{
+    var doctype = NIP_ENTRY_TYPE==='HSCB' ? 'HSCB' : (NIP_ENTRY_TYPE==='TEST_REPORT' ? 'TEST_REPORT' : 'LABEL');
+    var upl = await nipUploadCurrentFile(sku,doctype);
+    var driveUrl = (upl&&upl.ok)?upl.url:'';
+    var rows=nipEntryReadSafetyRows();
+    var msgs=[];
+    if(!upl||!upl.ok) msgs.push('⚠ Upload file lỗi: '+((upl&&upl.error)||'?')+' (vẫn tiếp tục ghi dữ liệu số nếu có)');
+
+    if(NIP_ENTRY_TYPE==='HSCB'){
+      var body='action=nipdata&sub=decl&pw='+encodeURIComponent(pw)
+        +'&sku='+encodeURIComponent(sku)+'&doc_role='+encodeURIComponent(NIP_ENTRY_ROLE)
+        +'&no='+encodeURIComponent((document.getElementById('e_no')||{}).value||'')
+        +'&date='+encodeURIComponent((document.getElementById('e_no_date')||{}).value||'')
+        +'&name='+encodeURIComponent((document.getElementById('e_no_name')||{}).value||'')
+        +'&origin='+encodeURIComponent((document.getElementById('e_no_origin')||{}).value||'')
+        +'&notes='+encodeURIComponent(((document.getElementById('e_no_notes')||{}).value||'')+(driveUrl?(' | file: '+driveUrl):''))
+        +'&by='+encodeURIComponent(by);
+      var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body});
+      var j=await res.json();
+      if(j&&j.ok){
+        msgs.push('✓ Đã ghi hồ sơ '+j.no+' ('+(j.doc_role==='thay_the'?'THAY THẾ':(j.doc_role==='cap_nhat'?'cập nhật':'gốc'))+')'+(j.superseded_no?(' — bản '+j.superseded_no+' không còn hiệu lực'):''));
+      } else msgs.push('Lỗi ghi 10_Declaration: '+((j&&j.error)||'?'));
+    }
+    if(rows.length){
+      var body2='action=nipdata&sub=safetysave&pw='+encodeURIComponent(pw)+'&sku='+encodeURIComponent(sku)+'&by='+encodeURIComponent(by)
+        +'&lab_name='+encodeURIComponent((document.getElementById('e_lab')||{}).value||'')
+        +'&test_date='+encodeURIComponent((document.getElementById('e_test_date')||{}).value||(document.getElementById('e_no_date')?((document.getElementById('e_no_date')||{}).value||''):''))
+        +'&items='+encodeURIComponent(JSON.stringify(rows.map(function(r){return {ind:r.ind,val:r.val,unit:r.unit};})));
+      var res2=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body2});
+      var j2=await res2.json();
+      if(j2&&j2.ok) msgs.push('✓ Đã ghi '+j2.written+' chỉ tiêu vào 06_Safety_Values');
+      else msgs.push('Lỗi ghi 06_Safety_Values: '+((j2&&j2.error)||'?'));
+    }
+    out.innerHTML='<div style="color:#0E7544;font-weight:600;font-size:12px">'+msgs.join('<br>')+'</div>'
+      +'<button onclick="nipReauth(sessionStorage.getItem(\'nip_pw\')).then(function(){nipSub(\'dash\')})" style="margin-top:8px;padding:8px 14px;border:0;border-radius:6px;background:var(--accent,#C9B037);color:#1B3A57;font-weight:700;cursor:pointer">↻ Tải lại & xem Dashboard</button>';
+  }catch(e){ out.innerHTML='<div style="color:#e06;font-size:12px">Lỗi: '+nipEsc(String(e))+'</div>'; }
 }
 /* ===================== HỒ SƠ CHUẨN (Guide 2) ===================== */
 let GUIDE2_DATA=null;
