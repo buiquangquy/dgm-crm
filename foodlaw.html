@@ -597,7 +597,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.4 (2026-08) · Summary Dashboard + Versioning HSCB + AI đọc file + Thư viện chuẩn</span>
+            <span style="font-size:11px;opacity:.6">· v4.5 (2026-08) · Summary Dashboard + Versioning HSCB + AI đọc file + Đề xuất Claim dinh dưỡng</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -4294,7 +4294,7 @@ function nipRenderDash(el){
     +'<button onclick="nipRefreshDocsUI()" title="Quét lại folder Drive (sau khi vừa upload file mới)" style="font-size:11px;padding:7px 10px;border:1px solid var(--border,#2a3f55);border-radius:8px;background:transparent;color:inherit;cursor:pointer">📂 Quét lại folder</button>'
     +'<button onclick="nipReauth(sessionStorage.getItem(\'nip_pw\')).then(function(){nipSub(\'dash\')})" title="Tải lại toàn bộ dữ liệu từ Google Sheet" style="font-size:11px;padding:7px 10px;border:1px solid var(--border,#2a3f55);border-radius:8px;background:transparent;color:inherit;cursor:pointer">↻ Tải lại dữ liệu</button>'
     +'</div>';
-  var legend='<div style="font-size:11px;opacity:.65;margin-bottom:8px">Bấm 🖼 Nhãn / 📄 HSCB / 📊 NIP / 🧪 Test report để xem chi tiết + tài liệu gốc. Điểm tổng: A ≥90 · B 75–89 · C 60–74 · D &lt;60. ⬜ = chưa có tài liệu (không trừ điểm).</div>';
+  var legend='<div style="font-size:11px;opacity:.65;margin-bottom:8px">Bấm 🖼 Nhãn / 📄 HSCB / 📊 NIP / 🧪 Test report để xem chi tiết + tài liệu gốc. Điểm tổng: A ≥90 · B 75–89 · C 60–74 · D &lt;60. ⬜ = chưa có tài liệu (không trừ điểm). Cột Lưu ý: badge <span style="color:#0E7544">✓ xanh</span> = claim đã xác nhận đúng TCVN 14429:2025 · badge <span style="color:#C9A84C">~ vàng nét đứt</span> = tham khảo theo Codex, CẦN kiểm lại trước khi in nhãn chính thức (di chuột để xem chi tiết).</div>';
   el.innerHTML=kpis+tools+legend+'<div id="nipDashTbl"></div>';
   nipDashTable();
 }
@@ -4329,6 +4329,20 @@ function nipVersionNote(sku){
   var txt=dc.updates.length ? (dc.updates.length+' thông báo cập nhật'+(lastU?(' · mới nhất '+nipEsc(lastU.date||'')):'')) : 'Chưa có cập nhật';
   return '<div style="font-size:11px;cursor:pointer" onclick="nipDetail(\''+sku+'\',\'hscb\')" title="Bấm xem lịch sử đầy đủ">'+txt+'</div>';
 }
+/* ---------- v2.8 — Đề xuất claim dinh dưỡng an toàn (nguồn: 22_Claim_Rules) ---------- */
+function nipClaimBadges(claims){
+  if(!claims || !claims.length) return '';
+  return '<div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:2px">'+claims.map(function(c){
+    var hi = c.confidence==='CAO';
+    var color = hi ? '#0E7544' : '#C9A84C';
+    var style = hi ? ('background:'+color+'22;color:'+color+';border:1px solid '+color+'55')
+                    : ('background:transparent;color:'+color+';border:1px dashed '+color+'88');
+    var tip = nipEsc(c.vi)+(c.val!=null?(' ('+c.val+' vs ngưỡng '+c.thr+')'):'')+' — '
+      +(hi?'độ tin cậy cao, đã xác nhận đúng TCVN 14429:2025':'THAM KHẢO — dựa Codex, chưa xác nhận 100% khớp TCVN 14429:2025, nên kiểm lại trước khi in nhãn')
+      +(c.note?(' · '+nipEsc(c.note)):'');
+    return '<span title="'+tip+'" style="font-size:9px;padding:1px 5px;border-radius:8px;white-space:nowrap;'+style+'">'+(hi?'✓':'~')+' '+nipEsc(c.vi)+'</span>';
+  }).join('')+'</div>';
+}
 function nipDashTable(){
   var box=document.getElementById('nipDashTbl'); if(!box) return;
   var S=nipScoreAll(); var sk=NIP_DATA.skus||{};
@@ -4350,7 +4364,9 @@ function nipDashTable(){
     if(f && nipNorm(sku+' '+d.name+' '+d.name_hscb).indexOf(f)<0) return;
     if(fst && m.overall!==fst) return;
     var notesArr=(((NIP_DATA.notes||{})[sku])||[]);
-    var noteTxt=notesArr.length ? nipEsc(notesArr[0].text).slice(0,90)+(notesArr[0].text.length>90?'…':'') : '<span style="opacity:.35">—</span>';
+    var noteTxt=notesArr.length ? nipEsc(notesArr[0].text).slice(0,90)+(notesArr[0].text.length>90?'…':'') : '';
+    var claimHtml=nipClaimBadges(sm.claims);
+    var lastCell = claimHtml + (noteTxt?('<div style="margin-top:3px;opacity:.85">'+noteTxt+'</div>'):'') + (!claimHtml&&!noteTxt?'<span style="opacity:.35">—</span>':'');
 
     var hscbCell = sm.hscb_active_doc
       ? '<div style="cursor:pointer" onclick="nipDetail(\''+sku+'\',\'hscb\')" title="Bấm xem hồ sơ + lịch sử">'+nipStIcon(m.hscb.st)+' <span style="font-size:10px;opacity:.7">'+(sm.decl_active?nipEsc(sm.decl_active.no):'')+'</span></div>'
@@ -4370,7 +4386,7 @@ function nipDashTable(){
       +'<td style="text-align:center;padding:6px 4px">'+nipCell+'</td>'
       +'<td style="padding:6px 4px">'+testCell+'</td>'
       +'<td style="text-align:center;padding:6px 4px;font-size:15px">'+nipStIcon(m.overall)+'</td>'
-      +'<td style="padding:6px 8px;font-size:11px">'+noteTxt+'</td>'
+      +'<td style="padding:6px 8px;font-size:11px">'+lastCell+'</td>'
       +'</tr>';
   });
   box.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'+head+(rows||'<tr><td colspan="8" style="padding:16px;text-align:center;opacity:.6">Không có SKU khớp bộ lọc</td></tr>')+'</table></div>';
