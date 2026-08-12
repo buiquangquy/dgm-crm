@@ -597,7 +597,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.5 (2026-08) · Summary Dashboard + Versioning HSCB + AI đọc file + Đề xuất Claim dinh dưỡng</span>
+            <span style="font-size:11px;opacity:.6">· v4.6 (2026-08) · Summary Dashboard + Versioning HSCB + AI đọc file + Đề xuất Claim + Sổ văn bản</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -613,7 +613,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
       <div id="guide2Panel" style="display:none">
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
           <div style="font-weight:700;font-size:15px">📚 Thư viện chuẩn</div>
-          <span style="font-size:11px;opacity:.6">· Checklist chuẩn mực: Nhãn · Nhãn phụ · Claim · Quảng cáo &amp; Nhãn hiệu · HSCB · Spec — dùng khi mở SKU mới, duyệt artwork, brief KOL, training team</span>
+          <span style="font-size:11px;opacity:.6">· Checklist chuẩn mực: Nhãn · Nhãn phụ · Claim · Quảng cáo &amp; Nhãn hiệu · HSCB · Spec · 📜 Sổ văn bản — dùng khi mở SKU mới, duyệt artwork, brief KOL, training team</span>
           <button onclick="state._guide2Loaded=false;guide2Load()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">↻ Tải lại</button>
         </div>
         <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -623,6 +623,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
           <button class="nip-subtab" data-g2="ads" onclick="guide2Show('ads')">📣 Quảng cáo &amp; Nhãn hiệu</button>
           <button class="nip-subtab" data-g2="hscb" onclick="guide2Show('hscb')">📑 HSCB</button>
           <button class="nip-subtab" data-g2="spec" onclick="guide2Show('spec')">🔬 Spec</button>
+          <button class="nip-subtab" data-g2="legal" onclick="guide2Show('legal')">📜 Sổ văn bản</button>
         </div>
         <div id="guide2Body" style="font-size:13px;line-height:1.5">Đang tải...</div>
       </div>
@@ -4891,6 +4892,7 @@ function guide2Show(which){
   document.querySelectorAll('[data-g2]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-g2')===which); });
   var body=document.getElementById('guide2Body'); if(!body) return;
   if(!GUIDE2_DATA){ body.innerHTML='Chưa có dữ liệu.'; return; }
+  if(which==='legal'){ guide2ShowLegal(); return; }
   var d=GUIDE2_DATA[which]||{rows:[],files:[]};
   var stColor={'✅':'#0E7544','⚠️':'#FFBC18','❌':'#C8102E','➖':'#888'};
   function stBadge(s){ var k=(s||'').charAt(0); var c=stColor[k]||'#888'; return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;background:'+c+'22;color:'+c+';font-size:11px;font-weight:700;white-space:nowrap">'+(s||'—')+'</span>'; }
@@ -4934,6 +4936,61 @@ function guide2Render(which){
       +'<div id="g2ai_'+which+'_'+idx+'" style="margin-top:8px"></div></div>';
   }).join('');
   var el=document.getElementById('g2rows'); if(el) el.innerHTML=html||'<div style="opacity:.6;padding:20px;text-align:center">Chưa có mục nào. Dán nội dung vào tab '+(G2_TAB[which]||'18_Guide_Spec')+' trong DGM_NIP_DB (mục này lấy từ file paste tương ứng), sau đó bấm ↻ Tải lại.</div>';
+}
+/* ---------- v2.9/v4.6 — 📜 Sổ văn bản (master list, đọc trực tiếp 20_Legal_Register) ---------- */
+var LEGAL_ST_META={
+  active:{label:'Còn hiệu lực',color:'#0E7544'},
+  tam_ngung:{label:'Tạm ngưng hiệu lực',color:'#FFBC18'},
+  amended:{label:'Đã sửa đổi (còn hiệu lực phần khác)',color:'#7cb56b'},
+  active_partial:{label:'Còn hiệu lực một phần',color:'#7cb56b'},
+  replaced:{label:'Đã bị thay thế',color:'#C8102E'},
+  expired:{label:'Hết hiệu lực',color:'#C8102E'},
+  khong_lien_quan:{label:'Không liên quan (cần rà lại)',color:'#8a94a3'}
+};
+function legalStBadge(st){
+  var m=LEGAL_ST_META[String(st||'').trim()]||{label:st||'Chưa rõ',color:'#8a94a3'};
+  return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;background:'+m.color+'22;color:'+m.color+';font-size:11px;font-weight:700;white-space:nowrap">'+m.label+'</span>';
+}
+function guide2ShowLegal(){
+  var body=document.getElementById('guide2Body'); if(!body) return;
+  var list=(GUIDE2_DATA.legal_register)||[];
+  var groups=Array.from(new Set(list.map(function(r){return r.nhom;}).filter(Boolean))).sort();
+  var gsel='<select id="g2legalGroup" onchange="guide2RenderLegal()" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:12px"><option value="">Tất cả nhóm ('+list.length+')</option>'+groups.map(function(g){return '<option value="'+nipEsc(g)+'">'+nipEsc(g)+' ('+list.filter(function(r){return r.nhom===g;}).length+')</option>';}).join('')+'</select>';
+  var stCnt={}; list.forEach(function(r){ var k=String(r.trang_thai||'').trim()||'(chưa rõ)'; stCnt[k]=(stCnt[k]||0)+1; });
+  var summary='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;font-size:12px">'
+    +Object.keys(stCnt).map(function(k){ var m=LEGAL_ST_META[k]||{label:k,color:'#8a94a3'}; return '<span style="color:'+m.color+'">● '+m.label+': '+stCnt[k]+'</span>'; }).join('')
+    +'<span style="opacity:.6">· Tổng '+list.length+' văn bản</span></div>';
+  var legend='<div style="font-size:11px;opacity:.65;margin-bottom:10px">Bảng này đọc TRỰC TIẾP từ tab 20_Legal_Register mỗi lần bấm ↻ Tải lại — sửa trạng thái/ghi chú bên Google Sheet xong tải lại là thấy ngay ở đây, không cần đợi cache.</div>';
+  body.innerHTML='<div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">'+gsel+'</div>'+summary+legend+'<div id="g2legalRows"></div>';
+  guide2RenderLegal();
+}
+function guide2RenderLegal(){
+  var list=(GUIDE2_DATA.legal_register)||[];
+  var filt=(document.getElementById('g2legalGroup')||{}).value||'';
+  var rows=list.filter(function(r){ return !filt || r.nhom===filt; });
+  // nhóm theo folder rồi mới liệt kê, giống cấu trúc folder A/B/C/D đã sắp xếp trên Drive
+  var byGroup={}; rows.forEach(function(r){ var g=r.nhom||'(chưa phân nhóm)'; (byGroup[g]=byGroup[g]||[]).push(r); });
+  var groupNames=Object.keys(byGroup).sort();
+  var html=groupNames.map(function(g){
+    var items=byGroup[g];
+    var head='<tr style="background:rgba(255,255,255,.06);font-size:11px"><th style="text-align:left;padding:6px 8px">Số hiệu</th><th style="text-align:left;padding:6px 8px">Loại</th><th style="text-align:left;padding:6px 8px;min-width:220px">Tên văn bản</th><th style="padding:6px 8px">Ngày ban hành</th><th style="padding:6px 8px">Ngày hiệu lực</th><th style="padding:6px 8px">Trạng thái</th><th style="text-align:left;padding:6px 8px;min-width:260px">Ghi chú</th></tr>';
+    var body=items.map(function(r){
+      var nameCell = r.incomplete ? ('<span style="color:#e0a">⚠ chưa điền tên</span>') : nipEsc(r.ten||'');
+      var urlBtn = r.url ? (' <a href="'+r.url+'" target="_blank" style="font-size:10px;color:var(--accent,#C9B037)">📎</a>') : '';
+      return '<tr style="border-top:1px solid rgba(255,255,255,.08);font-size:12px'+(r.stale?';opacity:.85':'')+'">'
+        +'<td style="padding:6px 8px;font-weight:700">'+nipEsc(r.so||'')+urlBtn+'</td>'
+        +'<td style="padding:6px 8px;font-size:11px;opacity:.8">'+nipEsc(r.loai||'')+'</td>'
+        +'<td style="padding:6px 8px">'+nameCell+'</td>'
+        +'<td style="padding:6px 8px;text-align:center;font-size:11px">'+nipEsc(r.ban_hanh||'—')+'</td>'
+        +'<td style="padding:6px 8px;text-align:center;font-size:11px">'+nipEsc(r.hieu_luc||'—')+'</td>'
+        +'<td style="padding:6px 8px;text-align:center">'+legalStBadge(r.trang_thai)+'</td>'
+        +'<td style="padding:6px 8px;font-size:11px;opacity:.85">'+nipEsc(r.ghi_chu||'')+'</td>'
+        +'</tr>';
+    }).join('');
+    return '<div style="margin-bottom:16px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;color:var(--accent,#C9B037)">📁 '+nipEsc(g)+' ('+items.length+')</div>'
+      +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'+head+body+'</table></div></div>';
+  }).join('');
+  var el=document.getElementById('g2legalRows'); if(el) el.innerHTML=html||'<div style="opacity:.6;padding:20px;text-align:center">Chưa có văn bản nào trong 20_Legal_Register.</div>';
 }
 async function guide2AiHint(which,idx){
   var r=(GUIDE2_DATA[which].rows.filter(function(x){return !((document.getElementById('g2group')||{}).value) || x.group===document.getElementById('g2group').value;}))[idx];
