@@ -597,13 +597,14 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.8 (2026-08) · Đăng nhập nhanh (tách xác thực khỏi tải data)</span>
+            <span style="font-size:11px;opacity:.6">· v4.9 (2026-08) · + Check tính tuân thủ SP dự định (tên/thành phần/NIP)</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
             <button class="nip-subtab active" data-nt="dash" onclick="nipSub('dash')">📊 Dashboard</button>
             <button class="nip-subtab" data-nt="compare" onclick="nipSub('compare')">🔬 So sánh NIP</button>
             <button class="nip-subtab" data-nt="entry" onclick="nipSub('entry')">➕ Nhập dữ liệu</button>
+            <button class="nip-subtab" data-nt="check" onclick="nipSub('check')">✅ Check tuân thủ</button>
           </div>
           <div id="nipBody" style="font-size:13px;line-height:1.55"></div>
         </div>
@@ -4284,6 +4285,7 @@ function nipSub(which){
   if(which==='dash') return nipRenderDash(el);
   if(which==='compare') return nipRenderCompare(el);
   if(which==='entry') return nipRenderEntry(el);
+  if(which==='check') return nipRenderCheck(el);
   nipRenderDash(el);
 }
 
@@ -4910,6 +4912,150 @@ async function nipEntryCommit(){
       +'<button onclick="nipReauth(sessionStorage.getItem(\'nip_pw\')).then(function(){nipSub(\'dash\')})" style="margin-top:8px;padding:8px 14px;border:0;border-radius:6px;background:var(--accent,#C9B037);color:#1B3A57;font-weight:700;cursor:pointer">↻ Tải lại & xem Dashboard</button>';
   }catch(e){ out.innerHTML='<div style="color:#e06;font-size:12px">Lỗi: '+nipEsc(String(e))+'</div>'; }
 }
+
+/* ---------- v2.12/v4.9 — ✅ CHECK TÍNH TUÂN THỦ (SP dự định, chưa cần là SKU thật) ---------- */
+var NIP_CHECK_PROJID = null;  // nếu đang sửa 1 hồ sơ đã lưu trong 21_NP_Projects
+function nipRenderCheck(el){
+  NIP_CHECK_PROJID = null;
+  var catOpts = (NIP_DATA.tier2 && NIP_DATA.tier2.cats || []).map(function(c){ return '<option value="'+c+'">'+c+'</option>'; }).join('');
+  el.innerHTML='<div style="border-left:4px solid #2F7898;background:rgba(255,255,255,.03);padding:12px 14px;border-radius:8px">'
+    +'<div style="font-weight:700;margin-bottom:6px">✅ Check tính tuân thủ — sản phẩm dự định</div>'
+    +'<div style="font-size:12px;opacity:.85;margin-bottom:12px">Nhập thông tin dự kiến (chưa cần là SKU thật), tick phần muốn kiểm tra, hệ thống đối chiếu luật và đưa ra cảnh báo rủi ro. Kết quả có thể lưu lại để tham khảo khi SP ra mắt thật.</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+    +'<div><label style="font-size:11px;opacity:.7">Tên sản phẩm dự định</label><input id="c_name" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:13px"></div>'
+    +'<div><label style="font-size:11px;opacity:.7">Nhóm sản phẩm (category)</label><select id="c_cat" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:13px"><option value="">— Chọn —</option>'+catOpts+'</select></div>'
+    +'</div>'
+    +'<div><label style="font-size:11px;opacity:.7">Thành phần (mỗi dòng hoặc phẩy, càng chi tiết càng chính xác)</label><textarea id="c_ing" rows="3" style="width:100%;box-sizing:border-box;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:13px;font-family:inherit" placeholder="vd: Cá thu (60%), nước, cà chua cô đặc, đường, muối, tinh bột biến tính..."></textarea></div>'
+    +'<div style="margin:10px 0 6px;font-weight:600;font-size:12px">Giá trị NIP (không bắt buộc — bỏ trống nếu chưa có, vẫn check được Tên/Thành phần)</div>'
+    +'<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><label style="font-size:11px;opacity:.7">Đơn vị</label>'
+    +'<select id="c_per" style="padding:6px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:12px"><option value="g">trên 100g (rắn)</option><option value="ml">trên 100ml (lỏng)</option></select></div>'
+    +'<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px">'
+    +['Nang luong:Năng lượng (kcal)','Chat dam:Đạm (g)','Chat beo:Béo (g)','Natri:Natri (mg)','Chat xo:Xơ (g)'].map(function(p){var kv=p.split(':');
+      return '<div><label style="font-size:10px;opacity:.65">'+kv[1]+'</label><input type="number" step="any" id="c_nip_'+kv[0]+'" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:12px"></div>';}).join('')
+    +'</div>'
+    +'<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;font-size:12px">'
+    +'<label><input type="checkbox" id="c_do_name" checked> Check tên</label>'
+    +'<label><input type="checkbox" id="c_do_ing" checked> Check thành phần</label>'
+    +'<label><input type="checkbox" id="c_do_nip" checked> Check NIP</label>'
+    +'</div>'
+    +'<button onclick="nipCheckRun()" style="width:100%;padding:10px;border:0;border-radius:8px;background:var(--accent,#C9B037);color:#1B3A57;font-weight:700;cursor:pointer">🔎 Chạy kiểm tra</button>'
+    +'<div id="c_result" style="margin-top:14px"></div>'
+    +'<div id="c_history" style="margin-top:18px"></div>'
+    +'</div>';
+  nipCheckLoadHistory();
+}
+function nipCheckRiskIcon(level){ return level==='fail'?'🔴':level==='warn'?'🟡':level==='pass'?'✅':'⬜'; }
+function nipCheckRenderSection(title, risks){
+  if(risks==null) return '';
+  var body = risks.length ? risks.map(function(r){
+    return '<div style="border:1px solid rgba(255,255,255,.08);border-left:4px solid '+(r.level==='fail'?'#C8102E':r.level==='warn'?'#FFBC18':'#0E7544')+';border-radius:8px;padding:8px 10px;margin-bottom:6px;background:rgba(255,255,255,.02)">'
+      +'<div style="font-size:12.5px">'+nipCheckRiskIcon(r.level)+' '+nipEsc(r.title)+'</div>'
+      +(r.legal?'<div style="font-size:10.5px;opacity:.6;margin-top:3px">📖 '+nipEsc(r.legal)+'</div>':'')
+      +(r.detail?'<div style="font-size:11px;margin-top:3px;opacity:.85">'+nipEsc(r.detail)+'</div>':'')
+      +'</div>';
+  }).join('') : '<div style="font-size:12px;opacity:.5">—</div>';
+  return '<div style="margin-bottom:12px"><div style="font-weight:700;font-size:12.5px;margin-bottom:6px">'+title+'</div>'+body+'</div>';
+}
+function nipCheckCollectInput(){
+  return {
+    name: (document.getElementById('c_name')||{}).value||'',
+    cat: (document.getElementById('c_cat')||{}).value||'',
+    ingredients: (document.getElementById('c_ing')||{}).value||'',
+    per_unit: (document.getElementById('c_per')||{}).value||'g',
+    nip_values: {
+      'Nang luong': (document.getElementById('c_nip_Nang luong')||{}).value||'',
+      'Chat dam': (document.getElementById('c_nip_Chat dam')||{}).value||'',
+      'Chat beo': (document.getElementById('c_nip_Chat beo')||{}).value||'',
+      'Natri': (document.getElementById('c_nip_Natri')||{}).value||'',
+      'Chat xo': (document.getElementById('c_nip_Chat xo')||{}).value||''
+    },
+    do_name: document.getElementById('c_do_name').checked,
+    do_ing: document.getElementById('c_do_ing').checked,
+    do_nip: document.getElementById('c_do_nip').checked
+  };
+}
+async function nipCheckRun(){
+  var out=document.getElementById('c_result');
+  var inp=nipCheckCollectInput();
+  if(!inp.do_name && !inp.do_ing && !inp.do_nip){ out.innerHTML='<div style="color:#e06;font-size:12px">⚠ Chọn ít nhất 1 phần để kiểm tra</div>'; return; }
+  out.innerHTML='<div style="opacity:.7;font-size:12px">Đang kiểm tra...</div>';
+  var pw=sessionStorage.getItem('nip_pw')||'';
+  var body='action=nipdata&sub=compcheck&pw='+encodeURIComponent(pw)
+    +'&name='+encodeURIComponent(inp.name)+'&cat='+encodeURIComponent(inp.cat)
+    +'&ingredients='+encodeURIComponent(inp.ingredients)+'&per_unit='+encodeURIComponent(inp.per_unit)
+    +'&nip_values='+encodeURIComponent(JSON.stringify(inp.nip_values))
+    +'&check_name='+(inp.do_name?'1':'0')+'&check_ing='+(inp.do_ing?'1':'0')+'&check_nip='+(inp.do_nip?'1':'0');
+  try{
+    var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body});
+    var j=await res.json();
+    if(!j||!j.ok){ out.innerHTML='<div style="color:#e06;font-size:12px">Lỗi: '+((j&&j.error)||'?')+'</div>'; return; }
+    NIP_CHECK_LAST_RESULT = j.result;
+    var html='';
+    if(j.result.name!=null) html+=nipCheckRenderSection('📛 Tên sản phẩm', j.result.name);
+    if(j.result.ingredients!=null) html+=nipCheckRenderSection('🧾 Thành phần', j.result.ingredients);
+    if(j.result.nip!=null) html+=nipCheckRenderSection('📊 NIP value', j.result.nip);
+    html+='<button onclick="nipCheckSave()" style="margin-top:6px;padding:9px 16px;border:0;border-radius:6px;background:#0E7544;color:#fff;font-weight:700;cursor:pointer">💾 Lưu hồ sơ này (21_NP_Projects)</button>';
+    out.innerHTML=html;
+  }catch(e){ out.innerHTML='<div style="color:#e06;font-size:12px">Không kết nối được server</div>'; }
+}
+var NIP_CHECK_LAST_RESULT=null;
+async function nipCheckSave(){
+  var inp=nipCheckCollectInput();
+  if(!inp.name){ alert('Cần nhập tên sản phẩm trước khi lưu'); return; }
+  var pw=sessionStorage.getItem('nip_pw')||'';
+  var by=nipNoteBy()||'app';
+  var body='action=nipdata&sub=projsave&pw='+encodeURIComponent(pw)
+    +(NIP_CHECK_PROJID?('&projid='+encodeURIComponent(NIP_CHECK_PROJID)):'')
+    +'&name='+encodeURIComponent(inp.name)+'&cat='+encodeURIComponent(inp.cat)
+    +'&input='+encodeURIComponent(JSON.stringify(inp))
+    +'&progress='+encodeURIComponent(JSON.stringify(NIP_CHECK_LAST_RESULT||{}))
+    +'&by='+encodeURIComponent(by);
+  try{
+    var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body});
+    var j=await res.json();
+    if(j&&j.ok){ NIP_CHECK_PROJID=j.projid||NIP_CHECK_PROJID; nipCheckLoadHistory(); alert('Đã lưu hồ sơ.'); }
+    else alert('Lỗi lưu: '+((j&&j.error)||'?'));
+  }catch(e){ alert('Không kết nối được server'); }
+}
+async function nipCheckLoadHistory(){
+  var box=document.getElementById('c_history'); if(!box) return;
+  var pw=sessionStorage.getItem('nip_pw')||'';
+  try{
+    var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=nipdata&sub=projlist&pw='+encodeURIComponent(pw)});
+    var j=await res.json();
+    if(!j||!j.ok||!j.projects||!j.projects.length){ box.innerHTML=''; return; }
+    var rows=j.projects.slice(0,10).map(function(p){
+      return '<div onclick="nipCheckLoadOne(\''+p.id+'\')" style="cursor:pointer;padding:7px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;margin-bottom:5px;font-size:12px;display:flex;justify-content:space-between"><span>'+nipEsc(p.name)+' <span style="opacity:.6;font-size:10px">('+nipEsc(p.cat)+')</span></span><span style="opacity:.6;font-size:10px">'+nipEsc(p.created)+'</span></div>';
+    }).join('');
+    box.innerHTML='<div style="font-weight:700;font-size:12px;margin-bottom:6px;opacity:.85">📂 Hồ sơ đã lưu gần đây (bấm để mở lại)</div>'+rows;
+  }catch(e){}
+}
+async function nipCheckLoadOne(projid){
+  var pw=sessionStorage.getItem('nip_pw')||'';
+  try{
+    var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=nipdata&sub=projlist&pw='+encodeURIComponent(pw)});
+    var j=await res.json();
+    var p=(j.projects||[]).filter(function(x){return x.id===projid;})[0]; if(!p) return;
+    var inp; try{ inp=JSON.parse(p.input||'{}'); }catch(e){ inp={}; }
+    NIP_CHECK_PROJID=projid;
+    document.getElementById('c_name').value=inp.name||'';
+    document.getElementById('c_cat').value=inp.cat||'';
+    document.getElementById('c_ing').value=inp.ingredients||'';
+    document.getElementById('c_per').value=inp.per_unit||'g';
+    if(inp.nip_values) Object.keys(inp.nip_values).forEach(function(k){ var el=document.getElementById('c_nip_'+k); if(el) el.value=inp.nip_values[k]||''; });
+    var res2=document.getElementById('c_result');
+    try{ NIP_CHECK_LAST_RESULT=JSON.parse(p.progress||'{}'); }catch(e){ NIP_CHECK_LAST_RESULT=null; }
+    if(NIP_CHECK_LAST_RESULT){
+      var html='';
+      if(NIP_CHECK_LAST_RESULT.name!=null) html+=nipCheckRenderSection('📛 Tên sản phẩm', NIP_CHECK_LAST_RESULT.name);
+      if(NIP_CHECK_LAST_RESULT.ingredients!=null) html+=nipCheckRenderSection('🧾 Thành phần', NIP_CHECK_LAST_RESULT.ingredients);
+      if(NIP_CHECK_LAST_RESULT.nip!=null) html+=nipCheckRenderSection('📊 NIP value', NIP_CHECK_LAST_RESULT.nip);
+      html+='<button onclick="nipCheckSave()" style="margin-top:6px;padding:9px 16px;border:0;border-radius:6px;background:#0E7544;color:#fff;font-weight:700;cursor:pointer">💾 Cập nhật hồ sơ này</button>';
+      res2.innerHTML=html;
+    }
+  }catch(e){}
+}
+
 /* ===================== HỒ SƠ CHUẨN (Guide 2) ===================== */
 let GUIDE2_DATA=null;
 var G2_TAB={nhan:'16_Guide_Nhan',hscb:'17_Guide_HSCB',spec:'18_Guide_Spec',sublabel:'18_Guide_Spec (item_id P…)',claim:'18_Guide_Spec (item_id C…)',ads:'18_Guide_Spec (item_id Q…)'};
