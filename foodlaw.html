@@ -597,7 +597,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.9 (2026-08) · + Check tính tuân thủ SP dự định (tên/thành phần/NIP)</span>
+            <span style="font-size:11px;opacity:.6">· v4.10 (2026-08) · Check tuân thủ: song ngữ VI/EN + dạng kết cấu SP + AI dự đoán</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -4918,21 +4918,41 @@ var NIP_CHECK_PROJID = null;  // nếu đang sửa 1 hồ sơ đã lưu trong 21
 function nipRenderCheck(el){
   NIP_CHECK_PROJID = null;
   var catOpts = (NIP_DATA.tier2 && NIP_DATA.tier2.cats || []).map(function(c){ return '<option value="'+c+'">'+c+'</option>'; }).join('');
+  var nutHtml = NIP_NUTS.map(function(n){
+    return '<div><label style="font-size:10px;opacity:.65">'+NIP_VN[n]+' ('+NIP_UNITS[n]+')</label><input type="number" step="any" id="c_nip_'+n+'" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:12px"></div>';
+  }).join('');
   el.innerHTML='<div style="border-left:4px solid #2F7898;background:rgba(255,255,255,.03);padding:12px 14px;border-radius:8px">'
     +'<div style="font-weight:700;margin-bottom:6px">✅ Check tính tuân thủ — sản phẩm dự định</div>'
-    +'<div style="font-size:12px;opacity:.85;margin-bottom:12px">Nhập thông tin dự kiến (chưa cần là SKU thật), tick phần muốn kiểm tra, hệ thống đối chiếu luật và đưa ra cảnh báo rủi ro. Kết quả có thể lưu lại để tham khảo khi SP ra mắt thật.</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
-    +'<div><label style="font-size:11px;opacity:.7">Tên sản phẩm dự định</label><input id="c_name" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:13px"></div>'
-    +'<div><label style="font-size:11px;opacity:.7">Nhóm sản phẩm (category)</label><select id="c_cat" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:13px"><option value="">— Chọn —</option>'+catOpts+'</select></div>'
+    +'<div style="font-size:12px;opacity:.85;margin-bottom:12px">Nhập thông tin dự kiến (chưa cần là SKU thật), tick phần muốn kiểm tra, hệ thống đối chiếu luật và đưa ra cảnh báo rủi ro. Nhập cả tiếng Việt lẫn tiếng Anh/gốc nếu là hàng nhập khẩu — dùng để đối chiếu 2 bản. Kết quả có thể lưu lại để tham khảo khi SP ra mắt thật.</div>'
+
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px">'
+    +'<div><label style="font-size:11px;opacity:.7">Tên sản phẩm — Tiếng Việt</label><input id="c_name_vi" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:13px"></div>'
+    +'<div><label style="font-size:11px;opacity:.7">Tên sản phẩm — Tiếng Anh / nhãn gốc (nếu NK)</label><input id="c_name_en" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:13px"></div>'
     +'</div>'
-    +'<div><label style="font-size:11px;opacity:.7">Thành phần (mỗi dòng hoặc phẩy, càng chi tiết càng chính xác)</label><textarea id="c_ing" rows="3" style="width:100%;box-sizing:border-box;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:13px;font-family:inherit" placeholder="vd: Cá thu (60%), nước, cà chua cô đặc, đường, muối, tinh bột biến tính..."></textarea></div>'
-    +'<div style="margin:10px 0 6px;font-weight:600;font-size:12px">Giá trị NIP (không bắt buộc — bỏ trống nếu chưa có, vẫn check được Tên/Thành phần)</div>'
+    +'<div style="margin-bottom:12px"><label style="font-size:11px;opacity:.7">Nhóm sản phẩm (category)</label><select id="c_cat" onchange="nipCheckFormDefault()" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:13px"><option value="">— Chọn —</option>'+catOpts+'</select></div>'
+
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px">'
+    +'<div><label style="font-size:11px;opacity:.7">Thành phần — Tiếng Việt</label><textarea id="c_ing_vi" rows="3" style="width:100%;box-sizing:border-box;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:13px;font-family:inherit" placeholder="vd: Cá thu (60%), nước, cà chua cô đặc, đường, muối..."></textarea></div>'
+    +'<div><label style="font-size:11px;opacity:.7">Thành phần — Tiếng Anh / gốc (nếu NK)</label><textarea id="c_ing_en" rows="3" style="width:100%;box-sizing:border-box;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:13px;font-family:inherit" placeholder="vd: Mackerel (60%), water, tomato concentrate, sugar, salt..."></textarea></div>'
+    +'</div>'
+
+    +'<div style="margin-bottom:12px"><label style="font-size:11px;opacity:.7">Dạng kết cấu sản phẩm — QUYẾT ĐỊNH có cần ghi khối lượng ráo nước không (NĐ 37/2026/NĐ-CP Điều 45)</label>'
+    +'<div style="display:flex;gap:8px;align-items:center">'
+    +'<select id="c_form" style="flex:1;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:13px">'
+    +'<option value="">— Chưa xác định —</option>'
+    +'<option value="ran_trong_long">Rắn trong môi trường lỏng (miếng/khúc ngâm dầu, nước, sốt... có thể ráo)</option>'
+    +'<option value="nhao_keo_set">Nhão, keo, sệt (paste/pate/sốt xay nhuyễn đồng nhất — KHÔNG ráo được)</option>'
+    +'<option value="long_dong_nhat">Lỏng đồng nhất (nước cốt dừa, nước tương...)</option>'
+    +'<option value="ran_kho">Rắn khô (mì, hạt nêm...)</option>'
+    +'</select>'
+    +'<button onclick="nipCheckPredictForm()" id="c_predictBtn" style="white-space:nowrap;padding:8px 12px;border:1px solid var(--accent,#C9B037);border-radius:6px;background:transparent;color:var(--accent,#C9B037);font-weight:700;cursor:pointer;font-size:12px">🤖 AI dự đoán</button>'
+    +'</div><div id="c_formHint" style="font-size:11px;margin-top:5px"></div></div>'
+
+    +'<div style="margin:10px 0 6px;font-weight:600;font-size:12px">Giá trị NIP (không bắt buộc — bỏ trống nếu chưa có, vẫn check được Tên/Thành phần). Hiện đủ 9 chỉ tiêu — chỉ tiêu nào không nhập thì coi như chưa có.</div>'
     +'<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><label style="font-size:11px;opacity:.7">Đơn vị</label>'
     +'<select id="c_per" style="padding:6px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:12px"><option value="g">trên 100g (rắn)</option><option value="ml">trên 100ml (lỏng)</option></select></div>'
-    +'<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px">'
-    +['Nang luong:Năng lượng (kcal)','Chat dam:Đạm (g)','Chat beo:Béo (g)','Natri:Natri (mg)','Chat xo:Xơ (g)'].map(function(p){var kv=p.split(':');
-      return '<div><label style="font-size:10px;opacity:.65">'+kv[1]+'</label><input type="number" step="any" id="c_nip_'+kv[0]+'" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:12px"></div>';}).join('')
-    +'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px">'+nutHtml+'</div>'
+
     +'<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;font-size:12px">'
     +'<label><input type="checkbox" id="c_do_name" checked> Check tên</label>'
     +'<label><input type="checkbox" id="c_do_ing" checked> Check thành phần</label>'
@@ -4943,6 +4963,37 @@ function nipRenderCheck(el){
     +'<div id="c_history" style="margin-top:18px"></div>'
     +'</div>';
   nipCheckLoadHistory();
+}
+function nipCheckFormDefault(){
+  var cat=(document.getElementById('c_cat')||{}).value||'';
+  var sel=document.getElementById('c_form');
+  if(sel && !sel.value && ['CA_HOP_TUNA','CA_HOP_SARDINE','CA_HOP_MACKEREL','DAU_DONG_HOP'].indexOf(cat)>=0){
+    document.getElementById('c_formHint').innerHTML='<span style="opacity:.6">Gợi ý: nhóm này thường là "rắn trong môi trường lỏng" — nhưng vẫn cần xác nhận, có thể là dạng pate/sệt. Chọn đúng ở trên hoặc bấm 🤖 AI dự đoán.</span>';
+  }
+}
+async function nipCheckPredictForm(){
+  var btn=document.getElementById('c_predictBtn'); var hint=document.getElementById('c_formHint');
+  if(!state.apiKey){ hint.innerHTML='<span style="color:#e0a">⚠ Chưa có Gemini API key (⚙️ Cài đặt) — chọn tay dạng kết cấu bên trên.</span>'; return; }
+  var nameVi=(document.getElementById('c_name_vi')||{}).value||'', nameEn=(document.getElementById('c_name_en')||{}).value||'';
+  var ingVi=(document.getElementById('c_ing_vi')||{}).value||'', ingEn=(document.getElementById('c_ing_en')||{}).value||'';
+  if(!nameVi && !nameEn){ hint.innerHTML='<span style="color:#e06">⚠ Nhập tên sản phẩm trước</span>'; return; }
+  btn.disabled=true; hint.innerHTML='<span style="opacity:.7">🤖 Đang phân tích...</span>';
+  var pw=sessionStorage.getItem('nip_pw')||'';
+  try{
+    var body='action=nipdata&sub=predictform&pw='+encodeURIComponent(pw)+'&apikey='+encodeURIComponent(state.apiKey)
+      +'&name_vi='+encodeURIComponent(nameVi)+'&name_en='+encodeURIComponent(nameEn)
+      +'&ingredients_vi='+encodeURIComponent(ingVi)+'&ingredients_en='+encodeURIComponent(ingEn);
+    var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body});
+    var j=await res.json();
+    btn.disabled=false;
+    if(j&&j.ok&&j.data){
+      var formLabel={ran_trong_long:'Rắn trong môi trường lỏng',nhao_keo_set:'Nhão, keo, sệt',long_dong_nhat:'Lỏng đồng nhất',ran_kho:'Rắn khô'};
+      if(j.data.form) document.getElementById('c_form').value=j.data.form;
+      hint.innerHTML='<div style="color:#0E7544">✓ AI dự đoán: <b>'+(formLabel[j.data.form]||j.data.form)+'</b> — '+nipEsc(j.data.form_reason||'')+'</div>'
+        +(j.data.name_compare?('<div style="margin-top:4px;opacity:.85">🔤 So sánh tên VI/EN: '+nipEsc(j.data.name_compare)+'</div>'):'')
+        +'<div style="margin-top:4px;font-size:10px;opacity:.6">Đây là đề xuất AI — vẫn nên xác nhận lại bằng mắt trước khi chạy kiểm tra.</div>';
+    } else { hint.innerHTML='<span style="color:#e06">Lỗi: '+((j&&j.error)||'?')+' — chọn tay dạng kết cấu.</span>'; }
+  }catch(e){ btn.disabled=false; hint.innerHTML='<span style="color:#e06">Không kết nối được server.</span>'; }
 }
 function nipCheckRiskIcon(level){ return level==='fail'?'🔴':level==='warn'?'🟡':level==='pass'?'✅':'⬜'; }
 function nipCheckRenderSection(title, risks){
@@ -4957,18 +5008,17 @@ function nipCheckRenderSection(title, risks){
   return '<div style="margin-bottom:12px"><div style="font-weight:700;font-size:12.5px;margin-bottom:6px">'+title+'</div>'+body+'</div>';
 }
 function nipCheckCollectInput(){
+  var nipv={};
+  NIP_NUTS.forEach(function(n){ nipv[n]=(document.getElementById('c_nip_'+n)||{}).value||''; });
   return {
-    name: (document.getElementById('c_name')||{}).value||'',
+    name_vi: (document.getElementById('c_name_vi')||{}).value||'',
+    name_en: (document.getElementById('c_name_en')||{}).value||'',
     cat: (document.getElementById('c_cat')||{}).value||'',
-    ingredients: (document.getElementById('c_ing')||{}).value||'',
+    ingredients_vi: (document.getElementById('c_ing_vi')||{}).value||'',
+    ingredients_en: (document.getElementById('c_ing_en')||{}).value||'',
+    physical_form: (document.getElementById('c_form')||{}).value||'',
     per_unit: (document.getElementById('c_per')||{}).value||'g',
-    nip_values: {
-      'Nang luong': (document.getElementById('c_nip_Nang luong')||{}).value||'',
-      'Chat dam': (document.getElementById('c_nip_Chat dam')||{}).value||'',
-      'Chat beo': (document.getElementById('c_nip_Chat beo')||{}).value||'',
-      'Natri': (document.getElementById('c_nip_Natri')||{}).value||'',
-      'Chat xo': (document.getElementById('c_nip_Chat xo')||{}).value||''
-    },
+    nip_values: nipv,
     do_name: document.getElementById('c_do_name').checked,
     do_ing: document.getElementById('c_do_ing').checked,
     do_nip: document.getElementById('c_do_nip').checked
@@ -4981,8 +5031,9 @@ async function nipCheckRun(){
   out.innerHTML='<div style="opacity:.7;font-size:12px">Đang kiểm tra...</div>';
   var pw=sessionStorage.getItem('nip_pw')||'';
   var body='action=nipdata&sub=compcheck&pw='+encodeURIComponent(pw)
-    +'&name='+encodeURIComponent(inp.name)+'&cat='+encodeURIComponent(inp.cat)
-    +'&ingredients='+encodeURIComponent(inp.ingredients)+'&per_unit='+encodeURIComponent(inp.per_unit)
+    +'&name_vi='+encodeURIComponent(inp.name_vi)+'&name_en='+encodeURIComponent(inp.name_en)+'&cat='+encodeURIComponent(inp.cat)
+    +'&ingredients_vi='+encodeURIComponent(inp.ingredients_vi)+'&ingredients_en='+encodeURIComponent(inp.ingredients_en)
+    +'&physical_form='+encodeURIComponent(inp.physical_form)+'&per_unit='+encodeURIComponent(inp.per_unit)
     +'&nip_values='+encodeURIComponent(JSON.stringify(inp.nip_values))
     +'&check_name='+(inp.do_name?'1':'0')+'&check_ing='+(inp.do_ing?'1':'0')+'&check_nip='+(inp.do_nip?'1':'0');
   try{
@@ -5001,12 +5052,13 @@ async function nipCheckRun(){
 var NIP_CHECK_LAST_RESULT=null;
 async function nipCheckSave(){
   var inp=nipCheckCollectInput();
-  if(!inp.name){ alert('Cần nhập tên sản phẩm trước khi lưu'); return; }
+  var displayName = inp.name_vi || inp.name_en;
+  if(!displayName){ alert('Cần nhập tên sản phẩm (VI hoặc EN) trước khi lưu'); return; }
   var pw=sessionStorage.getItem('nip_pw')||'';
   var by=nipNoteBy()||'app';
   var body='action=nipdata&sub=projsave&pw='+encodeURIComponent(pw)
     +(NIP_CHECK_PROJID?('&projid='+encodeURIComponent(NIP_CHECK_PROJID)):'')
-    +'&name='+encodeURIComponent(inp.name)+'&cat='+encodeURIComponent(inp.cat)
+    +'&name='+encodeURIComponent(displayName)+'&cat='+encodeURIComponent(inp.cat)
     +'&input='+encodeURIComponent(JSON.stringify(inp))
     +'&progress='+encodeURIComponent(JSON.stringify(NIP_CHECK_LAST_RESULT||{}))
     +'&by='+encodeURIComponent(by);
@@ -5038,9 +5090,12 @@ async function nipCheckLoadOne(projid){
     var p=(j.projects||[]).filter(function(x){return x.id===projid;})[0]; if(!p) return;
     var inp; try{ inp=JSON.parse(p.input||'{}'); }catch(e){ inp={}; }
     NIP_CHECK_PROJID=projid;
-    document.getElementById('c_name').value=inp.name||'';
+    document.getElementById('c_name_vi').value=inp.name_vi||inp.name||'';
+    document.getElementById('c_name_en').value=inp.name_en||'';
     document.getElementById('c_cat').value=inp.cat||'';
-    document.getElementById('c_ing').value=inp.ingredients||'';
+    document.getElementById('c_ing_vi').value=inp.ingredients_vi||inp.ingredients||'';
+    document.getElementById('c_ing_en').value=inp.ingredients_en||'';
+    document.getElementById('c_form').value=inp.physical_form||'';
     document.getElementById('c_per').value=inp.per_unit||'g';
     if(inp.nip_values) Object.keys(inp.nip_values).forEach(function(k){ var el=document.getElementById('c_nip_'+k); if(el) el.value=inp.nip_values[k]||''; });
     var res2=document.getElementById('c_result');
