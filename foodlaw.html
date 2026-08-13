@@ -597,7 +597,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.7 (2026-08) · Sửa lỗi xem ảnh nhãn (lightbox thay window.open)</span>
+            <span style="font-size:11px;opacity:.6">· v4.8 (2026-08) · Đăng nhập nhanh (tách xác thực khỏi tải data)</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -3968,20 +3968,32 @@ var NIP_MODULES = [
 
 async function nipUnlock(){
   var v=(document.getElementById('nipPass')||{}).value||'';
-  var m=document.getElementById('nipPassMsg'); if(m) m.textContent='Đang kiểm tra...';
+  var m=document.getElementById('nipPassMsg'); if(m) m.textContent='Đang kiểm tra mật khẩu...';
   if(!state.gasWebAppUrl){ if(m) m.textContent='Chưa cấu hình GAS URL trong Cài đặt'; return; }
   try{
+    // Bước 1 — v4.8: CHỈ xác thực mật khẩu (sub=ping), rất nhanh vì không đụng tới Google Sheet/Drive.
+    // Trước đây bước đăng nhập gộp chung với tải toàn bộ CSDL (10+ sheet + quét Drive) nên bị lag lâu.
+    var pingRes=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=nipdata&sub=ping&pw='+encodeURIComponent(v)});
+    var pingJ=await pingRes.json();
+    if(!pingJ || !pingJ.ok){
+      if(m) m.textContent = (pingJ && pingJ.error==='auth') ? 'Sai mật khẩu' : ('Lỗi: '+((pingJ&&pingJ.error)||'không rõ'));
+      return;
+    }
+    // Mật khẩu đúng → vào ngay, không bắt đợi thêm ở màn hình nhập mật khẩu nữa
+    nipUnlocked=true; try{ sessionStorage.setItem('nip_pw', v); }catch(e){}
+    document.getElementById('nipLock').style.display='none';
+    document.getElementById('nipContent').style.display='';
+    if(m) m.textContent='';
+    var body=document.getElementById('nipBody');
+    if(body) body.innerHTML='<div style="padding:50px 20px;text-align:center;opacity:.75"><div style="font-size:24px;margin-bottom:8px">⏳</div>Đang tải dữ liệu từ Google Sheet...<div style="font-size:11px;opacity:.7;margin-top:4px">Lần đầu trong phiên có thể mất vài giây (đang đọc nhiều sheet + quét folder tài liệu)</div></div>';
+    // Bước 2 — tải toàn bộ CSDL trong nền, người dùng đã thấy mình "vào" được app rồi
     var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=nipdata&pw='+encodeURIComponent(v)});
     var j=await res.json();
     if(j && j.ok && j.data){
-      nipUnlocked=true; NIP_DATA=j.data; NIP_SCORES=null;
-      try{ sessionStorage.setItem('nip_pw', v); }catch(e){}
-      document.getElementById('nipLock').style.display='none';
-      document.getElementById('nipContent').style.display='';
-      if(m) m.textContent='';
+      NIP_DATA=j.data; NIP_SCORES=null;
       nipSub('dash');
-    } else {
-      if(m) m.textContent = (j && j.error==='auth') ? 'Sai mật khẩu' : ('Lỗi: '+((j&&j.error)||'không rõ'));
+    } else if(body){
+      body.innerHTML='<div style="padding:30px;text-align:center;color:#e06">Lỗi tải dữ liệu: '+((j&&j.error)||'không rõ')+'<div style="margin-top:10px"><button onclick="nipReauth(sessionStorage.getItem(\'nip_pw\')).then(function(ok){ if(ok) nipSub(\'dash\'); })" style="padding:8px 14px;border:0;border-radius:6px;background:var(--accent,#C9B037);color:#1B3A57;font-weight:700;cursor:pointer">↻ Thử lại</button></div></div>';
     }
   }catch(e){ if(m) m.textContent='Không kết nối được server (kiểm tra mạng/extension)'; }
 }
