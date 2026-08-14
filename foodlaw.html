@@ -603,7 +603,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.14 (2026-08) · Tra cứu: AI gợi ý 2-4 hướng hiểu câu hỏi để chọn đúng ý trước khi tra</span>
+            <span style="font-size:11px;opacity:.6">· v4.15 (2026-08) · Sửa lỗi trích dẫn nhầm văn bản (số khớp chuỗi con) + chờ Drive DB kết nối trước khi tra + cache</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -1703,7 +1703,8 @@ function mapSemToFiles(results) {
 }
 
 // ── CACHE Ý ĐỊNH (localStorage) → câu hỏi lặp KHÔNG gọi lại Gemini parse → tiết kiệm quota ──
-const INTENT_CACHE_KEY = 'dgm_intent_cache_v1';
+const INTENT_CACHE_KEY = 'dgm_intent_cache_v2';  // v4.14 → v2: đổi version để KHÔNG dùng nhầm cache cũ
+                                                    // (định dạng cũ chỉ có 1 intent, không có "interpretations")
 const INTENT_CACHE_MAX = 200;
 function _intentKey(raw) {
   return stripDia(String(raw || '')).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
@@ -2085,6 +2086,19 @@ async function confirmIntent() {
     const folderCtx = buildFolderContext(intent.folders);
 
     // ── REAL DRIVE CONTENT INJECTION ────────────────────────────────────
+    // v4.15 — SỬA LỖI QUAN TRỌNG: nếu Drive Index đang "loading" (mới vào trang, index tự tải sau 1s)
+    // mà người dùng tra cứu NGAY LẬP TỨC, trước đây code coi như "chưa kết nối" và chạy static mode
+    // → AI phải TỰ ĐOÁN số điều luật từ kiến thức training thay vì đọc file thật → có thể trích dẫn
+    // NHẦM văn bản (đã xảy ra thực tế: AI ghi "NĐ 37/2026 Điều 10-12" nhưng nội dung thật lại của
+    // NĐ 46/2026 — khác hẳn văn bản). Giờ CHỜ tối đa 6 giây cho index tải xong trước khi quyết định
+    // dùng static mode, thay vì bỏ cuộc ngay.
+    if (driveIndexStatus === 'loading') {
+      document.getElementById('statusText').textContent = '⏳ Đang kết nối Drive DB...';
+      const waitStart = Date.now();
+      while (driveIndexStatus === 'loading' && Date.now() - waitStart < 6000) {
+        await new Promise(r => setTimeout(r, 200));
+      }
+    }
     let driveContentCtx = '';
     let driveFilesFound = [];
     if (driveIndexStatus === 'ok' && driveIndex) {
@@ -2114,8 +2128,9 @@ async function confirmIntent() {
       ? '\n🌐 LANGUAGE: Respond primarily in ENGLISH. Use Vietnamese ONLY for direct legal text quotes (trích dẫn nguyên văn) that cannot be translated without losing legal meaning. All analysis, risks, actions must be in English.'
       : '\n🌐 NGÔN NGỮ: Trả lời song ngữ Việt-Anh. Ưu tiên tiếng Việt cho phân tích, tiếng Anh cho bản dịch đi kèm.';
     const sourceNote = isDriveMode
-      ? `\n⚡ QUAN TRỌNG: Bạn có nội dung thực tế từ ${driveFilesFound.length} file trong cơ sở dữ liệu pháp luật.\nHãy ưu tiên trích dẫn CHÍNH XÁC từ tài liệu này thay vì kiến thức tổng quát.\nGhi rõ khi trích dẫn: "[Từ file: tên_file]"`
-      : '\n📚 Drive DB chưa kết nối — sử dụng kiến thức pháp lý Việt Nam từ training data.';
+      ? `\n⚡ QUAN TRỌNG: Bạn có nội dung thực tế từ ${driveFilesFound.length} file trong cơ sở dữ liệu pháp luật.\nHãy ưu tiên trích dẫn CHÍNH XÁC từ tài liệu này thay vì kiến thức tổng quát.\nGhi rõ khi trích dẫn: "[Từ file: tên_file]"\n🚫 TUYỆT ĐỐI KHÔNG được ghi số Điều/Khoản của 1 văn bản KHÁC với văn bản bạn đang đọc — nếu nội dung file thực tế là của NĐ X thì PHẢI ghi đúng "NĐ X", không được đoán/gán nhầm sang văn bản khác dù tên nghe hợp lý.`
+      : '\n📚 CẢNH BÁO: Drive DB CHƯA kết nối — bạn KHÔNG có file gốc, chỉ dựa vào kiến thức training (có thể ĐÃ LỖI THỜI hoặc SAI số Điều/Khoản cụ thể). '
+        + 'TUYỆT ĐỐI KHÔNG được nêu số Điều/Khoản cụ thể (vd "Điều 10, 11, 12") như thể chắc chắn — chỉ nêu TÊN VĂN BẢN liên quan ở mức khái quát, và trong "risks"/"actions" phải ghi rõ: "Cần xác minh lại số Điều/Khoản cụ thể với văn bản gốc hoặc đợi kết nối Drive DB — chưa có nội dung thật để đối chiếu."';
 
     const resPrompt = `Bạn là chuyên gia tư vấn pháp lý an toàn thực phẩm Việt Nam. Hỗ trợ các doanh nghiệp sản xuất, nhập khẩu và phân phối thực phẩm tuân thủ quy định pháp luật. Phân tích khách quan, không gắn với bất kỳ thương hiệu hay công ty cụ thể nào.
 
@@ -2608,41 +2623,50 @@ function findArticleInDrive(docId, articleStr) {
   function normalize(str) {
     return str.toLowerCase()
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  // strip diacritics: NĐ→nd, ND→nd
+      .replace(/đ/g, 'd')                                  // v4.15: 'đ' KHÔNG tách được bằng NFD (không phải ký tự có dấu ghép,
+                                                             // là ký tự riêng trong Unicode) — phải thay tay, nếu không "NĐ" không khớp "ND"
       .replace(/[\/\-\._]/g, ' ')
       .replace(/\s+/g, ' ').trim();
   }
+  // v4.15 — SỬA LỖI QUAN TRỌNG: trước đây so khớp số bằng "chuỗi con" (includes), nên số "37" khớp
+  // NHẦM vào bên trong mã ID ngẫu nhiên của file khác (vd "643724" chứa "37" ở giữa) → mở nhầm hẳn
+  // văn bản khác (đã xảy ra thật: NĐ 37/2026 bị nhận nhầm thành NĐ 46/2026 vì file kia có đuôi ID
+  // "643724"). Giờ tách chuỗi thành các TOKEN SỐ NGUYÊN VẸN (ranh giới không phải chữ số) rồi so
+  // khớp CHÍNH XÁC từng token — "37" chỉ khớp khi đứng riêng, không khớp bên trong "643724".
+  function numTokens(str) { return (String(str || '').match(/\d+/g) || []); }
 
   const docNorm = normalize(docId);
   // Extract meaningful keywords: numbers + key abbreviations
   const docKeywords = docNorm.split(/\s+/).filter(k => k.length > 1);
-  // Also extract just the numbers (most reliable match: "43", "2017")
-  const docNumbers = docId.match(/\d+/g) || [];
+  // Also extract just the numbers (most reliable match: "43", "2017") — dùng token, KHÔNG dùng substring
+  const docNumbers = numTokens(docId);
 
   const candidates = driveIndex.files.filter(f => {
     if (!f.extract_ok && !f.summary) return false; // allow files even if extract failed partially
     const nameNorm = normalize(f.name);
+    const nameNums = numTokens(f.name);            // v4.15: token số của TÊN FILE, so khớp chính xác
     const kwStr = normalize((f.keywords || []).join(' '));
     const summaryNorm = (f.text || f.summary) ? normalize((f.text || f.summary).slice(0, 1500)) : '';
+    const summaryNums = numTokens((f.text || f.summary || '').slice(0, 1500));
 
-    // Match if: all doc numbers found in filename OR keyword match OR summary match
-    const numbersInName = docNumbers.length > 0 && docNumbers.every(n => nameNorm.includes(n));
+    // Match if: TẤT CẢ số của docId khớp CHÍNH XÁC (không phải chuỗi con) với số trong tên file/nội dung
+    const numbersInName = docNumbers.length > 0 && docNumbers.every(n => nameNums.includes(n));
     const keywordMatch = docKeywords.some(k => nameNorm.includes(k) || kwStr.includes(k));
-    const summaryMatch = docNumbers.length > 0 && docNumbers.every(n => summaryNorm.includes(n));
+    const summaryMatch = docNumbers.length > 0 && docNumbers.every(n => summaryNums.includes(n));
 
-    return numbersInName || (keywordMatch && docNumbers.some(n => nameNorm.includes(n))) || summaryMatch;
+    return numbersInName || (keywordMatch && docNumbers.some(n => nameNums.includes(n))) || summaryMatch;
   });
 
   if (candidates.length === 0) return null;
 
-  // Score: prefer files where more doc numbers appear in filename
+  // Score: prefer files where more doc numbers appear in filename (so khớp CHÍNH XÁC, không phải chuỗi con)
   candidates.sort((a, b) => {
-    const nameA = normalize(a.name);
-    const nameB = normalize(b.name);
-    const kwA = normalize((a.keywords||[]).join(' '));
-    const kwB = normalize((b.keywords||[]).join(' '));
-    const scoreA = docNumbers.filter(n => nameA.includes(n)).length * 3
+    const nameNumsA = numTokens(a.name), nameNumsB = numTokens(b.name);
+    const nameA = normalize(a.name), nameB = normalize(b.name);
+    const kwA = normalize((a.keywords||[]).join(' ')), kwB = normalize((b.keywords||[]).join(' '));
+    const scoreA = docNumbers.filter(n => nameNumsA.includes(n)).length * 3
                  + docKeywords.filter(k => nameA.includes(k) || kwA.includes(k)).length;
-    const scoreB = docNumbers.filter(n => nameB.includes(n)).length * 3
+    const scoreB = docNumbers.filter(n => nameNumsB.includes(n)).length * 3
                  + docKeywords.filter(k => nameB.includes(k) || kwB.includes(k)).length;
     return scoreB - scoreA;
   });
@@ -4027,7 +4051,7 @@ if (!state.apiKey) {
 }
 // Auto-load Drive index if GAS URL is configured
 if (state.gasWebAppUrl) {
-  setTimeout(() => loadDriveIndex(false), 1000);
+  setTimeout(() => loadDriveIndex(false), 100);  // v4.15: giảm từ 1000ms → 100ms, đỡ tạo khoảng hở race-condition
 }
 
 /* ================= NIP CHECKER ================= */
