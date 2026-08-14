@@ -597,7 +597,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.12 (2026-08) · Thư viện chuẩn: bỏ AI gợi ý, thêm popup trích dẫn luật (đợt 1: Nhãn+Nhãn phụ)</span>
+            <span style="font-size:11px;opacity:.6">· v4.13 (2026-08) · Nhiều Gemini API key dự phòng — tự xoay vòng khi hết quota</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -850,9 +850,9 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
       </div>
 
       <div class="setting-group">
-        <div class="setting-label">Gemini API Key</div>
-        <input type="password" id="apiKeyInput" class="setting-input" placeholder="AIza...">
-        <div class="setting-desc">Lấy tại <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--gold)">Google AI Studio</a> · Miễn phí với Gemini 2.5 Flash</div>
+        <div class="setting-label">Gemini API Key <span style="font-weight:400;opacity:.6">(có thể thêm nhiều key dự phòng)</span></div>
+        <textarea id="apiKeyInput" class="setting-input" rows="2" placeholder="AIza... (mỗi key 1 dòng, hoặc cách nhau bằng dấu phẩy)" style="resize:vertical;font-family:inherit"></textarea>
+        <div class="setting-desc">Lấy tại <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--gold)">Google AI Studio</a> · Miễn phí với Gemini 2.5 Flash · Nhập ≥2 key (mỗi key 1 dòng) → hệ thống tự chuyển sang key khác khi 1 key hết quota, không cần tự thử lại thủ công.</div>
       </div>
 
       <div class="setting-group">
@@ -925,6 +925,15 @@ let state = {
 // Khi Google đổi model: chỉ cần sửa 2 mảng dưới đây, KHÔNG phải lùng khắp file.
 const GEN_MODELS  = ['gemini-3-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
 const LITE_MODELS = ['gemini-3.1-flash-lite', 'gemini-3-flash', 'gemini-flash-latest'];
+
+// v4.13 — nhiều API key dự phòng: state.apiKey có thể chứa NHIỀU key (mỗi dòng 1 key, hoặc cách nhau
+// bằng dấu phẩy). getApiKeys() tách thành mảng, lọc trùng/rỗng. Giữ nguyên biến state.apiKey (string)
+// để không phá các chỗ code cũ đang check `if(!state.apiKey)` — chỉ thêm hàm đọc mới, không đổi cấu trúc.
+function getApiKeys() {
+  const raw = String(state.apiKey || '');
+  const keys = raw.split(/[\n,]+/).map(k => k.trim()).filter(Boolean);
+  return [...new Set(keys)];
+}
 
 // Nhận diện lỗi "model đã chết" (404/NOT_FOUND/no longer available) — KHÁC với lỗi key sai hay hết quota.
 function isModelDeadError(errMsg, httpStatus) {
@@ -1586,7 +1595,8 @@ function safeParseJSON(raw) {
 // GEMINI API
 // ══════════════════════════════════════════════════════════
 async function callGemini(prompt, systemPrompt='', imageData=null, preferModel='') {
-  if (!state.apiKey) {
+  const apiKeys = getApiKeys();
+  if (!apiKeys.length) {
     openSettings();
     throw new Error('Vui lòng cấu hình Gemini API key');
   }
@@ -1597,45 +1607,57 @@ async function callGemini(prompt, systemPrompt='', imageData=null, preferModel='
   GEMINI_MODELS = GEMINI_MODELS.filter((m, i) => GEMINI_MODELS.indexOf(m) === i);
   let lastGeminiErr = '';
   let deadCount = 0;
-  for (let mi = 0; mi < GEMINI_MODELS.length; mi++) {
-    const model = GEMINI_MODELS[mi];
-    const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + state.apiKey;
+  // v4.13 — vòng NGOÀI theo key, vòng TRONG theo model. Hết quota (429) → key này coi như cạn cho
+  // TOÀN BỘ model (quota Gemini tính theo key/project, không theo model) → chuyển NGAY sang key kế
+  // tiếp thay vì phí thời gian thử các model khác trên 1 key đã cạn. Model chết (404) thì khác — lỗi
+  // đó xảy ra như nhau trên mọi key, nên vẫn thử model khác trước khi đổi key.
+  for (let ki = 0; ki < apiKeys.length; ki++) {
+    const apiKey = apiKeys[ki];
+    for (let mi = 0; mi < GEMINI_MODELS.length; mi++) {
+      const model = GEMINI_MODELS[mi];
+      const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + apiKey;
 
-    const parts = [];
-    if (imageData) {
-      parts.push({ inlineData: { mimeType: imageData.mimeType, data: imageData.data } });
-    }
-    parts.push({ text: systemPrompt ? systemPrompt + '\n\n' + prompt : prompt });
-
-    const genConfig = { temperature: 0.2, topP: 0.8, maxOutputTokens: 8192 };
-    if (!imageData) { genConfig.responseMimeType = 'application/json'; }
-
-    const body = { contents: [{ role: 'user', parts }], generationConfig: genConfig };
-
-    const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
-    const data = await res.json();
-    if (data.error) {
-      const errMsg = data.error.message || '';
-      // Model chết (404) → nhảy NGAY sang model kế, không chờ (không phải lỗi tạm thời).
-      if (isModelDeadError(errMsg, res.status)) {
-        deadCount++;
-        lastGeminiErr = errMsg;
-        if (mi < GEMINI_MODELS.length - 1) continue;
-      } else if (isOverloadError(errMsg, res.status) && mi < GEMINI_MODELS.length - 1) {
-        lastGeminiErr = errMsg;
-        await new Promise(r => setTimeout(r, 1500));
-        continue;
+      const parts = [];
+      if (imageData) {
+        parts.push({ inlineData: { mimeType: imageData.mimeType, data: imageData.data } });
       }
-      throw new Error(errMsg);
+      parts.push({ text: systemPrompt ? systemPrompt + '\n\n' + prompt : prompt });
+
+      const genConfig = { temperature: 0.2, topP: 0.8, maxOutputTokens: 8192 };
+      if (!imageData) { genConfig.responseMimeType = 'application/json'; }
+
+      const body = { contents: [{ role: 'user', parts }], generationConfig: genConfig };
+
+      const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+      const data = await res.json();
+      if (data.error) {
+        const errMsg = data.error.message || '';
+        // Model chết (404) → nhảy NGAY sang model kế trên CÙNG key, không phải lỗi tạm thời.
+        if (isModelDeadError(errMsg, res.status)) {
+          deadCount++;
+          lastGeminiErr = errMsg;
+          if (mi < GEMINI_MODELS.length - 1) continue;      // còn model khác → thử tiếp trên key này
+          break;                                             // hết model cho key này → sang key kế
+        } else if (isOverloadError(errMsg, res.status)) {
+          lastGeminiErr = errMsg;
+          if (ki < apiKeys.length - 1) break;                // còn key dự phòng → CHUYỂN KEY NGAY
+          if (mi < GEMINI_MODELS.length - 1) {                // hết key rồi → đợi rồi thử model khác trên key cuối
+            await new Promise(r => setTimeout(r, 1500));
+            continue;
+          }
+        }
+        throw new Error(errMsg);
+      }
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     }
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
   }
-  // Nếu TẤT CẢ model đều chết → thông báo rõ để biết cần cập nhật GEN_MODELS, không phải lỗi key.
-  if (deadCount === GEMINI_MODELS.length) {
+  // Nếu TẤT CẢ model TRÊN TẤT CẢ key đều chết → thông báo rõ để biết cần cập nhật GEN_MODELS.
+  if (deadCount === GEMINI_MODELS.length * apiKeys.length) {
     throw new Error('⚠ Tất cả model AI đã ngừng hoạt động (Google đổi model). '
       + 'Cần cập nhật danh sách GEN_MODELS/LITE_MODELS ở đầu file. Chi tiết: ' + lastGeminiErr);
   }
-  throw new Error(lastGeminiErr || 'All Gemini models unavailable. Please retry.');
+  throw new Error((apiKeys.length > 1 ? ('⚠ Đã thử hết ' + apiKeys.length + ' API key, vẫn hết quota. ') : '')
+    + (lastGeminiErr || 'All Gemini models unavailable. Please retry.'));
 }
 
 // ══════════════════════════════════════════════════════════
@@ -2933,14 +2955,23 @@ Add "product_type": "DOMESTIC|IMPORTED|OEM_IMPORT|UNKNOWN" to the root of your J
     });
     parts.push({ text: combinedPrompt });
 
-    // ── CALL with model fallback + retry ──────────────────────────────────
+    // ── CALL with API key rotation + model fallback + retry ──────────────────────
     // Tên model gom ở GEN_MODELS (đầu file). Đổi model chỉ sửa 1 chỗ đó.
+    // v4.13 — vòng NGOÀI CÙNG theo key: hết quota (429) → chuyển key dự phòng NGAY thay vì đợi/thử
+    // model khác trên 1 key đã cạn (quota Gemini tính theo key/project, đợi trên key cạn là vô ích).
+    const API_KEYS_SEQ = getApiKeys();
+    if (!API_KEYS_SEQ.length) { openSettings(); throw new Error('Vui lòng cấu hình Gemini API key'); }
     const MODEL_SEQUENCE = GEN_MODELS.concat(LITE_MODELS)
       .filter((m, i, a) => a.indexOf(m) === i);
     let data = null;
     let lastErr = null;
     let usedModel = '';
     isQuotaError = false; // reset for this attempt
+
+    keyLoop:
+    for (let ki = 0; ki < API_KEYS_SEQ.length; ki++) {
+      const activeApiKey = API_KEYS_SEQ[ki];
+      const isLastKey = ki === API_KEYS_SEQ.length - 1;
 
     for (let mi = 0; mi < MODEL_SEQUENCE.length; mi++) {
       const model = MODEL_SEQUENCE[mi];
@@ -2951,10 +2982,10 @@ Add "product_type": "DOMESTIC|IMPORTED|OEM_IMPORT|UNKNOWN" to the root of your J
         try {
           const attemptLabel = isFirstModel && attempt === 1
             ? '🔍 Đang phân tích...'
-            : '⏳ Thử model ' + (mi+1) + '/' + MODEL_SEQUENCE.length + ', lần ' + attempt + '...';
+            : '⏳ Thử model ' + (mi+1) + '/' + MODEL_SEQUENCE.length + ', lần ' + attempt + (API_KEYS_SEQ.length>1?(' (key '+(ki+1)+'/'+API_KEYS_SEQ.length+')'):'') + '...';
           document.getElementById('statusText').textContent = attemptLabel;
 
-          const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + state.apiKey;
+          const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + activeApiKey;
           const res = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -2967,7 +2998,7 @@ Add "product_type": "DOMESTIC|IMPORTED|OEM_IMPORT|UNKNOWN" to the root of your J
 
           if (d.error) {
             const errMsg = d.error.message || '';
-            // Model chết (404) → bỏ QUA cả 2 attempt của model này, sang model kế NGAY.
+            // Model chết (404) → bỏ QUA cả 2 attempt của model này, sang model kế NGAY (áp dụng cho mọi key).
             if (isModelDeadError(errMsg, res.status)) {
               lastErr = errMsg;
               break; // thoát vòng attempt → for model kế
@@ -2978,7 +3009,9 @@ Add "product_type": "DOMESTIC|IMPORTED|OEM_IMPORT|UNKNOWN" to the root of your J
             if (is429) {
               isQuotaError = true;
               lastErr = errMsg;
-              // Wait longer on quota errors before trying next model
+              // Còn key dự phòng → chuyển NGAY, khỏi đợi (đợi trên key cạn quota là vô ích).
+              if (!isLastKey) { continue keyLoop; }
+              // Hết key rồi → đợi rồi thử model khác trên key cuối như cũ.
               document.getElementById('statusText').textContent = '⏳ Đang chờ quota reset...';
               await new Promise(r => setTimeout(r, attempt === 1 ? 5000 : 10000));
               continue;
@@ -3005,8 +3038,9 @@ Add "product_type": "DOMESTIC|IMPORTED|OEM_IMPORT|UNKNOWN" to the root of your J
         }
       }
 
-      if (modelSuccess) break;
+      if (modelSuccess) break keyLoop;
     }
+    } // end keyLoop
 
     if (!data) {
       if (lastErr && isModelDeadError(lastErr, 404)) {
