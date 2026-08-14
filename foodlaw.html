@@ -126,6 +126,12 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
 .btn-confirm:hover{background:var(--gold2)}
 .btn-refine{padding:7px 16px;background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;cursor:pointer;transition:all .2s}
 .btn-refine:hover{border-color:var(--gold);color:var(--gold)}
+/* v4.14 — thẻ chọn nhiều diễn giải câu hỏi */
+.intent-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:12px}
+.intent-choice-card{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:var(--radius2);padding:12px 14px;cursor:pointer;transition:all .18s}
+.intent-choice-card:hover{border-color:var(--gold);background:rgba(201,168,76,.08);transform:translateY(-2px)}
+.intent-choice-label{font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.intent-choice-q{font-size:12.5px;color:var(--text);line-height:1.45}
 
 /* Results */
 .results-area{flex:1;overflow-y:auto;padding:16px 24px}
@@ -597,7 +603,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.13 (2026-08) · Nhiều Gemini API key dự phòng — tự xoay vòng khi hết quota</span>
+            <span style="font-size:11px;opacity:.6">· v4.14 (2026-08) · Tra cứu: AI gợi ý 2-4 hướng hiểu câu hỏi để chọn đúng ý trước khi tra</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -638,9 +644,13 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
     <div id="intentConfirm" class="intent-confirm">
       <div class="intent-label">AI · Xác nhận ý định / Intent confirmation</div>
       <div id="intentText" class="intent-text"></div>
-      <div class="intent-actions">
+      <div id="intentChoices" class="intent-choices" style="display:none"></div>
+      <div class="intent-actions" id="intentActionsSingle">
         <button class="btn-confirm" onclick="confirmIntent()">✓ Đúng, tiếp tục / Correct, proceed</button>
         <button class="btn-refine" onclick="refineIntent()">✎ Chỉnh sửa / Refine</button>
+      </div>
+      <div class="intent-actions" id="intentActionsMulti" style="display:none">
+        <button class="btn-refine" onclick="refineIntent()">✎ Không đúng ý nào — gõ lại / None of these — retype</button>
       </div>
     </div>
 
@@ -1972,42 +1982,74 @@ async function doSearch() {
   document.getElementById('intentConfirm').style.display = 'none';
 
   try {
-    // Step 1: Parse intent
+    // Step 1: Parse intent — v4.14: AI có thể trả về 2-4 DIỄN GIẢI khác nhau khi câu hỏi mơ hồ,
+    // thay vì chỉ 1 câu duy nhất — người dùng chọn đúng ý trước khi tra, tránh tra sai hướng.
     const isEN = state.appLang === 'en';
     const intentPrompt = `Bạn là trợ lý tra cứu pháp luật an toàn thực phẩm Việt Nam. Hỗ trợ doanh nghiệp sản xuất, nhập khẩu và phân phối thực phẩm tuân thủ quy định pháp luật hiện hành.
 
 Người dùng gõ: "${raw}"
 Ngôn ngữ giao diện người dùng: ${isEN ? 'English — hãy ưu tiên trả lời bằng tiếng Anh khi có thể, phần tiếng Việt chỉ dùng cho trích dẫn nguyên văn văn bản pháp luật.' : 'Tiếng Việt'}
 
+Câu hỏi người dùng gõ thường CHƯA đủ rõ để tra đúng điều khoản — có thể hiểu theo NHIỀU HƯỚNG khác nhau
+(vd: hỏi về "nhãn" có thể là nhãn chính hay nhãn phụ; hỏi về 1 tình huống có thể liên quan tới nhiều góc
+pháp lý khác nhau: nội dung ghi nhãn / xử phạt vi phạm / thủ tục công bố / đo lường...).
+
 Hãy:
-1. Phân tích ý định thực sự (họ muốn biết gì?)
-2. Tái diễn đạt thành câu hỏi pháp lý rõ ràng (song ngữ Việt-Anh)
-3. Xác định folder liên quan: A=Luật nền tảng, B=Nghị định, C=Nghị quyết, D=Ghi nhãn, E=Kiểm nghiệm/test, F=Claim/Quảng cáo
-4. Liệt kê văn bản pháp luật có thể liên quan
+1. Xác định xem câu hỏi có RÕ RÀNG (chỉ 1 cách hiểu hợp lý) hay MƠ HỒ (2-4 cách hiểu khác nhau đều hợp lý).
+2. Nếu RÕ RÀNG → trả về đúng 1 phần tử trong "interpretations".
+3. Nếu MƠ HỒ → trả về 2-4 phần tử, MỖI phần tử là 1 hướng hiểu khác nhau, khác biệt rõ về góc pháp lý
+   (không lặp lại ý nhau) — vd 1 hướng về nội dung ghi nhãn, 1 hướng về mức xử phạt nếu sai, 1 hướng về
+   thủ tục cần làm... tuỳ câu hỏi cụ thể.
+4. Mỗi phần tử: "label" là tên ngắn gọn (dưới 12 từ) để người dùng chọn nhanh, "intent_vi"/"intent_en"
+   là câu hỏi pháp lý đầy đủ đã tái diễn đạt rõ ràng, "folders" (A=Luật nền tảng, B=Nghị định/xử phạt,
+   C=Nghị quyết, D=Ghi nhãn, E=Kiểm nghiệm/test, F=Claim/Quảng cáo), "related_docs", "keywords".
 
 Trả về JSON:
 {
-  "intent_vi": "Câu hỏi tiếng Việt rõ ràng",
-  "intent_en": "Clear English question",
-  "folders": ["D","E"],
-  "related_docs": ["NĐ 37/2026","TT 29/2023"],
-  "keywords": ["nhãn phụ","cá ngừ","nhập khẩu"]
+  "interpretations": [
+    { "label": "Tên ngắn cho lựa chọn này",
+      "intent_vi": "Câu hỏi tiếng Việt rõ ràng", "intent_en": "Clear English question",
+      "folders": ["D","E"], "related_docs": ["NĐ 37/2026","TT 30/2026"], "keywords": ["nhãn phụ","cá ngừ","nhập khẩu"] }
+  ]
 }`;
 
     // Cache trước: câu hỏi đã hỏi → KHÔNG gọi Gemini lại. Nếu chưa có → parse bằng Flash-Lite (rẻ).
-    let intentJSON = loadIntentCache(raw);
-    if (!intentJSON) {
+    let parsedJSON = loadIntentCache(raw);
+    if (!parsedJSON) {
       const intentRaw = await callGemini(intentPrompt, '', null, LITE_MODELS[0]);
-      intentJSON = safeParseJSON(intentRaw);
-      if (!intentJSON) throw new Error('Không parse được ý định. Vui lòng thử lại.');
-      saveIntentCache(raw, intentJSON);
+      parsedJSON = safeParseJSON(intentRaw);
+      if (!parsedJSON) throw new Error('Không parse được ý định. Vui lòng thử lại.');
+      saveIntentCache(raw, parsedJSON);
     }
+    // Tương thích ngược: bản cũ trả thẳng {intent_vi,...} không bọc trong "interpretations".
+    const interpretations = Array.isArray(parsedJSON.interpretations) && parsedJSON.interpretations.length
+      ? parsedJSON.interpretations
+      : [parsedJSON];
 
-    state.currentIntent = intentJSON;
     state.currentQuery = raw;
+    state.currentInterpretations = interpretations;
 
-    document.getElementById('intentText').innerHTML =
-      `<strong>🇻🇳</strong> ${intentJSON.intent_vi}<br><br><strong>🇬🇧</strong> <em>${intentJSON.intent_en}</em>`;
+    if (interpretations.length <= 1) {
+      // Chỉ 1 cách hiểu → giữ nguyên UI xác nhận đơn như trước.
+      state.currentIntent = interpretations[0];
+      document.getElementById('intentText').innerHTML =
+        `<strong>🇻🇳</strong> ${interpretations[0].intent_vi}<br><br><strong>🇬🇧</strong> <em>${interpretations[0].intent_en}</em>`;
+      document.getElementById('intentChoices').style.display = 'none';
+      document.getElementById('intentActionsSingle').style.display = 'flex';
+      document.getElementById('intentActionsMulti').style.display = 'none';
+    } else {
+      // 2-4 cách hiểu → hiện dạng thẻ chọn.
+      document.getElementById('intentText').innerHTML =
+        `<strong>🤔</strong> Câu hỏi có thể hiểu theo ${interpretations.length} hướng khác nhau — chọn đúng ý bạn:`;
+      document.getElementById('intentChoices').innerHTML = interpretations.map((it, i) => `
+        <div class="intent-choice-card" onclick="selectInterpretation(${i})">
+          <div class="intent-choice-label">${gesc(it.label || ('Hướng ' + (i+1)))}</div>
+          <div class="intent-choice-q">🇻🇳 ${gesc(it.intent_vi || '')}</div>
+        </div>`).join('');
+      document.getElementById('intentChoices').style.display = 'grid';
+      document.getElementById('intentActionsSingle').style.display = 'none';
+      document.getElementById('intentActionsMulti').style.display = 'flex';
+    }
     document.getElementById('intentConfirm').style.display = 'block';
     document.getElementById('intentConfirm').classList.add('visible');
 
@@ -2017,6 +2059,12 @@ Trả về JSON:
   } finally {
     setLoading(false);
   }
+}
+function selectInterpretation(idx) {
+  const it = (state.currentInterpretations || [])[idx];
+  if (!it) return;
+  state.currentIntent = it;
+  confirmIntent();
 }
 
 function refineIntent() {
