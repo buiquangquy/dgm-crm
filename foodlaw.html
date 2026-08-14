@@ -597,7 +597,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.11 (2026-08) · Cảnh báo phụ gia cần xác minh INS (quét sống toàn bộ SKU)</span>
+            <span style="font-size:11px;opacity:.6">· v4.12 (2026-08) · Thư viện chuẩn: bỏ AI gợi ý, thêm popup trích dẫn luật (đợt 1: Nhãn+Nhãn phụ)</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -5171,7 +5171,8 @@ function guide2Render(which){
     if(r.by) meta.push('bởi '+r.by);
     if(r.ver && r.ver!=='-') meta.push('phiên bản '+r.ver);
     var pdfBtn = (r.pdf && r.pdf.indexOf('http')===0) ? '<a href="'+r.pdf+'" target="_blank" style="font-size:11px;color:var(--accent,#C9B037);text-decoration:none">📎 Mở PDF</a>' : '';
-    var legalBtn = r.legal ? '<span style="font-size:10px;opacity:.6">📖 '+r.legal+'</span>' : '';
+    // v2.15/v4.12 — citation giờ CLICK ĐƯỢC → popup nội dung điều khoản đã tra cứu (không phải AI sinh)
+    var legalBtn = r.legal ? '<span onclick="guide2ShowCitation(\''+which+'\','+idx+')" style="font-size:10px;color:var(--accent,#C9B037);cursor:pointer;text-decoration:underline dotted" title="Bấm xem nội dung điều khoản">📖 '+nipEsc(r.legal)+' 🔍</span>' : '';
     return '<div style="border:1px solid var(--border,#2a3f55);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:rgba(255,255,255,.02)">'
       +'<div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap">'
       +'<div style="flex:1;min-width:200px"><div style="font-weight:700;font-size:13px">'+r.title+' <span style="font-size:10px;opacity:.5">'+r.group+'</span></div>'
@@ -5179,11 +5180,34 @@ function guide2Render(which){
       +'<div style="text-align:right">'+stBadge(r.status)+'</div></div>'
       +(r.note?'<div style="margin-top:8px;padding:8px 10px;background:rgba(201,176,55,.08);border-radius:6px;font-size:12px"><b style="opacity:.7">Ghi chú của bạn:</b> '+r.note+'</div>':'')
       +'<div style="display:flex;gap:12px;align-items:center;margin-top:8px;flex-wrap:wrap">'+pdfBtn+legalBtn
-      +'<span style="font-size:10px;opacity:.5">'+meta.join(' · ')+'</span>'
-      +'<button onclick="guide2AiHint(\''+which+'\','+idx+')" style="margin-left:auto;font-size:11px;padding:4px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">💡 AI gợi ý</button></div>'
-      +'<div id="g2ai_'+which+'_'+idx+'" style="margin-top:8px"></div></div>';
+      +'<span style="font-size:10px;opacity:.5">'+meta.join(' · ')+'</span></div></div>';
   }).join('');
   var el=document.getElementById('g2rows'); if(el) el.innerHTML=html||'<div style="opacity:.6;padding:20px;text-align:center">Chưa có mục nào. Dán nội dung vào tab '+(G2_TAB[which]||'18_Guide_Spec')+' trong DGM_NIP_DB (mục này lấy từ file paste tương ứng), sau đó bấm ↻ Tải lại.</div>';
+}
+/* ---------- v2.15/v4.12 — Popup nội dung điều khoản đã tra cứu (KHÔNG dùng AI) ---------- */
+function guide2ShowCitation(which, idx){
+  var d=GUIDE2_DATA[which]||{rows:[]};
+  var filt=(document.getElementById('g2group')||{}).value||'';
+  var rows=d.rows.filter(function(r){ return !filt || r.group===filt; });
+  var r=rows[idx]; if(!r) return;
+  var old=document.getElementById('nipLightbox'); if(old) old.remove();
+  var ov=document.createElement('div');
+  ov.id='nipLightbox';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+  var box=document.createElement('div');
+  box.style.cssText='max-width:640px;max-height:80vh;overflow:auto;background:var(--bg,#0f1c2b);border:1px solid var(--border,#2a3f55);border-radius:12px;padding:20px 22px;color:inherit';
+  var bodyHtml = r.trich_dan
+    ? '<div style="white-space:pre-wrap;font-size:13px;line-height:1.6;padding:12px 14px;background:rgba(255,255,255,.03);border-left:3px solid var(--accent,#C9B037);border-radius:6px">'+nipEsc(r.trich_dan)+'</div>'
+      +'<div style="font-size:10px;opacity:.5;margin-top:8px">Nội dung do đội ngũ tra cứu trực tiếp từ văn bản gốc, KHÔNG do AI tạo ra. Vẫn nên đối chiếu bản đầy đủ nếu dùng cho quyết định quan trọng.</div>'
+    : '<div style="font-size:13px;opacity:.75;padding:12px 14px;background:rgba(255,188,24,.08);border-radius:6px">⚠️ Chưa có trích dẫn nguyên văn cho mục này trong hệ thống.'+(r.pdf?' Mở file gốc để tra:':'')+'</div>'
+      +(r.pdf?'<a href="'+r.pdf+'" target="_blank" style="display:inline-block;margin-top:8px;font-size:12px;color:var(--accent,#C9B037)">📎 Mở văn bản gốc</a>':'<div style="font-size:11px;opacity:.5;margin-top:6px">Tra tại 📜 Sổ văn bản (tab Thư viện chuẩn) theo số hiệu: '+nipEsc(r.legal||'')+'</div>');
+  box.innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">'
+    +'<div><div style="font-weight:700;font-size:14px">'+nipEsc(r.title)+'</div><div style="font-size:11px;opacity:.6;margin-top:2px">📖 '+nipEsc(r.legal||'')+'</div></div>'
+    +'<span onclick="document.getElementById(\'nipLightbox\').remove()" style="cursor:pointer;font-size:18px;opacity:.6;padding:0 4px">✕</span></div>'
+    +bodyHtml;
+  ov.appendChild(box);
+  document.body.appendChild(ov);
 }
 /* ---------- v2.9/v4.6 — 📜 Sổ văn bản (master list, đọc trực tiếp 20_Legal_Register) ---------- */
 var LEGAL_ST_META={
@@ -5239,24 +5263,6 @@ function guide2RenderLegal(){
       +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'+head+body+'</table></div></div>';
   }).join('');
   var el=document.getElementById('g2legalRows'); if(el) el.innerHTML=html||'<div style="opacity:.6;padding:20px;text-align:center">Chưa có văn bản nào trong 20_Legal_Register.</div>';
-}
-async function guide2AiHint(which,idx){
-  var r=(GUIDE2_DATA[which].rows.filter(function(x){return !((document.getElementById('g2group')||{}).value) || x.group===document.getElementById('g2group').value;}))[idx];
-  var box=document.getElementById('g2ai_'+which+'_'+idx);
-  if(!box) return; box.innerHTML='<div style="opacity:.6;font-size:12px">Đang hỏi AI...</div>';
-  if(!state.apiKey){ box.innerHTML='<div style="color:#e06;font-size:12px">Cần nhập API key ở đầu app</div>'; return; }
-  var pw=sessionStorage.getItem('nip_pw')||'';
-  var body='action=nipdata&sub=aihint&pw='+encodeURIComponent(pw)
-    +'&title='+encodeURIComponent(r.title)+'&req='+encodeURIComponent(r.req)+'&legal='+encodeURIComponent(r.legal)+'&apikey='+encodeURIComponent(state.apiKey);
-  try{
-    var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body});
-    var j=await res.json();
-    if(j&&j.ok){
-      box.innerHTML='<div style="border-left:3px solid #C8102E;background:rgba(200,16,46,.06);padding:8px 10px;border-radius:0 6px 6px 0;font-size:12px">'
-        +'<div style="color:#e06;font-weight:700;font-size:10px;margin-bottom:4px">⚠️ GỢI Ý THAM KHẢO TỪ AI — KHÔNG THAY THẾ ĐÁNH GIÁ CHUYÊN MÔN</div>'
-        +(j.hint||'').replace(/\n/g,'<br>')+'</div>';
-    } else { box.innerHTML='<div style="color:#e06;font-size:12px">Lỗi: '+((j&&j.error)||'?')+'</div>'; }
-  }catch(e){ box.innerHTML='<div style="color:#e06;font-size:12px">Không kết nối được</div>'; }
 }
 
 </script>
