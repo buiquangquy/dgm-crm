@@ -473,6 +473,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
     <span id="modeSKU" class="mode-badge inactive" onclick="setMode('sku')">📋 Checklist SKU</span>
     <span id="modeGuide" class="mode-badge inactive" onclick="setMode('guide')">📘 Hướng dẫn</span>
     <span id="modeEngine" class="mode-badge active" onclick="toggleEngine()" title="Chuyển AI ↔ Database-only. DB-only chạy không cần Gemini.">⚡ AI</span>
+    <span id="modeFastness" class="mode-badge inactive" onclick="toggleFastMode()" title="Chính xác: AI hỏi lại nếu câu hỏi mơ hồ, có thể gợi ý 2-4 hướng hiểu để chọn đúng ý trước khi tra — CHẬM hơn 1 bước nhưng ĐÚNG trọng tâm hơn. Nhanh: bỏ qua bước này, tra ngay.">🎯 Chính xác</span>
     <button class="btn-icon" title="Bookmark" onclick="toggleBookmarks()">🔖</button>
     <button class="btn-icon" title="Export" onclick="exportReport()">⬇️</button>
     <button class="btn-icon" title="Cài đặt" onclick="openSettings()">⚙️</button>
@@ -603,7 +604,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.15 (2026-08) · Sửa lỗi trích dẫn nhầm văn bản (số khớp chuỗi con) + chờ Drive DB kết nối trước khi tra + cache</span>
+            <span style="font-size:11px;opacity:.6">· v4.16 (2026-08) · Sửa lỗi gốc: "Nhanh" từng mặc định ẩn khiến tính năng gợi ý câu hỏi không chạy — giờ có nút 🎯/⚡ rõ ràng, mặc định "Chính xác"</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -921,7 +922,8 @@ let state = {
   activeTab: 'text', currentMode: 'keyword', selectedSKU: null,
   uploadedImage: null, defaultLang: 'bilingual', appLang: 'vi',
   dbOnly: false,    // true = chế độ Database-only (không gọi Gemini)
-  fastMode: true    // true = bỏ bước AI phân tích ý định → chỉ 1 lần gọi Gemini
+  fastMode: false   // v4.16: mặc định "Chính xác" (2 bước, có gợi ý nhiều hướng hiểu câu hỏi khi mơ hồ).
+                    // true = bỏ qua bước này, tra ngay bằng heuristic nội bộ (nhanh hơn, kém chính xác hơn).
 };
 
 // ══════════════════════════════════════════════════════════
@@ -1003,7 +1005,12 @@ function loadState() {
       state.defaultLang = s.defaultLang || 'bilingual';
       state.appLang = s.appLang || 'vi';
       state.dbOnly = s.dbOnly || false;
-      state.fastMode = s.fastMode !== false; // mặc định true
+      // v4.16: fastMode cũ mặc định true đã lưu sẵn trong localStorage của user đã dùng app trước đây —
+      // nếu chỉ đổi default thì user CŨ vẫn bị kẹt fastMode=true (vì true đã ghi cứng trong storage).
+      // Dùng thêm cờ fastModeUserSet để phân biệt "user tự bấm chọn" vs "chỉ là giá trị mặc định cũ còn sót":
+      // chưa từng tự bấm → LUÔN ép về false (Chính xác), bất kể localStorage đang lưu gì.
+      state.fastMode = (s.fastModeUserSet === true) ? (s.fastMode === true) : false;
+      state.fastModeUserSet = s.fastModeUserSet === true;
     }
   } catch(e) {}
 }
@@ -1015,7 +1022,7 @@ function saveState() {
     history: state.history.slice(0,50), bookmarks: state.bookmarks.slice(0,30),
     queryCount: state.queryCount, defaultLang: state.defaultLang,
     appLang: state.appLang,
-    dbOnly: state.dbOnly, fastMode: state.fastMode
+    dbOnly: state.dbOnly, fastMode: state.fastMode, fastModeUserSet: state.fastModeUserSet
   }));
 }
 
@@ -1463,6 +1470,7 @@ function updateStatus() {
   }
   updateFolderCounts();
   applyEngineBadge();
+  applyFastnessBadge();
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1486,6 +1494,27 @@ function applyEngineBadge() {
     b.classList.remove('active'); b.classList.add('inactive');
   } else {
     b.textContent = '⚡ AI';
+    b.classList.add('active'); b.classList.remove('inactive');
+  }
+}
+// v4.16 — nút bật/tắt "Chính xác" (2 bước: AI hỏi lại + gợi ý nhiều hướng hiểu nếu mơ hồ) vs
+// "Nhanh" (bỏ qua bước hỏi lại, tra ngay bằng heuristic nội bộ — KHÔNG dùng AI để tái diễn đạt câu hỏi).
+// Trước đây "Nhanh" là mặc định NGẦM, không có nút hiển thị → tính năng gợi ý nhiều lựa chọn không
+// bao giờ chạy tới dù đã build. Giờ "Chính xác" là mặc định, có nút rõ ràng để đổi khi cần tra nhanh.
+function toggleFastMode() {
+  state.fastMode = !state.fastMode;
+  state.fastModeUserSet = true;  // v4.16: đánh dấu user đã TỰ CHỌN, để không bị ép về mặc định ở lần tải trang sau
+  applyFastnessBadge();
+  saveState();
+}
+function applyFastnessBadge() {
+  const b = document.getElementById('modeFastness');
+  if (!b) return;
+  if (state.fastMode) {
+    b.textContent = '⚡ Nhanh';
+    b.classList.remove('active'); b.classList.add('inactive');
+  } else {
+    b.textContent = '🎯 Chính xác';
     b.classList.add('active'); b.classList.remove('inactive');
   }
 }
