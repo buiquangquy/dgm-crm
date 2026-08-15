@@ -3,6 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- v4.17 — chặn cache trình duyệt ở tầng HTML: nguyên nhân "cùng version vẫn ra kết quả khác nhau
+     giữa tab thường vs ẩn danh" gần như chắc chắn là do tab thường phục vụ bản HTML/JS CŨ từ cache
+     (bfcache hoặc HTTP cache của trình duyệt/GitHub Pages), trong khi ẩn danh luôn tải mới hoàn toàn.
+     3 thẻ meta dưới đây báo trình duyệt KHÔNG được lưu cache trang này — F5 thường (không cần
+     Ctrl+Shift+R) từ nay sẽ luôn lấy bản mới nhất đã deploy. -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Food Law Intelligence · QB</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,300;0,400;0,600;1,300&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -177,6 +185,9 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
 .risk-content .risk-title{font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px}
 .risk-content .risk-desc{font-size:11px;color:var(--text3);line-height:1.4}
 .risk-badge{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;margin-left:auto;white-space:nowrap;align-self:flex-start;margin-top:2px}
+/* v4.18 — badge liên kết luật, dùng chung cho Risk Assessment & Action Items */
+.legal-ref-badge{display:inline-block;margin-top:6px;padding:2px 9px;border-radius:20px;font-size:10px;font-family:'IBM Plex Mono',monospace;background:rgba(201,168,76,0.1);border:1px dashed rgba(201,168,76,0.4);color:var(--gold);cursor:pointer;transition:all .18s}
+.legal-ref-badge:hover{background:rgba(201,168,76,0.22);border-style:solid}
 .risk-badge-high{background:rgba(224,82,82,.15);color:var(--red)}
 .risk-badge-medium{background:rgba(224,154,56,.15);color:var(--amber)}
 .risk-badge-low{background:rgba(76,175,130,.15);color:var(--green)}
@@ -604,7 +615,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.16 (2026-08) · Sửa lỗi gốc: "Nhanh" từng mặc định ẩn khiến tính năng gợi ý câu hỏi không chạy — giờ có nút 🎯/⚡ rõ ràng, mặc định "Chính xác"</span>
+            <span style="font-size:11px;opacity:.6">· v4.19 (2026-08) · Thêm nút "Đồng bộ file ↔ Sổ văn bản" (chạy legalinit) trong 📜 Sổ văn bản</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -2176,6 +2187,11 @@ ${sourceNote}
 ${folderCtx}
 ${driveContentCtx}
 
+⚠️ QUAN TRỌNG về "risks" và "actions": mỗi rủi ro/hành động PHẢI cố gắng gắn "legal_doc_id" trỏ về ĐÚNG
+1 văn bản đã có trong "citations" (không tạo căn cứ pháp lý mới ngoài danh sách citations). Người dùng
+sẽ bấm vào đó để đọc nhanh điều luật gốc — nếu gắn sai/không tồn tại trong citations sẽ gây hiểu nhầm
+nghiêm trọng hơn là để trống. CHỈ để trống khi thực sự không có văn bản nào trong citations đủ liên quan.
+
 Hãy trả về phân tích toàn diện dạng JSON:
 {
   "citations": [
@@ -2200,7 +2216,9 @@ Hãy trả về phân tích toàn diện dạng JSON:
       "title_vi": "Tên rủi ro",
       "title_en": "Risk name",
       "desc_vi": "Mô tả rủi ro",
-      "desc_en": "Risk description"
+      "desc_en": "Risk description",
+      "legal_doc_id": "Số hiệu văn bản làm căn cứ cho rủi ro này, PHẢI trùng với 1 doc_id đã liệt kê trong \"citations\" ở trên (vd \"NĐ 115/2018/NĐ-CP\") — để trống nếu không xác định được căn cứ cụ thể",
+      "legal_article": "Điều/Khoản cụ thể nếu biết chắc (vd \"Điều 4\"), để trống nếu không chắc — KHÔNG bịa số"
     }
   ],
   "actions": [
@@ -2208,7 +2226,9 @@ Hãy trả về phân tích toàn diện dạng JSON:
       "priority": 1,
       "action_vi": "Hành động cần làm",
       "action_en": "Action required",
-      "deadline": "Thời hạn nếu có"
+      "deadline": "Thời hạn nếu có",
+      "legal_doc_id": "Số hiệu văn bản làm căn cứ cho hành động này (trùng doc_id trong \"citations\"), để trống nếu là khuyến nghị chung không gắn 1 điều luật cụ thể",
+      "legal_article": "Điều/Khoản cụ thể nếu biết chắc, để trống nếu không chắc"
     }
   ],
   "summary_vi": "Tóm tắt 1 câu",
@@ -2556,7 +2576,28 @@ function renderResults(result, intent) {
   }
   grid.appendChild(aiCard);
 
-  // Card 3: Risk Panel
+  // v4.18 — mở panel trích dẫn từ 1 dòng Risk/Action (chỉ có doc_id dạng chuỗi, không có index sẵn như
+// citation pill) — tìm đúng vị trí trong window._currentResult.citations rồi tái dùng openArticleDetail.
+function openLegalRefFromRiskAction(docId, articleStr, btnEl) {
+  const r = window._currentResult;
+  if (!r || !r.citations) return;
+  const idx = r.citations.findIndex(c => c.doc_id === docId);
+  if (idx === -1) {
+    alert('Chưa có văn bản "' + docId + '" trong danh sách trích dẫn của lần tra này — mở tab "Trích dẫn điều khoản" phía trên để xem toàn bộ, hoặc tra riêng câu hỏi về văn bản này.');
+    return;
+  }
+  // Đồng bộ pill "active" bên khối Trích dẫn nếu đang hiện cùng văn bản
+  const matchingPill = document.querySelector(`.article-pill[data-doc-idx="${idx}"]`);
+  openArticleDetail(idx, articleStr || docId, matchingPill || btnEl);
+  document.getElementById('citationMainCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function legalRefBadge(docId, articleStr) {
+  if (!docId) return '';
+  const label = articleStr ? `${gesc(docId)} · ${gesc(articleStr)}` : gesc(docId);
+  return `<span onclick="openLegalRefFromRiskAction('${docId.replace(/'/g,"\\'")}','${(articleStr||'').replace(/'/g,"\\'")}', this)" class="legal-ref-badge" title="Bấm xem điều khoản gốc">📖 ${label} 🔍</span>`;
+}
+
+// Card 3: Risk Panel
   const riskCard = document.createElement('div');
   riskCard.className = 'result-card fade-in';
   riskCard.style.animationDelay = '.15s';
@@ -2570,6 +2611,7 @@ function renderResults(result, intent) {
             <div class="risk-title">${r.title_vi}</div>
             <div class="risk-desc">${r.title_en}</div>
             <div class="risk-desc" style="margin-top:3px">${r.desc_vi}</div>
+            ${legalRefBadge(r.legal_doc_id, r.legal_article)}
           </div>
           <div class="risk-badge risk-badge-${r.level}">${r.level==='high'?'🔴 Cao':r.level==='medium'?'🟡 TB':'🟢 Thấp'}</div>
         </div>
@@ -2592,6 +2634,7 @@ function renderResults(result, intent) {
               <div style="font-size:12px;color:var(--text);margin-bottom:3px">${a.action_vi}</div>
               <div style="font-size:11px;color:var(--text3);font-style:italic">${a.action_en}</div>
               ${a.deadline ? `<div style="font-size:10px;color:var(--amber);margin-top:4px;font-family:'IBM Plex Mono',monospace">⏰ ${a.deadline}</div>` : ''}
+              ${legalRefBadge(a.legal_doc_id, a.legal_article)}
             </div>
           </div>
         </div>
@@ -3890,7 +3933,19 @@ function renderHistory() {
 
 function replayHistory(i) {
   const h = state.history[i];
-  if (h.result) { window._currentResult = h.result; renderResults(h.result, {intent_vi: h.query, intent_en: h.query}); }
+  if (h.result) {
+    window._currentResult = h.result;
+    renderResults(h.result, {intent_vi: h.query, intent_en: h.query});
+    // v4.17 — cảnh báo rõ đây là kết quả CŨ đã lưu (không phải tra lại mới), tránh nhầm với kết quả
+    // hiện tại nếu logic app đã đổi/sửa lỗi từ sau lần lưu đó.
+    const grid = document.getElementById('resultsGrid');
+    if (grid) {
+      const banner = document.createElement('div');
+      banner.style.cssText = 'grid-column:1/-1;background:rgba(255,180,80,.08);border:1px solid rgba(255,180,80,.25);border-radius:8px;padding:8px 14px;font-size:11px;color:#e8b869;margin-bottom:8px';
+      banner.innerHTML = `📜 <strong>Đang xem lại kết quả CŨ</strong> đã lưu lúc ${h.time} — KHÔNG phải tra cứu mới. Nếu nghi kết quả lỗi thời, bấm nút <strong>→</strong> để tra lại từ đầu.`;
+      grid.insertBefore(banner, grid.firstChild);
+    }
+  }
 }
 
 function bookmarkResult() {
@@ -4053,6 +4108,10 @@ async function testAndSaveKey() {
 // ══════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════
+// v4.17 — log version ra console để kiểm tra nhanh (F12 → Console) xem tab đang chạy bản MỚI NHẤT
+// hay vẫn còn bản cache cũ — không cần đoán qua chữ nhỏ ở footer. Nếu số này KHÔNG khớp với số bạn
+// vừa deploy, chắc chắn tab đang dính cache cũ → đóng hẳn tab, mở tab mới (không chỉ F5/Ctrl+Shift+R).
+console.log('%c[Food Law Intelligence] Đang chạy foodlaw.html v4.17 (2026-08)', 'color:#c9a84c;font-weight:bold;font-size:13px');
 loadState();
 updateStatus();
 renderHistory();
@@ -5368,8 +5427,34 @@ function guide2ShowLegal(){
     +Object.keys(stCnt).map(function(k){ var m=LEGAL_ST_META[k]||{label:k,color:'#8a94a3'}; return '<span style="color:'+m.color+'">● '+m.label+': '+stCnt[k]+'</span>'; }).join('')
     +'<span style="opacity:.6">· Tổng '+list.length+' văn bản</span></div>';
   var legend='<div style="font-size:11px;opacity:.65;margin-bottom:10px">Bảng này đọc TRỰC TIẾP từ tab 20_Legal_Register mỗi lần bấm ↻ Tải lại — sửa trạng thái/ghi chú bên Google Sheet xong tải lại là thấy ngay ở đây, không cần đợi cache.</div>';
-  body.innerHTML='<div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">'+gsel+'</div>'+summary+legend+'<div id="g2legalRows"></div>';
+  // v4.19 — nút chạy sub=legalinit: khớp file_name trong 20_Legal_Register với file đã index bên
+  // DriveIndexer (Code.gs), tự điền drive_url cho các dòng khớp được. Cần chạy SAU khi đã upload file +
+  // manualRebuild + rebuildEmbeddings bên Apps Script DriveIndexer — bước cuối nối 2 hệ thống lại.
+  var syncBtn='<div style="margin-bottom:12px;padding:10px 12px;border:1px dashed var(--border,#2a3f55);border-radius:8px">'
+    +'<div style="font-size:11px;opacity:.7;margin-bottom:6px">Bước cuối sau khi upload file mới + chạy manualRebuild/rebuildEmbeddings bên Apps Script: khớp file với sổ này (điền cột drive_url).</div>'
+    +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
+    +'<input type="password" id="g2legalEpw" placeholder="Mật khẩu biên tập (cấp 2)" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:12px;width:180px">'
+    +'<button onclick="guide2LegalInit()" style="padding:7px 12px;border:1px solid var(--accent,#C9B037);border-radius:6px;background:transparent;color:var(--accent,#C9B037);font-weight:700;cursor:pointer;font-size:12px">🔗 Đồng bộ file ↔ Sổ văn bản</button>'
+    +'</div><div id="g2legalInitResult" style="margin-top:8px;font-size:12px"></div></div>';
+  body.innerHTML='<div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">'+gsel+'</div>'+summary+legend+syncBtn+'<div id="g2legalRows"></div>';
   guide2RenderLegal();
+}
+async function guide2LegalInit(){
+  var epw=(document.getElementById('g2legalEpw')||{}).value||'';
+  var out=document.getElementById('g2legalInitResult');
+  if(!epw){ out.innerHTML='<span style="color:#e06">⚠ Cần nhập mật khẩu biên tập cấp 2</span>'; return; }
+  out.innerHTML='<span style="opacity:.7">Đang khớp file...</span>';
+  var pw=sessionStorage.getItem('nip_pw')||'';
+  try{
+    var body='action=nipdata&sub=legalinit&pw='+encodeURIComponent(pw)+'&epw='+encodeURIComponent(epw)+'&by='+encodeURIComponent(nipNoteBy()||'app');
+    var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body});
+    var j=await res.json();
+    if(j&&j.ok){
+      out.innerHTML='<span style="color:#0E7544">✓ Khớp được '+j.matched+'/'+j.total_in_register+' văn bản, điền mới drive_url cho '+j.filled_url+' dòng.</span>'
+        +(j.unmatched&&j.unmatched.length?('<div style="margin-top:4px;color:#FFBC18;font-size:11px">⚠ Chưa khớp được ('+j.unmatched.length+'): '+j.unmatched.slice(0,8).map(nipEsc).join(', ')+(j.unmatched.length>8?'...':'')+' — kiểm tra lại cột file_name trong 20_Legal_Register có đúng tên file trên Drive không.</div>'):'')
+        +'<button onclick="guide2ShowLegal()" style="margin-top:8px;padding:6px 12px;border:0;border-radius:6px;background:var(--accent,#C9B037);color:#1B3A57;font-weight:700;cursor:pointer;font-size:11px">↻ Tải lại bảng</button>';
+    } else out.innerHTML='<span style="color:#e06">Lỗi: '+nipEsc((j&&j.error)||'?')+'</span>';
+  }catch(e){ out.innerHTML='<span style="color:#e06">Không kết nối được server</span>'; }
 }
 function guide2RenderLegal(){
   var list=(GUIDE2_DATA.legal_register)||[];
