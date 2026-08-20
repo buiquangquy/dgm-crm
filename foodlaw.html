@@ -105,6 +105,8 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
 .search-input{width:100%;padding:14px 50px 14px 16px;background:var(--navy3);border:1px solid var(--border);border-radius:var(--radius2);color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:14px;outline:none;transition:all .2s}
 .search-input:focus{border-color:var(--gold);box-shadow:0 0 0 2px rgba(201,168,76,.1)}
 .search-input::placeholder{color:var(--text3)}
+.search-hint{font-size:11px;color:var(--text3);font-style:italic;line-height:1.5;margin:6px 2px 0;opacity:.75}
+.search-hint b{font-style:normal;opacity:.9}
 .search-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:var(--gold);border:none;border-radius:6px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--navy);font-size:16px;transition:all .2s}
 .search-btn:hover{background:var(--gold2)}
 .keyword-chips{display:flex;flex-wrap:wrap;gap:6px;padding:12px 0;min-height:44px}
@@ -549,6 +551,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
           <button class="search-btn" onclick="doSearch()">→</button>
         </div>
         <div id="chipContainer" class="keyword-chips"></div>
+        <div id="searchHint" class="search-hint"></div>
       </div>
 
       <!-- Image upload — v2: multi-image + analysis mode selector -->
@@ -615,7 +618,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.19 (2026-08) · Thêm nút "Đồng bộ file ↔ Sổ văn bản" (chạy legalinit) trong 📜 Sổ văn bản</span>
+            <span style="font-size:11px;opacity:.6">· v4.20 (2026-08) · Thêm hướng dẫn tìm kiếm (in nghiêng dưới thanh tra cứu) — song ngữ VI/EN</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -1081,6 +1084,7 @@ const LANG_LABELS = {
     reload_db: '🔄 Reload Drive DB',
     tab_text: '💬 Từ khoá / Câu hỏi',
     tab_image: '📷 Upload ảnh nhãn',
+    search_hint: '💡 Hỏi càng cụ thể càng đúng trọng tâm — nêu rõ <b>loại hàng</b> (nhập khẩu/nội địa), <b>nhóm sản phẩm</b>, và <b>khía cạnh muốn hỏi</b> (nội dung ghi nhãn · mức xử phạt · thủ tục công bố · đo lường...). Vd: "nhãn phụ cho cá ngừ hộp nhập khẩu cần ghi gì" — rõ hơn nhiều so với chỉ gõ "nhãn phụ". Câu hỏi càng mơ hồ, càng nên bật <b>🎯 Chính xác</b> (góc trên) để AI gợi ý hướng hiểu trước khi tra.',
   },
   en: {
     search_placeholder: 'Search regulations... e.g. sub-label tuna import · histamine test report · organic claim conditions...',
@@ -1098,6 +1102,7 @@ const LANG_LABELS = {
     reload_db: '🔄 Reload Drive DB',
     tab_text: '💬 Keywords / Question',
     tab_image: '📷 Upload label image',
+    search_hint: '💡 The more specific your question, the more accurate the answer — state the <b>goods type</b> (imported/domestic), <b>product group</b>, and <b>which angle</b> you need (label content · penalty · declaration procedure · measurement...). E.g. "what must the sub-label show for imported canned tuna" is far clearer than just "sub-label". If your question is vague, switch on <b>🎯 Accurate</b> (top right) so the AI can suggest interpretations before searching.',
   }
 };
 
@@ -1129,6 +1134,10 @@ function applyAppLang() {
   // Search placeholder
   const si = document.getElementById('searchInput');
   if (si) si.placeholder = L.search_placeholder;
+
+  // Search hint (italic, below search box) — v4.20
+  const sh = document.getElementById('searchHint');
+  if (sh) sh.innerHTML = L.search_hint || '';
 
   // Mode badges
   const mk = document.getElementById('modeKeyword');
