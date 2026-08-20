@@ -107,6 +107,10 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
 .search-input::placeholder{color:var(--text3)}
 .search-hint{font-size:11px;color:var(--text3);font-style:italic;line-height:1.5;margin:6px 2px 0;opacity:.75}
 .search-hint b{font-style:normal;opacity:.9}
+.g2-progress-wrap{margin-bottom:10px}
+.g2-progress-bar{height:6px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;display:flex}
+.g2-progress-fill{height:100%;background:linear-gradient(90deg,#0E7544,#C9A84C);transition:width .3s}
+.g2-badge{display:inline-block;margin-left:5px;padding:1px 6px;border-radius:9px;font-size:9px;font-weight:700;vertical-align:middle}
 .search-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:var(--gold);border:none;border-radius:6px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--navy);font-size:16px;transition:all .2s}
 .search-btn:hover{background:var(--gold2)}
 .keyword-chips{display:flex;flex-wrap:wrap;gap:6px;padding:12px 0;min-height:44px}
@@ -618,7 +622,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.20 (2026-08) · Thêm hướng dẫn tìm kiếm (in nghiêng dưới thanh tra cứu) — song ngữ VI/EN</span>
+            <span style="font-size:11px;opacity:.6">· v4.21 (2026-08) · Thêm hướng dẫn tìm kiếm (in nghiêng) + thanh % tiến độ trích dẫn luật trong 📚 Thư viện chuẩn</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -638,6 +642,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
           <span style="font-size:11px;opacity:.6">· Checklist chuẩn mực: Nhãn · Nhãn phụ · Claim · Quảng cáo &amp; Nhãn hiệu · HSCB · Spec · 📜 Sổ văn bản — dùng khi mở SKU mới, duyệt artwork, brief KOL, training team</span>
           <button onclick="state._guide2Loaded=false;guide2Load()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">↻ Tải lại</button>
         </div>
+        <div id="g2TotalBadge" style="font-size:11px;opacity:.65;margin-bottom:6px">📚 Trích dẫn luật: đang tải...</div>
         <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
           <button class="nip-subtab active" data-g2="nhan" onclick="guide2Show('nhan')">🏷️ Nhãn</button>
           <button class="nip-subtab" data-g2="sublabel" onclick="guide2Show('sublabel')">🈯 Nhãn phụ</button>
@@ -5335,9 +5340,34 @@ async function guide2Load(){
   try{
     var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=nipdata&sub=guide&pw='+encodeURIComponent(pw)});
     var j=await res.json();
-    if(j&&j.ok&&j.guide){ GUIDE2_DATA=j.guide; guide2Show('nhan'); }
+    if(j&&j.ok&&j.guide){ GUIDE2_DATA=j.guide; guide2UpdateBadges(); guide2Show('nhan'); }
     else { if(body) body.innerHTML='<div style="color:#e06">Lỗi: '+((j&&j.error)||'?')+'</div>'; }
   }catch(e){ if(body) body.innerHTML='<div style="color:#e06">Không kết nối được server</div>'; }
+}
+// v4.21 — badge % hoàn thành trích dẫn (trich_dan_luat) trên từng nút subtab Thư viện chuẩn
+function guide2CiteStats(which){
+  var d=(GUIDE2_DATA&&GUIDE2_DATA[which])||{rows:[]};
+  var total=d.rows.length, done=d.rows.filter(function(r){ return r.trich_dan && r.trich_dan.trim(); }).length;
+  return {done:done, total:total};
+}
+function guide2UpdateBadges(){
+  if(!GUIDE2_DATA) return;
+  var keys=['nhan','sublabel','claim','ads','hscb','spec'];
+  var tDone=0, tTotal=0;
+  keys.forEach(function(k){
+    var s=guide2CiteStats(k); tDone+=s.done; tTotal+=s.total;
+    var btn=document.querySelector('[data-g2="'+k+'"]'); if(!btn) return;
+    var old=btn.querySelector('.g2-badge'); if(old) old.remove();
+    if(!s.total) return;
+    var pct=Math.round(100*s.done/s.total);
+    var color = pct>=100 ? '#0E7544' : pct>0 ? '#C9A84C' : 'rgba(255,255,255,.15)';
+    var badge=document.createElement('span');
+    badge.className='g2-badge'; badge.style.background=color+'33'; badge.style.color=pct>=100?'#0E7544':(pct>0?'#C9A84C':'var(--text3)');
+    badge.textContent=s.done+'/'+s.total;
+    btn.appendChild(badge);
+  });
+  var totalBtn=document.getElementById('g2TotalBadge');
+  if(totalBtn) totalBtn.textContent='📚 Trích dẫn luật: '+tDone+'/'+tTotal+' mục ('+(tTotal?Math.round(100*tDone/tTotal):0)+'%)';
 }
 function guide2Show(which){
   document.querySelectorAll('[data-g2]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-g2')===which); });
@@ -5359,7 +5389,10 @@ function guide2Show(which){
     +'<span style="color:#C8102E">❌ '+cnt['❌']+' chưa đạt</span>'
     +'<span style="opacity:.6">➖ '+cnt['➖']+' N/A</span>'
     +'<span style="opacity:.6">· 📎 '+(d.files||[]).length+' file trên Drive</span></div>';
-  body.innerHTML='<div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">'+gsel+'</div>'+summary+'<div id="g2rows"></div>';
+  var cite=guide2CiteStats(which);
+  var citePct = cite.total ? Math.round(100*cite.done/cite.total) : 0;
+  var progressBar='<div class="g2-progress-wrap"><div style="display:flex;justify-content:space-between;font-size:11px;opacity:.7;margin-bottom:3px"><span>Trích dẫn luật (trich_dan_luat)</span><span>'+cite.done+'/'+cite.total+' ('+citePct+'%)</span></div><div class="g2-progress-bar"><div class="g2-progress-fill" style="width:'+citePct+'%"></div></div></div>';
+  body.innerHTML='<div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">'+gsel+'</div>'+progressBar+summary+'<div id="g2rows"></div>';
   guide2Render(which);
 }
 function guide2Render(which){
