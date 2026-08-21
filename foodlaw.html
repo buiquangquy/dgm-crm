@@ -622,7 +622,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.21 (2026-08) · Thêm hướng dẫn tìm kiếm (in nghiêng) + thanh % tiến độ trích dẫn luật trong 📚 Thư viện chuẩn</span>
+            <span style="font-size:11px;opacity:.6">· v4.22 (2026-08) · Thêm 🈯 Check nhãn phụ đầy đủ (dán nguyên văn) + % vào KPI Dashboard</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -4504,11 +4504,14 @@ function nipRenderDash(el){
   Object.keys(S).forEach(function(s){ cnt[S[s].overall]=(cnt[S[s].overall]||0)+1; });
   var nFiles=0,nSkuDoc=0; var docs=NIP_DATA.docs||{};
   Object.keys(docs).forEach(function(k){ if(k.indexOf('SKU-')===0){ nSkuDoc++; nFiles+=docs[k].length; } });
+  var totalSku=Object.keys(sk).length;
+  function pct(v){ return totalSku ? ' <span style="font-size:12px;font-weight:400;opacity:.7">('+Math.round(100*v/totalSku)+'%)</span>' : ''; }
   function kpi(c,t,v){ return '<div style="flex:1;min-width:110px;border:1px solid var(--border,#2a3f55);border-left:4px solid '+c+';border-radius:10px;padding:10px 12px;background:rgba(255,255,255,.02)"><div style="font-size:22px;font-weight:800;color:'+c+'">'+v+'</div><div style="font-size:11px;opacity:.75">'+t+'</div></div>'; }
+  // v4.22 — traffic-light tổng quan kèm % ngay khi mở Dashboard (bên cạnh số đếm đã có sẵn)
   var kpis='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'
-    +kpi('#2F7898','Tổng SKU',Object.keys(sk).length)
-    +kpi('#0E7544','✅ Đạt',cnt.pass||0)+kpi('#FFBC18','⚠️ Lưu ý',cnt.warn||0)
-    +kpi('#C8102E','🔴 Rủi ro',cnt.fail||0)+kpi('#8a94a3','⬜ Chưa đủ tài liệu',cnt.nd||0)
+    +kpi('#2F7898','Tổng SKU',totalSku)
+    +kpi('#0E7544','✅ Đạt',(cnt.pass||0)+pct(cnt.pass||0))+kpi('#FFBC18','⚠️ Lưu ý',(cnt.warn||0)+pct(cnt.warn||0))
+    +kpi('#C8102E','🔴 Rủi ro',(cnt.fail||0)+pct(cnt.fail||0))+kpi('#8a94a3','⬜ Chưa đủ tài liệu',(cnt.nd||0)+pct(cnt.nd||0))
     +kpi('#C9B037','📎 File tài liệu',nFiles+' <span style="font-size:11px;font-weight:400">('+nSkuDoc+' SKU)</span>')
     +'</div>';
   var tools='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">'
@@ -5180,8 +5183,49 @@ function nipRenderCheck(el){
     +'<button onclick="nipCheckRun()" style="width:100%;padding:10px;border:0;border-radius:8px;background:var(--accent,#C9B037);color:#1B3A57;font-weight:700;cursor:pointer">🔎 Chạy kiểm tra</button>'
     +'<div id="c_result" style="margin-top:14px"></div>'
     +'<div id="c_history" style="margin-top:18px"></div>'
+    +'</div>'
+
+    // ---- v2.20/v4.22 — CHECK NHÃN PHỤ ĐẦY ĐỦ (dán nguyên văn) ----
+    +'<div style="border-left:4px solid var(--accent,#C9B037);background:rgba(255,255,255,.03);padding:12px 14px;border-radius:8px;margin-top:18px">'
+    +'<div style="font-weight:700;margin-bottom:6px">🈯 Check nhãn phụ đầy đủ — dán nguyên văn</div>'
+    +'<div style="font-size:12px;opacity:.85;margin-bottom:12px">Dán TOÀN VĂN nội dung nhãn phụ (tên SP, tổ chức NK, xuất xứ, định lượng, NSX/HSD, thành phần, HDSD, NIP...). Hệ thống rule-based (KHÔNG dùng AI) dò từ khoá/định dạng, đối chiếu N01-N09/N11/N16/N18/N20 + P01-P08. ⚠️ Các mục vật lý (cỡ chữ thật, vị trí dán, độ bền keo...) KHÔNG thể check từ văn bản — luôn hiện riêng để nhắc rà bằng mắt.</div>'
+    +'<textarea id="c2_text" rows="8" style="width:100%;box-sizing:border-box;padding:8px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:13px;font-family:inherit;margin-bottom:10px" placeholder="Dán nguyên văn nội dung nhãn phụ vào đây..."></textarea>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">'
+    +'<div><label style="font-size:11px;opacity:.7">Hàng nhập khẩu?</label><select id="c2_imp" style="width:100%;padding:7px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:12px"><option value="Y" selected>Có (NK)</option><option value="N">Không (nội địa)</option></select></div>'
+    +'<div><label style="font-size:11px;opacity:.7">Nhóm sản phẩm</label><select id="c2_cat" style="width:100%;padding:7px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:12px"><option value="">— Chọn —</option>'+catOpts+'</select></div>'
+    +'<div><label style="font-size:11px;opacity:.7">Dạng kết cấu</label><select id="c2_form" style="width:100%;padding:7px;border-radius:6px;border:1px solid var(--border,#2a3f55);background:rgba(0,0,0,.2);color:inherit;font-size:12px"><option value="">— Chưa xác định —</option><option value="ran_trong_long">Rắn trong môi trường lỏng</option><option value="nhao_keo_set">Nhão, keo, sệt</option><option value="long_dong_nhat">Lỏng đồng nhất</option><option value="ran_kho">Rắn khô</option></select></div>'
+    +'</div>'
+    +'<label style="font-size:12px;display:block;margin-bottom:10px"><input type="checkbox" id="c2_claim"> Nội dung có claim/từ ngữ mô tả đặc biệt (tự nhiên, ít béo, không đường...) — bật để rà thêm rủi ro claim</label>'
+    +'<button onclick="nipSublabelCheckRun()" style="width:100%;padding:10px;border:0;border-radius:8px;background:var(--accent,#C9B037);color:#1B3A57;font-weight:700;cursor:pointer">🈯 Chạy kiểm tra nhãn phụ</button>'
+    +'<div id="c2_result" style="margin-top:14px"></div>'
     +'</div>';
   nipCheckLoadHistory();
+}
+async function nipSublabelCheckRun(){
+  var text=(document.getElementById('c2_text')||{}).value||'';
+  var out=document.getElementById('c2_result');
+  if(!text.trim()){ out.innerHTML='<div style="color:#e06;font-size:12px">Chưa dán nội dung nhãn phụ.</div>'; return; }
+  out.innerHTML='<div style="opacity:.7;font-size:12px">Đang kiểm tra...</div>';
+  var pw=sessionStorage.getItem('nip_pw')||'';
+  try{
+    var body='action=nipdata&sub=sublabelcheck&pw='+encodeURIComponent(pw)
+      +'&text='+encodeURIComponent(text)
+      +'&is_imported='+encodeURIComponent((document.getElementById('c2_imp')||{}).value||'Y')
+      +'&cat='+encodeURIComponent((document.getElementById('c2_cat')||{}).value||'')
+      +'&physical_form='+encodeURIComponent((document.getElementById('c2_form')||{}).value||'')
+      +'&has_claim='+((document.getElementById('c2_claim')||{}).checked?'1':'0');
+    var res=await fetch(state.gasWebAppUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body});
+    var j=await res.json();
+    if(j&&j.ok&&j.result){
+      var r=j.result, html='';
+      if(r.noidung) html+=nipCheckRenderSection('📋 Nội dung bắt buộc', r.noidung);
+      if(r.diung) html+=nipCheckRenderSection('🚨 Dị ứng & phụ gia', r.diung);
+      if(r.claim && r.claim.length) html+=nipCheckRenderSection('✨ Claim & từ ngữ', r.claim);
+      if(r.trinhbay) html+=nipCheckRenderSection('🎨 Trình bày & ngôn ngữ', r.trinhbay);
+      if(r.khongcheckduoc) html+=nipCheckRenderSection('👁️ Cần rà bằng mắt (không check được từ văn bản)', r.khongcheckduoc);
+      out.innerHTML=html;
+    } else { out.innerHTML='<div style="color:#e06;font-size:12px">Lỗi: '+((j&&j.error)||'?')+'</div>'; }
+  }catch(e){ out.innerHTML='<div style="color:#e06;font-size:12px">Không kết nối được server.</div>'; }
 }
 function nipCheckFormDefault(){
   var cat=(document.getElementById('c_cat')||{}).value||'';
