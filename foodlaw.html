@@ -11,6 +11,27 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<!-- v4.23 (2026-08) — SỬA 4 LỖI phát hiện từ vụ tra "hàng xuất dư bị trả lại... dùng bán trong nước":
+     1) applyFastnessBadge()/toggleEngine(): badge "🎯 Chính xác" trước đây hiện sáng bình thường dù
+        DB-only đang bật khiến bước AI hỏi lại/gợi ý nhiều hướng hiểu KHÔNG chạy tới — giờ hiện rõ
+        trạng thái "(tắt · đang DB-only)" + tooltip giải thích.
+     2) localRankFiles/searchDriveIndex: đổi cộng điểm PHẲNG (+15/+8/+3 như nhau cho mọi từ khoá)
+        sang trọng số IDF (buildTermDocFreq_/_idfWeight_) — từ phổ biến như "hàng","xuất","trả","bán"
+        không còn lấn át từ khoá đặc trưng, tránh việc văn bản không liên quan (vd NĐ 15/2018,
+        TT 38/2015) thắng điểm trước văn bản đúng (NĐ 37/2026) chỉ vì trùng nhiều từ thông dụng.
+     3) localRankFiles: so khớp SỐ hiệu văn bản theo TOKEN chính xác (_numTokenMatch_) thay vì chuỗi
+        con — cùng lỗi/cách fix đã áp dụng ở findArticleInDrive (v4.15: "37" từng khớp nhầm số ngẫu
+        nhiên trong ID file khác), nhưng trước đây CHỈ fix ở đường đọc trích dẫn, chưa fix ở đường
+        XẾP HẠNG file — tức đúng chỗ quyết định file nào lọt vào top kết quả ngay từ đầu.
+     4) buildLocalResult: thêm cảnh báo "đang ở chế độ từ khoá thuần, Chính xác/Nhanh không có tác
+        dụng" + gợi ý thu hẹp phạm vi khi câu hỏi mơ hồ (nhiều nhóm hoặc không xác định được nhóm nào)
+        — offline, không cần AI/quota, để bù cho việc DB-only không có bước hỏi lại như chế độ AI.
+     GIỚI HẠN CỦA BẢN VÁ NÀY: các fix trên chỉ sửa được phần CLIENT (file .html này). Nếu bấm 📚→⚡ để
+     tắt DB-only mà kết quả vẫn lệch, nguyên nhân nằm ở BACKEND "semsearch" (Apps Script DriveIndexer,
+     không nằm trong file này) — cần kiểm tra riêng: (a) NĐ 37/2026 đã có trong Drive folder được index
+     chưa, (b) đã chạy rebuildEmbeddings SAU KHI thêm/sửa file đó chưa, (c) semanticSearchGAS có đang
+     lỗi/hết quota embedding âm thầm không (xem console — hiện chỉ log ra devtools, người dùng thường
+     không thấy). -->
 <title>Food Law Intelligence · QB</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,300;0,400;0,600;1,300&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -622,7 +643,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.22 (2026-08) · Thêm 🈯 Check nhãn phụ đầy đủ (dán nguyên văn) + % vào KPI Dashboard</span>
+            <span style="font-size:11px;opacity:.6">· v4.23 (2026-08) · Sửa: badge Chính xác bị DB-only đè im lặng, xếp hạng từ khoá theo IDF thay vì cộng điểm phẳng, so khớp số hiệu văn bản theo token chính xác</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -1504,6 +1525,7 @@ function updateStatus() {
 function toggleEngine() {
   state.dbOnly = !state.dbOnly;
   applyEngineBadge();
+  applyFastnessBadge(); // v4.23 — DB-only đổi thì badge Chính xác/Nhanh cũng phải cập nhật theo (xem lý do dưới)
   saveState();
   const st = document.getElementById('statusText');
   if (st) st.textContent = state.dbOnly
@@ -1535,12 +1557,25 @@ function toggleFastMode() {
 function applyFastnessBadge() {
   const b = document.getElementById('modeFastness');
   if (!b) return;
-  if (state.fastMode) {
+  // v4.23 — LỖI ĐÃ SỬA: doSearch() kiểm tra state.dbOnly TRƯỚC state.fastMode (xem doSearch), nên khi
+  // DB-only đang bật, toggle Nhanh/Chính xác KHÔNG có tác dụng gì — bước AI hỏi lại + gợi ý nhiều
+  // hướng hiểu (selectInterpretation) không bao giờ chạy tới. Trước đây badge vẫn hiện "🎯 Chính xác"
+  // sáng bình thường dù thực tế vô hiệu → người dùng tưởng đang bật mà không phải. Giờ hiện rõ trạng
+  // thái "bị đè" bằng nhãn + màu riêng, và tooltip giải thích vì sao.
+  const overridden = state.dbOnly || !state.apiKey;
+  if (overridden) {
+    b.textContent = (state.fastMode ? '⚡ Nhanh' : '🎯 Chính xác') + ' (tắt · đang DB-only)';
+    b.classList.remove('active'); b.classList.add('inactive');
+    b.style.opacity = '0.45';
+    b.title = 'Không có tác dụng khi đang ở chế độ 📚 DB-only — bước AI hỏi lại/gợi ý nhiều hướng hiểu chỉ chạy khi tắt DB-only (bấm 📚→⚡). Bấm vào đây vẫn đổi lựa chọn Nhanh/Chính xác, nhưng sẽ chỉ có tác dụng SAU KHI tắt DB-only.';
+  } else if (state.fastMode) {
     b.textContent = '⚡ Nhanh';
     b.classList.remove('active'); b.classList.add('inactive');
+    b.style.opacity = ''; b.title = 'Chính xác: AI hỏi lại nếu câu hỏi mơ hồ, có thể gợi ý 2-4 hướng hiểu để chọn đúng ý trước khi tra — CHẬM hơn 1 bước nhưng ĐÚNG trọng tâm hơn. Nhanh: bỏ qua bước này, tra ngay.';
   } else {
     b.textContent = '🎯 Chính xác';
     b.classList.add('active'); b.classList.remove('inactive');
+    b.style.opacity = ''; b.title = 'Chính xác: AI hỏi lại nếu câu hỏi mơ hồ, có thể gợi ý 2-4 hướng hiểu để chọn đúng ý trước khi tra — CHẬM hơn 1 bước nhưng ĐÚNG trọng tâm hơn. Nhanh: bỏ qua bước này, tra ngay.';
   }
 }
 
@@ -1810,7 +1845,42 @@ function isQuotaErr(msg) {
 }
 const VN_STOP = new Set(['quy','dinh','ve','la','gi','cho','cua','va','cac','co',
   'the','khi','theo','nao','duoc','tren','trong','mot','can','phai','khong','hay',
-  'nhu','thi','se','o','den','tu','toi','muon','hoi','xin','lam','sao']);
+  'nhu','thi','se','o','den','tu','toi','muon','hoi','xin','lam','sao',
+  // v4.23 — bổ sung hư từ/từ nối còn thiếu (không mang tín hiệu phân biệt văn bản nào với văn bản nào)
+  'hoac','bi','va','neu','thi','da','se','nay','do','di','ra','vao']);
+// v4.23 — TẦN SUẤT XUẤT HIỆN THEO VĂN BẢN (document frequency) cho từng từ khoá, tính 1 lần khi
+// driveIndex vừa tải xong (xem buildTermDocFreq_ + hook trong loadDriveIndex). Dùng để GIẢM điểm
+// cho từ khoá xuất hiện ở phần lớn văn bản (vd "hàng", "xuất", "trả", "bán" gần như văn bản nào cũng
+// có) — đây chính là nguyên nhân NĐ 37/2026 bị các văn bản không liên quan (NĐ 15/2018, TT 38/2015...)
+// vượt điểm trong ảnh chụp: điểm cộng thẳng +15/+8/+3 không phân biệt từ khoá HIẾM khỏi từ khoá PHỔ BIẾN.
+let _termDF = null;      // { term: số văn bản chứa term } — null = chưa tính (fallback: coi mọi từ như nhau)
+let _termDFTotal = 0;    // tổng số văn bản đã dùng để tính _termDF
+function buildTermDocFreq_() {
+  _termDF = {};
+  _termDFTotal = 0;
+  if (!driveIndex || !driveIndex.files) return;
+  driveIndex.files.forEach(f => {
+    _termDFTotal++;
+    const hay = stripDia([f.name, (f.keywords||[]).join(' '), f.text || f.summary || ''].join(' '));
+    const seen = new Set(hay.split(/[^a-z0-9]+/).filter(w => w.length > 1));
+    seen.forEach(w => { _termDF[w] = (_termDF[w] || 0) + 1; });
+  });
+  console.log('[DGM DF] Đã tính document-frequency cho ' + Object.keys(_termDF).length + ' từ khoá trên ' + _termDFTotal + ' văn bản.');
+}
+// idf: từ hiếm (xuất hiện ở ít văn bản) → trọng số cao; từ phổ biến (>50% văn bản) → trọng số thấp hẳn.
+function _idfWeight_(term) {
+  if (!_termDF || !_termDFTotal) return 1; // chưa có DF (chưa tải xong/lỗi) → coi như cũ, không vỡ luồng
+  const df = _termDF[term] || 1;
+  const w = Math.log((_termDFTotal + 1) / df) + 0.15; // +0.15: sàn tối thiểu, không cho về 0/âm
+  return Math.max(0.15, Math.min(3, w)); // kẹp trong [0.15, 3] để không lệch quá đà 1 chiều
+}
+// So khớp SỐ CHÍNH XÁC theo token (không phải chuỗi con) — cùng cách đã fix ở findArticleInDrive (v4.15),
+// áp dụng lại ở đây vì localRankFiles/searchDriveIndex trước giờ vẫn dùng .includes() kiểu cũ, khiến
+// "37" khớp nhầm vào số ngẫu nhiên trong ID file khác (đúng lỗi đã từng làm NĐ 37/2026 bị nhận nhầm).
+function _numTokenMatch_(haystack, n) {
+  const toks = String(haystack || '').match(/\d+/g) || [];
+  return toks.includes(n);
+}
 function localTokenize(raw) {
   const norm = stripDia(raw).replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
   const keywords = [...new Set(norm.split(' ').filter(w => w.length > 1 && !VN_STOP.has(w)))];
@@ -1860,15 +1930,21 @@ function localRankFiles(raw, folders) {
     const typeH = stripDia([f.doc_type, f.doc_number, f.doc_year].filter(Boolean).join(' '));
     const hay   = nameH + ' ' + kwH + ' ' + typeH;
     let score = 0;
+    // v4.23 — mỗi từ khoá được nhân với trọng số IDF: từ càng HIẾM (ít văn bản chứa) càng được tính
+    // điểm cao; từ phổ biến như "hàng"/"xuất"/"trả"/"bán" (xuất hiện ở đa số văn bản) gần như không
+    // còn đóng góp điểm → không còn kéo nhầm các văn bản không liên quan lên top nữa.
     terms.forEach(t => {
-      if (nameH.includes(t))      score += 15;
-      else if (kwH.includes(t))   score += 8;
-      else if (typeH.includes(t)) score += 6;
-      else if (sumH.includes(t))  score += 3;
+      const w = _idfWeight_(t);
+      if (nameH.includes(t))      score += 15 * w;
+      else if (kwH.includes(t))   score += 8 * w;
+      else if (typeH.includes(t)) score += 6 * w;
+      else if (sumH.includes(t))  score += 3 * w;
     });
+    // v4.23 — so khớp SỐ theo token chính xác (không phải chuỗi con), cùng cách đã fix ở
+    // findArticleInDrive (v4.15) — tránh "37" khớp nhầm số ngẫu nhiên trong ID file khác.
     numbers.forEach(n => {
-      if (hay.includes(n))        score += 12;
-      else if (sumH.includes(n))  score += 5;
+      if (_numTokenMatch_(f.name, n) || _numTokenMatch_((f.doc_number||'')+' '+(f.doc_year||''), n)) score += 20;
+      else if (_numTokenMatch_(sumH, n)) score += 8;
     });
     if (score > 0 && wantFolders && wantFolders.includes(f.folder)) score += 6; // boost, không lọc bỏ
     return { ...f, score };
@@ -1906,13 +1982,44 @@ function buildLocalResult(raw, files, terms, mode) {
     `→ [${i + 1}] ${f.name.replace(/\.[^.]+$/, '')}` +
     (f.url ? ` — <a href="${f.url}" target="_blank" style="color:var(--gold)">📎 mở file gốc</a>` : '')
   ).join('\n');
+  // v4.23 — cảnh báo rõ: nút "🎯 Chính xác/⚡ Nhanh" KHÔNG có tác dụng ở chế độ Database-only, vì
+  // bước AI hỏi lại/gợi ý nhiều hướng hiểu chỉ chạy khi tắt DB-only (xem doSearch + applyFastnessBadge).
+  // Trước đây không có dòng này → người dùng tưởng "Chính xác" đang chạy mà thực ra bị bỏ qua hoàn toàn.
+  const modeWarn = (!usedSem)
+    ? ('⚠️ **Đang ở chế độ từ khoá thuần** (không dùng AI, không tìm theo nghĩa) — nút "🎯 Chính xác/⚡ Nhanh" ' +
+       'KHÔNG có tác dụng ở đây vì bước AI hỏi lại chỉ chạy khi tắt 📚 DB-only. Nếu bấm 📚→⚡ trên thanh tiêu đề, ' +
+       'app sẽ dùng AI để hiểu ý câu hỏi và có thể hỏi lại khi mơ hồ — kết quả sẽ đúng trọng tâm hơn nhiều so với khớp từ khoá thô.\n')
+    : '';
+  // Gợi ý thu hẹp khi câu hỏi có thể thuộc nhiều nhóm khác nhau — tương tự việc hỏi lại người dùng
+  // chọn hướng hiểu, nhưng chạy được hoàn toàn offline (không cần AI/quota).
+  const folderLabelMap = {};
+  (driveIndex && driveIndex.files || []).forEach(f => { if (f.folder && f.folder_name_vi) folderLabelMap[f.folder] = f.folder_name_vi; });
+  const rawFolders = window._lastIntentFolders || [];
+  const ambiguousFolders = rawFolders.filter(x => x !== 'all');
+  const isAllFallback = rawFolders.includes('all') || ambiguousFolders.length === 0;
+  // v4.23 — trường hợp KHÔNG xác định được nhóm nào (folders=['all']) là mơ hồ NHẤT (không có tín hiệu
+  // rõ ràng để phân loại), nhưng bản vá trước chỉ cảnh báo khi phát hiện ≥2 nhóm cụ thể — bỏ sót đúng
+  // dạng câu hỏi như "hàng xuất dư bị trả lại... dùng bán trong nước": không chứa từ khoá nào khớp quy
+  // tắc detectFoldersLocal (không có "nhãn", "kiểm nghiệm", "công bố"...) nên rơi thẳng vào 'all'.
+  const refineHint = isBrowse ? '' :
+    (ambiguousFolders.length >= 2
+      ? ('🎯 Câu hỏi có thể liên quan nhiều nhóm khác nhau: ' +
+         ambiguousFolders.map(f => (folderLabelMap[f] || ('Nhóm ' + f))).join(', ') + '. ' +
+         'Nếu kết quả dưới đây chưa đúng ý, thử gõ cụ thể hơn — nêu rõ khía cạnh bạn cần (vd "nội dung ghi nhãn", ' +
+         '"mức xử phạt", "thủ tục công bố") thay vì câu hỏi chung chung.\n')
+      : (isAllFallback && terms.length >= 4
+        ? ('🎯 Hệ thống KHÔNG xác định được câu hỏi này thuộc nhóm cụ thể nào (đang tìm trên toàn bộ DB) — ' +
+           'đây là dấu hiệu câu hỏi đang khá chung chung, dễ ra kết quả lệch hướng. Thử nêu rõ: loại hàng ' +
+           '(nhập khẩu/nội địa/xuất khẩu), và khía cạnh cụ thể bạn cần (ghi nhãn / thuế-hoá đơn / hải quan / xử phạt...).\n')
+        : ''));
   const analysis_vi = isBrowse
     ? ('**Chế độ Database — không khớp từ khoá chính xác.**\n' +
        'Không có file nào chứa đúng từ khoá trong TOÀN VĂN đã index. ' +
        'Dưới đây là ' + files.length + ' văn bản trong nhóm liên quan để bạn mở đọc trực tiếp:\n' +
        fileLinks + '\n' +
        'Gợi ý: thử từ khoá khác hoặc số hiệu văn bản (vd "37/2026", "dung sai", "Điều 10").')
-    : ((usedSem
+    : (modeWarn + refineHint +
+       (usedSem
          ? '**Chế độ Database · 🧠 tìm theo NGHĨA (semantic)** — không dùng quota AI generate.\n'
          : '**Chế độ Database (không dùng AI) đang hoạt động** — vì Gemini hết hạn mức hoặc bạn đã bật 📚 DB-only.\n') +
        'Hệ thống đã tra cứu và xếp hạng ' + files.length + ' văn bản khớp nhất với câu hỏi. ' +
@@ -1922,7 +2029,9 @@ function buildLocalResult(raw, files, terms, mode) {
        'Văn bản tìm thấy:\n' + fileLinks);
   const analysis_en = isBrowse
     ? ('**Database mode — no exact keyword match.** Showing ' + files.length + ' documents from the related folder to open directly. Try other keywords or the document number (e.g. "37/2026", "Điều 10").')
-    : ('**Database mode (no AI) is active** because the Gemini quota is exhausted or DB-only is on. ' +
+    : ((!usedSem ? '⚠️ **Plain keyword mode** — the "🎯 Accurate/⚡ Fast" toggle has no effect here since the AI re-ask step only runs with 📚 DB-only turned off.\n' : '') +
+       (ambiguousFolders.length >= 2 ? ('🎯 This question may span multiple topic groups: ' + ambiguousFolders.map(f => (folderLabelMap[f] || ('Group ' + f))).join(', ') + '. Try a more specific phrasing if the results below aren\'t on target.\n') : '') +
+       '**Database mode (no AI) is active** because the Gemini quota is exhausted or DB-only is on. ' +
        'Ranked ' + files.length + ' best-matching documents; left column shows real excerpts. Lookup & source extraction only — no automated analysis.');
   return {
     citations, analysis_vi, analysis_en,
@@ -1983,6 +2092,7 @@ async function localDbSearch(raw) {
     }
   }
   const intent = buildLocalIntent(raw);
+  window._lastIntentFolders = intent.folders || []; // v4.23 — dùng để gợi ý thu hẹp phạm vi trong buildLocalResult
   // Ưu tiên SEMANTIC (tìm theo nghĩa qua GAS · không tốn quota generate). Không có → keyword cũ.
   let files, terms;
   const sem = await semanticSearchGAS(raw, 6);
@@ -2294,6 +2404,7 @@ async function loadDriveIndex(forceRebuild) {
     driveIndexError = '';
     updateFolderCounts();
     updateStatus();
+    buildTermDocFreq_(); // v4.23 — tính document-frequency 1 lần, dùng cho toàn bộ search sau đó
     console.log('[DGM Drive] Index loaded:', driveIndex.meta);
   } catch (err) {
     driveIndexStatus = 'error';
@@ -2373,10 +2484,14 @@ function searchDriveIndex(keywords, folders) {
     const summaryLower = (file.text || file.summary || '').toLowerCase();
     const kwStr = (file.keywords || []).join(' ').toLowerCase();
 
+    // v4.23 — cùng trọng số IDF với localRankFiles (xem lý do trong buildTermDocFreq_/_idfWeight_):
+    // trước đây cộng điểm phẳng khiến từ phổ biến ("hàng","xuất","trả"...) lấn át từ khoá thật sự
+    // đặc trưng, có thể loại đúng văn bản (vd NĐ 37/2026) khỏi top 4 dù semantic search rớt xuống đây.
     terms.forEach(t => {
-      if (nameLower.includes(t))    score += 15;
-      if (kwStr.includes(t))        score += 8;
-      if (summaryLower.includes(t)) score += 3;
+      const w = _idfWeight_(stripDia(t));
+      if (nameLower.includes(t))    score += 15 * w;
+      if (kwStr.includes(t))        score += 8 * w;
+      if (summaryLower.includes(t)) score += 3 * w;
     });
     return { ...file, score };
   }).filter(f => f.score > 0);
