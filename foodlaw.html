@@ -11,6 +11,28 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<!-- v4.24 (2026-08) — 7 VÁ theo review_tra_cuu.md (đọc lại toàn bộ pipeline tra cứu để tận dụng AI tốt
+     hơn + minh bạch nguồn văn bản hơn):
+     A1) buildDriveContext(): ƯU TIÊN dùng đúng Điều semantic search đã xác định (f._semLabel qua
+         findArticleByLabel, tới 4000 ký tự) thay vì bỏ phí kết quả semantic rồi dò lại từ khoá trên
+         toàn văn như trước — đây là lỗi nghiêm trọng nhất tìm được: công sức dựng semantic search bị
+         vứt bỏ đúng ở bước quan trọng nhất (chọn đoạn đưa cho AI đọc).
+     A2) Nới k semantic search từ 5 lên 9 khi câu hỏi trải ≥2 folder (nhiều lĩnh vực).
+     A4) buildFolderContext() fallback: dùng snapshot TỰ ĐỘNG lưu mỗi lần kết nối Drive thành công
+         (_saveFolderSnapshot_/_loadFolderSnapshot_) thay vì luôn dùng 1 đoạn text viết cứng dễ lỗi thời
+         — danh sách viết cứng giờ chỉ còn là phao cứu sinh cuối cùng khi CHƯA TỪNG kết nối lần nào.
+     A5) Kiểm tra thật sự legal_doc_id trong risks/actions có khớp 1 doc_id trong citations không (prompt
+         chỉ DẶN AI làm vậy, không có gì đảm bảo tuân thủ) — gắn cờ _refValid, legalRefBadge() hiện cảnh
+         báo "chưa xác minh" thay vì badge bấm-được bình thường khi vi phạm.
+     B1) Tự động chạy findArticleInDrive() cho MỌI citation ngay khi render (rẻ — chỉ tra driveIndex đã
+         tải sẵn ở client, không gọi mạng), gắn badge ✅/⚠️/📭 ngay trên danh sách — trước đây chỉ chạy
+         khi người dùng chủ động bấm vào từng citation, dễ bỏ sót.
+     B2) Banner kết quả phân biệt rõ "🧠 Tìm theo NGHĨA (semantic)" vs "🔤 Khớp từ khoá (semantic chưa
+         phủ)" — trước đây cả 2 trường hợp hiện banner y hệt nhau dù độ tin cậy khác hẳn.
+     B3) Route backend mới "?action=legalstatus" (KHÔNG cần mật khẩu NIP, chỉ trả so_hiệu+trạng_thái)
+         nối 20_Legal_Register vào kết quả tra cứu — citation của văn bản đã "replaced"/"expired" giờ
+         hiện cảnh báo đỏ ngay, không cần mở riêng tab Thư viện chuẩn mới biết.
+     Chi tiết đầy đủ + lý do từng mục: xem file review_tra_cuu.md. -->
 <!-- v4.23 (2026-08) — SỬA 4 LỖI phát hiện từ vụ tra "hàng xuất dư bị trả lại... dùng bán trong nước":
      1) applyFastnessBadge()/toggleEngine(): badge "🎯 Chính xác" trước đây hiện sáng bình thường dù
         DB-only đang bật khiến bước AI hỏi lại/gợi ý nhiều hướng hiểu KHÔNG chạy tới — giờ hiện rõ
@@ -643,7 +665,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.23 (2026-08) · Sửa: badge Chính xác bị DB-only đè im lặng, xếp hạng từ khoá theo IDF thay vì cộng điểm phẳng, so khớp số hiệu văn bản theo token chính xác</span>
+            <span style="font-size:11px;opacity:.6">· v4.24 (2026-08) · Tận dụng semantic search đúng cách (đoạn AI đọc = đúng Điều đã tìm), tự động xác minh + cảnh báo hết hiệu lực ngay trên citation</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -1617,6 +1639,7 @@ function saveSettings() {
     // Auto-load index after saving if GAS URL is set
     if (state.gasWebAppUrl && driveIndexStatus === 'none') {
       loadDriveIndex();
+      loadLegalStatus(); // v4.24 — B3
     }
   }, 1500);
 }
@@ -1762,6 +1785,31 @@ async function callGemini(prompt, systemPrompt='', imageData=null, preferModel='
 // ══════════════════════════════════════════════════════════
 // SEMANTIC SEARCH (tìm theo NGHĨA qua GAS · dùng quota embedding RIÊNG, không tốn quota generate)
 // ══════════════════════════════════════════════════════════
+// v4.24 — B3: tải trạng thái hiệu lực (20_Legal_Register) 1 lần, KHÔNG cần mật khẩu NIP — dùng để cảnh
+// báo ngay trên citation khi văn bản đã bị đánh dấu replaced/expired. Trước đây module Tra cứu và Thư
+// viện chuẩn không nói chuyện với nhau — 1 văn bản hết hiệu lực trong sổ vẫn có thể bị AI trích dẫn ở
+// tab tra cứu mà không cảnh báo gì (xem review_tra_cuu.md mục B3).
+let legalStatusList = null; // [{so, status, stale}] hoặc null nếu chưa tải/tải lỗi
+async function loadLegalStatus() {
+  if (!state.gasWebAppUrl || legalStatusList) return;
+  try {
+    const res = await fetch(state.gasWebAppUrl + '?action=legalstatus');
+    const j = await res.json();
+    if (j && j.ok && Array.isArray(j.items)) legalStatusList = j.items;
+  } catch (e) { console.warn('[DGM legalstatus] lỗi: ' + e.message); }
+}
+// So khớp doc_id (định dạng AI ghi, vd "NĐ 37/2026/NĐ-CP") với so_hiệu trong sổ (vd "37/2026/NĐ-CP")
+// bằng token số nguyên vẹn — cùng cách tránh khớp nhầm đã dùng ở findArticleInDrive (v4.15).
+function legalStatusFor(docId) {
+  if (!legalStatusList || !docId) return null;
+  const nums = (String(docId).match(/\d+/g) || []);
+  if (!nums.length) return null;
+  return legalStatusList.find(x => {
+    const xNums = (String(x.so || '').match(/\d+/g) || []);
+    return xNums.length && nums.every(n => xNums.includes(n));
+  }) || null;
+}
+
 async function semanticSearchGAS(query, k) {
   if (!state.gasWebAppUrl || !query) return null;
   try {
@@ -2248,6 +2296,7 @@ async function confirmIntent() {
   try {
     const intent = state.currentIntent;
     const folderCtx = buildFolderContext(intent.folders);
+    loadLegalStatus(); // v4.24 — B3: tải song song, không cần chờ — nếu chưa xong kịp lúc render thì lần tra sau sẽ có
 
     // ── REAL DRIVE CONTENT INJECTION ────────────────────────────────────
     // v4.15 — SỬA LỖI QUAN TRỌNG: nếu Drive Index đang "loading" (mới vào trang, index tự tải sau 1s)
@@ -2274,10 +2323,16 @@ async function confirmIntent() {
       ];
       // 1) Ưu tiên SEMANTIC (đưa AI đúng điều/khoản hơn → trích dẫn chuẩn, đỡ hỏi lại)
       const semQuery = [intent.intent_vi, intent.intent_en, state.currentQuery].filter(Boolean).join(' · ');
-      const sem = await semanticSearchGAS(semQuery, 5);
+      // v4.24 — A2: câu hỏi trải nhiều lĩnh vực (≥2 folder phát hiện được) cần nhiều văn bản đại diện
+      // hơn để không bỏ sót góc độ nào — nới k từ 5 lên 9 trong trường hợp này.
+      const semK = (intent.folders || []).filter(x => x !== 'all').length >= 2 ? 9 : 5;
+      const sem = await semanticSearchGAS(semQuery, semK);
       const semFiles = sem ? mapSemToFiles(sem) : [];
+      // v4.24 — B2: nhớ lại đã dùng semantic hay rơi về keyword, để banner kết quả hiển thị đúng mức độ
+      // tin cậy thay vì hiện y hệt nhau cho cả 2 trường hợp (xem review_tra_cuu.md mục B2).
+      const usedSemantic = semFiles.length > 0;
       // 2) Không có embeddings / không khớp → quay về keyword cũ
-      driveFilesFound = semFiles.length ? semFiles : searchDriveIndex(searchKeywords, intent.folders);
+      driveFilesFound = usedSemantic ? semFiles : searchDriveIndex(searchKeywords, intent.folders);
       if (driveFilesFound.length > 0) {
         driveContentCtx = buildDriveContext(driveFilesFound, searchKeywords);
         document.getElementById('statusText').textContent =
@@ -2364,8 +2419,16 @@ Hãy trả về phân tích toàn diện dạng JSON:
     const result = safeParseJSON(resRaw);
     if (!result) throw new Error('Không thể parse kết quả từ AI. Vui lòng thử lại.');
 
+    // v4.24 — A5: prompt đã dặn "legal_doc_id PHẢI trùng 1 doc_id trong citations", nhưng đó chỉ là lời
+    // dặn — không có gì đảm bảo AI tuân thủ 100%. Kiểm tra lại thật sự, gắn cờ để renderResults hiển thị
+    // cảnh báo thay vì âm thầm tin theo (xem review_tra_cuu.md mục A5).
+    const _citIds = new Set((result.citations || []).map(c => c.doc_id));
+    (result.risks || []).forEach(r => { if (r.legal_doc_id) r._refValid = _citIds.has(r.legal_doc_id); });
+    (result.actions || []).forEach(a => { if (a.legal_doc_id) a._refValid = _citIds.has(a.legal_doc_id); });
+
     result._driveFilesFound = driveFilesFound;
     result._isDriveMode = isDriveMode;
+    result._usedSemantic = usedSemantic;   // v4.24 — B2
 
     renderResults(result, intent);
     addToHistory(intent.intent_vi, result);
@@ -2405,6 +2468,7 @@ async function loadDriveIndex(forceRebuild) {
     updateFolderCounts();
     updateStatus();
     buildTermDocFreq_(); // v4.23 — tính document-frequency 1 lần, dùng cho toàn bộ search sau đó
+    _saveFolderSnapshot_(); // v4.24 — A4: lưu ảnh chụp gọn để buildFolderContext() dùng khi mất kết nối
     console.log('[DGM Drive] Index loaded:', driveIndex.meta);
   } catch (err) {
     driveIndexStatus = 'error';
@@ -2517,10 +2581,19 @@ function buildDriveContext(files, terms) {
       ctx += `    Keywords: ${f.keywords.slice(0,10).join(', ')}\n`;
     }
     const full = f.text || f.summary || '';
-    if (full) {
-      // Gửi ĐÚNG (các) đoạn liên quan tới câu hỏi thay vì cắt đầu tài liệu → AI thấy đúng điều/khoản
-      const excerpt = relevantWindows(full, tNorm, 1800).replace(/\n{3,}/g, '\n\n');
-      ctx += `    Nội dung (trích đúng đoạn liên quan):\n${excerpt}\n`;
+    // v4.24 — A1: ƯU TIÊN dùng đúng Điều mà semantic search đã xác định (f._semLabel, vd "Điều 50"),
+    // lấy TRỌN nội dung Điều đó qua findArticleByLabel (tới 4000 ký tự — rộng hơn hẳn 1800 ký tự của
+    // relevantWindows). Trước đây kết quả semantic (_semSnippet/_semLabel) bị bỏ phí hoàn toàn, code
+    // luôn dò lại từ khoá trên toàn văn — mất đúng thứ giá trị nhất mà semantic search vừa tìm ra
+    // (xem review_tra_cuu.md mục A1). Chỉ fallback về dò từ khoá khi không có nhãn semantic cho file này.
+    let excerpt = '', excerptNote = '';
+    if (f._semLabel && full) {
+      const fullArticle = findArticleByLabel(full, f._semLabel);
+      if (fullArticle && fullArticle.length > 40) { excerpt = fullArticle; excerptNote = ` — 🧠 đúng ${f._semLabel} do semantic search xác định`; }
+    }
+    if (!excerpt && full) excerpt = relevantWindows(full, tNorm, 1800);
+    if (excerpt) {
+      ctx += `    Nội dung (trích đúng đoạn liên quan${excerptNote}):\n${excerpt.replace(/\n{3,}/g, '\n\n')}\n`;
     }
     ctx += '\n';
   });
@@ -2557,6 +2630,29 @@ function relevantWindows(text, tNorm, budget) {
     .join('\n  ----\n');
 }
 
+// v4.24 — A4: lưu ảnh chụp GỌN (folder → tên file, không kèm toàn văn) mỗi khi driveIndex tải thành
+// công, để buildFolderContext() dùng làm fallback khi mất kết nối — TỰ CẬP NHẬT theo thời gian, thay vì
+// 1 đoạn text viết cứng trong code (dễ lệch thực tế, xem review_tra_cuu.md mục A4).
+const FOLDER_SNAPSHOT_KEY = 'dgm_folder_snapshot_v1';
+function _saveFolderSnapshot_() {
+  try {
+    if (!driveIndex || !driveIndex.folders) return;
+    const snap = { at: new Date().toISOString(), folders: {} };
+    Object.entries(driveIndex.folders).forEach(([key, folder]) => {
+      if (!folder.file_count) return;
+      snap.folders[key] = {
+        name_vi: folder.name_vi,
+        files: (driveIndex.files || []).filter(f => f.folder === key)
+          .map(f => f.name.replace(/\.[^.]+$/, '')).slice(0, 15)
+      };
+    });
+    localStorage.setItem(FOLDER_SNAPSHOT_KEY, JSON.stringify(snap));
+  } catch (e) { /* localStorage đầy/lỗi → bỏ qua, không chặn luồng chính */ }
+}
+function _loadFolderSnapshot_() {
+  try { return JSON.parse(localStorage.getItem(FOLDER_SNAPSHOT_KEY) || 'null'); } catch (e) { return null; }
+}
+
 function buildFolderContext(folders) {
   // 1. Try to use real Drive index
   if (driveIndexStatus === 'ok' && driveIndex) {
@@ -2575,8 +2671,20 @@ function buildFolderContext(folders) {
     return ctx;
   }
 
-  // 2. Fallback: static knowledge base
-  return `Cơ sở dữ liệu pháp luật bao gồm:
+  // 2. v4.24 — A4: mất kết nối lúc này, nhưng đã từng kết nối thành công trước đó → dùng snapshot lần
+  // gần nhất (tự động, luôn theo sát thực tế hơn danh sách viết cứng) thay vì nhánh 3 bên dưới.
+  const snap = _loadFolderSnapshot_();
+  if (snap && snap.folders && Object.keys(snap.folders).length) {
+    let ctx = `Cơ sở dữ liệu pháp luật — snapshot lần kết nối gần nhất (${snap.at.slice(0,10)}, hiện ĐANG OFFLINE nên có thể thiếu văn bản mới thêm sau thời điểm đó):\n`;
+    Object.entries(snap.folders).forEach(([key, f]) => {
+      ctx += `Folder ${key} (${f.name_vi}): ${f.files.join(', ')}\n`;
+    });
+    return ctx;
+  }
+
+  // 3. Chưa TỪNG kết nối Drive thành công lần nào (vd lần đầu mở app mà không có mạng) → dùng danh sách
+  // viết cứng làm phao cứu sinh cuối cùng. CÓ THỂ LỖI THỜI — chỉ nên tới đây khi nhánh 1 và 2 đều không có.
+  return `⚠️ Chưa từng kết nối Drive DB thành công — danh sách dưới đây viết cứng trong code, có thể đã lỗi thời:
 Folder A (Luật nền tảng): Luật ATTP 55/2010/QH12, VB HN 61/VBHN-VPQH 2025
 Folder B (Nghị định): NĐ 15/2018, NĐ 46/2026 (tạm ngưng), NĐ 115/2018, NĐ 124/2021, NĐ 09/2016, NĐ 37/2026 (ghi nhãn), NĐ 43/2017 (hết HLực), NĐ 111/2021 (hết HLực)
 Folder C (Nghị quyết): NQ 66.13/2026 (tạm ngưng), NQ 15/2026 (tạm ngưng NĐ 46)
@@ -2598,9 +2706,14 @@ function renderResults(result, intent) {
 
   // Drive source banner
   if (isDriveMode && driveFiles.length > 0) {
+    // v4.24 — B2: phân biệt rõ ĐANG dùng semantic (đáng tin hơn) hay đã rơi về khớp từ khoá (rủi ro lạc
+    // đề cao hơn, như vụ NĐ 37/2026 hồi đầu) — trước đây cả 2 trường hợp hiện banner y hệt nhau.
+    const modeLabel = result._usedSemantic
+      ? '🧠 Tìm theo NGHĨA (semantic)'
+      : '🔤 Khớp từ khoá (semantic chưa có/chưa phủ câu này — độ chính xác thấp hơn)';
     const banner = document.createElement('div');
     banner.style.cssText = 'grid-column:1/-1;background:rgba(76,175,130,0.08);border:1px solid rgba(76,175,130,0.25);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--green);display:flex;align-items:center;gap:8px;flex-wrap:wrap';
-    banner.innerHTML = `<strong>✅ Drive DB · Nội dung thật</strong> &nbsp;|&nbsp; Đọc từ ${driveFiles.length} file: &nbsp;`
+    banner.innerHTML = `<strong>✅ Drive DB · ${modeLabel}</strong> &nbsp;|&nbsp; Đọc từ ${driveFiles.length} file: &nbsp;`
       + driveFiles.map(f => `<span style="background:rgba(76,175,130,0.15);padding:2px 7px;border-radius:10px;font-family:'IBM Plex Mono',monospace;font-size:10px">${f.name.replace(/\.[^.]+$/, '').substring(0,30)}</span>`).join(' ');
     grid.appendChild(banner);
   } else if (!isDriveMode) {
@@ -2631,12 +2744,36 @@ function renderResults(result, intent) {
     const folderTag = cit.folder ? '[' + cit.folder + '] ' : '';
     const sourceTag = cit.source_file ? ' <span style="color:var(--green);font-size:9px">· 📄 ' + cit.source_file + '</span>' : '';
     const preview = cit.content_vi ? cit.content_vi.substring(0,150) + '...' : '';
+    // v4.24 — B1: tự động đối chiếu trích dẫn với Drive DB NGAY khi render, không chờ người dùng bấm
+    // vào pill mới biết (trước đây findArticleInDrive chỉ chạy khi bấm — nếu người dùng đọc lướt phần
+    // phân tích mà không bấm từng trích dẫn, họ không biết cái nào đã xác minh được). Chạy được rẻ vì
+    // chỉ tìm trong driveIndex đã tải sẵn ở client, không tốn gọi mạng/API. Xem review_tra_cuu.md mục B1.
+    let verifyBadge = '';
+    if (driveIndexStatus === 'ok' && driveIndex) {
+      try {
+        const found = findArticleInDrive(cit.doc_id, cit.article || '');
+        if (found && found.found_article) {
+          verifyBadge = '<span style="font-size:9px;color:var(--green);border:1px solid rgba(76,175,130,.35);padding:1px 6px;border-radius:8px;margin-left:6px;white-space:nowrap" title="Đã đối chiếu khớp với văn bản gốc trong Drive DB">✅ Đã xác minh</span>';
+        } else if (found) {
+          verifyBadge = '<span style="font-size:9px;color:var(--amber);border:1px solid rgba(201,168,76,.35);padding:1px 6px;border-radius:8px;margin-left:6px;white-space:nowrap" title="Tìm thấy đúng văn bản nhưng chưa định vị chính xác điều/khoản trong nội dung đã index — bấm để tự đọc file gốc">⚠️ Chưa định vị chính xác</span>';
+        } else {
+          verifyBadge = '<span style="font-size:9px;color:var(--text3);border:1px solid var(--border2);padding:1px 6px;border-radius:8px;margin-left:6px;white-space:nowrap" title="Không tìm thấy văn bản này trong Drive DB đã index — AI có thể đang dùng kiến thức chung, cần tự kiểm tra kỹ hơn">📭 Không có trong DB</span>';
+        }
+      } catch (e) { /* không chặn hiển thị nếu xác minh lỗi */ }
+    }
+    // v4.24 — B3: cảnh báo nếu văn bản đã bị đánh dấu replaced/expired trong 20_Legal_Register
+    let staleBadge = '';
+    const lst = legalStatusFor(cit.doc_id);
+    if (lst && (lst.stale || lst.status === 'replaced' || lst.status === 'expired')) {
+      const why = lst.status === 'replaced' ? 'đã bị THAY THẾ' : lst.status === 'expired' ? 'đã HẾT HIỆU LỰC' : 'đang được đánh dấu cần rà lại';
+      staleBadge = '<div style="font-size:10px;color:var(--red,#C8102E);background:rgba(200,16,2,.08);border:1px solid rgba(200,16,2,.25);border-radius:6px;padding:4px 8px;margin-top:6px" title="Theo sổ đăng ký văn bản pháp luật (20_Legal_Register)">🔴 Văn bản này ' + why + ' theo sổ đăng ký nội bộ — kiểm tra lại trước khi dùng.</div>';
+    }
     citItemsHtml +=
       '<div class="citation-item" id="cit-item-' + i + '" onclick="openCitation(' + i + ')" data-index="' + i + '">' +
-        '<div class="citation-doc">' + folderTag + cit.doc_id + sourceTag + '</div>' +
+        '<div class="citation-doc">' + folderTag + cit.doc_id + sourceTag + verifyBadge + '</div>' +
         '<div class="citation-clause">' + (cit.article||'') + ' — ' + (cit.doc_name_vi||'') + '</div>' +
         '<div class="citation-clause-en">' + (cit.article_en||'') + ' — ' + (cit.doc_name_en||'') + '</div>' +
-        pillsHtml +
+        pillsHtml + staleBadge +
         '<div style="font-size:11px;color:var(--text2);margin-top:4px;line-height:1.4">' + preview + '</div>' +
         '<div class="citation-ref">📖 Click pill mục để xem trích dẫn · Click để xem tổng quan</div>' +
       '</div>';
@@ -2720,9 +2857,15 @@ function openLegalRefFromRiskAction(docId, articleStr, btnEl) {
   openArticleDetail(idx, articleStr || docId, matchingPill || btnEl);
   document.getElementById('citationMainCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
-function legalRefBadge(docId, articleStr) {
+function legalRefBadge(docId, articleStr, isValid) {
   if (!docId) return '';
   const label = articleStr ? `${gesc(docId)} · ${gesc(articleStr)}` : gesc(docId);
+  // v4.24 — A5: isValid===false nghĩa là AI gắn legal_doc_id KHÔNG khớp bất kỳ doc_id nào trong
+  // citations đã liệt kê (vi phạm chỉ dẫn trong prompt) — hiện cảnh báo thay vì badge bấm-được bình
+  // thường, để không tạo cảm giác "đã xác minh" cho 1 căn cứ thực ra chưa được đối chiếu với gì cả.
+  if (isValid === false) {
+    return `<span class="legal-ref-badge" style="opacity:.75;cursor:default;border-color:rgba(201,168,76,.4)" title="Văn bản này KHÔNG có trong danh sách trích dẫn (citations) của lần tra này — có thể AI ghi nhầm, tự kiểm tra lại trước khi dùng">⚠️ ${label} (chưa xác minh)</span>`;
+  }
   return `<span onclick="openLegalRefFromRiskAction('${docId.replace(/'/g,"\\'")}','${(articleStr||'').replace(/'/g,"\\'")}', this)" class="legal-ref-badge" title="Bấm xem điều khoản gốc">📖 ${label} 🔍</span>`;
 }
 
@@ -2740,7 +2883,7 @@ function legalRefBadge(docId, articleStr) {
             <div class="risk-title">${r.title_vi}</div>
             <div class="risk-desc">${r.title_en}</div>
             <div class="risk-desc" style="margin-top:3px">${r.desc_vi}</div>
-            ${legalRefBadge(r.legal_doc_id, r.legal_article)}
+            ${legalRefBadge(r.legal_doc_id, r.legal_article, r._refValid)}
           </div>
           <div class="risk-badge risk-badge-${r.level}">${r.level==='high'?'🔴 Cao':r.level==='medium'?'🟡 TB':'🟢 Thấp'}</div>
         </div>
@@ -2763,7 +2906,7 @@ function legalRefBadge(docId, articleStr) {
               <div style="font-size:12px;color:var(--text);margin-bottom:3px">${a.action_vi}</div>
               <div style="font-size:11px;color:var(--text3);font-style:italic">${a.action_en}</div>
               ${a.deadline ? `<div style="font-size:10px;color:var(--amber);margin-top:4px;font-family:'IBM Plex Mono',monospace">⏰ ${a.deadline}</div>` : ''}
-              ${legalRefBadge(a.legal_doc_id, a.legal_article)}
+              ${legalRefBadge(a.legal_doc_id, a.legal_article, a._refValid)}
             </div>
           </div>
         </div>
@@ -4240,7 +4383,7 @@ async function testAndSaveKey() {
 // v4.17 — log version ra console để kiểm tra nhanh (F12 → Console) xem tab đang chạy bản MỚI NHẤT
 // hay vẫn còn bản cache cũ — không cần đoán qua chữ nhỏ ở footer. Nếu số này KHÔNG khớp với số bạn
 // vừa deploy, chắc chắn tab đang dính cache cũ → đóng hẳn tab, mở tab mới (không chỉ F5/Ctrl+Shift+R).
-console.log('%c[Food Law Intelligence] Đang chạy foodlaw.html v4.17 (2026-08)', 'color:#c9a84c;font-weight:bold;font-size:13px');
+console.log('%c[Food Law Intelligence] Đang chạy foodlaw.html v4.24 (2026-08)', 'color:#c9a84c;font-weight:bold;font-size:13px');
 loadState();
 updateStatus();
 renderHistory();
@@ -4269,6 +4412,7 @@ if (!state.apiKey) {
 // Auto-load Drive index if GAS URL is configured
 if (state.gasWebAppUrl) {
   setTimeout(() => loadDriveIndex(false), 100);  // v4.15: giảm từ 1000ms → 100ms, đỡ tạo khoảng hở race-condition
+  setTimeout(() => loadLegalStatus(), 150);       // v4.24 — B3: tải song song, sẵn sàng trước lần tra đầu tiên
 }
 
 /* ================= NIP CHECKER ================= */
