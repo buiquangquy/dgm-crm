@@ -665,7 +665,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.24 (2026-08) · Tận dụng semantic search đúng cách (đoạn AI đọc = đúng Điều đã tìm), tự động xác minh + cảnh báo hết hiệu lực ngay trên citation</span>
+            <span style="font-size:11px;opacity:.6">· v4.24.1 (2026-08) · Hotfix lỗi "usedSemantic is not defined" (chặn mọi tra cứu chế độ AI) — lỗi biến khai báo sai phạm vi khi vá v4.24</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -2314,6 +2314,11 @@ async function confirmIntent() {
     }
     let driveContentCtx = '';
     let driveFilesFound = [];
+    let usedSemantic = false;   // v4.24.1 — HOTFIX: khai báo ở NGOÀI khối if (trước đây khai báo bằng
+                                  // const bên TRONG khối if nhưng lại dùng bên NGOÀI khối đó → luôn báo
+                                  // lỗi "usedSemantic is not defined" ở MỌI lần chạy chế độ AI, không
+                                  // phải ngẫu nhiên (JS block-scope: const/let chỉ tồn tại trong đúng
+                                  // cặp { } khai báo nó).
     if (driveIndexStatus === 'ok' && driveIndex) {
       document.getElementById('statusText').textContent = '🔍 Tìm văn bản trong Drive DB...';
       const searchKeywords = [
@@ -2330,7 +2335,7 @@ async function confirmIntent() {
       const semFiles = sem ? mapSemToFiles(sem) : [];
       // v4.24 — B2: nhớ lại đã dùng semantic hay rơi về keyword, để banner kết quả hiển thị đúng mức độ
       // tin cậy thay vì hiện y hệt nhau cho cả 2 trường hợp (xem review_tra_cuu.md mục B2).
-      const usedSemantic = semFiles.length > 0;
+      usedSemantic = semFiles.length > 0;
       // 2) Không có embeddings / không khớp → quay về keyword cũ
       driveFilesFound = usedSemantic ? semFiles : searchDriveIndex(searchKeywords, intent.folders);
       if (driveFilesFound.length > 0) {
@@ -4383,7 +4388,7 @@ async function testAndSaveKey() {
 // v4.17 — log version ra console để kiểm tra nhanh (F12 → Console) xem tab đang chạy bản MỚI NHẤT
 // hay vẫn còn bản cache cũ — không cần đoán qua chữ nhỏ ở footer. Nếu số này KHÔNG khớp với số bạn
 // vừa deploy, chắc chắn tab đang dính cache cũ → đóng hẳn tab, mở tab mới (không chỉ F5/Ctrl+Shift+R).
-console.log('%c[Food Law Intelligence] Đang chạy foodlaw.html v4.24 (2026-08)', 'color:#c9a84c;font-weight:bold;font-size:13px');
+console.log('%c[Food Law Intelligence] Đang chạy foodlaw.html v4.24.1 (2026-08)', 'color:#c9a84c;font-weight:bold;font-size:13px');
 loadState();
 updateStatus();
 renderHistory();
