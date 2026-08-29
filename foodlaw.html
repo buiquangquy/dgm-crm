@@ -11,6 +11,18 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<!-- v4.25 (2026-08) — 2 việc theo yêu cầu tiếp theo:
+     1) ĐẢM BẢO KHÔNG BỎ SÓT NỘI DUNG khi nhúng embeddings: thêm store toàn văn KHÔNG GIỚI HẠN ký tự
+        riêng ở backend (_dgm_foodlaw_fulltext_uncapped.json — indexer v3.12), tách biệt hoàn toàn khỏi
+        index chính app tải về (không ảnh hưởng tốc độ mở app). Nâng FULLTEXT_CHARS 260K→400K (bản
+        client) và EMB_MAX_CHUNKS 220→900 (bản nhúng, đủ cho văn bản dài nhất gặp thực tế: 876K ký tự).
+        Thêm forceReembedTruncated() ở Embeddings_gas.gs — chạy 1 lần để ép nhúng lại đầy đủ 6 file từng
+        bị cắt trước đó (mtime không đổi nên top-up thường sẽ bỏ qua, tưởng đã xong).
+     2) ĐỐI CHIẾU AI: badge mới "🔍 Đối chiếu AI" trên thanh tiêu đề (mặc định BẬT). Sau câu trả lời
+        chính (dựa Drive DB), tự động hỏi thêm 1 lượt AI theo KIẾN THỨC CHUNG (không đọc DB nội bộ), so
+        sánh 2 câu trả lời — hiện card riêng nếu DB có thể thiếu văn bản, có văn bản đã cũ, hoặc câu hỏi
+        chưa đủ rõ ràng. Lỗi/hết quota ở bước này không chặn kết quả chính. Tốn thêm 1 lượt gọi Gemini
+        mỗi lần tra khi bật — có thể tắt qua badge nếu cần tiết kiệm quota. -->
 <!-- v4.24 (2026-08) — 7 VÁ theo review_tra_cuu.md (đọc lại toàn bộ pipeline tra cứu để tận dụng AI tốt
      hơn + minh bạch nguồn văn bản hơn):
      A1) buildDriveContext(): ƯU TIÊN dùng đúng Điều semantic search đã xác định (f._semLabel qua
@@ -534,6 +546,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
     <span id="modeGuide" class="mode-badge inactive" onclick="setMode('guide')">📘 Hướng dẫn</span>
     <span id="modeEngine" class="mode-badge active" onclick="toggleEngine()" title="Chuyển AI ↔ Database-only. DB-only chạy không cần Gemini.">⚡ AI</span>
     <span id="modeFastness" class="mode-badge inactive" onclick="toggleFastMode()" title="Chính xác: AI hỏi lại nếu câu hỏi mơ hồ, có thể gợi ý 2-4 hướng hiểu để chọn đúng ý trước khi tra — CHẬM hơn 1 bước nhưng ĐÚNG trọng tâm hơn. Nhanh: bỏ qua bước này, tra ngay.">🎯 Chính xác</span>
+    <span id="modeDoubleCheck" class="mode-badge inactive" onclick="toggleDoubleCheck()" title="Sau khi tra xong, hỏi thêm 1 lượt AI theo KIẾN THỨC CHUNG (không đọc Drive DB), rồi đối chiếu 2 câu trả lời — báo cho bạn biết nếu database có thể thiếu/lệch so với kiến thức chung. Tốn thêm 1 lượt gọi Gemini mỗi lần tra — chỉ chạy ở chế độ AI (không chạy ở DB-only).">🔍 Đối chiếu AI</span>
     <button class="btn-icon" title="Bookmark" onclick="toggleBookmarks()">🔖</button>
     <button class="btn-icon" title="Export" onclick="exportReport()">⬇️</button>
     <button class="btn-icon" title="Cài đặt" onclick="openSettings()">⚙️</button>
@@ -665,7 +678,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.24.1 (2026-08) · Hotfix lỗi "usedSemantic is not defined" (chặn mọi tra cứu chế độ AI) — lỗi biến khai báo sai phạm vi khi vá v4.24</span>
+            <span style="font-size:11px;opacity:.6">· v4.25 (2026-08) · Thêm bước Đối chiếu AI (kiến thức chung, độc lập với Drive DB) — badge 🔍 Đối chiếu AI trên thanh tiêu đề</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -984,8 +997,11 @@ let state = {
   activeTab: 'text', currentMode: 'keyword', selectedSKU: null,
   uploadedImage: null, defaultLang: 'bilingual', appLang: 'vi',
   dbOnly: false,    // true = chế độ Database-only (không gọi Gemini)
-  fastMode: false   // v4.16: mặc định "Chính xác" (2 bước, có gợi ý nhiều hướng hiểu câu hỏi khi mơ hồ).
+  fastMode: false,  // v4.16: mặc định "Chính xác" (2 bước, có gợi ý nhiều hướng hiểu câu hỏi khi mơ hồ).
                     // true = bỏ qua bước này, tra ngay bằng heuristic nội bộ (nhanh hơn, kém chính xác hơn).
+  doubleCheckAI: true  // v4.25: mặc định BẬT — sau khi có kết quả từ DB, hỏi thêm 1 lượt AI theo kiến
+                    // thức chung (không đọc Drive DB) để đối chiếu, phát hiện thiếu sót/lệch. Tốn thêm
+                    // 1 lượt gọi Gemini mỗi lần tra — có thể tắt qua badge 🔍 Đối chiếu AI trên header.
 };
 
 // ══════════════════════════════════════════════════════════
@@ -1073,6 +1089,7 @@ function loadState() {
       // chưa từng tự bấm → LUÔN ép về false (Chính xác), bất kể localStorage đang lưu gì.
       state.fastMode = (s.fastModeUserSet === true) ? (s.fastMode === true) : false;
       state.fastModeUserSet = s.fastModeUserSet === true;
+      state.doubleCheckAI = (s.doubleCheckAI === undefined) ? true : (s.doubleCheckAI === true); // v4.25: mặc định true nếu chưa từng lưu
     }
   } catch(e) {}
 }
@@ -1084,7 +1101,8 @@ function saveState() {
     history: state.history.slice(0,50), bookmarks: state.bookmarks.slice(0,30),
     queryCount: state.queryCount, defaultLang: state.defaultLang,
     appLang: state.appLang,
-    dbOnly: state.dbOnly, fastMode: state.fastMode, fastModeUserSet: state.fastModeUserSet
+    dbOnly: state.dbOnly, fastMode: state.fastMode, fastModeUserSet: state.fastModeUserSet,
+    doubleCheckAI: state.doubleCheckAI
   }));
 }
 
@@ -1539,6 +1557,7 @@ function updateStatus() {
   updateFolderCounts();
   applyEngineBadge();
   applyFastnessBadge();
+  applyDoubleCheckBadge(); // v4.25
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1548,6 +1567,7 @@ function toggleEngine() {
   state.dbOnly = !state.dbOnly;
   applyEngineBadge();
   applyFastnessBadge(); // v4.23 — DB-only đổi thì badge Chính xác/Nhanh cũng phải cập nhật theo (xem lý do dưới)
+  applyDoubleCheckBadge(); // v4.25
   saveState();
   const st = document.getElementById('statusText');
   if (st) st.textContent = state.dbOnly
@@ -1598,6 +1618,32 @@ function applyFastnessBadge() {
     b.textContent = '🎯 Chính xác';
     b.classList.add('active'); b.classList.remove('inactive');
     b.style.opacity = ''; b.title = 'Chính xác: AI hỏi lại nếu câu hỏi mơ hồ, có thể gợi ý 2-4 hướng hiểu để chọn đúng ý trước khi tra — CHẬM hơn 1 bước nhưng ĐÚNG trọng tâm hơn. Nhanh: bỏ qua bước này, tra ngay.';
+  }
+}
+
+// v4.25 — bật/tắt bước "Đối chiếu AI": sau khi có câu trả lời dựa trên Drive DB, hỏi thêm 1 lượt AI
+// theo KIẾN THỨC CHUNG (không đọc DB), rồi đối chiếu — báo nếu DB có thể thiếu/lệch. Chỉ có tác dụng ở
+// chế độ AI (không phải DB-only, giống applyFastnessBadge) vì cần có câu trả lời DB-mode để đối chiếu.
+function toggleDoubleCheck() {
+  state.doubleCheckAI = !state.doubleCheckAI;
+  applyDoubleCheckBadge();
+  saveState();
+}
+function applyDoubleCheckBadge() {
+  const b = document.getElementById('modeDoubleCheck');
+  if (!b) return;
+  const overridden = state.dbOnly || !state.apiKey;
+  if (overridden) {
+    b.textContent = '🔍 Đối chiếu AI (tắt · đang DB-only)';
+    b.classList.remove('active'); b.classList.add('inactive');
+    b.style.opacity = '0.45';
+    b.title = 'Không có tác dụng khi đang ở chế độ 📚 DB-only — cần có câu trả lời từ AI trước mới đối chiếu được. Tắt 📚 DB-only để dùng.';
+  } else if (state.doubleCheckAI) {
+    b.textContent = '🔍 Đối chiếu AI'; b.classList.add('active'); b.classList.remove('inactive');
+    b.style.opacity = ''; b.title = 'ĐANG BẬT: sau khi tra xong, hỏi thêm 1 lượt AI theo kiến thức chung (không đọc Drive DB) để đối chiếu — tốn thêm 1 lượt gọi Gemini mỗi lần tra. Bấm để tắt.';
+  } else {
+    b.textContent = '🔍 Đối chiếu AI (tắt)'; b.classList.remove('active'); b.classList.add('inactive');
+    b.style.opacity = ''; b.title = 'ĐANG TẮT — bấm để bật đối chiếu với kiến thức AI chung sau mỗi lần tra (tốn thêm 1 lượt gọi Gemini).';
   }
 }
 
@@ -2435,6 +2481,44 @@ Hãy trả về phân tích toàn diện dạng JSON:
     result._isDriveMode = isDriveMode;
     result._usedSemantic = usedSemantic;   // v4.24 — B2
 
+    // v4.25 — ĐỐI CHIẾU AI: hỏi thêm 1 lượt AI theo KIẾN THỨC CHUNG (không đọc Drive DB), so với câu
+    // trả lời chính (dựa trên DB) để phát hiện thiếu sót/lệch nhau — có thể do DB chưa cập nhật, hoặc
+    // do câu hỏi chưa đủ rõ ràng. Không chặn luồng chính nếu bước này lỗi/hết quota — chỉ bỏ qua card,
+    // vẫn hiển thị đầy đủ kết quả chính như bình thường.
+    if (state.doubleCheckAI && !state.dbOnly && state.apiKey) {
+      try {
+        document.getElementById('statusText').textContent = '🔍 Đang đối chiếu với kiến thức AI chung...';
+        const dbCitSummary = (result.citations || [])
+          .map(c => `${c.doc_id} — ${c.article || ''} (${c.doc_name_vi || ''})`).join('; ') || '(không có trích dẫn nào)';
+        const dcPrompt = `Bạn là chuyên gia pháp lý an toàn thực phẩm Việt Nam. Đây là bước ĐỐI CHIẾU ĐỘC LẬP: trả lời câu hỏi dưới đây HOÀN TOÀN dựa vào kiến thức chung của bạn — KHÔNG được giả định có quyền truy cập bất kỳ cơ sở dữ liệu nội bộ nào.
+
+Câu hỏi: ${intent.intent_vi}
+
+Sau khi trả lời, ĐỐI CHIẾU với danh sách văn bản mà 1 hệ thống nội bộ khác (dựa trên cơ sở dữ liệu công ty) đã trích dẫn cho câu hỏi này:
+${dbCitSummary}
+
+Nhiệm vụ:
+1) Trả lời ngắn gọn theo kiến thức chung của bạn (không cần biết DB nội bộ có gì).
+2) Liệt kê văn bản/Điều khoản mà BẠN cho là liên quan, theo kiến thức chung.
+3) So sánh 2 danh sách: hệ thống nội bộ có THIẾU văn bản nào bạn biết là liên quan không? Có văn bản nào hệ thống nội bộ trích mà có vẻ ĐÃ CŨ/hết hiệu lực theo kiến thức bạn không?
+4) Nếu bản thân câu hỏi CHƯA đủ rõ ràng (có thể hiểu theo nhiều hướng khác nhau), nêu rõ — đây có thể là lý do 2 câu trả lời khác nhau, không hẳn do DB thiếu.
+⚠️ Nếu không chắc chắn điều gì, hãy nói rõ "không chắc" thay vì đoán liều.
+
+Trả về JSON:
+{
+  "general_answer_vi": "Tóm tắt ngắn gọn (2-3 câu) theo kiến thức chung",
+  "general_citations": ["NĐ X/20XX", "..."],
+  "gaps": [{"type":"missing_in_db|possibly_outdated_in_db|ambiguous_question|other", "note_vi":"Mô tả ngắn gọn điểm khác biệt/thiếu sót"}],
+  "agrees_with_db": true
+}`;
+        const dcRaw = await callGemini(dcPrompt);
+        const dc = safeParseJSON(dcRaw);
+        if (dc) result._doubleCheck = dc;
+      } catch (e) {
+        console.warn('[DGM double-check] lỗi (bỏ qua, không chặn kết quả chính): ' + e.message);
+      }
+    }
+
     renderResults(result, intent);
     addToHistory(intent.intent_vi, result);
     state.queryCount++;
@@ -2846,6 +2930,35 @@ function renderResults(result, intent) {
     </div>`;
   }
   grid.appendChild(aiCard);
+
+  // v4.25 — Card đối chiếu AI (chỉ hiện nếu bước đối chiếu đã chạy thành công — xem confirmIntent)
+  if (result._doubleCheck) {
+    const dc = result._doubleCheck;
+    const dcCard = document.createElement('div');
+    dcCard.className = 'result-card fade-in';
+    dcCard.style.animationDelay = '.12s';
+    const gapsHtml = (dc.gaps || []).length
+      ? '<div style="margin-top:8px">' + dc.gaps.map(g => {
+          const typeLabel = g.type === 'missing_in_db' ? '🔴 DB có thể THIẾU'
+            : g.type === 'possibly_outdated_in_db' ? '🟡 DB có thể ĐÃ CŨ'
+            : g.type === 'ambiguous_question' ? '💬 Câu hỏi chưa đủ rõ'
+            : '⚪ Khác';
+          return '<div style="font-size:11px;padding:6px 10px;border-radius:6px;margin-bottom:6px;background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2)"><b>' + typeLabel + '</b><br>' + _escHtml(g.note_vi || '') + '</div>';
+        }).join('') + '</div>'
+      : '<div style="font-size:11px;color:var(--green);margin-top:6px">✅ Không phát hiện khác biệt đáng chú ý với kiến thức chung.</div>';
+    dcCard.innerHTML = `
+      <div class="card-header">
+        <div class="card-title">🔍 Đối chiếu kiến thức AI chung</div>
+        <span style="font-size:10px;color:var(--text3);border:1px solid var(--border2);padding:2px 8px;border-radius:10px">độc lập · không đọc Drive DB</span>
+      </div>
+      <div class="card-body">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:8px;line-height:1.5">Câu trả lời AI dựa trên kiến thức chung, KHÔNG dùng dữ liệu công ty — chỉ để phát hiện thiếu sót, không thay thế câu trả lời chính ở trên. Có thể tắt bước này ở badge 🔍 Đối chiếu AI trên thanh tiêu đề.</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.5">${_escHtml(dc.general_answer_vi || '')}</div>
+        ${(dc.general_citations||[]).length ? '<div style="font-size:10px;color:var(--text3);margin-top:6px">Văn bản AI nhớ được: ' + dc.general_citations.map(c=>_escHtml(c)).join(', ') + '</div>' : ''}
+        ${gapsHtml}
+      </div>`;
+    grid.appendChild(dcCard);
+  }
 
   // v4.18 — mở panel trích dẫn từ 1 dòng Risk/Action (chỉ có doc_id dạng chuỗi, không có index sẵn như
 // citation pill) — tìm đúng vị trí trong window._currentResult.citations rồi tái dùng openArticleDetail.
@@ -4388,7 +4501,7 @@ async function testAndSaveKey() {
 // v4.17 — log version ra console để kiểm tra nhanh (F12 → Console) xem tab đang chạy bản MỚI NHẤT
 // hay vẫn còn bản cache cũ — không cần đoán qua chữ nhỏ ở footer. Nếu số này KHÔNG khớp với số bạn
 // vừa deploy, chắc chắn tab đang dính cache cũ → đóng hẳn tab, mở tab mới (không chỉ F5/Ctrl+Shift+R).
-console.log('%c[Food Law Intelligence] Đang chạy foodlaw.html v4.24.1 (2026-08)', 'color:#c9a84c;font-weight:bold;font-size:13px');
+console.log('%c[Food Law Intelligence] Đang chạy foodlaw.html v4.25 (2026-08)', 'color:#c9a84c;font-weight:bold;font-size:13px');
 loadState();
 updateStatus();
 renderHistory();
