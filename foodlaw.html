@@ -11,6 +11,17 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<!-- v4.27 (2026-08) — SO SÁNH VỚI BẢN ĐẦU (theo yêu cầu người dùng) phát hiện 1 hồi quy quan trọng:
+     bản đầu (buildFolderContext viết cứng) từng ghi "(hết HLực)" ngay cạnh tên văn bản trong context —
+     cho AI thấy NGAY tín hiệu tránh dùng làm căn cứ chính. Khi vá lỗi "danh sách viết cứng dễ lỗi thời"
+     (A4, v4.24), nhánh Drive-thật thay thế nó chỉ liệt kê TÊN FILE trần, VÔ TÌNH làm MẤT tín hiệu đó —
+     hậu quả: AI trích dẫn NĐ 111/2021 (đã thay thế) thay vì NĐ 37/2026 (hiện hành) dù semantic search
+     đã tìm đúng cả 2. Vá: gắn lại nhãn (ĐÃ THAY THẾ)/(HẾT HIỆU LỰC)/(cần rà lại) vào TỪNG file trong
+     context thật — lấy từ 20_Legal_Register qua legalStatusFor() (đã có sẵn từ B3), không phải viết
+     cứng — nên luôn đúng theo dữ liệu thật. Thêm cả câu chỉ dẫn ưu tiên rõ ràng ("luôn ưu tiên văn bản
+     MỚI NHẤT còn hiệu lực") — điều mà CẢ 2 bản (đầu lẫn các bản sau) đều chưa từng có, chỉ có nhãn thôi
+     chưa đủ, cần nói thẳng AI phải xử lý nhãn đó thế nào. Cũng đổi loadLegalStatus() từ gọi song song
+     sang ĐỢI xong trước khi build context, để có nhãn ngay từ lần tra đầu tiên. -->
 <!-- v4.26 (2026-08) — 3 lỗi phát hiện khi test thật NĐ 37/2026 tới cùng:
      1) findArticleByLabel() + findArticleInDrive(): văn bản .docx VN thường có 1 đoạn MỤC LỤC ở đầu
         file liệt kê "Điều N. Tên điều" trên 1 dòng — trước đây 2 hàm này lấy NGAY vị trí khớp ĐẦU
@@ -691,7 +702,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.26 (2026-08) · Sửa: trích sai Điều do bắt nhầm dòng mục lục, model AI lỗi thời (404), localStorage tràn bộ nhớ khi lưu lịch sử</span>
+            <span style="font-size:11px;opacity:.6">· v4.27 (2026-08) · Phục hồi + nâng cấp tín hiệu "hết hiệu lực" trong context AI (đã mất khi vá A4) — AI giờ ưu tiên đúng luật mới nhất thay vì luật cũ đã bị thay thế</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -2367,8 +2378,8 @@ async function confirmIntent() {
 
   try {
     const intent = state.currentIntent;
+    await loadLegalStatus(); // v4.27 — ĐỢI xong trước khi build context, để nhãn (ĐÃ THAY THẾ)/(HẾT HIỆU LỰC) có mặt ngay từ lần tra ĐẦU TIÊN, không phải đợi lần 2 mới có (trước đây gọi song song, không chờ)
     const folderCtx = buildFolderContext(intent.folders);
-    loadLegalStatus(); // v4.24 — B3: tải song song, không cần chờ — nếu chưa xong kịp lúc render thì lần tra sau sẽ có
 
     // ── REAL DRIVE CONTENT INJECTION ────────────────────────────────────
     // v4.15 — SỬA LỖI QUAN TRỌNG: nếu Drive Index đang "loading" (mới vào trang, index tự tải sau 1s)
@@ -2772,16 +2783,37 @@ function buildFolderContext(folders) {
   // 1. Try to use real Drive index
   if (driveIndexStatus === 'ok' && driveIndex) {
     let ctx = 'Cơ sở dữ liệu pháp luật — Kết nối trực tiếp Google Drive:\n';
+    // v4.27 — PHỤC HỒI + NÂNG CẤP: bản đầu (viết cứng) từng ghi rõ "(hết HLực)" ngay cạnh tên văn bản
+    // trong context — cho AI thấy NGAY tín hiệu tránh dùng làm căn cứ chính. Khi sửa lỗi "danh sách
+    // viết cứng dễ lỗi thời" (A4, v4.24), nhánh Drive-thật này chỉ liệt kê TÊN FILE trần, vô tình làm
+    // MẤT tín hiệu quý giá đó — dù dữ liệu hết-hiệu-lực (20_Legal_Register, qua legalStatusFor — B3)
+    // đã có sẵn, chỉ chưa nối vào đúng chỗ AI thực sự đọc để quyết định trích dẫn. Giờ gắn lại nhãn,
+    // lấy từ dữ liệu THẬT thay vì viết cứng, nên luôn cập nhật đúng theo 20_Legal_Register.
     Object.entries(driveIndex.folders).forEach(([key, folder]) => {
       if (folder.file_count > 0) {
         const files = (driveIndex.files || [])
           .filter(f => f.folder === key)
-          .map(f => f.name.replace(/\.[^.]+$/, '')) // strip extension
+          .map(f => {
+            const nameShort = f.name.replace(/\.[^.]+$/, ''); // strip extension
+            const docIdGuess = [f.doc_type, f.doc_number, f.doc_year].filter(Boolean).join(' ');
+            const st = legalStatusFor(docIdGuess) || legalStatusFor(nameShort);
+            const tag = (st && (st.stale || st.status === 'replaced' || st.status === 'expired'))
+              ? (st.status === 'replaced' ? ' (ĐÃ THAY THẾ)' : st.status === 'expired' ? ' (HẾT HIỆU LỰC)' : ' (cần rà lại)')
+              : '';
+            return nameShort + tag;
+          })
           .slice(0, 10)
           .join(', ');
         ctx += `Folder ${key} (${folder.name_vi}): ${folder.file_count} files — ${files}\n`;
       }
     });
+    // v4.27 — chỉ dẫn ưu tiên rõ ràng: cả bản đầu lẫn các bản sau đều CHƯA từng có câu này — chỉ có
+    // nhãn "(hết HLực)" thôi không đủ, cần NÓI THẲNG cách AI phải xử lý khi thấy nhãn đó.
+    ctx += '\n⚠️ QUAN TRỌNG: văn bản đánh dấu (ĐÃ THAY THẾ)/(HẾT HIỆU LỰC)/(cần rà lại) ở trên KHÔNG còn '
+      + 'là căn cứ pháp lý hiện hành — CHỈ dùng để biết bối cảnh/lịch sử nếu cần, TUYỆT ĐỐI KHÔNG dùng '
+      + 'làm trích dẫn CHÍNH cho câu trả lời. Khi nhiều văn bản cùng chủ đề, luôn ƯU TIÊN văn bản MỚI '
+      + 'NHẤT còn hiệu lực (không có nhãn cảnh báo) làm căn cứ chính; văn bản cũ chỉ nêu thêm nếu cần '
+      + 'giải thích quá trình thay đổi.';
     ctx += '\nLưu ý: AI sẽ được cung cấp nội dung thực tế từ các file phù hợp nhất.';
     return ctx;
   }
@@ -4563,7 +4595,7 @@ async function testAndSaveKey() {
 // v4.17 — log version ra console để kiểm tra nhanh (F12 → Console) xem tab đang chạy bản MỚI NHẤT
 // hay vẫn còn bản cache cũ — không cần đoán qua chữ nhỏ ở footer. Nếu số này KHÔNG khớp với số bạn
 // vừa deploy, chắc chắn tab đang dính cache cũ → đóng hẳn tab, mở tab mới (không chỉ F5/Ctrl+Shift+R).
-console.log('%c[Food Law Intelligence] Đang chạy foodlaw.html v4.26 (2026-08)', 'color:#c9a84c;font-weight:bold;font-size:13px');
+console.log('%c[Food Law Intelligence] Đang chạy foodlaw.html v4.27 (2026-08)', 'color:#c9a84c;font-weight:bold;font-size:13px');
 loadState();
 updateStatus();
 renderHistory();
