@@ -11,6 +11,23 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<!-- v4.28 (2026-08) — TEST LẠI câu hỏi gốc sau v4.27: panel Trích dẫn đã đúng (37/2026 có badge, 111/2021
+     & 43/2017 bị gắn "đã thay thế"), NHƯNG "risks"/"actions" vẫn trích 111/2021 & 43/2017 làm căn cứ
+     chính, và "Phân tích AI" trống trơn → hồi quy CHƯA hết, chỉ hết ở panel hiển thị. 2 nguyên nhân thật:
+     1) B4: v4.27 ghi "gắn nhãn vào TỪNG file trong context thật" nhưng thực ra chỉ gắn vào folderCtx
+        (tóm tắt TÊN file theo folder, dùng Object.entries(driveIndex.folders)...) — KHÔNG gắn vào
+        buildDriveContext() (nơi AI đọc NỘI DUNG TRÍCH DẪN thật của 4 file semantic search chọn ra, chỗ
+        AI thực sự lấy content_vi/risks/actions). staleBadge trên panel citation là FE tự tra SAU khi AI
+        trả lời (legalStatusFor(cit.doc_id)), không phải AI biết trước — nên panel đúng mà AI vẫn sai.
+        Vá: gọi legalStatusFor() ngay trong buildDriveContext(), gắn cảnh báo cạnh TỪNG file, và XẾP file
+        còn hiệu lực lên trước (LLM thiên vị nội dung đọc trước).
+     2) B5: prompt có câu "Giới hạn mỗi trường text tối đa 300 ký tự" áp dụng CHUNG cho mọi trường — mâu
+        thuẫn trực tiếp với "analysis_vi: 3-4 đoạn" và "content_vi: trích dẫn CHÍNH XÁC" (thường > 300 ký
+        tự cho 1 Khoản đầy đủ). Nghi đây là lý do panel Phân tích AI trống — model né vi phạm giới hạn
+        bằng cách để trống field khó nhét vừa 300 ký tự nhất. Vá: bỏ giới hạn CHUNG, thay bằng giới hạn
+        RIÊNG theo từng loại trường (content/analysis dài hơn risks/actions), nói rõ "cắt bớt SỐ LƯỢNG
+        mục thay vì để trống analysis". Nhân tiện tăng maxOutputTokens 8192→16000 (model hỗ trợ tới
+        65.536) để có thêm biên an toàn — dù nguyên nhân chính vẫn là mâu thuẫn prompt ở trên. -->
 <!-- v4.27 (2026-08) — SO SÁNH VỚI BẢN ĐẦU (theo yêu cầu người dùng) phát hiện 1 hồi quy quan trọng:
      bản đầu (buildFolderContext viết cứng) từng ghi "(hết HLực)" ngay cạnh tên văn bản trong context —
      cho AI thấy NGAY tín hiệu tránh dùng làm căn cứ chính. Khi vá lỗi "danh sách viết cứng dễ lỗi thời"
@@ -702,7 +719,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.27 (2026-08) · Phục hồi + nâng cấp tín hiệu "hết hiệu lực" trong context AI (đã mất khi vá A4) — AI giờ ưu tiên đúng luật mới nhất thay vì luật cũ đã bị thay thế</span>
+            <span style="font-size:11px;opacity:.6">· v4.28 (2026-08) · Gắn nhãn hết-hiệu-lực NGAY vào nội dung AI đọc (không chỉ ở tóm tắt folder) + xếp luật còn hiệu lực lên trước + gỡ giới hạn 300 ký tự mâu thuẫn từng làm Phân tích AI bị trống — AI giờ ưu tiên đúng luật mới nhất thay vì luật cũ đã bị thay thế</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -1828,7 +1845,11 @@ async function callGemini(prompt, systemPrompt='', imageData=null, preferModel='
       }
       parts.push({ text: systemPrompt ? systemPrompt + '\n\n' + prompt : prompt });
 
-      const genConfig = { temperature: 0.2, topP: 0.8, maxOutputTokens: 8192 };
+      // v4.28 — 8192 quá sát cho 1 lượt JSON gồm citations (trích nguyên văn) + analysis_vi/en (3-4 đoạn)
+      // + risks + actions cùng lúc → nghi là lý do "Phân tích AI" hay trống (model tự cắt bớt field để
+      // không vượt hạn mức). gemini-3.6-flash/3.5-flash-lite hỗ trợ tới 65.536 token output — 16000 vẫn
+      // rất an toàn so với hạn mức thật, chỉ tăng nhẹ so với 8192 cũ để đỡ tốn quota/chi phí không cần thiết.
+      const genConfig = { temperature: 0.2, topP: 0.8, maxOutputTokens: 16000 };
       if (!imageData) { genConfig.responseMimeType = 'application/json'; }
 
       const body = { contents: [{ role: 'user', parts }], generationConfig: genConfig };
@@ -2441,7 +2462,14 @@ async function confirmIntent() {
 
     const resPrompt = `Bạn là chuyên gia tư vấn pháp lý an toàn thực phẩm Việt Nam. Hỗ trợ các doanh nghiệp sản xuất, nhập khẩu và phân phối thực phẩm tuân thủ quy định pháp luật. Phân tích khách quan, không gắn với bất kỳ thương hiệu hay công ty cụ thể nào.
 
-⚠️ QUAN TRỌNG: Trả về JSON hợp lệ và ĐẦY ĐỦ. Giới hạn mỗi trường text tối đa 300 ký tự. KHÔNG được cắt giữa chừng.
+⚠️ QUAN TRỌNG: Trả về JSON hợp lệ và ĐẦY ĐỦ — KHÔNG được cắt giữa chừng. Giới hạn độ dài áp dụng RIÊNG theo
+từng loại trường (không áp dụng chung 1 mức cho mọi trường — làm vậy sẽ ép các trường cần nội dung dài
+như "analysis_vi"/"analysis_en" phải để TRỐNG để né giới hạn, đây là lỗi đã từng xảy ra):
+- "content_vi"/"content_en" (trích dẫn điều khoản): tối đa ~1500 ký tự, đủ trọn Khoản/Điều đang trích, không cắt giữa câu.
+- "analysis_vi"/"analysis_en" (phân tích tổng hợp): BẮT BUỘC có nội dung thật, 3-4 đoạn, mỗi đoạn tối đa ~400 ký tự (tổng tối đa ~1600 ký tự/trường) — TUYỆT ĐỐI KHÔNG được để trống hoặc chỉ 1 câu.
+- "relevance", "desc_vi"/"desc_en" (trong risks), "action_vi"/"action_en": tối đa ~250 ký tự mỗi trường, súc tích.
+- "summary_vi"/"summary_en": tối đa ~150 ký tự, đúng 1 câu.
+Nếu cần rút gọn để vừa tổng dung lượng phản hồi, hãy CẮT BỚT SỐ LƯỢNG citations/risks/actions (giữ những mục quan trọng nhất) thay vì để trống "analysis_vi"/"analysis_en".
 ${langInstruction}
 
 Câu hỏi: ${intent.intent_vi}
@@ -2695,13 +2723,31 @@ function buildDriveContext(files, terms) {
   if (!files || files.length === 0) return '';
   const tNorm = (terms || []).map(t => stripDia(String(t))).filter(Boolean);
 
-  let ctx = '\n\n═══ NỘI DUNG THỰC TẾ TỪ DRIVE DATABASE ═══\n';
-  ctx += `(${files.length} văn bản liên quan được tìm thấy trong cơ sở dữ liệu pháp luật)\n\n`;
+  // v4.28 — B4 FIX: nhãn (ĐÃ THAY THẾ)/(HẾT HIỆU LỰC) trước đây CHỈ được gắn ở folderCtx (danh sách tên
+  // file gọn cho cả kho) — KHÔNG hề gắn vào đúng chỗ AI đọc nội dung thật (đoạn trích full-text dưới
+  // đây). Panel citation hiển thị đúng badge "đã thay thế" là do FE tự tra cứu legalStatusFor() SAU khi
+  // AI đã trả lời — AI không hề biết điều đó lúc viết risks/actions/citations, nên vẫn chọn văn bản cũ
+  // làm căn cứ chính. Giờ: (1) tra legalStatusFor() ngay tại đây — cùng chỗ AI đọc nội dung thật;
+  // (2) xếp văn bản CÒN HIỆU LỰC lên trước (LLM có xu hướng ưu tiên nội dung đọc trước) để giảm rủi ro.
+  const filesRanked = files.map(f => {
+    const docIdGuess = [f.doc_type, f.doc_number, f.doc_year].filter(Boolean).join(' ');
+    const nameShort = String(f.name || '').replace(/\.[^.]+$/, '');
+    const lst = legalStatusFor(docIdGuess) || legalStatusFor(nameShort);
+    const stale = !!(lst && (lst.stale || lst.status === 'replaced' || lst.status === 'expired'));
+    return { f, stale, lst };
+  }).sort((a, b) => (a.stale === b.stale) ? 0 : (a.stale ? 1 : -1));
 
-  files.forEach((f, i) => {
+  let ctx = '\n\n═══ NỘI DUNG THỰC TẾ TỪ DRIVE DATABASE ═══\n';
+  ctx += `(${files.length} văn bản liên quan được tìm thấy trong cơ sở dữ liệu pháp luật — văn bản CÒN HIỆU LỰC được xếp trước)\n\n`;
+
+  filesRanked.forEach(({ f, stale, lst }, i) => {
     ctx += `── [${i+1}] ${f.name} [Folder ${f.folder}: ${f.folder_name_vi}]\n`;
     if (f.doc_type && f.doc_number) {
       ctx += `    Loại: ${f.doc_type} ${f.doc_number}${f.doc_year ? '/' + f.doc_year : ''}\n`;
+    }
+    if (stale) {
+      const why = lst.status === 'replaced' ? 'ĐÃ BỊ THAY THẾ' : lst.status === 'expired' ? 'ĐÃ HẾT HIỆU LỰC' : 'CẦN RÀ SOÁT LẠI';
+      ctx += `    🔴 CẢNH BÁO (theo 20_Legal_Register): văn bản này ${why} — TUYỆT ĐỐI KHÔNG dùng làm căn cứ chính cho "citations" đầu danh sách, "risks" hay "actions". Chỉ nêu để giải thích bối cảnh/lịch sử nếu cần, và phải ghi rõ trong nội dung là văn bản cũ.\n`;
     }
     if (f.keywords && f.keywords.length > 0) {
       ctx += `    Keywords: ${f.keywords.slice(0,10).join(', ')}\n`;
@@ -4595,7 +4641,7 @@ async function testAndSaveKey() {
 // v4.17 — log version ra console để kiểm tra nhanh (F12 → Console) xem tab đang chạy bản MỚI NHẤT
 // hay vẫn còn bản cache cũ — không cần đoán qua chữ nhỏ ở footer. Nếu số này KHÔNG khớp với số bạn
 // vừa deploy, chắc chắn tab đang dính cache cũ → đóng hẳn tab, mở tab mới (không chỉ F5/Ctrl+Shift+R).
-console.log('%c[Food Law Intelligence] Đang chạy foodlaw.html v4.27 (2026-08)', 'color:#c9a84c;font-weight:bold;font-size:13px');
+console.log('%c[Food Law Intelligence] Đang chạy foodlaw.html v4.28 (2026-08)', 'color:#c9a84c;font-weight:bold;font-size:13px');
 loadState();
 updateStatus();
 renderHistory();
