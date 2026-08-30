@@ -11,6 +11,19 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<!-- v4.26 (2026-08) — 3 lỗi phát hiện khi test thật NĐ 37/2026 tới cùng:
+     1) findArticleByLabel() + findArticleInDrive(): văn bản .docx VN thường có 1 đoạn MỤC LỤC ở đầu
+        file liệt kê "Điều N. Tên điều" trên 1 dòng — trước đây 2 hàm này lấy NGAY vị trí khớp ĐẦU
+        TIÊN (thường chính là dòng mục lục ngắn), khiến bấm vào citation hiện SAI nội dung dù semantic
+        search đã tìm đúng file/Điều. Giờ quét TẤT CẢ vị trí khớp, chọn đoạn DÀI NHẤT (nội dung thật
+        luôn dài hơn hẳn 1 dòng mục lục). Ảnh hưởng cả badge tự động xác minh (B1, v4.24).
+     2) GEN_MODELS/LITE_MODELS: gemini-3-flash/gemini-3.1-flash-lite đã lỗi thời (404) — cập nhật
+        gemini-3.6-flash/gemini-3.5-flash-lite (GA từ 7-8/2026), giữ gemini-flash-latest làm alias dự
+        phòng cuối cùng.
+     3) addToHistory(): result._driveFilesFound (chế độ khớp từ khoá) chứa nguyên văn tới 400.000 ký
+        tự/file × 6 file/lượt — lưu thẳng vào localStorage (~5-10MB/domain) gây QuotaExceededError sau
+        vài chục lượt tra, làm NGƯNG lưu mọi trạng thái khác (kể cả API key). Giờ chỉ giữ tên/loại văn
+        bản khi lưu lịch sử, bỏ text/summary nặng; thêm cơ chế tự thu gọn lịch sử nếu vẫn tràn. -->
 <!-- v4.25 (2026-08) — 2 việc theo yêu cầu tiếp theo:
      1) ĐẢM BẢO KHÔNG BỎ SÓT NỘI DUNG khi nhúng embeddings: thêm store toàn văn KHÔNG GIỚI HẠN ký tự
         riêng ở backend (_dgm_foodlaw_fulltext_uncapped.json — indexer v3.12), tách biệt hoàn toàn khỏi
@@ -678,7 +691,7 @@ header{height:72px;background:rgba(13,27,42,0.95);border-bottom:1px solid var(--
         <div id="nipContent" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
             <div style="font-weight:700;font-size:15px">🔐 NIP Compliance Checker</div>
-            <span style="font-size:11px;opacity:.6">· v4.25 (2026-08) · Thêm bước Đối chiếu AI (kiến thức chung, độc lập với Drive DB) — badge 🔍 Đối chiếu AI trên thanh tiêu đề</span>
+            <span style="font-size:11px;opacity:.6">· v4.26 (2026-08) · Sửa: trích sai Điều do bắt nhầm dòng mục lục, model AI lỗi thời (404), localStorage tràn bộ nhớ khi lưu lịch sử</span>
             <button onclick="nipLock()" style="margin-left:auto;font-size:11px;padding:5px 10px;border:1px solid var(--border,#2a3f55);border-radius:6px;background:transparent;color:inherit;cursor:pointer">🔒 Khoá lại</button>
           </div>
           <div class="nip-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
@@ -1013,8 +1026,11 @@ let state = {
 // GEN_MODELS  = chuỗi model trả lời chính (thử lần lượt tới khi có model sống).
 // LITE_MODELS = model nhẹ cho parse ý định (bể quota rộng hơn).
 // Khi Google đổi model: chỉ cần sửa 2 mảng dưới đây, KHÔNG phải lùng khắp file.
-const GEN_MODELS  = ['gemini-3-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
-const LITE_MODELS = ['gemini-3.1-flash-lite', 'gemini-3-flash', 'gemini-flash-latest'];
+// v4.26 — cập nhật gemini-3-flash/gemini-3.1-flash-lite (đã lỗi thời, trả 404) → gemini-3.6-flash/
+// gemini-3.5-flash-lite (bản GA mới nhất, phát hành 7-8/2026). Giữ 'gemini-flash-latest' làm alias dự
+// phòng cuối — theo tài liệu Google, đây là bí danh luôn trỏ tới model ổn định mới nhất.
+const GEN_MODELS  = ['gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-flash-latest'];
+const LITE_MODELS = ['gemini-3.5-flash-lite', 'gemini-3.6-flash', 'gemini-flash-latest'];
 
 // v4.13 — nhiều API key dự phòng: state.apiKey có thể chứa NHIỀU key (mỗi dòng 1 key, hoặc cách nhau
 // bằng dấu phẩy). getApiKeys() tách thành mảng, lọc trùng/rỗng. Giữ nguyên biến state.apiKey (string)
@@ -1454,7 +1470,17 @@ function getArticleSegments(text){
 function findArticleByLabel(text,label){
   if(!text||!label) return null;
   const want=stripDia(label).replace(/\s+/g,' ').toLowerCase();
-  for(const s of getArticleSegments(text)){ if(stripDia(s.label).toLowerCase()===want) return s.body.slice(0,4000); }
+  // v4.26 — HOTFIX: văn bản pháp luật VN thường có 1 đoạn MỤC LỤC ở đầu file, liệt kê "Điều N. Tên điều"
+  // trên 1 dòng riêng — dòng mục lục này cũng khớp điều kiện "đứng đầu dòng" y hệt nội dung thật, nên
+  // trước đây hàm trả về NGAY đoạn khớp ĐẦU TIÊN (thường chính là dòng mục lục ngắn, không phải nội
+  // dung thật nằm sâu hơn) — gây hiện tượng "trích sai Điều" (bấm vào thấy nội dung không liên quan)
+  // dù semantic search đã tìm đúng ngay từ đầu. Sửa: gom TẤT CẢ đoạn khớp cùng nhãn, chọn đoạn DÀI NHẤT
+  // — nội dung Điều thật luôn dài hơn hẳn 1 dòng mục lục (thường chỉ vài chục ký tự).
+  const matches = getArticleSegments(text).filter(s => stripDia(s.label).toLowerCase()===want);
+  if (matches.length) {
+    matches.sort((a,b) => b.body.length - a.body.length);
+    return matches[0].body.slice(0,4000);
+  }
   const i=stripDia(text).toLowerCase().indexOf(want);
   if(i>=0){ const tail=text.slice(i+6); const nx=tail.search(/\n\s*Điều\s+\d+/i); const end=nx>=0?i+6+nx:Math.min(text.length,i+1800); return text.slice(i,end).trim().slice(0,4000); }
   return null;
@@ -3151,17 +3177,28 @@ function findArticleInDrive(docId, articleStr) {
 
   let excerpt = '';
   for (const kw of searchSeq) {
-    const idx = summaryLower.indexOf(kw.toLowerCase());
-    if (idx !== -1) {
+    const kwLower = kw.toLowerCase();
+    // v4.26 — HOTFIX: cùng lỗi như findArticleByLabel — văn bản có thể có dòng MỤC LỤC liệt kê "Điều N"
+    // xuất hiện TRƯỚC nội dung thật, khiến indexOf() (chỉ bắt vị trí khớp ĐẦU TIÊN) trích nhầm dòng
+    // mục lục ngắn thay vì nội dung thật nằm sâu hơn. Đây chính là hàm quyết định badge ✅/⚠️/📭 tự
+    // động (B1) — nếu trích nhầm mục lục, badge có thể báo "đã xác minh" cho nội dung SAI. Giờ quét
+    // TẤT CẢ vị trí khớp của từ khoá, chọn vị trí cho ra đoạn trích DÀI NHẤT (nội dung thật luôn dài
+    // hơn hẳn 1 dòng mục lục ngắn).
+    let bestExcerpt = '', bestLen = 0, searchFrom = 0, foundAny = false;
+    while (true) {
+      const idx = summaryLower.indexOf(kwLower, searchFrom);
+      if (idx === -1) break;
+      foundAny = true;
       const start = Math.max(0, idx - 30);
-      // kéo dài tới ranh giới "Điều" kế tiếp để lấy TRỌN điều/khoản (giới hạn 4000 ký tự)
       let end = idx + 400;
       const nextDieu = summary.slice(idx + 6).search(/\n\s*Điều\s+\d+/i);
       if (nextDieu >= 0) end = idx + 6 + nextDieu;
       end = Math.min(summary.length, Math.min(Math.max(end, idx + 400), idx + 4000));
-      excerpt = summary.slice(start, end);
-      break;
+      const candidate = summary.slice(start, end);
+      if (candidate.length > bestLen) { bestLen = candidate.length; bestExcerpt = candidate; }
+      searchFrom = idx + kwLower.length;
     }
+    if (foundAny) { excerpt = bestExcerpt; break; }
   }
 
   if (!excerpt) excerpt = summary.slice(0, 900);
@@ -4304,8 +4341,33 @@ function exportChecklist() {
 function addToHistory(query, result) {
   const risks = result.risks || [];
   const maxRisk = risks.some(r=>r.level==='high') ? 'red' : risks.some(r=>r.level==='medium') ? 'amber' : 'green';
-  state.history.unshift({ query, time: new Date().toLocaleTimeString('vi-VN'), risk: maxRisk, result });
-  renderHistory();
+  // v4.26 — HOTFIX QuotaExceededError: result._driveFilesFound (chế độ khớp từ khoá) chứa NGUYÊN VẸN
+  // object file gốc từ driveIndex, gồm cả f.text tới 400.000 ký tự/file × 6 file/lượt tra. Lưu thẳng
+  // vào localStorage (giới hạn ~5-10MB/domain) chỉ sau vài chục lượt là tràn, làm saveState() ném lỗi
+  // và ngưng lưu MỌI trạng thái khác (kể cả API key, cài đặt...). Giờ chỉ giữ lại tên/folder/loại văn
+  // bản để hiện được banner khi mở lại lịch sử — bỏ hẳn text/summary nặng, không cần cho việc replay.
+  const lightResult = Object.assign({}, result);
+  if (Array.isArray(lightResult._driveFilesFound)) {
+    lightResult._driveFilesFound = lightResult._driveFilesFound.map(f => ({
+      name: f.name, folder: f.folder, folder_name_vi: f.folder_name_vi,
+      doc_type: f.doc_type, doc_number: f.doc_number, doc_year: f.doc_year, url: f.url
+    }));
+  }
+  state.history.unshift({ query, time: new Date().toLocaleTimeString('vi-VN'), risk: maxRisk, result: lightResult });
+  state.history = state.history.slice(0, 50); // v4.26 — cắt ngay tại nguồn, không đợi tới saveState() mới cắt
+  try { renderHistory(); } catch (e) {}
+  try { saveState(); }
+  catch (e) {
+    // v4.26 — vẫn tràn dù đã gọn nhẹ hơn (vd bookmark quá nhiều/API key dài) → GIẢM DẦN lịch sử rồi thử
+    // lại, thay vì bỏ cuộc hoàn toàn khiến API key/cài đặt không được lưu.
+    console.warn('[DGM history] localStorage đầy, đang thu gọn lịch sử rồi lưu lại...');
+    while (state.history.length > 5) {
+      state.history = state.history.slice(0, Math.max(5, Math.floor(state.history.length / 2)));
+      try { saveState(); return; } catch (e2) { /* thử tiếp với ít hơn */ }
+    }
+    state.history = [];
+    try { saveState(); } catch (e3) { console.warn('[DGM history] vẫn lỗi dù đã xoá hết lịch sử: ' + e3.message); }
+  }
 }
 
 function renderHistory() {
@@ -4501,7 +4563,7 @@ async function testAndSaveKey() {
 // v4.17 — log version ra console để kiểm tra nhanh (F12 → Console) xem tab đang chạy bản MỚI NHẤT
 // hay vẫn còn bản cache cũ — không cần đoán qua chữ nhỏ ở footer. Nếu số này KHÔNG khớp với số bạn
 // vừa deploy, chắc chắn tab đang dính cache cũ → đóng hẳn tab, mở tab mới (không chỉ F5/Ctrl+Shift+R).
-console.log('%c[Food Law Intelligence] Đang chạy foodlaw.html v4.25 (2026-08)', 'color:#c9a84c;font-weight:bold;font-size:13px');
+console.log('%c[Food Law Intelligence] Đang chạy foodlaw.html v4.26 (2026-08)', 'color:#c9a84c;font-weight:bold;font-size:13px');
 loadState();
 updateStatus();
 renderHistory();
