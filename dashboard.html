@@ -266,9 +266,29 @@
   .lt-row .tx{flex:1; font-size:13px;}
   .lt-row .tx.strike{text-decoration:line-through; color:#A9A496;}
   .lt-row .lead{font-size:11px; color:var(--navy); font-weight:600;}
+
+  /* ---------- v2: Toast ---------- */
+  #toastBox{position:fixed; bottom:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:8px; max-width:340px;}
+  .toast-item{background:var(--navy); color:#fff; padding:10px 14px; border-radius:8px; font-size:12.5px;
+    box-shadow:0 4px 14px rgba(0,0,0,.2); opacity:1; transform:translateY(0); transition:opacity .25s, transform .25s;}
+  .toast-item.err{background:var(--red);}
+  .toast-item.out{opacity:0; transform:translateY(8px);}
+
+  /* ---------- v2: trạng thái đang lưu (chặn double-click) ---------- */
+  .busy{opacity:.5; cursor:wait !important; pointer-events:none;}
+
+  /* ---------- v2: nút sửa/xoá nhỏ trong subtask & comment ---------- */
+  .icon-btn{border:none; background:transparent; cursor:pointer; font-size:11px; padding:0 2px; opacity:.6; vertical-align:-1px;}
+  .icon-btn:hover{opacity:1;}
+  .fi-sm{font-size:12px; padding:5px 8px; border:1px solid var(--line); border-radius:6px; font-family:'Inter',sans-serif;}
+  .wt-sub-edit, .wt-cmt-edit{display:flex; gap:6px; align-items:center; flex-wrap:wrap; padding:4px 0;}
+  .wt-sub-edit .fi-sm:first-child, .wt-cmt-edit .fi-sm{flex:1; min-width:120px;}
+  .bod-sub-panel{margin-top:8px; padding-top:8px; border-top:1px dashed var(--line);}
+  .bod-row .icon-btn{font-size:11px;}
 </style>
 </head>
 <body>
+<div id="toastBox"></div>
 
 <header>
   <div class="title-block">
@@ -519,6 +539,13 @@ let STATE = {
 };
 const WEEK_UNSET = 'Chưa gắn tuần';
 window._wtPanel = window._wtPanel || {};   // taskId -> 'cmt' | 'sub' | 'dl' | null
+// ✅ v2: state UI cho sửa inline subtask/comment (team + BOD) và panel subtask BOD
+window._wtSubEdit = window._wtSubEdit || new Set();   // 'taskId:subId' đang mở form sửa
+window._wtCmtEdit = window._wtCmtEdit || new Set();   // 'taskId:cmtId' đang mở form sửa
+window._bodSubOpen = window._bodSubOpen || new Set(); // bodTaskId đang mở panel subtask
+window._bodSubEdit = window._bodSubEdit || new Set();
+window._bodCmtEdit = window._bodCmtEdit || new Set();
+let _lastSyncAt = 0; // dùng để tự đồng bộ nhẹ khi quay lại tab sau một lúc
 
 function esc(s) {
   return String(s === null || s === undefined ? '' : s)
@@ -543,16 +570,65 @@ async function apiGet(action, extra = {}) {
   const url = new URL(CONFIG.WEBAPP_URL);
   url.searchParams.set('action', action);
   Object.entries(extra).forEach(([k, v]) => url.searchParams.set(k, v));
-  const res = await fetch(url.toString());
+  const res = await fetch(url.toString(), { redirect: 'follow' });
   return res.json();
 }
+
+// ✅ v2: transport an toàn theo kích thước payload (đồng bộ cách làm với
+// index.html) — payload nhỏ (đa số trường hợp, nhất là từ khi chuyển các
+// thao tác nhỏ sang action 'patch') đi qua GET đọc được kết quả thật;
+// chỉ payload bất thường lớn (task rất nhiều subtask/comment) mới rơi
+// vào POST no-cors (không đọc được response, coi là "đã gửi").
 async function apiWrite(body) {
   _checkConfig();
-  const url = new URL(CONFIG.WEBAPP_URL);
-  url.searchParams.set('method', 'post');
-  url.searchParams.set('payload', encodeURIComponent(JSON.stringify(body)));
-  const res = await fetch(url.toString());
-  return res.json();
+  const enc = encodeURIComponent(JSON.stringify(body));
+  if (enc.length < 6000) {
+    const url = new URL(CONFIG.WEBAPP_URL);
+    url.searchParams.set('method', 'post');
+    url.searchParams.set('payload', enc);
+    const res = await fetch(url.toString(), { redirect: 'follow' });
+    return res.json();
+  }
+  await fetch(CONFIG.WEBAPP_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(body),
+  });
+  return { ok: true, _blind: true };
+}
+
+// ✅ v2: ghi CHỈ những field thay đổi (action 'patch' — backend v13).
+// Dùng cho MỌI thao tác nhỏ: tick done, thêm/sửa/xoá subtask & comment,
+// đổi deadline... payload nhỏ gọn, không phải gửi lại nguyên object.
+async function apiPatch(sheetKey, id, fields) {
+  return apiWrite({ action: 'patch', sheet: sheetKey, id, fields });
+}
+
+// ---------- v2: Toast (thay cho alert() rời rạc) ----------
+function toast(msg, type) {
+  const box = document.getElementById('toastBox');
+  if (!box) return;
+  const el = document.createElement('div');
+  el.className = 'toast-item' + (type === 'err' ? ' err' : '');
+  el.textContent = msg;
+  box.appendChild(el);
+  setTimeout(() => {
+    el.classList.add('out');
+    setTimeout(() => el.remove(), 260);
+  }, 3000);
+}
+
+// ---------- v2: chặn double-click / double-submit trên 1 nút hoặc input ----------
+async function withBusy(el, fn) {
+  if (el && el.disabled) return; // đang xử lý dở — bỏ qua click chồng
+  if (el) { el.disabled = true; el.classList.add('busy'); }
+  try {
+    return await fn();
+  } catch (e) {
+    toast('⚠ ' + (e && e.message ? e.message : 'Có lỗi xảy ra, vui lòng thử lại'), 'err');
+  } finally {
+    if (el) { el.disabled = false; el.classList.remove('busy'); }
+  }
 }
 
 function pct(done, total) { return total > 0 ? Math.round((done / total) * 100) : 0; }
@@ -604,6 +680,7 @@ async function loadAll() {
     renderBODMeetingLog();
 
     statusEl.textContent = 'Cập nhật lúc ' + new Date(stats.generated_at || Date.now()).toLocaleString('vi-VN');
+    _lastSyncAt = Date.now();
   } catch (e) {
     statusEl.textContent = '⚠ Lỗi tải dữ liệu: ' + e.message;
     statusEl.classList.add('err');
@@ -621,7 +698,12 @@ function pickDefaultWeek() {
   return STATE.weekly[STATE.weekly.length - 1].week_no;
 }
 
-// Tải lại toàn bộ phần team sau khi thao tác task (không đụng BOD)
+// Tải lại toàn bộ phần team (không đụng BOD) — nay chỉ còn dùng khi:
+// bắt đầu họp tuần mới (carry-over đụng nhiều task cùng lúc), lỗi cần
+// đồng bộ lại cho chắc, bấm "Làm mới", hoặc tự đồng bộ nhẹ khi quay lại
+// tab. Các thao tác nhỏ hàng ngày (tick done/subtask/comment/deadline)
+// KHÔNG còn gọi hàm này nữa — đã cập nhật local + ghi patch nền, không
+// cần chờ tải lại toàn bộ mới thấy thay đổi.
 async function refreshTeamOnly() {
   const stats = await apiGet('weeklyStats');
   if (!stats.ok) return;
@@ -634,6 +716,26 @@ async function refreshTeamOnly() {
   STATE.selectedWeek = STATE.weekly.some(w => w.week_no === keep) ? keep : pickDefaultWeek();
   renderLedger(); renderKPIs(); renderPicTable(); renderOffenders();
   renderWeekTaskPicFilter(); renderWeekTasks(); renderLeadTasks();
+  _lastSyncAt = Date.now();
+}
+
+// ✅ v2: hàm này được GỌI Ở NHIỀU NƠI trong bản cũ nhưng CHƯA TỪNG được
+// định nghĩa (bug) — mọi thao tác BOD (tick done, huỷ, thêm comment,
+// sửa/thêm task) vì vậy luôn báo lỗi ngầm và KHÔNG BAO GIỜ tự cập nhật
+// lại giao diện, bắt buộc phải F5 mới thấy thay đổi. Nay bổ sung đầy đủ,
+// và cũng như refreshTeamOnly — chỉ còn cần thiết cho các mốc lớn (bắt
+// đầu họp BOD mới) hoặc khi có lỗi cần đồng bộ lại.
+async function refreshBODOnly() {
+  const bodStats = await apiGet('bodStats');
+  if (!bodStats.ok) return;
+  STATE.bodTasks = bodStats.tasks || [];
+  STATE.bodMeetings = bodStats.meetings || [];
+  STATE.bodTotals = {
+    total: bodStats.total_count || 0, open: bodStats.open_count || 0,
+    done: bodStats.done_count || 0, offenders: bodStats.offenders || [],
+  };
+  renderBODKPIs(); renderBODTasks(); renderBODMeetingLog();
+  _lastSyncAt = Date.now();
 }
 
 // ---------- Ledger strip ----------
@@ -905,12 +1007,28 @@ function renderWTSubPanel(t, subs) {
   return `<div class="wt-panel">
   ${subs.length ? subs.map(s => {
     const dn = (s.done === true || s.done === 'true');
+    const key = t.id + ':' + s.id;
     const names = (Array.isArray(s.pic_ids) ? s.pic_ids : (s.pic_ids ? String(s.pic_ids).split(',') : []))
       .filter(Boolean).map(userName);
+    if (window._wtSubEdit.has(key)) {
+      const curPic = Array.isArray(s.pic_ids) && s.pic_ids[0] ? s.pic_ids[0] : '';
+      return `<div class="wt-sub-edit">
+        <input type="text" class="fi-sm" id="se-t-${esc(t.id)}-${esc(s.id)}" value="${esc(s.text || '')}">
+        <select class="fi-sm" id="se-pic-${esc(t.id)}-${esc(s.id)}">
+          <option value="">— PIC —</option>
+          ${(STATE.users || []).map(u => `<option value="${esc(u.id)}" ${String(u.id) === String(curPic) ? 'selected' : ''}>${esc(u.name)}</option>`).join('')}
+        </select>
+        <input type="date" class="fi-sm" id="se-dl-${esc(t.id)}-${esc(s.id)}" value="${esc(s.deadline || '')}">
+        <button class="btn btn-gold btn-sm wt-subedit-save" data-id="${esc(t.id)}" data-sid="${esc(s.id)}">Lưu</button>
+        <button class="btn-plain btn-sm wt-subedit-btn" data-id="${esc(t.id)}" data-sid="${esc(s.id)}">Huỷ</button>
+      </div>`;
+    }
     return `<div class="wt-sub">
       <input type="checkbox" class="wt-subchk" data-id="${esc(t.id)}" data-sid="${esc(s.id)}" ${dn ? 'checked' : ''}>
       <span class="tx ${dn ? 'strike' : ''}">${esc(s.text || '')}</span>
       <span class="sm">${names.length ? '👤 ' + names.map(esc).join(', ') : ''}${s.deadline ? ' · 📅 ' + fmtVN(s.deadline) : ''}</span>
+      <button class="icon-btn wt-subedit-btn" data-id="${esc(t.id)}" data-sid="${esc(s.id)}" title="Sửa">✏️</button>
+      <button class="icon-btn wt-subdel" data-id="${esc(t.id)}" data-sid="${esc(s.id)}" title="Xoá">🗑</button>
     </div>`;
   }).join('') : '<div style="font-size:11.5px;color:#8A8577;">Chưa có subtask nào</div>'}
   <div class="wt-inline">
@@ -926,10 +1044,22 @@ function renderWTSubPanel(t, subs) {
 
 function renderWTCmtPanel(t, cms) {
   return `<div class="wt-panel">
-  ${cms.length ? cms.slice(-12).map(c => c.isSystem
-    ? `<div class="wt-cmt sys"><div>${esc(c.text)}</div><span class="ctm">${c.time ? new Date(c.time).toLocaleString('vi-VN') : ''}</span></div>`
-    : `<div class="wt-cmt"><div><span class="ca">${esc(c.author)}</span> — ${esc(c.text)}</div><span class="ctm">${c.time ? new Date(c.time).toLocaleString('vi-VN') : ''}</span></div>`
-  ).join('') : '<div style="font-size:11.5px;color:#8A8577;">Chưa có ghi chú nào</div>'}
+  ${cms.length ? cms.slice(-12).map(c => {
+    if (c.isSystem) return `<div class="wt-cmt sys"><div>${esc(c.text)}</div><span class="ctm">${c.time ? new Date(c.time).toLocaleString('vi-VN') : ''}</span></div>`;
+    const key = t.id + ':' + c.id;
+    if (window._wtCmtEdit.has(key)) {
+      return `<div class="wt-cmt-edit">
+        <input type="text" class="fi-sm" id="ce-${esc(t.id)}-${esc(c.id)}" value="${esc(c.text)}">
+        <button class="btn btn-gold btn-sm wt-cmtedit-save" data-id="${esc(t.id)}" data-cid="${esc(c.id)}">Lưu</button>
+        <button class="btn-plain btn-sm wt-cmtedit-btn" data-id="${esc(t.id)}" data-cid="${esc(c.id)}">Huỷ</button>
+      </div>`;
+    }
+    return `<div class="wt-cmt"><div><span class="ca">${esc(c.author)}</span> — ${esc(c.text)}${c.edited_at ? ' <i style="color:#B9B4A4">(đã sửa)</i>' : ''}</div>
+      <span class="ctm">${c.time ? new Date(c.time).toLocaleString('vi-VN') : ''}
+        <button class="icon-btn wt-cmtedit-btn" data-id="${esc(t.id)}" data-cid="${esc(c.id)}" title="Sửa">✏️</button>
+        <button class="icon-btn wt-cmtdel" data-id="${esc(t.id)}" data-cid="${esc(c.id)}" title="Xoá">🗑</button>
+      </span></div>`;
+  }).join('') : '<div style="font-size:11.5px;color:#8A8577;">Chưa có ghi chú nào</div>'}
   <div class="wt-inline">
     <input type="text" class="wt-cmtinp" data-id="${esc(t.id)}" placeholder="Ghi chú cập nhật trong buổi họp…">
     <button class="btn btn-gold btn-sm wt-cmtsend" data-id="${esc(t.id)}">Gửi</button>
@@ -948,37 +1078,48 @@ function renderWTDlPanel(t) {
 
 function bindWeekTaskEvents(wrap) {
   wrap.querySelectorAll('.wt-check').forEach(cb =>
-    cb.addEventListener('change', () => wtToggleDone(cb.dataset.id, cb.checked)));
+    cb.addEventListener('change', () => wtToggleDone(cb.dataset.id, cb.checked, cb)));
   wrap.querySelectorAll('.wt-p').forEach(b => b.addEventListener('click', () => {
     const id = b.dataset.id;
     window._wtPanel[id] = (window._wtPanel[id] === b.dataset.p) ? null : b.dataset.p;
     renderWeekTasks();
   }));
   wrap.querySelectorAll('.wt-subchk').forEach(cb =>
-    cb.addEventListener('change', () => wtToggleSub(cb.dataset.id, cb.dataset.sid, cb.checked)));
+    cb.addEventListener('change', () => wtToggleSub(cb.dataset.id, cb.dataset.sid, cb.checked, cb)));
   wrap.querySelectorAll('.wt-subadd').forEach(b =>
-    b.addEventListener('click', () => wtAddSub(b.dataset.id)));
+    b.addEventListener('click', () => wtAddSub(b.dataset.id, b)));
   wrap.querySelectorAll('.wt-subinp').forEach(inp =>
-    inp.addEventListener('keydown', e => { if (e.key === 'Enter') wtAddSub(inp.dataset.id); }));
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') wtAddSub(inp.dataset.id, inp); }));
+  wrap.querySelectorAll('.wt-subedit-btn').forEach(b =>
+    b.addEventListener('click', () => { const k = b.dataset.id + ':' + b.dataset.sid; window._wtSubEdit.has(k) ? window._wtSubEdit.delete(k) : window._wtSubEdit.add(k); renderWeekTasks(); }));
+  wrap.querySelectorAll('.wt-subedit-save').forEach(b =>
+    b.addEventListener('click', () => wtEditSub(b.dataset.id, b.dataset.sid, b)));
+  wrap.querySelectorAll('.wt-subdel').forEach(b =>
+    b.addEventListener('click', () => wtDelSub(b.dataset.id, b.dataset.sid, b)));
   wrap.querySelectorAll('.wt-cmtsend').forEach(b =>
-    b.addEventListener('click', () => wtAddComment(b.dataset.id)));
+    b.addEventListener('click', () => wtAddComment(b.dataset.id, b)));
   wrap.querySelectorAll('.wt-cmtinp').forEach(inp =>
-    inp.addEventListener('keydown', e => { if (e.key === 'Enter') wtAddComment(inp.dataset.id); }));
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') wtAddComment(inp.dataset.id, inp); }));
+  wrap.querySelectorAll('.wt-cmtedit-btn').forEach(b =>
+    b.addEventListener('click', () => { const k = b.dataset.id + ':' + b.dataset.cid; window._wtCmtEdit.has(k) ? window._wtCmtEdit.delete(k) : window._wtCmtEdit.add(k); renderWeekTasks(); }));
+  wrap.querySelectorAll('.wt-cmtedit-save').forEach(b =>
+    b.addEventListener('click', () => wtEditComment(b.dataset.id, b.dataset.cid, b)));
+  wrap.querySelectorAll('.wt-cmtdel').forEach(b =>
+    b.addEventListener('click', () => wtDelComment(b.dataset.id, b.dataset.cid, b)));
   wrap.querySelectorAll('.wt-dlsave').forEach(b =>
-    b.addEventListener('click', () => wtSaveDeadline(b.dataset.id)));
+    b.addEventListener('click', () => wtSaveDeadline(b.dataset.id, b)));
 }
 
-// ---- Ghi task về CRM_Tasks (gửi FULL object để không mất cột) ----
+// ---- v2: ghi CHỈ field thay đổi (action 'patch') — không còn phải gửi
+// nguyên object mỗi lần, và KHÔNG tự tải lại toàn bộ weeklyStats sau mỗi
+// thao tác nhỏ (state cục bộ đã cập nhật + render ngay ở trên rồi).
 function wtFindTask(id) {
   return wtTasksOfWeek().find(t => String(t.id) === String(id));
 }
-async function wtSave(t, okMsg) {
-  const data = {};
-  Object.keys(t).forEach(k => { if (k.charAt(0) !== '_') data[k] = t[k]; });
-  data.updated_at = new Date().toISOString();
-  const res = await apiWrite({ action: 'upsert', sheet: 'Tasks', data });
+async function wtPatch(t, fields, okMsg) {
+  const res = await apiPatch('Tasks', t.id, fields);
   if (!res || !res.ok) {
-    alert('⚠ Lưu thất bại: ' + ((res && res.error) || 'không rõ nguyên nhân'));
+    toast('⚠ Lưu thất bại: ' + ((res && res.error) || 'không rõ nguyên nhân') + ' — đang đồng bộ lại...', 'err');
     await refreshTeamOnly();
     return false;
   }
@@ -991,26 +1132,27 @@ function wtSysComment(t, text) {
   t.comments.push({ id: Date.now(), text: text, author: 'System', time: new Date().toISOString(), isSystem: true });
 }
 
-async function wtToggleDone(id, checked) {
+async function wtToggleDone(id, checked, cbEl) {
   const t = wtFindTask(id); if (!t) return;
   if (checked) { t.status = 'done'; t.outcome = 'success'; t.done_by = CONFIG.MY_USER_ID; }
   else { t.status = 'inprogress'; t.outcome = ''; t.done_by = ''; }
   t._done = !!checked; t._closed = !!checked; t._cancelled = false;
   wtSysComment(t, (checked ? '✅ Đóng task trong buổi họp' : '↩ Mở lại task trong buổi họp') + ' — ' + CONFIG.MY_NAME);
   renderWeekTasks();
-  if (await wtSave(t, checked ? 'Đã đóng task' : 'Đã mở lại task')) await refreshTeamOnly();
+  await withBusy(cbEl, () => wtPatch(t, { status: t.status, outcome: t.outcome, done_by: t.done_by, comments: t.comments },
+    checked ? 'Đã đóng task' : 'Đã mở lại task'));
 }
 
-async function wtToggleSub(id, sid, checked) {
+async function wtToggleSub(id, sid, checked, cbEl) {
   const t = wtFindTask(id); if (!t) return;
   if (!Array.isArray(t.subtasks)) t.subtasks = [];
   const s = t.subtasks.find(x => String(x.id) === String(sid)); if (!s) return;
   s.done = !!checked;
   renderWeekTasks();
-  await wtSave(t, 'Đã cập nhật subtask');
+  await withBusy(cbEl, () => wtPatch(t, { subtasks: t.subtasks }, 'Đã cập nhật subtask'));
 }
 
-async function wtAddSub(id) {
+async function wtAddSub(id, ctrlEl) {
   const t = wtFindTask(id); if (!t) return;
   const inp = document.querySelector('.wt-subinp[data-id="' + id + '"]');
   const txt = inp && inp.value.trim();
@@ -1018,32 +1160,87 @@ async function wtAddSub(id) {
   const pic = document.querySelector('.wt-subpic[data-id="' + id + '"]');
   const dl = document.querySelector('.wt-subdl[data-id="' + id + '"]');
   if (dl && dl.value && t.deadline && dl.value > t.deadline) {
-    alert('Deadline subtask không được vượt deadline task chính (' + fmtVN(t.deadline) + ')');
+    toast('Deadline subtask không được vượt deadline task chính (' + fmtVN(t.deadline) + ')', 'err');
     return;
   }
   if (!Array.isArray(t.subtasks)) t.subtasks = [];
   t.subtasks.push({
     id: Date.now(), text: txt, done: false,
     pic_ids: pic && pic.value ? [pic.value] : [],
-    deadline: dl ? dl.value : '', comments: [],
+    deadline: dl ? dl.value : '',
   });
   wtSysComment(t, '➕ Thêm subtask trong buổi họp: "' + txt + '" — ' + CONFIG.MY_NAME);
+  inp.value = ''; if (dl) dl.value = '';
   renderWeekTasks();
-  await wtSave(t, 'Đã thêm subtask');
+  await withBusy(ctrlEl, () => wtPatch(t, { subtasks: t.subtasks, comments: t.comments }, 'Đã thêm subtask'));
 }
 
-async function wtAddComment(id) {
+// ✅ mới: sửa nội dung / PIC / deadline của 1 subtask đã có
+async function wtEditSub(id, sid, btnEl) {
+  const t = wtFindTask(id); if (!t) return;
+  const s = (t.subtasks || []).find(x => String(x.id) === String(sid)); if (!s) return;
+  const textEl = document.getElementById('se-t-' + id + '-' + sid);
+  const dlEl = document.getElementById('se-dl-' + id + '-' + sid);
+  const picEl = document.getElementById('se-pic-' + id + '-' + sid);
+  const newText = textEl ? textEl.value.trim() : s.text;
+  if (!newText) { toast('Nội dung subtask không được để trống', 'err'); return; }
+  const newDl = dlEl ? dlEl.value : (s.deadline || '');
+  if (newDl && t.deadline && newDl > t.deadline) {
+    toast('Deadline subtask không được vượt deadline task chính (' + fmtVN(t.deadline) + ')', 'err');
+    return;
+  }
+  s.text = newText; s.deadline = newDl;
+  s.pic_ids = picEl && picEl.value ? [picEl.value] : [];
+  window._wtSubEdit.delete(id + ':' + sid);
+  renderWeekTasks();
+  await withBusy(btnEl, () => wtPatch(t, { subtasks: t.subtasks }, 'Đã sửa subtask'));
+}
+// ✅ mới: xoá subtask
+async function wtDelSub(id, sid, btnEl) {
+  const t = wtFindTask(id); if (!t) return;
+  if (!confirm('Xoá subtask này?')) return;
+  t.subtasks = (t.subtasks || []).filter(x => String(x.id) !== String(sid));
+  window._wtSubEdit.delete(id + ':' + sid);
+  renderWeekTasks();
+  await withBusy(btnEl, () => wtPatch(t, { subtasks: t.subtasks }, 'Đã xoá subtask'));
+}
+
+async function wtAddComment(id, ctrlEl) {
   const t = wtFindTask(id); if (!t) return;
   const inp = document.querySelector('.wt-cmtinp[data-id="' + id + '"]');
   const txt = inp && inp.value.trim();
   if (!txt) return;
   if (!Array.isArray(t.comments)) t.comments = [];
   t.comments.push({ id: Date.now(), text: txt, author: CONFIG.MY_NAME, time: new Date().toISOString(), isSystem: false });
+  inp.value = '';
   renderWeekTasks();
-  await wtSave(t, 'Đã lưu ghi chú');
+  await withBusy(ctrlEl, () => wtPatch(t, { comments: t.comments }, 'Đã lưu ghi chú'));
+}
+// ✅ mới: sửa 1 comment do người dùng gõ (comment hệ thống '📝/✅/➕/📅...' bị khoá, không cho sửa/xoá — đó là log thao tác)
+async function wtEditComment(id, cid, btnEl) {
+  const t = wtFindTask(id); if (!t) return;
+  const c = (t.comments || []).find(x => String(x.id) === String(cid));
+  if (!c || c.isSystem) return;
+  const inp = document.getElementById('ce-' + id + '-' + cid);
+  const newText = inp ? inp.value.trim() : '';
+  if (!newText) { toast('Nội dung ghi chú không được để trống', 'err'); return; }
+  c.text = newText; c.edited_at = new Date().toISOString();
+  window._wtCmtEdit.delete(id + ':' + cid);
+  renderWeekTasks();
+  await withBusy(btnEl, () => wtPatch(t, { comments: t.comments }, 'Đã sửa ghi chú'));
+}
+// ✅ mới: xoá comment
+async function wtDelComment(id, cid, btnEl) {
+  const t = wtFindTask(id); if (!t) return;
+  const c = (t.comments || []).find(x => String(x.id) === String(cid));
+  if (!c || c.isSystem) return;
+  if (!confirm('Xoá ghi chú này?')) return;
+  t.comments = (t.comments || []).filter(x => String(x.id) !== String(cid));
+  renderWeekTasks();
+  await withBusy(btnEl, () => wtPatch(t, { comments: t.comments }, 'Đã xoá ghi chú'));
 }
 
-async function wtSaveDeadline(id) {
+async function wtSaveDeadline(id, btnEl) {
   const t = wtFindTask(id); if (!t) return;
   const inp = document.querySelector('.wt-dlinp[data-id="' + id + '"]');
   const old = t.deadline || '(chưa có)';
@@ -1051,7 +1248,7 @@ async function wtSaveDeadline(id) {
   wtSysComment(t, '📅 Đổi deadline: ' + old + ' → ' + (t.deadline || '(bỏ hạn)') + ' — ' + CONFIG.MY_NAME);
   window._wtPanel[String(id)] = null;
   renderWeekTasks();
-  await wtSave(t, 'Đã đổi deadline');
+  await withBusy(btnEl, () => wtPatch(t, { deadline: t.deadline, comments: t.comments }, 'Đã đổi deadline'));
 }
 
 // ---- Thanh lọc ----
@@ -1065,6 +1262,34 @@ document.getElementById('wtPicFilter').addEventListener('change', e => {
   STATE.wtPic = e.target.value; renderWeekTasks();
 });
 
+// ✅ v2: chèn task vừa tạo thẳng vào state cục bộ — hiện ngay lập tức,
+// không cần đợi/không phụ thuộc vào việc tải lại toàn bộ weeklyStats.
+function _wtInjectNewTask(data, wk) {
+  let bucket = STATE.weekly.find(w => w.week_no === wk);
+  if (!bucket) {
+    bucket = { week_no: wk, total: 0, done: 0, open: 0, cancelled: 0, byPic: {}, tasks: [] };
+    STATE.weekly.push(bucket);
+    STATE.weekly.sort(_sortWeekKeysClient);
+  }
+  const full = Object.assign({}, data, {
+    _pic_names: (data.pic_ids || []).map(userName),
+    _customer_name: '', _week: wk, _done: false, _cancelled: false, _closed: false,
+  });
+  bucket.tasks.push(full);
+  bucket.total++; bucket.open++;
+  (data.pic_ids || []).forEach(pid => {
+    if (!bucket.byPic[pid]) bucket.byPic[pid] = { id: pid, name: userName(pid), known: true, total: 0, done: 0 };
+    bucket.byPic[pid].total++;
+  });
+  STATE.selectedWeek = wk;
+  renderLedger(); renderKPIs(); renderPicTable(); renderWeekTaskPicFilter(); renderWeekTasks();
+}
+function _sortWeekKeysClient(a, b) {
+  if (a.week_no === WEEK_UNSET) return -1;
+  if (b.week_no === WEEK_UNSET) return 1;
+  return a.week_no < b.week_no ? -1 : (a.week_no > b.week_no ? 1 : 0);
+}
+
 // ---- Modal thêm task tuần ----
 const wtOverlay = document.getElementById('wtOverlay');
 document.getElementById('wtAddBtn').addEventListener('click', () => {
@@ -1073,23 +1298,32 @@ document.getElementById('wtAddBtn').addEventListener('click', () => {
   document.getElementById('wtDeadline').value = '';
   document.getElementById('wtNotes').value = '';
   document.getElementById('wtChannel').value = 'ALL';
+  // ✅ v2: sinh id CỐ ĐỊNH cho phiên tạo task này — nếu lần bấm Lưu đầu
+  // tiên bị lỗi/chậm, bấm Lưu lại sẽ CẬP NHẬT cùng 1 dòng thay vì tạo
+  // thêm dòng mới trùng lặp.
+  document.getElementById('wtTaskId').value = 't' + Date.now();
   const chips = document.getElementById('wtPicChips');
   chips.innerHTML = (STATE.users || []).map(u =>
     `<div class="pic-chip" data-uid="${esc(u.id)}"><span class="av">${esc(u.initials || (u.name || '?')[0])}</span>${esc(u.name)}</div>`).join('');
   chips.querySelectorAll('.pic-chip').forEach(ch => ch.addEventListener('click', () => ch.classList.toggle('sel')));
   wtOverlay.classList.add('open');
 });
-document.getElementById('wtCancel').addEventListener('click', () => wtOverlay.classList.remove('open'));
-wtOverlay.addEventListener('click', e => { if (e.target === wtOverlay) wtOverlay.classList.remove('open'); });
+document.getElementById('wtCancel').addEventListener('click', () => { if (!window._wtSaving) wtOverlay.classList.remove('open'); });
+// ✅ v2: không cho đóng modal bằng cách bấm ra ngoài khi đang lưu — đây
+// chính là nguyên nhân hay gặp nhất khiến 1 lần bấm ra 2-3 task giống
+// nhau (đóng modal giữa chừng rồi mở lại bấm tiếp trong khi request cũ
+// vẫn đang chạy).
+wtOverlay.addEventListener('click', e => { if (e.target === wtOverlay && !window._wtSaving) wtOverlay.classList.remove('open'); });
 
 document.getElementById('wtSubmit').addEventListener('click', async () => {
   const title = document.getElementById('wtTitle').value.trim();
-  if (!title) { alert('Vui lòng nhập nội dung công việc'); return; }
+  if (!title) { toast('Vui lòng nhập nội dung công việc', 'err'); return; }
   const pics = [...document.querySelectorAll('#wtPicChips .pic-chip.sel')].map(c => c.dataset.uid);
-  if (!pics.length) { alert('Chọn ít nhất 1 người phụ trách'); return; }
+  if (!pics.length) { toast('Chọn ít nhất 1 người phụ trách', 'err'); return; }
   const wk = (STATE.selectedWeek && STATE.selectedWeek !== WEEK_UNSET) ? STATE.selectedWeek : STATE.currentWeek;
+  const taskId = document.getElementById('wtTaskId').value || ('t' + Date.now());
   const data = {
-    id: 't' + Date.now(),
+    id: taskId,
     title: title,
     customer_id: '',
     channel: document.getElementById('wtChannel').value || 'ALL',
@@ -1112,17 +1346,18 @@ document.getElementById('wtSubmit').addEventListener('click', async () => {
     updated_at: new Date().toISOString(),
   };
   const btn = document.getElementById('wtSubmit');
-  btn.disabled = true; btn.textContent = 'Đang lưu…';
+  btn.disabled = true; btn.textContent = 'Đang lưu…'; window._wtSaving = true;
   try {
     const res = await apiWrite({ action: 'upsert', sheet: 'Tasks', data });
     if (!res.ok) throw new Error(res.error || 'Lỗi không xác định');
+    _wtInjectNewTask(data, wk);
     wtOverlay.classList.remove('open');
-    await refreshTeamOnly();
+    toast('Đã thêm task ✓');
   } catch (e) {
     const rb = document.getElementById('wtModalResult');
-    rb.style.display = 'block'; rb.innerHTML = '⚠ ' + e.message;
+    rb.style.display = 'block'; rb.innerHTML = '⚠ ' + e.message + ' — bấm Lưu lại để thử tiếp, sẽ KHÔNG tạo trùng.';
   } finally {
-    btn.disabled = false; btn.textContent = '💾 Lưu';
+    btn.disabled = false; btn.textContent = '💾 Lưu'; window._wtSaving = false;
   }
 });
 
@@ -1198,18 +1433,28 @@ function renderBODTasks() {
   });
   wrap.innerHTML = sorted.map(renderBODTaskRow).join('');
 
-  wrap.querySelectorAll('.bod-check').forEach(cb => cb.addEventListener('change', () => toggleBODDone(cb.dataset.id, cb.checked)));
+  wrap.querySelectorAll('.bod-check').forEach(cb => cb.addEventListener('change', () => toggleBODDone(cb.dataset.id, cb.checked, cb)));
   wrap.querySelectorAll('.bod-edit-btn').forEach(b => b.addEventListener('click', () => openBODTaskModal(b.dataset.id)));
-  wrap.querySelectorAll('.bod-cancel-btn').forEach(b => b.addEventListener('click', () => cancelBODTask(b.dataset.id)));
+  wrap.querySelectorAll('.bod-cancel-btn').forEach(b => b.addEventListener('click', () => cancelBODTask(b.dataset.id, b)));
   wrap.querySelectorAll('.bod-cmt-btn').forEach(b => b.addEventListener('click', () => {
     const key = String(b.dataset.id);
-    if (window._bodCmtOpen.has(key)) window._bodCmtOpen.delete(key); else window._bodCmtOpen.add(key);
+    const set = b.dataset.p === 'sub' ? window._bodSubOpen : window._bodCmtOpen;
+    if (set.has(key)) set.delete(key); else set.add(key);
     renderBODTasks();
   }));
-  wrap.querySelectorAll('.bod-cmt-send').forEach(b => b.addEventListener('click', () => postBODComment(b.dataset.id)));
+  wrap.querySelectorAll('.bod-cmt-send').forEach(b => b.addEventListener('click', () => postBODComment(b.dataset.id, b)));
   wrap.querySelectorAll('.bod-cmt-inp').forEach(inp => inp.addEventListener('keydown', e => {
-    if (e.key === 'Enter') postBODComment(inp.dataset.id);
+    if (e.key === 'Enter') postBODComment(inp.dataset.id, inp);
   }));
+  wrap.querySelectorAll('.bod-cmtedit-btn').forEach(b => b.addEventListener('click', () => { const k = b.dataset.id + ':' + b.dataset.cid; window._bodCmtEdit.has(k) ? window._bodCmtEdit.delete(k) : window._bodCmtEdit.add(k); renderBODTasks(); }));
+  wrap.querySelectorAll('.bod-cmtedit-save').forEach(b => b.addEventListener('click', () => editBODComment(b.dataset.id, b.dataset.cid, b)));
+  wrap.querySelectorAll('.bod-cmtdel').forEach(b => b.addEventListener('click', () => delBODComment(b.dataset.id, b.dataset.cid, b)));
+  wrap.querySelectorAll('.bod-subchk').forEach(cb => cb.addEventListener('change', () => bodToggleSub(cb.dataset.id, cb.dataset.sid, cb.checked, cb)));
+  wrap.querySelectorAll('.bod-subadd').forEach(b => b.addEventListener('click', () => bodAddSub(b.dataset.id, b)));
+  wrap.querySelectorAll('.bod-subinp').forEach(inp => inp.addEventListener('keydown', e => { if (e.key === 'Enter') bodAddSub(inp.dataset.id, inp); }));
+  wrap.querySelectorAll('.bod-subedit-btn').forEach(b => b.addEventListener('click', () => { const k = b.dataset.id + ':' + b.dataset.sid; window._bodSubEdit.has(k) ? window._bodSubEdit.delete(k) : window._bodSubEdit.add(k); renderBODTasks(); }));
+  wrap.querySelectorAll('.bod-subedit-save').forEach(b => b.addEventListener('click', () => bodEditSub(b.dataset.id, b.dataset.sid, b)));
+  wrap.querySelectorAll('.bod-subdel').forEach(b => b.addEventListener('click', () => bodDelSub(b.dataset.id, b.dataset.sid, b)));
 }
 
 function renderBODTaskRow(t) {
@@ -1218,69 +1463,197 @@ function renderBODTaskRow(t) {
   const co = parseInt(t.carry_over_count, 10) || 0;
   const ov = isOverdueBOD(t);
   const cms = Array.isArray(t.comments) ? t.comments : [];
+  const subs = Array.isArray(t.subtasks) ? t.subtasks : [];
+  const subDone = subs.filter(s => s.done === true || s.done === 'true').length;
   const cmtOpen = window._bodCmtOpen.has(String(t.id));
+  const subOpen = window._bodSubOpen.has(String(t.id));
   return `<div class="bod-row">
     <div class="bod-row-main">
-      <input type="checkbox" class="bod-check" data-id="${t.id}" ${isDone ? 'checked' : ''} ${isCancelled ? 'disabled' : ''}>
+      <input type="checkbox" class="bod-check" data-id="${esc(t.id)}" ${isDone ? 'checked' : ''} ${isCancelled ? 'disabled' : ''}>
       <div class="bod-row-body">
-        <div class="bod-title ${isDone || isCancelled ? 'done' : ''}">${t.title || '(không tên)'} ${isCancelled ? '<span style="color:var(--red);font-weight:600;">— Đã huỷ</span>' : ''}</div>
+        <div class="bod-title ${isDone || isCancelled ? 'done' : ''}">${esc(t.title || '(không tên)')} ${isCancelled ? '<span style="color:var(--red);font-weight:600;">— Đã huỷ' + (t.cancel_reason ? ': ' + esc(t.cancel_reason) : '') + '</span>' : ''}</div>
         <div class="bod-meta">
-          <span>👤 ${t.pic_name || '—'}</span>
+          <span>👤 ${esc(t.pic_name || '—')}</span>
           ${t.deadline ? `<span class="${ov ? 'ov' : ''}">${ov ? '⚠ ' : ''}📅 ${fmtVN(t.deadline)}</span>` : ''}
           ${co >= 2 ? `<span class="badge ${co >= 3 ? 'co3' : 'co2'}">×${co} carry-over</span>` : ''}
-          <button class="bod-cmt-btn" data-id="${t.id}">💬 ${cms.length || ''}</button>
+          ${subs.length ? `<span>☑ ${subDone}/${subs.length} subtask</span>` : ''}
+          <button class="bod-cmt-btn" data-id="${esc(t.id)}" data-p="sub">➕ subtask</button>
+          <button class="bod-cmt-btn" data-id="${esc(t.id)}" data-p="cmt">💬 ${cms.length || ''}</button>
         </div>
-        ${t.notes ? `<div class="bod-notes">${t.notes}</div>` : ''}
+        ${t.notes ? `<div class="bod-notes">${esc(t.notes)}</div>` : ''}
+        ${subOpen ? renderBODSubPanel(t, subs) : ''}
         ${cmtOpen ? renderBODCommentThread(t, cms) : ''}
       </div>
       <div class="bod-row-actions">
-        <button class="bod-edit-btn" data-id="${t.id}" title="Sửa">✏️</button>
-        ${!isDone && !isCancelled ? `<button class="bod-cancel-btn" data-id="${t.id}" title="Huỷ việc này">🚫</button>` : ''}
+        <button class="bod-edit-btn" data-id="${esc(t.id)}" title="Sửa">✏️</button>
+        ${!isDone && !isCancelled ? `<button class="bod-cancel-btn" data-id="${esc(t.id)}" title="Huỷ việc này">🚫</button>` : ''}
       </div>
     </div>
   </div>`;
+}
+
+// ✅ mới: subtask cho việc BOD — text + done, sửa/xoá được (đơn giản hơn
+// subtask của task tuần vì PIC của việc BOD vốn là 1 người/1 chữ tự do).
+function renderBODSubPanel(t, subs) {
+  return `<div class="bod-sub-panel">
+  ${subs.length ? subs.map(s => {
+    const dn = (s.done === true || s.done === 'true');
+    const key = t.id + ':' + s.id;
+    if (window._bodSubEdit.has(key)) {
+      return `<div class="wt-sub-edit">
+        <input type="text" class="fi-sm" id="bse-${esc(t.id)}-${esc(s.id)}" value="${esc(s.text || '')}">
+        <button class="btn btn-gold btn-sm bod-subedit-save" data-id="${esc(t.id)}" data-sid="${esc(s.id)}">Lưu</button>
+        <button class="btn-plain btn-sm bod-subedit-btn" data-id="${esc(t.id)}" data-sid="${esc(s.id)}">Huỷ</button>
+      </div>`;
+    }
+    return `<div class="wt-sub">
+      <input type="checkbox" class="bod-subchk" data-id="${esc(t.id)}" data-sid="${esc(s.id)}" ${dn ? 'checked' : ''}>
+      <span class="tx ${dn ? 'strike' : ''}">${esc(s.text || '')}</span>
+      <button class="icon-btn bod-subedit-btn" data-id="${esc(t.id)}" data-sid="${esc(s.id)}" title="Sửa">✏️</button>
+      <button class="icon-btn bod-subdel" data-id="${esc(t.id)}" data-sid="${esc(s.id)}" title="Xoá">🗑</button>
+    </div>`;
+  }).join('') : '<div style="font-size:11.5px;color:#8A8577;">Chưa có subtask nào</div>'}
+  <div class="wt-inline">
+    <input type="text" class="bod-subinp" data-id="${esc(t.id)}" placeholder="Thêm subtask…">
+    <button class="btn btn-gold btn-sm bod-subadd" data-id="${esc(t.id)}">Thêm</button>
+  </div>
+</div>`;
 }
 
 function renderBODCommentThread(t, cms) {
   return `<div class="bod-cmt-thread">
-    ${cms.length ? cms.map(c => `<div class="bod-cmt-item"><div><span class="ca">${c.author}</span> — ${c.text}</div><span class="ctm">${new Date(c.time).toLocaleString('vi-VN')}</span></div>`).join('') : '<div style="font-size:11.5px;color:#8A8577;">Chưa có ghi chú nào</div>'}
+    ${cms.length ? cms.map(c => {
+      const key = t.id + ':' + c.id;
+      if (window._bodCmtEdit.has(key)) {
+        return `<div class="bod-cmt-item wt-cmt-edit">
+          <input type="text" class="fi-sm" id="bce-${esc(t.id)}-${esc(c.id)}" value="${esc(c.text)}">
+          <button class="btn btn-gold btn-sm bod-cmtedit-save" data-id="${esc(t.id)}" data-cid="${esc(c.id)}">Lưu</button>
+          <button class="btn-plain btn-sm bod-cmtedit-btn" data-id="${esc(t.id)}" data-cid="${esc(c.id)}">Huỷ</button>
+        </div>`;
+      }
+      return `<div class="bod-cmt-item"><div><span class="ca">${esc(c.author)}</span> — ${esc(c.text)}${c.edited_at ? ' <i style="color:#B9B4A4">(đã sửa)</i>' : ''}</div>
+      <span class="ctm">${c.time ? new Date(c.time).toLocaleString('vi-VN') : ''}
+        <button class="icon-btn bod-cmtedit-btn" data-id="${esc(t.id)}" data-cid="${esc(c.id)}" title="Sửa">✏️</button>
+        <button class="icon-btn bod-cmtdel" data-id="${esc(t.id)}" data-cid="${esc(c.id)}" title="Xoá">🗑</button>
+      </span></div>`;
+    }).join('') : '<div style="font-size:11.5px;color:#8A8577;">Chưa có ghi chú nào</div>'}
     <div class="bod-cmt-input">
-      <input type="text" class="bod-cmt-inp" data-id="${t.id}" placeholder="Ghi chú cập nhật...">
-      <button class="btn btn-gold btn-sm bod-cmt-send" data-id="${t.id}">Gửi</button>
+      <input type="text" class="bod-cmt-inp" data-id="${esc(t.id)}" placeholder="Ghi chú cập nhật...">
+      <button class="btn btn-gold btn-sm bod-cmt-send" data-id="${esc(t.id)}">Gửi</button>
     </div>
   </div>`;
 }
 
-async function toggleBODDone(id, checked) {
+// ✅ v2: dùng action 'patch' (chỉ field đổi) thay vì 'upsert' nguyên object,
+// render optimistic TRƯỚC khi await (giống bên team), và khi lỗi mới đồng
+// bộ lại toàn bộ BOD — trước đây các hàm này gọi refreshBODOnly() nhưng
+// hàm đó CHƯA TỪNG tồn tại nên UI không bao giờ tự cập nhật.
+async function bodPatch(t, fields, okMsg) {
+  const res = await apiPatch('BODTasks', t.id, fields);
+  if (!res || !res.ok) {
+    toast('⚠ Lưu thất bại: ' + ((res && res.error) || 'không rõ nguyên nhân') + ' — đang đồng bộ lại...', 'err');
+    await refreshBODOnly();
+    return false;
+  }
+  const st = document.getElementById('statusLine');
+  if (st && okMsg) st.textContent = okMsg + ' · ' + new Date().toLocaleTimeString('vi-VN');
+  return true;
+}
+
+async function toggleBODDone(id, checked, cbEl) {
   const t = STATE.bodTasks.find(x => String(x.id) === String(id));
   if (!t) return;
   t.status = checked ? 'Done' : 'Open';
-  t.updated_at = new Date().toISOString();
-  await apiWrite({ action: 'upsert', sheet: 'BODTasks', data: t });
-  await refreshBODOnly();
+  renderBODTasks(); renderBODKPIs();
+  await withBusy(cbEl, () => bodPatch(t, { status: t.status }));
 }
 
-async function cancelBODTask(id) {
-  if (!confirm('Huỷ việc này?')) return;
+async function cancelBODTask(id, btnEl) {
   const t = STATE.bodTasks.find(x => String(x.id) === String(id));
   if (!t) return;
-  t.status = 'Cancelled';
-  t.updated_at = new Date().toISOString();
-  await apiWrite({ action: 'upsert', sheet: 'BODTasks', data: t });
-  await refreshBODOnly();
+  const reason = prompt('Lý do huỷ việc này (có thể bỏ trống):', '');
+  if (reason === null) return; // bấm Huỷ trên hộp thoại → không thực hiện
+  t.status = 'Cancelled'; t.cancel_reason = reason;
+  renderBODTasks(); renderBODKPIs();
+  await withBusy(btnEl, () => bodPatch(t, { status: t.status, cancel_reason: reason }));
 }
 
-async function postBODComment(id) {
+async function postBODComment(id, ctrlEl) {
   const inp = document.querySelector('.bod-cmt-inp[data-id="' + id + '"]');
   if (!inp || !inp.value.trim()) return;
   const t = STATE.bodTasks.find(x => String(x.id) === String(id));
   if (!t) return;
   if (!Array.isArray(t.comments)) t.comments = [];
   t.comments.push({ id: Date.now(), text: inp.value.trim(), author: CONFIG.MY_NAME, time: new Date().toISOString() });
-  t.updated_at = new Date().toISOString();
   window._bodCmtOpen.add(String(id));
-  await apiWrite({ action: 'upsert', sheet: 'BODTasks', data: t });
-  await refreshBODOnly();
+  renderBODTasks();
+  await withBusy(ctrlEl, () => bodPatch(t, { comments: t.comments }));
+}
+// ✅ mới: sửa / xoá comment BOD
+async function editBODComment(id, cid, btnEl) {
+  const t = STATE.bodTasks.find(x => String(x.id) === String(id));
+  if (!t) return;
+  const c = (t.comments || []).find(x => String(x.id) === String(cid));
+  if (!c) return;
+  const inp = document.getElementById('bce-' + id + '-' + cid);
+  const newText = inp ? inp.value.trim() : '';
+  if (!newText) { toast('Nội dung ghi chú không được để trống', 'err'); return; }
+  c.text = newText; c.edited_at = new Date().toISOString();
+  window._bodCmtEdit.delete(id + ':' + cid);
+  renderBODTasks();
+  await withBusy(btnEl, () => bodPatch(t, { comments: t.comments }));
+}
+async function delBODComment(id, cid, btnEl) {
+  const t = STATE.bodTasks.find(x => String(x.id) === String(id));
+  if (!t) return;
+  if (!confirm('Xoá ghi chú này?')) return;
+  t.comments = (t.comments || []).filter(x => String(x.id) !== String(cid));
+  renderBODTasks();
+  await withBusy(btnEl, () => bodPatch(t, { comments: t.comments }));
+}
+// ✅ mới: subtask cho việc BOD
+async function bodAddSub(id, ctrlEl) {
+  const t = STATE.bodTasks.find(x => String(x.id) === String(id));
+  if (!t) return;
+  const inp = document.querySelector('.bod-subinp[data-id="' + id + '"]');
+  const txt = inp && inp.value.trim();
+  if (!txt) return;
+  if (!Array.isArray(t.subtasks)) t.subtasks = [];
+  t.subtasks.push({ id: Date.now(), text: txt, done: false });
+  inp.value = '';
+  window._bodSubOpen.add(String(id));
+  renderBODTasks();
+  await withBusy(ctrlEl, () => bodPatch(t, { subtasks: t.subtasks }));
+}
+async function bodToggleSub(id, sid, checked, cbEl) {
+  const t = STATE.bodTasks.find(x => String(x.id) === String(id));
+  if (!t) return;
+  const s = (t.subtasks || []).find(x => String(x.id) === String(sid));
+  if (!s) return;
+  s.done = !!checked;
+  renderBODTasks();
+  await withBusy(cbEl, () => bodPatch(t, { subtasks: t.subtasks }));
+}
+async function bodEditSub(id, sid, btnEl) {
+  const t = STATE.bodTasks.find(x => String(x.id) === String(id));
+  if (!t) return;
+  const s = (t.subtasks || []).find(x => String(x.id) === String(sid));
+  if (!s) return;
+  const inp = document.getElementById('bse-' + id + '-' + sid);
+  const newText = inp ? inp.value.trim() : '';
+  if (!newText) { toast('Nội dung subtask không được để trống', 'err'); return; }
+  s.text = newText;
+  window._bodSubEdit.delete(id + ':' + sid);
+  renderBODTasks();
+  await withBusy(btnEl, () => bodPatch(t, { subtasks: t.subtasks }));
+}
+async function bodDelSub(id, sid, btnEl) {
+  const t = STATE.bodTasks.find(x => String(x.id) === String(id));
+  if (!t) return;
+  if (!confirm('Xoá subtask này?')) return;
+  t.subtasks = (t.subtasks || []).filter(x => String(x.id) !== String(sid));
+  renderBODTasks();
+  await withBusy(btnEl, () => bodPatch(t, { subtasks: t.subtasks }));
 }
 
 function renderBODMeetingLog() {
@@ -1314,7 +1687,9 @@ function renderBODMeetingLog() {
 function openBODTaskModal(editId) {
   const t = editId ? STATE.bodTasks.find(x => String(x.id) === String(editId)) : null;
   document.getElementById('bodTaskModalTitle').textContent = t ? 'Sửa việc cần làm' : 'Thêm việc cần làm';
-  document.getElementById('bodTaskId').value = t ? t.id : '';
+  // ✅ v2: id cố định ngay khi mở modal (kể cả tạo mới) — bấm Lưu lại sau
+  // lỗi/chậm sẽ cập nhật cùng dòng, không tạo trùng.
+  document.getElementById('bodTaskId').value = t ? t.id : ('bt' + Date.now());
   document.getElementById('bodTaskTitle').value = t ? (t.title || '') : '';
   document.getElementById('bodTaskPic').value = t ? (t.pic_name || CONFIG.MY_NAME) : CONFIG.MY_NAME;
   document.getElementById('bodTaskDeadline').value = t ? (t.deadline || '') : '';
@@ -1325,25 +1700,27 @@ function openBODTaskModal(editId) {
 
 const bodTaskOverlay = document.getElementById('bodTaskOverlay');
 document.getElementById('addBODTaskBtn').addEventListener('click', () => openBODTaskModal(null));
-document.getElementById('bodTaskCancelModal').addEventListener('click', () => bodTaskOverlay.classList.remove('open'));
-bodTaskOverlay.addEventListener('click', e => { if (e.target === bodTaskOverlay) bodTaskOverlay.classList.remove('open'); });
+document.getElementById('bodTaskCancelModal').addEventListener('click', () => { if (!window._bodTaskSaving) bodTaskOverlay.classList.remove('open'); });
+bodTaskOverlay.addEventListener('click', e => { if (e.target === bodTaskOverlay && !window._bodTaskSaving) bodTaskOverlay.classList.remove('open'); });
 document.getElementById('bodPicMeBtn').addEventListener('click', () => {
   document.getElementById('bodTaskPic').value = CONFIG.MY_NAME;
 });
 
 document.getElementById('bodTaskSubmit').addEventListener('click', async () => {
   const title = document.getElementById('bodTaskTitle').value.trim();
-  if (!title) { alert('Vui lòng nhập nội dung công việc'); return; }
+  if (!title) { toast('Vui lòng nhập nội dung công việc', 'err'); return; }
   const editId = document.getElementById('bodTaskId').value;
   const existing = editId ? STATE.bodTasks.find(x => String(x.id) === String(editId)) : null;
   const data = {
-    id: existing ? existing.id : ('bt' + Date.now()),
+    id: editId,
     title,
     pic_name: document.getElementById('bodTaskPic').value.trim() || CONFIG.MY_NAME,
     deadline: document.getElementById('bodTaskDeadline').value || '',
     notes: document.getElementById('bodTaskNotes').value.trim(),
     status: existing ? existing.status : 'Open',
+    subtasks: existing ? (existing.subtasks || []) : [],
     comments: existing ? (existing.comments || []) : [],
+    cancel_reason: existing ? (existing.cancel_reason || '') : '',
     meeting_id: existing ? (existing.meeting_id || '') : (STATE.bodMeetings[0] ? STATE.bodMeetings[0].id : ''),
     carry_over_count: existing ? (existing.carry_over_count || 0) : 0,
     last_reviewed_meeting_id: existing ? (existing.last_reviewed_meeting_id || '') : '',
@@ -1351,17 +1728,21 @@ document.getElementById('bodTaskSubmit').addEventListener('click', async () => {
     created_at: existing ? (existing.created_at || new Date().toISOString()) : new Date().toISOString(),
   };
   const btn = document.getElementById('bodTaskSubmit');
-  btn.disabled = true; btn.textContent = 'Đang lưu…';
+  btn.disabled = true; btn.textContent = 'Đang lưu…'; window._bodTaskSaving = true;
   try {
     const res = await apiWrite({ action: 'upsert', sheet: 'BODTasks', data });
     if (!res.ok) throw new Error(res.error || 'Lỗi không xác định');
+    // ✅ chèn/cập nhật ngay vào state cục bộ — hiện ngay, không cần F5
+    if (existing) Object.assign(existing, data);
+    else { STATE.bodTasks.push(data); STATE.bodTotals.total++; STATE.bodTotals.open++; }
     bodTaskOverlay.classList.remove('open');
-    await refreshBODOnly();
+    renderBODKPIs(); renderBODTasks();
+    toast(existing ? 'Đã cập nhật ✓' : 'Đã thêm việc cần làm ✓');
   } catch (e) {
     const rb = document.getElementById('bodTaskModalResult');
-    rb.style.display = 'block'; rb.innerHTML = '⚠ ' + e.message;
+    rb.style.display = 'block'; rb.innerHTML = '⚠ ' + e.message + ' — bấm Lưu lại để thử tiếp, sẽ KHÔNG tạo trùng.';
   } finally {
-    btn.disabled = false; btn.textContent = '💾 Lưu';
+    btn.disabled = false; btn.textContent = '💾 Lưu'; window._bodTaskSaving = false;
   }
 });
 
@@ -1375,8 +1756,8 @@ document.getElementById('startBODMeetingBtn').addEventListener('click', () => {
   document.getElementById('bodCreatedBy').value = CONFIG.MY_NAME;
   bodOverlay.classList.add('open');
 });
-document.getElementById('bodCancelModal').addEventListener('click', () => bodOverlay.classList.remove('open'));
-bodOverlay.addEventListener('click', e => { if (e.target === bodOverlay) bodOverlay.classList.remove('open'); });
+document.getElementById('bodCancelModal').addEventListener('click', () => { if (!window._bodMeetingSaving) bodOverlay.classList.remove('open'); });
+bodOverlay.addEventListener('click', e => { if (e.target === bodOverlay && !window._bodMeetingSaving) bodOverlay.classList.remove('open'); });
 
 document.getElementById('bodSubmitMeeting').addEventListener('click', async () => {
   const meeting_date = document.getElementById('bodDate').value || undefined;
@@ -1385,7 +1766,7 @@ document.getElementById('bodSubmitMeeting').addEventListener('click', async () =
   const created_by = document.getElementById('bodCreatedBy').value.trim() || CONFIG.MY_NAME;
   const btn = document.getElementById('bodSubmitMeeting');
   const resultBox = document.getElementById('bodModalResult');
-  btn.disabled = true; btn.textContent = 'Đang xử lý…';
+  btn.disabled = true; btn.textContent = 'Đang xử lý…'; window._bodMeetingSaving = true;
   try {
     const res = await apiWrite({ action: 'startBODMeeting', data: { meeting_date, attendees, key_decisions, created_by } });
     if (!res.ok) throw new Error(res.error || 'Lỗi không xác định');
@@ -1397,7 +1778,7 @@ document.getElementById('bodSubmitMeeting').addEventListener('click', async () =
     resultBox.style.display = 'block';
     resultBox.innerHTML = '⚠ ' + e.message;
   } finally {
-    btn.disabled = false; btn.textContent = 'Tạo & Quét carry-over';
+    btn.disabled = false; btn.textContent = 'Tạo & Quét carry-over'; window._bodMeetingSaving = false;
   }
 });
 
@@ -1428,8 +1809,8 @@ document.getElementById('startMeetingBtn').addEventListener('click', () => {
   renderAttendeeChips(); // reset lựa chọn mỗi lần mở modal
   overlay.classList.add('open');
 });
-document.getElementById('cancelModal').addEventListener('click', () => overlay.classList.remove('open'));
-overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+document.getElementById('cancelModal').addEventListener('click', () => { if (!window._meetingSaving) overlay.classList.remove('open'); });
+overlay.addEventListener('click', e => { if (e.target === overlay && !window._meetingSaving) overlay.classList.remove('open'); });
 
 document.getElementById('submitMeeting').addEventListener('click', async () => {
   const chipNames = [...document.querySelectorAll('#attendeeChips .pic-chip.sel')].map(c => c.dataset.name);
@@ -1439,19 +1820,22 @@ document.getElementById('submitMeeting').addEventListener('click', async () => {
   const created_by = document.getElementById('fCreatedBy').value.trim();
   const btn = document.getElementById('submitMeeting');
   const resultBox = document.getElementById('modalResult');
-  btn.disabled = true; btn.textContent = 'Đang xử lý…';
+  btn.disabled = true; btn.textContent = 'Đang xử lý…'; window._meetingSaving = true;
   try {
     const res = await apiWrite({ action: 'startMeeting', data: { attendees, key_decisions, created_by } });
     if (!res.ok) throw new Error(res.error || 'Lỗi không xác định');
     resultBox.style.display = 'block';
     resultBox.innerHTML = `✅ Đã tạo họp tuần <b>${res.meeting.week_no}</b>.<br>
       ${res.carried_over_count} task chưa Done được đánh dấu carry-over và sẵn sàng để review.`;
-    await loadAll();
+    // ✅ v2: carry-over đụng nhiều task cùng lúc — cần tải lại đầy đủ, nhưng
+    // chỉ cần phần TEAM (BOD không bị ảnh hưởng bởi họp tuần) thay vì
+    // loadAll() gọi luôn cả bodStats không cần thiết.
+    await refreshTeamOnly();
   } catch (e) {
     resultBox.style.display = 'block';
     resultBox.innerHTML = '⚠ ' + e.message;
   } finally {
-    btn.disabled = false; btn.textContent = 'Tạo & Quét carry-over';
+    btn.disabled = false; btn.textContent = 'Tạo & Quét carry-over'; window._meetingSaving = false;
   }
 });
 
@@ -1463,6 +1847,15 @@ if (window.self !== window.top) {
   const backLink = document.querySelector('a[href="index.html"]');
   if (backLink) backLink.style.display = 'none';
 }
+
+// ✅ v2: tự đồng bộ NHẸ khi quay lại tab sau một lúc (>90s) — để nhận
+// cập nhật từ đồng nghiệp khác mà không cần bấm "Làm mới" thủ công.
+// Không polling liên tục để tránh tốn quota Apps Script.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && _lastSyncAt && (Date.now() - _lastSyncAt > 90000)) {
+    loadAll();
+  }
+});
 
 loadAll();
 </script>
