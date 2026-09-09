@@ -2992,11 +2992,22 @@ document.addEventListener('DOMContentLoaded',()=>{
       // 🔧 FIX B1: Sales phải login lại — hiện form login, ẩn loading
       hideLoading();
       $('login').style.display='flex';
+      // 🔧 FIX LOGIN-SYNC: Trước đây syncAll() KHÔNG được gọi ở nhánh này
+      // → dropdown "Chọn tài khoản" chỉ hiện danh sách cache/DEFAULT_USERS
+      // (7 người cũ), nhân viên mới thêm sau này (vd Ngô Thị Hạnh, Lê Minh
+      // Phương) sẽ KHÔNG BAO GIỜ xuất hiện để chọn trên thiết bị chưa từng
+      // đăng nhập thành công. Gọi sync ngầm ngay khi hiện form login để
+      // dropdown tự cập nhật danh sách thật từ Sheet (syncAll() tự gọi lại
+      // initLogin() khi xong, không làm gián đoạn người đang gõ).
+      syncAll();
     }
   } else {
     // 🔧 FIX B1: Chưa có session — hiện form login, ẩn loading
     hideLoading();
     $('login').style.display='flex';
+    // 🔧 FIX LOGIN-SYNC: xem giải thích ở nhánh trên — luôn sync ngầm để
+    // dropdown có đủ tài khoản mới nhất kể cả khi chưa từng đăng nhập.
+    syncAll();
   }
 
   // 🔧 FIX B1: Safety net: nếu sau 8 giây vẫn còn loading overlay thì tự ẩn
