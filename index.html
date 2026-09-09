@@ -528,14 +528,21 @@ window.addEventListener('offline',()=>{
 const SL={todo:'To Do',inprogress:'Đang làm',confirm:'Chờ xác nhận',done:'Hoàn thành'};
 const CHANNELS=['ALL','MT','GT','B2B','HoReCa'];
 
+// 🔧 FIX SYNC: đồng bộ lại mật khẩu dự phòng cho khớp CRM_Users hiện tại
+// (mảng này chỉ dùng để hiện dropdown NGAY LẬP TỨC lúc trang vừa mở /
+// khi mất mạng hoàn toàn chưa có cache — sau khi syncAll() chạy xong,
+// state.users luôn được ghi đè bằng dữ liệu thật mới nhất từ Sheet).
+// Đã bổ sung thêm 2 tài khoản thêm sau: Ngô Thị Hạnh, Lê Minh Phương.
 const DEFAULT_USERS=[
-{id:'u1',name:'Bùi Quang Quý',email:'quangquy.bui@gmail.com',role:'manager',position:'Sales & Marketing Manager',channel:'ALL',region:'ALL',initials:'QB',password:'',status:'Active'},
-{id:'u2',name:'Hồ Anh Tài',email:'taihathuy@gmail.com',role:'sales',position:'Sales Representative',channel:'MT',region:'ALL',initials:'HAT',password:'2847',status:'Active'},
-{id:'u3',name:'Thiên Thanh',email:'ng.thienthanh1696@gmail.com',role:'sales',position:'Sales Representative',channel:'MT',region:'ALL',initials:'TT',password:'5193',status:'Active'},
-{id:'u4',name:'Nguyễn Xuân Đức',email:'nguyenxuanduc13091987@gmail.com',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Bắc',initials:'NXD',password:'7062',status:'Active'},
-{id:'u5',name:'Phương Ngọc Chánh',email:'chanhphuong86@gmail.com',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Nam',initials:'PNC',password:'3815',status:'Active'},
-{id:'u6',name:'Hồ Ngọc Anh',email:'honguyennguyenan2016@gmail.com',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Trung',initials:'HNA',password:'9274',status:'Active'},
-{id:'u7',name:'Phương Thi',email:'phuongthi21@gmail.com',role:'trade',position:'Trade Marketing',channel:'ALL',region:'ALL',initials:'DPT',password:'6538',status:'Active'}
+{id:'u1',name:'Bùi Quang Quý',email:'quangquy.bui@gmail.com',role:'manager',position:'Sales & Marketing Manager',channel:'ALL',region:'ALL',initials:'QB',password:'8888',status:'Active'},
+{id:'u2',name:'Hồ Anh Tài',email:'taihathuy@gmail.com',role:'sales',position:'Sales Representative',channel:'MT',region:'ALL',initials:'HAT',password:'1111',status:'Active'},
+{id:'u3',name:'Thiên Thanh',email:'ng.thienthanh1696@gmail.com',role:'sales',position:'Sales Representative',channel:'MT',region:'ALL',initials:'NHTT',password:'1112',status:'Active'},
+{id:'u4',name:'Nguyễn Xuân Đức',email:'nguyenxuanduc13091987@gmail.com',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Bắc',initials:'NXD',password:'1113',status:'Active'},
+{id:'u5',name:'Phương Ngọc Chánh',email:'chanhphuong86@gmail.com',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Nam',initials:'PNC',password:'1234',status:'Active'},
+{id:'u6',name:'Hồ Ngọc Anh',email:'honguyennguyenan2016@gmail.com',role:'sales',position:'Sales Representative',channel:'GT',region:'Miền Trung',initials:'HNA',password:'1115',status:'Active'},
+{id:'u7',name:'Phương Thi',email:'phuongthi21@gmail.com',role:'trade',position:'Trade Marketing',channel:'ALL',region:'ALL',initials:'DPT',password:'1116',status:'Active'},
+{id:'u1778597939512',name:'Ngô Thị Hạnh',email:'hanhngo19@gmail.com',role:'trade',position:'Sales Admin',channel:'ALL',region:'ALL',initials:'NTH',password:'1117',status:'Active'},
+{id:'u1778598583346',name:'Lê Minh Phương',email:'minhphuong3011forwork@gmail.com',role:'trade',position:'Digital Marketing',channel:'ALL',region:'ALL',initials:'LMP',password:'3011',status:'Active'}
 ];
 
 // Chỉ giữ 1 flow duy nhất — General Task
