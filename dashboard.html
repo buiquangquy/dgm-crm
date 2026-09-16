@@ -523,6 +523,17 @@
 
 <script>
 // ============================================================
+// ✅ v3 Changes — GỘP REQUEST + CHỐNG LỖI "<!DOCTYPE" TẠM THỜI
+//   [NEW-1] loadAll() nay gọi 1 action 'dashboardAll' (backend v15)
+//           thay vì 2 lượt apiGet('weeklyStats')+apiGet('bodStats')
+//           cùng lúc (Promise.all) — đúng nguyên nhân 2 dòng
+//           "Completed" trùng giây trong log Executions bạn gửi.
+//   [NEW-2] apiGet/apiWrite nay đọc response bằng text() rồi tự parse,
+//           và TỰ THỬ LẠI 1 lần sau 1.2s nếu Google trả về HTML thay
+//           vì JSON (hay gặp khi script tạm thời chậm/quá tải) —
+//           trước đây lỗi này hiện thẳng ra statusLine ngay lần đầu.
+//   Giữ 100% các hàm/luồng khác của v2 không đổi.
+// ============================================================
 // CONFIG — dán URL Web App (GAS) đã deploy vào đây
 // ============================================================
 const CONFIG = {
@@ -570,8 +581,26 @@ async function apiGet(action, extra = {}) {
   const url = new URL(CONFIG.WEBAPP_URL);
   url.searchParams.set('action', action);
   Object.entries(extra).forEach(([k, v]) => url.searchParams.set(k, v));
-  const res = await fetch(url.toString(), { redirect: 'follow' });
-  return res.json();
+  return _fetchJsonWithRetry(url.toString());
+}
+
+// ✅ v3: Apps Script Web App thỉnh thoảng trả về HTML tạm thời (quá tải,
+// hiếm gặp — log Executions vẫn ghi "Completed" nên KHÔNG phải bug logic)
+// thay vì JSON, khiến res.json() báo lỗi khó hiểu "Unexpected token '<'".
+// Đọc bằng text() trước, tự thử lại 1 lần sau 1.2s nếu không parse được,
+// và chỉ báo lỗi dễ hiểu nếu vẫn thất bại sau khi thử lại.
+async function _fetchJsonWithRetry(url, attempt = 1) {
+  const res = await fetch(url, { redirect: 'follow' });
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    if (attempt < 2) {
+      await new Promise(r => setTimeout(r, 1200));
+      return _fetchJsonWithRetry(url, attempt + 1);
+    }
+    throw new Error('Máy chủ phản hồi không hợp lệ sau ' + attempt + ' lần thử (có thể do quá tải tạm thời) — bấm "Làm mới" để thử lại.');
+  }
 }
 
 // ✅ v2: transport an toàn theo kích thước payload (đồng bộ cách làm với
@@ -586,8 +615,7 @@ async function apiWrite(body) {
     const url = new URL(CONFIG.WEBAPP_URL);
     url.searchParams.set('method', 'post');
     url.searchParams.set('payload', enc);
-    const res = await fetch(url.toString(), { redirect: 'follow' });
-    return res.json();
+    return _fetchJsonWithRetry(url.toString());
   }
   await fetch(CONFIG.WEBAPP_URL, {
     method: 'POST', mode: 'no-cors',
@@ -637,6 +665,8 @@ function ringColor(p) { return p >= 80 ? '#0E7544' : p >= 50 ? '#C9B037' : '#C81
 // ---------- Load ----------
 // ✅ v12: weeklyStats đã trả kèm users + lead_tasks + task đầy đủ theo tuần
 // nên không cần gọi thêm action=all cho phần team nữa.
+// ✅ v3: gộp weeklyStats + bodStats thành 1 lượt gọi 'dashboardAll' duy
+// nhất (backend v15) thay vì 2 lượt cùng lúc như trước.
 async function loadAll() {
   const statusEl = document.getElementById('statusLine');
   if (CONFIG.WEBAPP_URL.includes('PASTE_YOUR')) {
@@ -647,8 +677,8 @@ async function loadAll() {
   statusEl.textContent = 'Đang tải dữ liệu…';
   statusEl.classList.remove('err');
   try {
-    const [stats, bodStats] = await Promise.all([apiGet('weeklyStats'), apiGet('bodStats')]);
-    if (!stats.ok) throw new Error(stats.error || 'weeklyStats lỗi');
+    const stats = await apiGet('dashboardAll');
+    if (!stats.ok) throw new Error(stats.error || 'dashboardAll lỗi');
     STATE.weekly = stats.weekly || [];
     STATE.offenders = stats.offenders || [];
     STATE.meetings = (stats.meetings || []).sort((a, b) => (a.week_no < b.week_no ? 1 : -1));
@@ -657,14 +687,13 @@ async function loadAll() {
     STATE.currentWeek = stats.current_week || null;
     STATE.selectedWeek = pickDefaultWeek();
 
-    if (bodStats.ok) {
-      STATE.bodTasks = bodStats.tasks || [];
-      STATE.bodMeetings = bodStats.meetings || [];
-      STATE.bodTotals = {
-        total: bodStats.total_count || 0, open: bodStats.open_count || 0,
-        done: bodStats.done_count || 0, offenders: bodStats.offenders || [],
-      };
-    }
+    const bod = stats.bod || {};
+    STATE.bodTasks = bod.tasks || [];
+    STATE.bodMeetings = bod.meetings || [];
+    STATE.bodTotals = {
+      total: bod.total_count || 0, open: bod.open_count || 0,
+      done: bod.done_count || 0, offenders: bod.offenders || [],
+    };
 
     renderLedger();
     renderKPIs();

@@ -512,6 +512,24 @@ function hideLoading(){
   if(ol){ol.style.opacity='0';ol.style.transition='opacity .3s';setTimeout(()=>ol.remove(),350);}
 }
 
+// ✅ v13: Apps Script Web App thỉnh thoảng trả về HTML tạm thời (quá tải,
+// hiếm gặp — không phải bug logic) thay vì JSON, khiến JSON.parse() báo lỗi
+// khó hiểu "Unexpected token '<'". Đọc bằng text() trước, tự thử lại 1 lần
+// sau 1.2s nếu không parse được. Dùng chung cho syncAll() và apiPost().
+async function _fetchJsonWithRetry(url, opts, attempt = 1) {
+  const res = await fetch(url, opts);
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    if (attempt < 2) {
+      await new Promise(r => setTimeout(r, 1200));
+      return _fetchJsonWithRetry(url, opts, attempt + 1);
+    }
+    throw new Error('Máy chủ phản hồi không hợp lệ sau ' + attempt + ' lần thử');
+  }
+}
+
 window.addEventListener('online',()=>{
   const banner=document.getElementById('offline-banner');
   if(banner)banner.style.display='none';
@@ -893,9 +911,10 @@ async function apiPost(payload){
   try{
     const enc=encodeURIComponent(JSON.stringify(payload));
     if(enc.length<6000){
-      const r=await fetch(SCRIPT_URL+'?method=post&payload='+enc,{redirect:'follow'});
-      const t=await r.text();
-      try{const d=JSON.parse(t);if(d.ok===true)return true;}catch(e){}
+      try{
+        const d=await _fetchJsonWithRetry(SCRIPT_URL+'?method=post&payload='+enc,{redirect:'follow'});
+        if(d.ok===true)return true;
+      }catch(e){/* rơi xuống no-cors bên dưới để vẫn cố gắng gửi */}
     }
     await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
     return true;
@@ -917,8 +936,7 @@ async function syncAll(){
   if(!SCRIPT_URL)return;
   state.syncing=true;setSS('sy');
   try{
-    const res=await fetch(SCRIPT_URL+'?action=all',{redirect:'follow'});
-    const d=await res.json();
+    const d=await _fetchJsonWithRetry(SCRIPT_URL+'?action=all',{redirect:'follow'});
     if(d.ok&&d.data){
       const dt=d.data;
       const rawUsers=(dt.users||[]).map(mapUser).filter(u=>u.name&&u.email&&!/^(STT|▶|←|⚠)/.test(u.name));
@@ -966,9 +984,19 @@ async function syncAll(){
         if(cache.leads&&cache.leads.length)state.leads=cache.leads;
         const cAt=cache.cachedAt?new Date(cache.cachedAt).toLocaleTimeString('vi-VN'):'?';
         setSS('ok');
-        toast('📦 Dùng cache ('+cAt+') — mạng đang yếu','warn');
+        // ✅ v13: phân biệt mất mạng thật (navigator.onLine=false) với
+        // trường hợp vẫn online nhưng máy chủ phản hồi chậm/không hợp lệ
+        // (quá tải tạm thời) — trước đây luôn báo chung "mạng đang yếu"
+        // dù nguyên nhân thật có thể ở phía server, gây khó chẩn đoán.
+        const reason = navigator.onLine ? 'máy chủ phản hồi chậm/không hợp lệ' : 'mạng đang yếu';
+        toast('📦 Dùng cache ('+cAt+') — '+reason,'warn');
         const banner=document.getElementById('offline-banner');
-        if(banner)banner.style.display='block';
+        if(banner){
+          banner.textContent = navigator.onLine
+            ? '⚠ Máy chủ phản hồi chậm — đang dùng dữ liệu cache'
+            : '📶 Mạng đang yếu — đang dùng dữ liệu cache';
+          banner.style.display='block';
+        }
       }else{
         if(!state.users.length)state.users=DEFAULT_USERS;
         if(!state.config.length)state.config=DEFAULT_FLOWS;
@@ -2922,7 +2950,7 @@ function timeAgo(iso){
   return Math.floor(diff/86400)+' ngày trước';
 }
 
-// ✅ v8: Polling 45s — so sánh updated_at để detect thay đổi từ người khác
+// ✅ v8: so sánh updated_at để detect thay đổi từ người khác
 let _lastTaskSnapshot={};
 function _snapshotTasks(){
   const snap={};
@@ -2945,6 +2973,11 @@ function _checkNewUpdates(prevSnap){
   });
 }
 
+// ✅ v13: Polling 90s (trước là 45s) — log Executions cho thấy mỗi lượt
+// action=all mất 4-9 giây để quét đủ 9 sheet; với cả team cùng mở CRM cả
+// ngày, 45s/lượt/tab tạo ra khá nhiều lượt gọi chồng lên nhau (script chạy
+// chung 1 tài khoản "Execute as: Me" nên chung 1 hạn mức thực thi). 90s vẫn
+// đủ nhanh để thấy cập nhật của đồng nghiệp mà giảm ~1 nửa số lượt gọi.
 let _pollInterval=null;
 function startPolling(){
   if(_pollInterval)clearInterval(_pollInterval);
@@ -2954,7 +2987,7 @@ function startPolling(){
     const prevSnap=_snapshotTasks();
     await syncAll();
     _checkNewUpdates(prevSnap);
-  },45000); // 45 giây
+  },90000); // 90 giây
 }
 
 // ---- INIT ----
